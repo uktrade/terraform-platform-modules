@@ -5,21 +5,6 @@ data "aws_region" "current" {}
 #   id = var.vpc_id
 # }
 
-data "aws_vpc" "vpc" {
-  #depends_on = [module.platform-vpc]
-  filter {
-      name = "tag:Name"
-      values = [var.args.space]
-  }
-}
-
-data "aws_subnets" "private-subnets" {
-  filter {
-    name = "tag:Name"
-    values = ["${var.args.space}-private-*"]
-  }
-}
-
 # resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
 #   for_each = toset(var.args.environment)
 
@@ -44,9 +29,7 @@ data "aws_subnets" "private-subnets" {
 # }
 
 resource "aws_security_group" "opensearch-security-group" {
-  for_each = toset(var.args.environment)
-
-  name        = "${var.args.application}-${each.value}-opensearch-sg"
+  name        = "${var.args.name}-${var.args.environment}--opensearch-sg"
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow inbound HTTP traffic"
 
@@ -60,20 +43,21 @@ resource "aws_security_group" "opensearch-security-group" {
       data.aws_vpc.vpc.cidr_block,
     ]
   }
+  tags = {
+        copilot-application = var.args.application
+        copilot-environment = var.args.environment
+        managed-by = "Terraform"
+  }
 }
 
 resource "random_password" "password" {
-  for_each = toset(var.args.environment)
-
   length  = 32
   special = true
 }
 
 resource "aws_opensearch_domain" "this" {
-  for_each = toset(var.args.environment)
-
   # ToDo: Stupid 28 character limit, need to check and randamize name
-  domain_name    = "${each.value}-engine"
+  domain_name    = "${var.args.name}-engine"
   engine_version = "OpenSearch_${var.engine_version}"
 
   cluster_config {
@@ -83,9 +67,12 @@ resource "aws_opensearch_domain" "this" {
     instance_type            = var.instance_type
     instance_count           = var.instance_count
     zone_awareness_enabled   = var.zone_awareness_enabled
-    zone_awareness_config {
-      availability_zone_count = var.zone_awareness_enabled ? length(data.aws_subnets.private_subnets.ids) : null
-    }
+    # zone_awareness_config {
+    #   availability_zone_count = var.zone_awareness_enabled ? length(tolist(data.aws_subnets.private-subnets.ids)) : null
+    # }
+    # zone_awareness_config {
+    #   availability_zone_count = 3
+    # }
   }
 
   advanced_security_options {
@@ -94,7 +81,7 @@ resource "aws_opensearch_domain" "this" {
     internal_user_database_enabled = true
     master_user_options {
       master_user_name     = local.master_user
-      master_user_password = random_password.password[each.key].result
+      master_user_password = random_password.password.result
     }
   }
 
@@ -143,9 +130,10 @@ resource "aws_opensearch_domain" "this" {
   vpc_options {
     # We get this error when deploying a single instance and supplying the full list of subnet IDs:
     #  Error: creating OpenSearch Domain: ValidationException: You must specify exactly one subnet.
-    subnet_ids = data.aws_subnets.private_subnets.ids
+    #subnet_ids = [local.instance_subnet_id]
+    subnet_ids = [tolist(data.aws_subnets.private-subnets.ids)[0]]
 
-    security_group_ids = [aws_security_group.opensearch_security_group[each.key].id]
+    security_group_ids = [aws_security_group.opensearch-security-group.id]
   }
 
 
@@ -157,25 +145,44 @@ resource "aws_opensearch_domain" "this" {
             "Action": "es:*",
             "Principal": "*",
             "Effect": "Allow",
-            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${each.value}-engine/*"
+            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.args.name}-engine/*"
         }
     ]
 }
 CONFIG
+
+tags = {
+        copilot-application = var.args.application
+        copilot-environment = var.args.environment
+        managed-by = "Terraform"
+  }
 }
 
 resource "aws_ssm_parameter" "this-master-user" {
-  for_each = toset(var.args.environment)
-
   # This will be a problem if you have > 1 openswearch instance per environment
-  name        = "/copilot/${var.args.application}/${each.value}/secrets/${upper(replace("${var.args.application}-opensearch", "-", "_"))}"
+  name        = "/copilot/${var.args.name}/${var.args.environment}/secrets/${upper(replace("${var.args.name}-opensearch", "-", "_"))}"
   description = "opensearch_password"
   type        = "SecureString"
-  value       = "https://${local.master_user}:${urlencode(random_password.password[each.key].result)}@${aws_opensearch_domain.this[each.key].endpoint}"
+  value       = "https://${local.master_user}:${urlencode(random_password.password.result)}@${aws_opensearch_domain.this.endpoint}"
 
   tags = {
         copilot-application = var.args.application
-        copilot-environment = "${each.value}"
+        copilot-environment = var.args.environment
         managed-by = "Terraform"
+  }
+}
+
+data "aws_vpc" "vpc" {
+  #depends_on = [module.platform-vpc]
+  filter {
+      name = "tag:Name"
+      values = [var.args.space]
+  }
+}
+
+data "aws_subnets" "private-subnets" {
+  filter {
+    name = "tag:Name"
+    values = ["${var.args.space}-private-*"]
   }
 }
