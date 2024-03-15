@@ -3,7 +3,11 @@ module "s3" {
 
     for_each = local.s3
 
-    args = each.value
+    application = var.application
+    environment = var.environment
+    vpc_name = var.vpc_name
+
+    config = each.value
 }
 
 # module "rds-postgres" {

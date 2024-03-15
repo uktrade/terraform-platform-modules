@@ -1,7 +1,6 @@
-# locals {
-#     tags = {
-#         copilot-application = var.args.application
-#         copilot-environment = var.args.environment
-#     }
-# }
-
+locals {
+  tags = {
+    Application = var.application
+    Environment = var.environment
+  }
+}

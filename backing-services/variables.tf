@@ -3,6 +3,14 @@ variable "vpc_name" {
     type = string
 }
 
-variable "args" {
+variable "application" {
+  type = string
+} 
+
+variable "environment" {
+  type = string
+} 
+
+variable "services" {
     type = map
 }

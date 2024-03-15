@@ -52,6 +52,7 @@ module "backing-services" {
     source = "../backing-services"
 
     vpc_name = "an-existing-vpc"
-
-    args = tomap(local.args)
+    application = "example"
+    environment = "staging"
+    services = tomap(local.args)
 }
