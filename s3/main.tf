@@ -1,36 +1,36 @@
 module "this" {
-  for_each = toset(var.args.environment)
+
   # depends_on = [aws_kms_key.s3_bucket]
   source = "terraform-aws-modules/s3-bucket/aws"
 
   # Todo (spike): Should add a unique string in the bucket name to avoid duplication.
-  bucket = "${var.args.application}-s3-bucket-${each.value}"
+  bucket = var.args.params.bucket_name
 
   # versioning = {
   #   enabled = true
   # }
 
-  attach_policy = true
-  policy = jsonencode({
-      "Version": "2012-10-17",
-      "Statement": [
-          {
-              "Sid": "ForceHTTPS",
-              "Effect": "Deny",
-              "Principal": "*",
-              "Action": "s3:*",
-              "Resource": [
-                  "arn:aws:s3:::${var.args.application}-s3-bucket-${each.value}/*",
-                  "arn:aws:s3:::${var.args.application}-s3-bucket-${each.value}"
-              ],
-              "Condition": {
-                  "Bool": {
-                      "aws:SecureTransport": "false"
-                  }
-              }
-          }
-      ]
-  })
+  # attach_policy = true
+  # policy = jsonencode({
+  #     "Version": "2012-10-17",
+  #     "Statement": [
+  #         {
+  #             "Sid": "ForceHTTPS",
+  #             "Effect": "Deny",
+  #             "Principal": "*",
+  #             "Action": "s3:*",
+  #             "Resource": [
+  #                 "arn:aws:s3:::${var.args.application}-s3-bucket-${each.value}/*",
+  #                 "arn:aws:s3:::${var.args.application}-s3-bucket-${each.value}"
+  #             ],
+  #             "Condition": {
+  #                 "Bool": {
+  #                     "aws:SecureTransport": "false"
+  #                 }
+  #             }
+  #         }
+  #     ]
+  # })
 
   # server_side_encryption_configuration = {
     # rule = {
@@ -41,12 +41,12 @@ module "this" {
     # }
   # }
 
-  tags = {
-      copilot-application = var.args.application
-      copilot-environment = "${each.value}"
-      managed-by = "Terraform"
-      #terraform-version = chomp(data.local_file.terraform_version.content)
-  }
+  # tags = {
+  #     copilot-application = var.args.application
+  #     copilot-environment = "${each.value}"
+  #     managed-by = "Terraform"
+  #     #terraform-version = chomp(data.local_file.terraform_version.content)
+  # }
 
 }
 
