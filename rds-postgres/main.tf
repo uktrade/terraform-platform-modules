@@ -1,9 +1,8 @@
 module "security-group" {
-  for_each = toset(var.args.environment)
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 5.0"
 
-  name        = "${var.args.application}-${each.value}-rds-postgres-sg"
+  name        = "${var.args.application}-${var.args.environment}-rds-postgres-sg"
   description = "Complete PostgreSQL example security group"
   vpc_id = data.aws_vpc.vpc.id
 
@@ -20,17 +19,16 @@ module "security-group" {
 
   tags = {
         copilot-application = var.args.application
-        copilot-environment = "${each.value}"
+        copilot-environment = var.args.environment
         managed-by = "Terraform"
     }
 }
 
 
 module "this" {
-  for_each = toset(var.args.environment)
   source = "terraform-aws-modules/rds/aws"
 
-  identifier = "${var.args.application}-${each.value}-rds-postgres"
+  identifier = "${var.args.application}-${var.args.environment}-rds-postgres"
 
   # All available versions: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts
   engine               = "postgres"
@@ -57,8 +55,8 @@ module "this" {
 
   multi_az               = false
   create_db_subnet_group = true
-  vpc_security_group_ids = [module.security_group[each.key].security_group_id]
-  subnet_ids = data.aws_subnets.private_subnets.ids
+  vpc_security_group_ids = [module.security-group.security_group_id]
+  subnet_ids = data.aws_subnets.private-subnets.ids
 
   maintenance_window              = "Mon:00:00-Mon:03:00"
   backup_window                   = "03:00-06:00"
@@ -90,7 +88,7 @@ module "this" {
 
   tags = {
         copilot-application = var.args.application
-        copilot-environment = "${each.value}"
+        copilot-environment = var.args.environment
         managed-by = "Terraform"
     }
 
@@ -118,30 +116,27 @@ data "aws_subnets" "private-subnets" {
 }
 
 data "aws_secretsmanager_secret" "secret" {
-  for_each = toset(var.args.environment)
-  arn = module.this[each.key].db_instance_master_user_secret_arn
+  arn = module.this.db_instance_master_user_secret_arn
 }
 
 data "aws_secretsmanager_secret_version" "current" {
-  for_each = toset(var.args.environment)
-  secret_id = data.aws_secretsmanager_secret.secret[each.key].id
+  secret_id = data.aws_secretsmanager_secret.secret.id
 }
 
 resource "aws_ssm_parameter" "connection-string" {
-  for_each = toset(var.args.environment)
-  name  = "/copilot/${var.args.application}/${each.value}/secrets/${upper(replace("${var.args.application}-rds-postgres", "-", "_"))}"
+  name  = "/copilot/${var.args.application}/${var.args.environment}/secrets/${upper(replace("${var.args.name}-rds-postgres", "-", "_"))}"
   type  = "SecureString"
   value = jsonencode({
-    "username"=jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current[each.key].secret_string)).username,
-    "password"=urlencode(jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current[each.key].secret_string)).password),
+    "username"=jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current.secret_string)).username,
+    "password"=urlencode(jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current.secret_string)).password),
     "engine"="postgres",
-    "port"=module.this[each.key].db_instance_port,
-    "dbname"=module.this[each.key].db_instance_name,
-    "host"=split(":", module.this[each.key].db_instance_endpoint)[0]
+    "port"=module.this.db_instance_port,
+    "dbname"=module.this.db_instance_name,
+    "host"=split(":", module.this.db_instance_endpoint)[0]
   })
   tags = {
         copilot-application = var.args.application
-        copilot-environment = "${each.value}"
+        copilot-environment = var.args.environment
         managed-by = "Terraform"
     }
 }
