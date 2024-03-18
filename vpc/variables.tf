@@ -1,6 +1,6 @@
 variable "arg_name" {
   default = null
-  type    = any
+  type    = string
 }
 
 variable "arg_config" {
