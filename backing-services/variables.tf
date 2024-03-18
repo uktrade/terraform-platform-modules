@@ -1,20 +1,14 @@
-
-# variable "vpc_name" {
-#     type = string
-# }
-
-variable "application" {
-  type = string
-} 
+variable "args" {
+  type = object({
+    application = string,
+    services    = any,
+  })
+}
 
 variable "environment" {
   type = string
-} 
-
-variable "services" {
-  type = any
 }
 
-variable "environments" {
-  type = any
+variable "vpc_name" {
+  type = string
 }
