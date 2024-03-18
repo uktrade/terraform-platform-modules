@@ -13,8 +13,3 @@ module "backing-services-staging" {
   environment = "staging"
   vpc_name    = "intranet-nonprod"
 }
-
-### DEBUG
-output "test1" {
-  value = module.backing-services-staging.services
-}

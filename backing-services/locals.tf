@@ -22,9 +22,3 @@ locals {
   opensearch = { for k, v in local.services : k => v if v.type == "opensearch" }
   monitoring = { for k, v in local.services : k => v if v.type == "monitoring" }
 }
-
-### DEBUG
-output "services" {
-  value = local.s3
-}
-
