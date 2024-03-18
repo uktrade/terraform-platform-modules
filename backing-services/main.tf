@@ -1,14 +1,15 @@
-# module "s3" {
-#     source = "../s3"
+module "s3" {
+  source = "../s3"
 
-#     for_each = local.s3
+  for_each = local.s3
 
-#     application = var.application
-#     environment = var.environment
-#     vpc_name = var.vpc_name
+  application = var.args.application
+  environment = var.environment
+  name        = each.key
+  vpc_name    = var.vpc_name
 
-#     config = each.value
-# }
+  config = each.value
+}
 
 # module "rds-postgres" {
 #     source =  "../rds-postgres"

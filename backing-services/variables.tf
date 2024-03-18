@@ -1,7 +1,7 @@
-variable args {
+variable "args" {
   type = object({
     application = string,
-    services = any,
+    services    = any,
   })
 }
 
@@ -9,8 +9,6 @@ variable "environment" {
   type = string
 }
 
-variable "vpc" {
+variable "vpc_name" {
   type = string
-} 
-
-
+}

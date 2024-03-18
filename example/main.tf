@@ -1,17 +1,17 @@
 locals {
-    args = {
-      application = "intranet"
-      services = yamldecode(file("${path.module}/backing-services.yml"))
-    }
+  args = {
+    application = "intranet"
+    services    = yamldecode(file("${path.module}/backing-services.yml"))
+  }
 }
 
 module "backing-services-staging" {
-    source = "../backing-services"
+  source = "../backing-services"
 
-    args = local.args
+  args = local.args
 
-    environment = "staging"
-    vpc = "intranet-nonprod"
+  environment = "staging"
+  vpc_name    = "intranet-nonprod"
 }
 
 ### DEBUG

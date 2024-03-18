@@ -1,30 +1,30 @@
 locals {
-    plans = yamldecode(file("${path.module}/plans.yml"))
+  plans = yamldecode(file("${path.module}/plans.yml"))
 
-    // select environment for each service and expand config from "*"
-    services_select_env = { for k, v in var.args.services : k => merge(v, merge(lookup(v.environments, "*", {}), lookup(v.environments, var.environment, {}))) }
+  // select environment for each service and expand config from "*"
+  services_select_env = { for k, v in var.args.services : k => merge(v, merge(lookup(v.environments, "*", {}), lookup(v.environments, var.environment, {}))) }
 
-    // expand plan config
-    services_expand_plan = { for k, v in local.services_select_env : k => merge(lookup(local.plans[v.type], lookup(v, "plan", "NO-PLAN"), {}), v) }
+  // expand plan config
+  services_expand_plan = { for k, v in local.services_select_env : k => merge(lookup(local.plans[v.type], lookup(v, "plan", "NO-PLAN"), {}), v) }
 
-    // remove unnecessary fields
-    services = {
-        for service_name, service_config in local.services_expand_plan : 
-            service_name => {
-                for k, v in service_config : k => v if !contains(["environments", "services", "plan"], k)
-            }
+  // remove unnecessary fields
+  services = {
+    for service_name, service_config in local.services_expand_plan :
+    service_name => {
+      for k, v in service_config : k => v if !contains(["environments", "services", "plan"], k)
     }
+  }
 
-    // filter services per backing-service type
-    postgres = { for k, v in local.services : k => v if v.type == "postgres" }
-    s3 = { for k, v in local.services : k => v if v.type == "s3" }
-    redis = { for k, v in local.services : k => v if v.type == "redis" }
-    opensearch = { for k, v in local.services : k => v if v.type == "opensearch" }
-    monitoring = { for k, v in local.services : k => v if v.type == "monitoring" }
+  // filter services per backing-service type
+  postgres   = { for k, v in local.services : k => v if v.type == "postgres" }
+  s3         = { for k, v in local.services : k => v if v.type == "s3" }
+  redis      = { for k, v in local.services : k => v if v.type == "redis" }
+  opensearch = { for k, v in local.services : k => v if v.type == "opensearch" }
+  monitoring = { for k, v in local.services : k => v if v.type == "monitoring" }
 }
 
 ### DEBUG
 output "services" {
-    value = local.services
+  value = local.s3
 }
 

@@ -5,11 +5,11 @@ module "this" {
   source = "terraform-aws-modules/s3-bucket/aws"
 
   # Todo (spike): Should add a unique string in the bucket name to avoid duplication.
-  bucket = var.config.params.bucket_name
+  bucket = var.config.bucket_name
 
-  # versioning = {
-  #   enabled = true
-  # }
+  versioning = {
+     enabled = lookup(var.config, "versioning", false)
+  }
 
   attach_policy = true
   policy = jsonencode({
@@ -21,8 +21,8 @@ module "this" {
               "Principal": "*",
               "Action": "s3:*",
               "Resource": [
-                  "arn:aws:s3:::${var.config.params.bucket_name}/*",
-                  "arn:aws:s3:::${var.config.params.bucket_name}"
+                  "arn:aws:s3:::${var.config.bucket_name}/*",
+                  "arn:aws:s3:::${var.config.bucket_name}"
               ],
               "Condition": {
                   "Bool": {
