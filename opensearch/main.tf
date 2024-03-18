@@ -29,7 +29,7 @@ data "aws_region" "current" {}
 # }
 
 resource "aws_security_group" "opensearch-security-group" {
-  name        = "${var.args.name}-${var.args.environment}--opensearch-sg"
+  name        = "${var.config.name}-${var.environment}--opensearch-sg"
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow inbound HTTP traffic"
 
@@ -44,9 +44,9 @@ resource "aws_security_group" "opensearch-security-group" {
     ]
   }
   tags = {
-    copilot-application = var.args.application
-    copilot-environment = var.args.environment
-    managed-by          = "Terraform"
+        copilot-application = var.application
+        copilot-environment = var.environment
+        managed-by = "Terraform"
   }
 }
 
@@ -57,16 +57,16 @@ resource "random_password" "password" {
 
 resource "aws_opensearch_domain" "this" {
   # ToDo: Stupid 28 character limit, need to check and randamize name
-  domain_name    = "${var.args.name}-engine"
-  engine_version = "OpenSearch_${var.engine_version}"
+  domain_name    = "${var.config.name}-engine"
+  engine_version = "OpenSearch_${var.config.engine}"
 
   cluster_config {
-    dedicated_master_count   = var.dedicated_master_count
-    dedicated_master_type    = var.dedicated_master_type
-    dedicated_master_enabled = var.dedicated_master_enabled
-    instance_type            = var.instance_type
-    instance_count           = var.instance_count
-    zone_awareness_enabled   = var.zone_awareness_enabled
+    dedicated_master_count   = 1 # TODO
+    dedicated_master_type    = local.plans[var.config.plan].instance # TODO
+    dedicated_master_enabled = local.plans[var.config.plan].master
+    instance_type            = local.plans[var.config.plan].instance
+    instance_count           = local.plans[var.config.plan].instances
+    zone_awareness_enabled   = false # TODO
     # zone_awareness_config {
     #   availability_zone_count = var.zone_awareness_enabled ? length(tolist(data.aws_subnets.private-subnets.ids)) : null
     # }
@@ -76,7 +76,7 @@ resource "aws_opensearch_domain" "this" {
   }
 
   advanced_security_options {
-    enabled                        = var.security_options_enabled
+    enabled                        = true # TODO var.security_options_enabled
     anonymous_auth_enabled         = false
     internal_user_database_enabled = true
     master_user_options {
@@ -104,12 +104,15 @@ resource "aws_opensearch_domain" "this" {
   }
 
   ebs_options {
-    ebs_enabled = var.ebs_enabled
-    volume_size = var.ebs_volume_size
-    volume_type = var.volume_type
-    throughput  = var.throughput
+    ebs_enabled = true
+    volume_size = coalesce(var.config.volume_size, local.plans[var.config.plan].volume_size)
+    volume_type = "gp3"
+    throughput  = 250 # TODO var.throughput
   }
 
+  auto_tune_options {
+    desired_state = startswith(local.plans[var.config.plan].instance, "t2") || startswith(local.plans[var.config.plan].instance, "t3") ? "DISABLED" : "ENABLED"
+  }
   # log_publishing_options {
   #   cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.arn
   #   log_type                 = "INDEX_SLOW_LOGS"
@@ -145,44 +148,44 @@ resource "aws_opensearch_domain" "this" {
             "Action": "es:*",
             "Principal": "*",
             "Effect": "Allow",
-            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.args.name}-engine/*"
+            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.config.name}-engine/*"
         }
     ]
 }
 CONFIG
 
-  tags = {
-    copilot-application = var.args.application
-    copilot-environment = var.args.environment
-    managed-by          = "Terraform"
+tags = {
+        copilot-application = var.application
+        copilot-environment = var.environment
+        managed-by = "Terraform"
   }
 }
 
 resource "aws_ssm_parameter" "this-master-user" {
   # This will be a problem if you have > 1 openswearch instance per environment
-  name        = "/copilot/${var.args.name}/${var.args.environment}/secrets/${upper(replace("${var.args.name}-opensearch", "-", "_"))}"
+  name        = "/copilot/${var.config.name}/${var.environment}/secrets/${upper(replace("${var.config.name}-opensearch", "-", "_"))}"
   description = "opensearch_password"
   type        = "SecureString"
   value       = "https://${local.master_user}:${urlencode(random_password.password.result)}@${aws_opensearch_domain.this.endpoint}"
 
   tags = {
-    copilot-application = var.args.application
-    copilot-environment = var.args.environment
-    managed-by          = "Terraform"
+        copilot-application = var.application
+        copilot-environment = var.environment
+        managed-by = "Terraform"
   }
 }
 
 data "aws_vpc" "vpc" {
   #depends_on = [module.platform-vpc]
   filter {
-    name   = "tag:Name"
-    values = [var.args.space]
+      name = "tag:Name"
+      values = [var.space]
   }
 }
 
 data "aws_subnets" "private-subnets" {
   filter {
-    name   = "tag:Name"
-    values = ["${var.args.space}-private-*"]
+    name = "tag:Name"
+    values = ["${var.space}-private-*"]
   }
 }
