@@ -1,0 +1,64 @@
+# TODO: terraform module versioning :thinking:
+
+dw-redis:
+  type: redis
+  environments:
+    "*":
+      engine: '6.2'
+      plan: small
+    prod:
+      plan: medium-ha
+
+dw-postgres:
+  type: postgres
+  version: 14.4
+  environments:
+    "*":
+      min_capacity: 0.5 # AllowedValues: from 0.5 through 128
+      max_capacity: 8   # AllowedValues: from 0.5 through 128
+    staging:
+      deletion_protection: true
+      deletion_policy: Retain
+    prod:
+      deletion_protection: true
+      deletion_policy: Retain
+
+dw-opensearch:
+  type: opensearch
+  environments:
+    "*":
+      plan: small
+      engine: '1.3'
+      volume_size: 40
+    prod:
+      plan: large-ha
+      engine: '1.3'
+      volume_size: 100
+
+dw-s3-bucket:
+  type: s3
+  services:
+    - "s3proxy"
+    - "beat"
+    - "web"
+    - "worker"
+  environments:
+    dev:
+      bucket_name: digital-workspace-v2-dev
+    hotfix:
+      bucket_name: digital-workspace-v2-hotfix
+    prod:
+      bucket_name: digital-workspace-v2-prod
+    staging:
+      bucket_name: digital-workspace-v2-staging
+    training:
+      bucket_name: digital-workspace-v2-training
+  objects:
+    - key: healthcheck.txt
+      body: S3 Proxy is working.
+
+monitoring:
+  type: monitoring
+  environments:
+    "*":
+      enable_ops_center: false
