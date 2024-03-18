@@ -1,9 +1,19 @@
+terraform {
+  required_version = ">=1.6.1"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 data "aws_caller_identity" "current" {}
 
 module "this" {
   depends_on = [aws_kms_key.s3-bucket]
-  source = "terraform-aws-modules/s3-bucket/aws"
-
+  source     = "terraform-aws-modules/s3-bucket/aws"
+  version    = ">=1.6.1"
   # Todo (spike): Should add a unique string in the bucket name to avoid duplication.
   bucket = var.config.params.bucket_name
 
@@ -13,24 +23,24 @@ module "this" {
 
   attach_policy = true
   policy = jsonencode({
-      "Version": "2012-10-17",
-      "Statement": [
-          {
-              "Sid": "ForceHTTPS",
-              "Effect": "Deny",
-              "Principal": "*",
-              "Action": "s3:*",
-              "Resource": [
-                  "arn:aws:s3:::${var.config.params.bucket_name}/*",
-                  "arn:aws:s3:::${var.config.params.bucket_name}"
-              ],
-              "Condition": {
-                  "Bool": {
-                      "aws:SecureTransport": "false"
-                  }
-              }
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "ForceHTTPS",
+        "Effect" : "Deny",
+        "Principal" : "*",
+        "Action" : "s3:*",
+        "Resource" : [
+          "arn:aws:s3:::${var.config.params.bucket_name}/*",
+          "arn:aws:s3:::${var.config.params.bucket_name}"
+        ],
+        "Condition" : {
+          "Bool" : {
+            "aws:SecureTransport" : "false"
           }
-      ]
+        }
+      }
+    ]
   })
 
   server_side_encryption_configuration = {
@@ -46,27 +56,27 @@ module "this" {
 }
 
 resource "aws_kms_key" "s3-bucket" {
-  description             = "KMS Key for S3 encryption"
+  description = "KMS Key for S3 encryption"
   policy = jsonencode({
-    "Version": "2012-10-17",
-    "Id": "${var.application}-${var.application}S3Bucket-key",
-    "Statement": [
-        {
-            "Sid": "Enable IAM User Permissions",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-            },
-            "Action": "kms:*",
-            "Resource": "*"
-        }
+    "Version" : "2012-10-17",
+    "Id" : "${var.application}-${var.application}S3Bucket-key",
+    "Statement" : [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
     ]
-})
+  })
   tags = local.tags
 }
 
 resource "aws_kms_alias" "s3-bucket" {
-  depends_on = [aws_kms_key.s3-bucket]
+  depends_on    = [aws_kms_key.s3-bucket]
   name          = "alias/${var.application}-${var.application}S3Bucket-key"
   target_key_id = aws_kms_key.s3-bucket.id
 }
