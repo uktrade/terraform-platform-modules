@@ -10,10 +10,10 @@ terraform {
 
 # VPC
 resource "aws_vpc" "vpc" {
-  cidr_block           = "${var.arg_value.cidr}${local.vpc_cidr_mask}"
+  cidr_block           = "${var.arg_config.cidr}${local.vpc_cidr_mask}"
   enable_dns_hostnames = true
   tags = {
-    Name       = var.arg_key
+    Name       = var.arg_name
     managed-by = "Terraform"
   }
 }
@@ -22,12 +22,12 @@ resource "aws_vpc" "vpc" {
 # Subnets
 ##Private
 resource "aws_subnet" "private" {
-  for_each          = var.arg_value.az_map.private
+  for_each          = var.arg_config.az_map.private
   vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "${var.arg_value.cidr}.${each.value}${local.subnet_cidr_mask}"
+  cidr_block        = "${var.arg_config.cidr}.${each.value}${local.subnet_cidr_mask}"
   availability_zone = "${local.region}${each.key}"
   tags = {
-    Name        = "${var.arg_key}-private-${local.region}${each.key}"
+    Name        = "${var.arg_name}-private-${local.region}${each.key}"
     subnet_type = "private"
     managed-by  = "Terraform"
   }
@@ -36,12 +36,12 @@ resource "aws_subnet" "private" {
 
 ##Public
 resource "aws_subnet" "public" {
-  for_each          = var.arg_value.az_map.public
+  for_each          = var.arg_config.az_map.public
   vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "${var.arg_value.cidr}.${each.value}${local.subnet_cidr_mask}"
+  cidr_block        = "${var.arg_config.cidr}.${each.value}${local.subnet_cidr_mask}"
   availability_zone = "${local.region}${each.key}"
   tags = {
-    Name        = "${var.arg_key}-public-${local.region}${each.key}"
+    Name        = "${var.arg_name}-public-${local.region}${each.key}"
     subnet_type = "public"
     managed-by  = "Terraform"
   }
@@ -52,7 +52,7 @@ resource "aws_subnet" "public" {
 resource "aws_internet_gateway" "public" {
   vpc_id = aws_vpc.vpc.id
   tags = {
-    Name       = "${var.arg_key}-ig-public"
+    Name       = "${var.arg_name}-ig-public"
     managed-by = "Terraform"
   }
 }
@@ -61,7 +61,7 @@ resource "aws_internet_gateway" "public" {
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.vpc.id
   tags = {
-    Name       = "${var.arg_key}-rt-public"
+    Name       = "${var.arg_name}-rt-public"
     managed-by = "Terraform"
   }
 }
@@ -73,7 +73,7 @@ resource "aws_route" "public_route" {
 }
 
 resource "aws_route_table_association" "public" {
-  for_each       = var.arg_value.az_map.public
+  for_each       = var.arg_config.az_map.public
   subnet_id      = aws_subnet.public[each.key].id
   route_table_id = aws_route_table.public.id
 }
@@ -81,20 +81,20 @@ resource "aws_route_table_association" "public" {
 
 # NAT Gateway
 resource "aws_eip" "public" {
-  for_each = toset(var.arg_value.nat_gateways)
+  for_each = toset(var.arg_config.nat_gateways)
   domain   = "vpc"
   tags = {
-    Name       = "${var.arg_key}nat-eip-${each.key}"
+    Name       = "${var.arg_name}nat-eip-${each.key}"
     managed-by = "Terraform"
   }
 }
 
 resource "aws_nat_gateway" "public" {
-  for_each      = toset(var.arg_value.nat_gateways)
+  for_each      = toset(var.arg_config.nat_gateways)
   allocation_id = aws_eip.public[each.key].id
   subnet_id     = aws_subnet.public[each.key].id
   tags = {
-    Name       = "${var.arg_key}-nat-gateway-${each.key}"
+    Name       = "${var.arg_name}-nat-gateway-${each.key}"
     managed-by = "Terraform"
   }
 }
@@ -104,20 +104,20 @@ resource "aws_nat_gateway" "public" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.vpc.id
   tags = {
-    Name       = "${var.arg_key}-rt-private"
+    Name       = "${var.arg_name}-rt-private"
     managed-by = "Terraform"
   }
 }
 
 resource "aws_route" "private_route" {
-  for_each               = toset(var.arg_value.nat_gateways)
+  for_each               = toset(var.arg_config.nat_gateways)
   route_table_id         = aws_route_table.private.id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.public[each.key].id
 }
 
 resource "aws_route_table_association" "private" {
-  for_each       = var.arg_value.az_map.private
+  for_each       = var.arg_config.az_map.private
   subnet_id      = aws_subnet.private[each.key].id
   route_table_id = aws_route_table.private.id
 }
