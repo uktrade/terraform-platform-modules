@@ -1,7 +1,7 @@
 
-variable "vpc_name" {
-    type = string
-}
+# variable "vpc_name" {
+#     type = string
+# }
 
 variable "application" {
   type = string
@@ -12,5 +12,9 @@ variable "environment" {
 } 
 
 variable "services" {
-    type = map
+  type = any
+}
+
+variable "environments" {
+  type = any
 }
