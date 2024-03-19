@@ -51,6 +51,7 @@ dw-s3-bucket:
       bucket_name: digital-workspace-v2-prod
     staging:
       bucket_name: xyz-test-acme-widgets-ltd
+      versioning: false
     training:
       bucket_name: digital-workspace-v2-training
   objects:
