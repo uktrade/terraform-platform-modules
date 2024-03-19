@@ -11,5 +11,5 @@ module "backing-services-staging" {
   args = local.args
 
   environment = "staging"
-  vpc_name    = "intranet-nonprod"
+  vpc_name    = "sandbox-lyndon"
 }

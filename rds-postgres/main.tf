@@ -1,50 +1,56 @@
-module "security-group" {
-  source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 5.0"
-
-  name        = "${var.args.application}-${var.args.environment}-rds-postgres-sg"
-  description = "Complete PostgreSQL example security group"
-  vpc_id = data.aws_vpc.vpc.id
-
-  # ingress
-  ingress_with_cidr_blocks = [
-    {
-      from_port   = 5432
-      to_port     = 5432
-      protocol    = "tcp"
-      description = "PostgreSQL access from within VPC"
-      cidr_blocks = data.aws_vpc.vpc.cidr_block
-    },
-  ]
-
-  tags = {
-        copilot-application = var.args.application
-        copilot-environment = var.args.environment
-        managed-by = "Terraform"
-    }
+data "aws_vpc" "vpc" {
+  filter {
+      name = "tag:Name"
+      values = [var.vpc_name]
+  }
 }
 
+data "aws_subnets" "private-subnets" {
+  filter {
+    name = "tag:Name"
+    values = ["${var.vpc_name}-private*"]
+  }
+}
+
+resource "aws_security_group" "security-group" {
+  name        = local.name
+  vpc_id      = data.aws_vpc.vpc.id
+  description = "Allow access from inside the VPC"
+
+  ingress {
+    description = "Local VPC access"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+
+    cidr_blocks = [
+      data.aws_vpc.vpc.cidr_block,
+    ]
+  }
+  tags = local.tags
+}
 
 module "this" {
   source = "terraform-aws-modules/rds/aws"
 
-  identifier = "${var.args.application}-${var.args.environment}-rds-postgres"
+  identifier = local.name
 
   # All available versions: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts
   engine               = "postgres"
-  engine_version       = "14"
+  engine_version       = local.version
   family               = "postgres14" # DB parameter group
   major_engine_version = "14"         # DB option group
-  instance_class       = "db.t4g.large"
+  # instance_class       = local.instance
+  instance_class = local.instance
 
-  allocated_storage     = 20
+  allocated_storage     = local.volume_size
   max_allocated_storage = 100
 
   # NOTE: Do NOT use 'user' as the value for 'username' as it throws:
   # "Error creating DB Instance: InvalidParameterValue: MasterUsername
   # user cannot be used as it is a reserved word used by the engine"
-  db_name  = "completePostgresql"
-  username = "complete_postgresql"
+  db_name  = "main"
+  username = "postgres"
   port     = 5432
 
   # setting manage_master_user_password_rotation to false after it
@@ -55,7 +61,7 @@ module "this" {
 
   multi_az               = false
   create_db_subnet_group = true
-  vpc_security_group_ids = [module.security-group.security_group_id]
+  vpc_security_group_ids = [aws_security_group.security-group.id]
   subnet_ids = data.aws_subnets.private-subnets.ids
 
   maintenance_window              = "Mon:00:00-Mon:03:00"
@@ -65,15 +71,15 @@ module "this" {
 
   backup_retention_period = 1
   skip_final_snapshot     = true
-  deletion_protection     = false
+  deletion_protection     = local.deletion_protection
 
   performance_insights_enabled          = true
   performance_insights_retention_period = 7
   create_monitoring_role                = true
   monitoring_interval                   = 60
-  monitoring_role_name                  = "example-monitoring-role-name"
+  monitoring_role_name                  = local.name
   monitoring_role_use_name_prefix       = true
-  monitoring_role_description           = "Description for monitoring role"
+  monitoring_role_description           = "RDS monitoring role"
 
   parameters = [
     {
@@ -86,33 +92,14 @@ module "this" {
     }
   ]
 
-  tags = {
-        copilot-application = var.args.application
-        copilot-environment = var.args.environment
-        managed-by = "Terraform"
-    }
-
   db_option_group_tags = {
     "Sensitive" = "low"
   }
   db_parameter_group_tags = {
     "Sensitive" = "low"
   }
-}
 
-data "aws_vpc" "vpc" {
-  #depends_on = [module.platform-vpc]
-  filter {
-      name = "tag:Name"
-      values = [var.args.space]
-  }
-}
-
-data "aws_subnets" "private-subnets" {
-  filter {
-    name = "tag:Name"
-    values = ["${var.args.space}-private-*"]
-  }
+  tags = local.tags
 }
 
 data "aws_secretsmanager_secret" "secret" {
@@ -124,7 +111,7 @@ data "aws_secretsmanager_secret_version" "current" {
 }
 
 resource "aws_ssm_parameter" "connection-string" {
-  name  = "/copilot/${var.args.application}/${var.args.environment}/secrets/${upper(replace("${var.args.name}-rds-postgres", "-", "_"))}"
+  name  = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}-rds-postgres", "-", "_"))}"
   type  = "SecureString"
   value = jsonencode({
     "username"=jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current.secret_string)).username,
@@ -134,9 +121,5 @@ resource "aws_ssm_parameter" "connection-string" {
     "dbname"=module.this.db_instance_name,
     "host"=split(":", module.this.db_instance_endpoint)[0]
   })
-  tags = {
-        copilot-application = var.args.application
-        copilot-environment = var.args.environment
-        managed-by = "Terraform"
-    }
+  tags = local.tags
 }
