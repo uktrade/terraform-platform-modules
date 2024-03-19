@@ -5,10 +5,10 @@ data "aws_vpc" "vpc" {
   }
 }
 
-data "aws_subnets" "private-subnets" {
+data "aws_subnets" "public-subnets" {
   filter {
     name = "tag:Name"
-    values = ["${var.space}-private-*"]
+    values = ["${var.space}-public-*"]
   }
 }
 
@@ -17,7 +17,7 @@ resource "aws_lb" "this" {
   internal           = true
   load_balancer_type = "application"
   # security_groups    =
-  subnets            = tolist(data.aws_subnets.private-subnets.ids)
+  subnets            = tolist(data.aws_subnets.public-subnets.ids)
 
   enable_deletion_protection = true
 
