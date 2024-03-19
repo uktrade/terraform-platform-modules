@@ -1,15 +1,10 @@
-run "setup_tests" {
-  module {
-    source = "./tests/setup"
-  }
-}
-
 variables {
   vpc_name    = "s3-test-vpc-name"
   application = "s3-test-application"
   environment = "s3-test-environment"
   name        = "s3-test-name"
   config = {
+    "bucket_name" = "dbt-terraform-test-s3-module",
     "type"       = "string",
     "versioning" = false,
     "objects"    = [],
@@ -17,21 +12,11 @@ variables {
 }
 
 run "e2e_test" {
-
-  variables {
-    config = {
-      "bucket_name" = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
-      "type"        = "string",
-      "versioning"  = false,
-      "objects"     = [],
-    }
-  }
-
   command = apply
 
   ### Test aws_s3_bucket resource ###
   assert {
-    condition     = endswith(aws_s3_bucket.this.bucket, "-terraform-test-module-s3") == true
+    condition     = aws_s3_bucket.this.bucket == "dbt-terraform-test-s3-module"
     error_message = "Invalid S3 bucket name"
   }
 
@@ -85,10 +70,10 @@ run "versioning_enabled" {
 
   variables {
     config = {
-      "bucket_name" = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
+      "bucket_name" = "dbt-terraform-test-s3-module",
       "type"        = "string",
       "versioning"  = true,
-      "objects"     = [],
+      "objects"    = [],
     }
   }
 
@@ -105,11 +90,11 @@ run "retention_policy_governance" {
 
   variables {
     config = {
-      "bucket_name"      = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
+      "bucket_name" = "dbt-terraform-test-s3-module",
       "type"             = "string",
       "versioning"       = true,
       "retention_policy" = { "mode" = "GOVERNANCE", "days" = 1 },
-      "objects"          = [],
+      "objects"    = [],
     }
   }
 
@@ -131,11 +116,11 @@ run "retention_policy_compliance" {
 
   variables {
     config = {
-      "bucket_name"      = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
+      "bucket_name" = "dbt-terraform-test-s3-module",
       "type"             = "string",
       "versioning"       = true,
       "retention_policy" = { "mode" = "COMPLIANCE", "years" = 1 },
-      "objects"          = [],
+      "objects"    = [],
     }
   }
 
