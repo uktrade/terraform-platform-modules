@@ -1,5 +1,3 @@
-data "aws_caller_identity" "current" {}
-
 resource "aws_s3_bucket" "this" {
   bucket = var.config.bucket_name
 
@@ -48,6 +46,23 @@ resource "aws_s3_bucket_versioning" "this-versioning" {
   }
 }
 
+resource "aws_kms_key" "kms-key" {
+  description             = "KMS Key for S3 encryption"
+  tags = local.tags
+}
+
+// require server side encryption
+resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
+  bucket = aws_s3_bucket.this.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.kms-key.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+
 resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
   bucket = aws_s3_bucket.this.id
 
@@ -62,49 +77,7 @@ resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
   }
 }
 
-data "aws_iam_policy_document" "kms-key-policy" {
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
-    }
-
-    // QUESTION: Should this be scoped down?
-    actions = [
-      "kms:*",
-    ]
-
-    effect = "Allow"
-
-    // QUESTION: Should this be scoped down?
-    resources = ["*"]
-  }
-}
-
-resource "aws_kms_key" "kms-key" {
-  description             = "KMS Key for S3 encryption"
-  policy = data.aws_iam_policy_document.kms-key-policy.json
-  tags = local.tags
-}
-
-resource "aws_kms_alias" "key-alias" {
-  depends_on = [aws_kms_key.kms-key]
-  name          = "alias/${var.application}-${var.application}S3Bucket-key"
-  target_key_id = aws_kms_key.kms-key.id
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
-  bucket = aws_s3_bucket.this.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.kms-key.arn
-      sse_algorithm     = "aws:kms"
-    }
-  }
-}
-
-// Upload files 
+// create objects based on the config.objects key
 resource "aws_s3_object" "object" {
   for_each = { for item in lookup(var.config, "objects", []): item.key => item.body } 
 
