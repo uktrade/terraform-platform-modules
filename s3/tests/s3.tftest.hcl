@@ -9,21 +9,21 @@ variables {
   application = "s3-test-application"
   environment = "s3-test-environment"
   name        = "s3-test-name"
-  config      = {
-    "type"        = "string",
-    "versioning"  = false,
-    "objects"       = [],
+  config = {
+    "type"       = "string",
+    "versioning" = false,
+    "objects"    = [],
   }
 }
 
 run "e2e_test" {
 
   variables {
-    config      = {
-    "bucket_name" = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
-    "type"        = "string",
-    "versioning"  = false,
-    "objects"       = [],
+    config = {
+      "bucket_name" = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
+      "type"        = "string",
+      "versioning"  = false,
+      "objects"     = [],
     }
   }
 
@@ -76,7 +76,7 @@ run "e2e_test" {
 
   ### Test aws_s3_bucket_server_side_encryption_configuration resource sse_algorithm ###
   assert {
-    condition     = [for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule : true if [for el2 in el.apply_server_side_encryption_by_default : true if el2.sse_algorithm == "aws:kms"][0] == true][0] == true
+    condition     = [for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule : true if[for el2 in el.apply_server_side_encryption_by_default : true if el2.sse_algorithm == "aws:kms"][0] == true][0] == true
     error_message = "Invalid s3 KMS key tags"
   }
 }
@@ -84,11 +84,11 @@ run "e2e_test" {
 run "versioning_enabled" {
 
   variables {
-    config      = {
-    "bucket_name" = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
-    "type"        = "string",
-    "versioning"  = true,
-    "objects"       = [],
+    config = {
+      "bucket_name" = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
+      "type"        = "string",
+      "versioning"  = true,
+      "objects"     = [],
     }
   }
 
@@ -104,12 +104,12 @@ run "versioning_enabled" {
 run "retention_policy_governance" {
 
   variables {
-    config      = {
-    "bucket_name" = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
-    "type"        = "string",
-    "versioning"  = true,
-    "retention_policy" = {"mode" = "GOVERNANCE", "days" = 1},
-    "objects"       = [],
+    config = {
+      "bucket_name"      = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
+      "type"             = "string",
+      "versioning"       = true,
+      "retention_policy" = { "mode" = "GOVERNANCE", "days" = 1 },
+      "objects"          = [],
     }
   }
 
@@ -130,12 +130,12 @@ run "retention_policy_governance" {
 run "retention_policy_compliance" {
 
   variables {
-    config      = {
-    "bucket_name" = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
-    "type"        = "string",
-    "versioning"  = true,
-    "retention_policy" = {"mode" = "COMPLIANCE", "years" = 1},
-    "objects"       = [],
+    config = {
+      "bucket_name"      = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3",
+      "type"             = "string",
+      "versioning"       = true,
+      "retention_policy" = { "mode" = "COMPLIANCE", "years" = 1 },
+      "objects"          = [],
     }
   }
 
