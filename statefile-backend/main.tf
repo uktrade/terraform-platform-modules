@@ -9,11 +9,12 @@ terraform {
 
 resource "aws_s3_bucket" "terraform-state" {
   bucket = "terraform-platform-state-${var.aws_account_name}"
-  tags = {
-    Name       = var.aws_account_name
-    managed-by = "Terraform"
-    purpose = "Terraform statefile storage - DBT Platform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      purpose = "Terraform statefile storage - DBT Platform"
+    }
+  )
 }
 
 resource "aws_s3_bucket_acl" "terraform-state-acl" {
@@ -47,11 +48,12 @@ resource "aws_s3_bucket_public_access_block" "block" {
 
 resource "aws_kms_key" "terraform-bucket-key" {
   description = "This key is used to encrypt bucket objects"
-  tags = {
-    Name       = var.aws_account_name
-    managed-by = "Terraform"
-    purpose = "Terraform statefile kms key - DBT Platform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      purpose = "Terraform statefile kms key - DBT Platform"
+    }
+  )
 }
 
 resource "aws_kms_alias" "key-alias" {
@@ -80,9 +82,10 @@ resource "aws_dynamodb_table" "terraform-state" {
     name = "LockID"
     type = "S"
   }
-  tags = {
-    Name       = var.aws_account_name
-    managed-by = "Terraform"
-    purpose = "Terraform statefile lock - DBT Platform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      purpose = "Terraform statefile lock - DBT Platform"
+    }
+  )
 }
