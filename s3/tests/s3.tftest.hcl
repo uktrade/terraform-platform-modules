@@ -4,26 +4,6 @@ run "setup_tests" {
   }
 }
 
-
-# run "unit_test" {
-#   command = plan
-
-#   variables {
-#     vpc_name    = true
-#     application = true
-#     environment = true
-#     config = {
-#       "params" = {"bucket_name" = "${run.setup_tests.bucket_prefix}-terraform-test-module-s3"}
-#     }
-#   }
-#   expect_failures = [
-#     var.vpc_name,
-#     var.application,
-#     var.environment,
-#   ]
-# }
-
-
 run "e2e_test" {
 
   command = apply
