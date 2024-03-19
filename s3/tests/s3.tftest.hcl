@@ -11,6 +11,23 @@ variables {
   }
 }
 
+
+# run "no_retention_policy" {
+#   command = plan
+
+#   variables {
+#     config = {
+#       "bucket_name" = "dbt-terraform-test-s3-module",
+#       "type"        = "string",
+#       "versioning"  = true,
+#       "objects"     = [],
+#     }
+#   }
+
+#   ### Test aws_s3_bucket_object_lock_configuration resource ###
+#   expect_failures = [aws_s3_bucket_object_lock_configuration.object-lock-config[0].rule]
+# }
+
 run "e2e_test" {
   command = apply
 
@@ -64,6 +81,14 @@ run "e2e_test" {
     condition     = [for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule : true if[for el2 in el.apply_server_side_encryption_by_default : true if el2.sse_algorithm == "aws:kms"][0] == true][0] == true
     error_message = "Invalid s3 KMS key tags"
   }
+
+  ### Test aws_s3_bucket_object_lock_configuration resource ###
+  # assert {
+  #   condition     = aws_s3_bucket_object_lock_configuration.object-lock-config[0].rule == false
+  #   error_message = "Invalid s3 bucket object lock configuration"
+  # }
+  # expect_failures = [aws_s3_bucket_object_lock_configuration.object-lock-config[0].rule]
+
 }
 
 run "versioning_enabled" {
@@ -137,3 +162,23 @@ run "retention_policy_compliance" {
     error_message = "Invalid s3 bucket object lock configuration"
   }
 }
+
+run "no_retention_policy" {
+  command = apply
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-module",
+      "type"        = "string",
+      "versioning"  = true,
+      "objects"     = [],
+    }
+  }
+
+  ### Test aws_s3_bucket_object_lock_configuration resource ###
+  assert {
+    condition     = aws_s3_bucket_object_lock_configuration.object-lock-config == []
+    error_message = "Invalid s3 bucket object lock configuration"
+  }
+}
+
