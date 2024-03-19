@@ -1,6 +1,6 @@
 locals {
   tags = {
-    Name       = var.aws_account_name
+    Name       = "terraform-statefile-${var.aws_account_name}"
     managed-by = "Terraform"
   }
 }
