@@ -1,6 +1,6 @@
 variable "application" {
   type = string
-} 
+}
 
 variable "environment" {
   type = string
@@ -12,23 +12,23 @@ variable "name" {
 
 variable "vpc_name" {
   type = string
-} 
+}
 
 variable "config" {
-  type     = object({
+  type = object({
     bucket_name = string
-    type = string
+    type        = string
     retention_policy = optional(object({
-      mode = string
-      days = optional(number)
+      mode  = string
+      days  = optional(number)
       years = optional(number)
     }))
     versioning = optional(bool)
     # NOTE: readonly access is managed by Copilot server addon s3 policy.
-    readonly = optional(bool)  
+    readonly = optional(bool)
     objects = optional(list(object({
       body = string
-      key = string
+      key  = string
     })))
   })
 }

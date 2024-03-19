@@ -44,9 +44,9 @@ resource "aws_security_group" "opensearch-security-group" {
     ]
   }
   tags = {
-        copilot-application = var.args.application
-        copilot-environment = var.args.environment
-        managed-by = "Terraform"
+    copilot-application = var.args.application
+    copilot-environment = var.args.environment
+    managed-by          = "Terraform"
   }
 }
 
@@ -151,10 +151,10 @@ resource "aws_opensearch_domain" "this" {
 }
 CONFIG
 
-tags = {
-        copilot-application = var.args.application
-        copilot-environment = var.args.environment
-        managed-by = "Terraform"
+  tags = {
+    copilot-application = var.args.application
+    copilot-environment = var.args.environment
+    managed-by          = "Terraform"
   }
 }
 
@@ -166,23 +166,23 @@ resource "aws_ssm_parameter" "this-master-user" {
   value       = "https://${local.master_user}:${urlencode(random_password.password.result)}@${aws_opensearch_domain.this.endpoint}"
 
   tags = {
-        copilot-application = var.args.application
-        copilot-environment = var.args.environment
-        managed-by = "Terraform"
+    copilot-application = var.args.application
+    copilot-environment = var.args.environment
+    managed-by          = "Terraform"
   }
 }
 
 data "aws_vpc" "vpc" {
   #depends_on = [module.platform-vpc]
   filter {
-      name = "tag:Name"
-      values = [var.args.space]
+    name   = "tag:Name"
+    values = [var.args.space]
   }
 }
 
 data "aws_subnets" "private-subnets" {
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["${var.args.space}-private-*"]
   }
 }
