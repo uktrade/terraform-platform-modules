@@ -55,7 +55,8 @@ resource "aws_security_group" "alb-http" {
 
 resource "aws_vpc_security_group_ingress_rule" "allow-http-ingress" {
   security_group_id = aws_security_group.alb-http.id
-  cidr_ipv4         = data.aws_vpc.vpc.cidr_block
+  description       = "Allow from anyone on port 80"
+  cidr_ipv4         = "0.0.0.0/0"
   from_port         = 80
   ip_protocol       = "tcp"
   to_port           = 80
@@ -84,7 +85,8 @@ resource "aws_security_group" "alb-https" {
 
 resource "aws_vpc_security_group_ingress_rule" "allow-https-ingress" {
   security_group_id = aws_security_group.alb-https.id
-  cidr_ipv4         = data.aws_vpc.vpc.cidr_block
+  description       = "Allow from anyone on port 443"
+  cidr_ipv4         = "0.0.0.0/0"
   from_port         = 443
   ip_protocol       = "tcp"
   to_port           = 443
