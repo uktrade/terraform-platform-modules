@@ -1,4 +1,4 @@
 variable "args" {
-  default     = null
-  type        = any
+  default = null
+  type    = any
 }
