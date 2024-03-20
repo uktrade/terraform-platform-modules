@@ -13,6 +13,10 @@ data "aws_subnets" "public-subnets" {
 }
 
 resource "aws_lb" "this" {
+  # depends_on = [
+  #   aws_security_group.alb-http,
+  #   aws_security_group.alb-https
+  # ]
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
   subnets            = tolist(data.aws_subnets.public-subnets.ids)
