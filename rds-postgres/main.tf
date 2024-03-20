@@ -4,7 +4,7 @@ module "security-group" {
 
   name        = "${var.args.application}-${var.args.environment}-rds-postgres-sg"
   description = "Complete PostgreSQL example security group"
-  vpc_id = data.aws_vpc.vpc.id
+  vpc_id      = data.aws_vpc.vpc.id
 
   # ingress
   ingress_with_cidr_blocks = [
@@ -18,10 +18,10 @@ module "security-group" {
   ]
 
   tags = {
-        copilot-application = var.args.application
-        copilot-environment = var.args.environment
-        managed-by = "Terraform"
-    }
+    copilot-application = var.args.application
+    copilot-environment = var.args.environment
+    managed-by          = "Terraform"
+  }
 }
 
 
@@ -49,14 +49,14 @@ module "this" {
 
   # setting manage_master_user_password_rotation to false after it
   # has been set to true previously disables automatic rotation
-  manage_master_user_password_rotation              = false
+  manage_master_user_password_rotation = false
   # master_user_password_rotate_immediately           = false
   # master_user_password_rotation_schedule_expression = "rate(15 days)"
 
   multi_az               = false
   create_db_subnet_group = true
   vpc_security_group_ids = [module.security-group.security_group_id]
-  subnet_ids = data.aws_subnets.private-subnets.ids
+  subnet_ids             = data.aws_subnets.private-subnets.ids
 
   maintenance_window              = "Mon:00:00-Mon:03:00"
   backup_window                   = "03:00-06:00"
@@ -87,10 +87,10 @@ module "this" {
   ]
 
   tags = {
-        copilot-application = var.args.application
-        copilot-environment = var.args.environment
-        managed-by = "Terraform"
-    }
+    copilot-application = var.args.application
+    copilot-environment = var.args.environment
+    managed-by          = "Terraform"
+  }
 
   db_option_group_tags = {
     "Sensitive" = "low"
@@ -103,14 +103,14 @@ module "this" {
 data "aws_vpc" "vpc" {
   #depends_on = [module.platform-vpc]
   filter {
-      name = "tag:Name"
-      values = [var.args.space]
+    name   = "tag:Name"
+    values = [var.args.space]
   }
 }
 
 data "aws_subnets" "private-subnets" {
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["${var.args.space}-private-*"]
   }
 }
@@ -124,19 +124,19 @@ data "aws_secretsmanager_secret_version" "current" {
 }
 
 resource "aws_ssm_parameter" "connection-string" {
-  name  = "/copilot/${var.args.application}/${var.args.environment}/secrets/${upper(replace("${var.args.name}-rds-postgres", "-", "_"))}"
-  type  = "SecureString"
+  name = "/copilot/${var.args.application}/${var.args.environment}/secrets/${upper(replace("${var.args.name}-rds-postgres", "-", "_"))}"
+  type = "SecureString"
   value = jsonencode({
-    "username"=jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current.secret_string)).username,
-    "password"=urlencode(jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current.secret_string)).password),
-    "engine"="postgres",
-    "port"=module.this.db_instance_port,
-    "dbname"=module.this.db_instance_name,
-    "host"=split(":", module.this.db_instance_endpoint)[0]
+    "username" = jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current.secret_string)).username,
+    "password" = urlencode(jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current.secret_string)).password),
+    "engine"   = "postgres",
+    "port"     = module.this.db_instance_port,
+    "dbname"   = module.this.db_instance_name,
+    "host"     = split(":", module.this.db_instance_endpoint)[0]
   })
   tags = {
-        copilot-application = var.args.application
-        copilot-environment = var.args.environment
-        managed-by = "Terraform"
-    }
+    copilot-application = var.args.application
+    copilot-environment = var.args.environment
+    managed-by          = "Terraform"
+  }
 }
