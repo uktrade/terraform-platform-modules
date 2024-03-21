@@ -1,19 +1,3 @@
-locals {
-  protocols = {
-    http = {
-      port            = 80,
-      ssl_policy      = null
-      certificate_arn = null
-    },
-    https = {
-      port            = 443,
-      ssl_policy      = "ELBSecurityPolicy-2016-08"
-      # Todo: Get the certificate ARN dynamically
-      certificate_arn = "arn:aws:acm:eu-west-2:852676506468:certificate/fdbdea9a-5245-44ac-b22b-92ad8bacbca1"
-    }
-  }
-}
-
 data "aws_vpc" "vpc" {
   filter {
     name   = "tag:Name"
@@ -25,6 +9,26 @@ data "aws_subnets" "public-subnets" {
   filter {
     name   = "tag:Name"
     values = ["${var.space}-public-*"]
+  }
+}
+
+# Todo: This should probably come from outside the module, Should we just pass the domain in from demodjango.tf?
+data "aws_acm_certificate" "certificate" {
+  domain = "v2.demodjango.${var.environment}.uktrade.digital"
+}
+
+locals {
+  protocols = {
+    http = {
+      port            = 80,
+      ssl_policy      = null
+      certificate_arn = null
+    },
+    https = {
+      port            = 443,
+      ssl_policy      = "ELBSecurityPolicy-2016-08"
+      certificate_arn = "${data.aws_acm_certificate.certificate.arn}"
+    }
   }
 }
 
