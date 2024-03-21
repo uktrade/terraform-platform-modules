@@ -35,31 +35,6 @@ resource "aws_lb_listener" "http-listener" {
   }
 }
 
-resource "aws_lb_target_group" "http-target-group" {
-  name        = "${var.application}-${var.environment}-http"
-  port        = 80
-  protocol    = "HTTP"
-  target_type = "ip"
-  vpc_id      = data.aws_vpc.vpc.id
-  tags        = local.tags
-}
-
-resource "aws_security_group" "alb-http" {
-  name   = "${var.application}-${var.environment}-alb-http"
-  vpc_id = data.aws_vpc.vpc.id
-  tags   = local.tags
-}
-
-resource "aws_vpc_security_group_ingress_rule" "allow-http-ingress" {
-  security_group_id = aws_security_group.alb-http.id
-  description       = "Allow from anyone on port 80"
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 80
-  ip_protocol       = "tcp"
-  to_port           = 80
-  tags              = local.tags
-}
-
 resource "aws_lb_listener" "https-listener" {
   load_balancer_arn = aws_lb.this.arn
   port              = "443"
@@ -74,10 +49,26 @@ resource "aws_lb_listener" "https-listener" {
   }
 }
 
+resource "aws_security_group" "alb-http" {
+  name   = "${var.application}-${var.environment}-alb-http"
+  vpc_id = data.aws_vpc.vpc.id
+  tags   = local.tags
+}
+
 resource "aws_security_group" "alb-https" {
   name   = "${var.application}-${var.environment}-alb-https"
   vpc_id = data.aws_vpc.vpc.id
   tags   = local.tags
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow-http-ingress" {
+  security_group_id = aws_security_group.alb-http.id
+  description       = "Allow from anyone on port 80"
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 80
+  ip_protocol       = "tcp"
+  to_port           = 80
+  tags              = local.tags
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow-https-ingress" {
@@ -89,3 +80,34 @@ resource "aws_vpc_security_group_ingress_rule" "allow-https-ingress" {
   to_port           = 443
   tags              = local.tags
 }
+
+resource "aws_vpc_security_group_egress_rule" "allow-http-egress" {
+  security_group_id = aws_security_group.alb-http.id
+  description       = "Allow traffic out on port 80"
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 80
+  ip_protocol       = "tcp"
+  to_port           = 80
+  tags              = local.tags
+}
+
+resource "aws_vpc_security_group_egress_rule" "allow-https-egress" {
+  security_group_id = aws_security_group.alb-https.id
+  description       = "Allow traffic out on port 443"
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  ip_protocol       = "tcp"
+  to_port           = 443
+  tags              = local.tags
+}
+
+resource "aws_lb_target_group" "http-target-group" {
+  name        = "${var.application}-${var.environment}-http"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = data.aws_vpc.vpc.id
+  tags        = local.tags
+}
+
+# Todo: Enable logging
