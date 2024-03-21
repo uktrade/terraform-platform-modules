@@ -16,7 +16,7 @@ terraform {
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = "sandbox-jamesm"
+    Name = "sandbox-opensearch"
   }
 }
 resource "aws_subnet" "primary" {
@@ -24,7 +24,7 @@ resource "aws_subnet" "primary" {
   cidr_block = "10.0.1.0/24"
   availability_zone = "eu-west-2a"
   tags = {
-    Name = "sandbox-jamesm-private-primary"
+    Name = "sandbox-opensearch-private-primary"
   }
 }
 
@@ -33,6 +33,6 @@ resource "aws_subnet" "secondary" {
   cidr_block = "10.0.2.0/24"
   availability_zone = "eu-west-2b"
   tags = {
-    Name = "sandbox-jamesm-private-secondary"
+    Name = "sandbox-opensearch-private-secondary"
   }
 }
