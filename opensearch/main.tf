@@ -1,10 +1,6 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
-# data "aws_vpc" "selected" {
-#   id = var.vpc_id
-# }
-
 # resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
 #   for_each = toset(var.args.environment)
 
@@ -15,15 +11,12 @@ data "aws_region" "current" {}
 
 # resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
 #   for_each = toset(var.args.environment)
-
-
 #   name              = "/aws/opensearch/${local.domain}/search-slow"
 #   retention_in_days = 14
 # }
 
 # resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
 #   for_each = toset(var.args.environment)
-
 #   name              = "/aws/opensearch/${local.domain}/es-application"
 #   retention_in_days = 14
 # }
@@ -61,12 +54,12 @@ resource "aws_opensearch_domain" "this" {
   engine_version = "OpenSearch_${var.config.engine}"
 
   cluster_config {
-    dedicated_master_count   = 1 # TODO
-    dedicated_master_type    = local.plans[var.config.plan].instance # TODO
+    dedicated_master_count   = 1
+    dedicated_master_type    = local.plans[var.config.plan].master ? local.plans[var.config.plan].instance : null
     dedicated_master_enabled = local.plans[var.config.plan].master
     instance_type            = local.plans[var.config.plan].instance
     instance_count           = local.plans[var.config.plan].instances
-    zone_awareness_enabled   = false # TODO
+    zone_awareness_enabled   = false
     # zone_awareness_config {
     #   availability_zone_count = var.zone_awareness_enabled ? length(tolist(data.aws_subnets.private-subnets.ids)) : null
     # }
@@ -112,6 +105,7 @@ resource "aws_opensearch_domain" "this" {
 
   auto_tune_options {
     desired_state = startswith(local.plans[var.config.plan].instance, "t2") || startswith(local.plans[var.config.plan].instance, "t3") ? "DISABLED" : "ENABLED"
+    rollback_on_disable = "DEFAULT_ROLLBACK"
   }
   # log_publishing_options {
   #   cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.arn
@@ -162,7 +156,7 @@ tags = {
 }
 
 resource "aws_ssm_parameter" "this-master-user" {
-  # This will be a problem if you have > 1 openswearch instance per environment
+  # This will be a problem if you have > 1 opensearch instance per environment
   name        = "/copilot/${var.config.name}/${var.environment}/secrets/${upper(replace("${var.config.name}-opensearch", "-", "_"))}"
   description = "opensearch_password"
   type        = "SecureString"
