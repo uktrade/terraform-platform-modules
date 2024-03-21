@@ -6,9 +6,9 @@ provider "aws" {
 
 variables {
   args = {
-    application = "opensearch-test-jamesm"
+    application = "opensearch-test"
     environment = "sandbox"
-    space = "sandbox-jamesm"
+    space = "sandbox-opensearch"
     name = "test"
   }
   ebs_enabled              = true
@@ -19,7 +19,9 @@ variables {
   security_options_enabled = true
   throughput               = 250
   volume_type              = "gp3"
-  allowed_instance_types   = ["m6.large.search", "t3.small.search"]
+  
+  # Locals aren't supported in tests right now. Below variables are only for these tests.
+  allowed_instance_types   = ["m6.large.search", "t3.small.search"] 
 }
 
 run "setup_tests" {
