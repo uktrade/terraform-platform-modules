@@ -13,3 +13,7 @@ module "backing-services-staging" {
   environment = "staging"
   vpc_name    = "sandbox-lyndon"
 }
+
+output "test" {
+  value = module.backing-services-staging.test
+}

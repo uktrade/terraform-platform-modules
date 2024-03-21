@@ -24,6 +24,12 @@ module "rds-postgres" {
     config = each.value
 }
 
+### DEBUG
+
+output "test" {
+  value = module.rds-postgres["dw-postgres"].test
+}
+
 # module "elasticache-redis" {
 #     source   = "../elasticache-redis"
 

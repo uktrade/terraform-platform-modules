@@ -6,7 +6,10 @@ locals {
 
   name = "${var.application}-${var.environment}-${var.name}"
 
-  version = coalesce(var.config.version, 14)
+  version = var.config.version
+  family = local.version != null ? format("postgres%d", local.version): null
+  major_version = local.version != null ? tonumber(format("%d", local.version)) : null
+
   deletion_protection = coalesce(var.config.deletion_protection, false)
   multi_az = coalesce(var.config.multi_az, false)
 # iops = optional(number)
