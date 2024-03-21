@@ -12,10 +12,12 @@ terraform {
 resource "aws_vpc" "vpc" {
   cidr_block           = "${var.arg_config.cidr}${local.vpc_cidr_mask}"
   enable_dns_hostnames = true
-  tags = {
-    Name       = var.arg_name
-    managed-by = "Terraform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name = var.arg_name
+    }
+  )
 }
 
 
@@ -26,11 +28,13 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = "${var.arg_config.cidr}.${each.value}${local.subnet_cidr_mask}"
   availability_zone = "${local.region}${each.key}"
-  tags = {
-    Name        = "${var.arg_name}-private-${local.region}${each.key}"
-    subnet_type = "private"
-    managed-by  = "Terraform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name        = "${var.arg_name}-private-${local.region}${each.key}"
+      subnet_type = "private"
+    }
+  )
 }
 
 
@@ -40,33 +44,39 @@ resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = "${var.arg_config.cidr}.${each.value}${local.subnet_cidr_mask}"
   availability_zone = "${local.region}${each.key}"
-  tags = {
-    Name        = "${var.arg_name}-public-${local.region}${each.key}"
-    subnet_type = "public"
-    managed-by  = "Terraform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name        = "${var.arg_name}-public-${local.region}${each.key}"
+      subnet_type = "public"
+    }
+  )
 }
 
 
 ## Public - Internet Gateway
 resource "aws_internet_gateway" "public" {
   vpc_id = aws_vpc.vpc.id
-  tags = {
-    Name       = "${var.arg_name}-ig-public"
-    managed-by = "Terraform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.arg_name}-ig-public"
+    }
+  )
 }
 
 # Public Routing
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.vpc.id
-  tags = {
-    Name       = "${var.arg_name}-rt-public"
-    managed-by = "Terraform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.arg_name}-rt-public"
+    }
+  )
 }
 
-resource "aws_route" "public_route" {
+resource "aws_route" "public-route" {
   route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.public.id
@@ -83,33 +93,39 @@ resource "aws_route_table_association" "public" {
 resource "aws_eip" "public" {
   for_each = toset(var.arg_config.nat_gateways)
   domain   = "vpc"
-  tags = {
-    Name       = "${var.arg_name}nat-eip-${each.key}"
-    managed-by = "Terraform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.arg_name}nat-eip-${each.key}"
+    }
+  )
 }
 
 resource "aws_nat_gateway" "public" {
   for_each      = toset(var.arg_config.nat_gateways)
   allocation_id = aws_eip.public[each.key].id
   subnet_id     = aws_subnet.public[each.key].id
-  tags = {
-    Name       = "${var.arg_name}-nat-gateway-${each.key}"
-    managed-by = "Terraform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.arg_name}-nat-gateway-${each.key}"
+    }
+  )
 }
 
 
 # Private Routing
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.vpc.id
-  tags = {
-    Name       = "${var.arg_name}-rt-private"
-    managed-by = "Terraform"
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.arg_name}-rt-private"
+    }
+  )
 }
 
-resource "aws_route" "private_route" {
+resource "aws_route" "private-route" {
   for_each               = toset(var.arg_config.nat_gateways)
   route_table_id         = aws_route_table.private.id
   destination_cidr_block = "0.0.0.0/0"
@@ -141,5 +157,148 @@ resource "aws_default_network_acl" "deafult-acl" {
     cidr_block = "0.0.0.0/0"
     from_port  = 0
     to_port    = 0
+  }
+  lifecycle {
+    ignore_changes = [subnet_ids]
+  }
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.arg_name}-base-sg"
+    }
+  )
+}
+
+
+# Base VPC security group
+resource "aws_security_group" "vpc-core-sg" {
+  name        = "${var.arg_name}-base-sg"
+  description = "Base security group for VPC"
+  vpc_id      = aws_vpc.vpc.id
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.arg_name}-base-sg"
+    }
+  )
+}
+
+resource "aws_security_group_rule" "vpc-core-ingress-all" {
+  type                     = "ingress"
+  description              = "Ingress from other containers in the same security group"
+  from_port                = -1
+  to_port                  = -1
+  protocol                 = -1
+  source_security_group_id = aws_security_group.vpc-core-sg.id
+  security_group_id        = aws_security_group.vpc-core-sg.id
+}
+
+resource "aws_security_group_rule" "vpc-core-egress-all" {
+  type              = "egress"
+  description       = "Egress for all"
+  from_port         = -1
+  to_port           = -1
+  protocol          = -1
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.vpc-core-sg.id
+}
+
+
+# VPC Enpoint required for RDS secrets manager
+resource "aws_vpc_endpoint" "rds-vpc-endpoint" {
+  vpc_id              = aws_vpc.vpc.id
+  service_name        = "com.amazonaws.eu-west-2.secretsmanager"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
+  subnet_ids          = data.aws_subnets.private-subnets.ids
+  security_group_ids = [
+    aws_security_group.rds-vpc-endpoint-sg.id,
+    aws_security_group.vpc-core-sg.id
+  ]
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.arg_name}-rds-endpoint"
+    }
+  )
+}
+# Security groups for RDS VPC endpoint
+resource "aws_security_group" "rds-vpc-endpoint-sg" {
+  name        = "${var.arg_name}-rds-endpoint-sg"
+  description = "A security group to access the DB cluster"
+  vpc_id      = aws_vpc.vpc.id
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.arg_name}-rds-endpoint-sg"
+    }
+  )
+}
+
+resource "aws_security_group_rule" "rds-db-ingress-fargate" {
+  type                     = "ingress"
+  description              = "Ingress from Fargate containers"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.vpc-core-sg.id
+  security_group_id        = aws_security_group.rds-vpc-endpoint-sg.id
+}
+
+resource "aws_security_group_rule" "rds-db-ingress-lambda-to-db" {
+  type                     = "ingress"
+  description              = "Ingress from Lambda Functions to DB"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.rds-vpc-endpoint-sg.id
+  security_group_id        = aws_security_group.rds-vpc-endpoint-sg.id
+}
+
+resource "aws_security_group_rule" "rds-db-ingress-lambda-to-sm" {
+  type                     = "ingress"
+  description              = "Ingress from Lambda Functions to Secrets Manager"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.rds-vpc-endpoint-sg.id
+  security_group_id        = aws_security_group.rds-vpc-endpoint-sg.id
+}
+
+resource "aws_security_group_rule" "rds-db-egress-db-to-lambda" {
+  type                     = "egress"
+  description              = "Egress from DB to Lambda Functions"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.rds-vpc-endpoint-sg.id
+  security_group_id        = aws_security_group.rds-vpc-endpoint-sg.id
+}
+
+resource "aws_security_group_rule" "rds-db-egress-sm-to-lambda" {
+  type                     = "egress"
+  description              = "Egress from Secrets Manager to Lambda Functions"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.rds-vpc-endpoint-sg.id
+  security_group_id        = aws_security_group.rds-vpc-endpoint-sg.id
+}
+
+resource "aws_security_group_rule" "rds-db-egress-https" {
+  type              = "egress"
+  description       = "Egress for HTTPS"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.rds-vpc-endpoint-sg.id
+}
+
+data "aws_subnets" "private-subnets" {
+  depends_on = [aws_subnet.private]
+  filter {
+    name   = "tag:Name"
+    values = ["${var.arg_name}-private-*"]
   }
 }
