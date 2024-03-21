@@ -13,10 +13,6 @@ data "aws_subnets" "public-subnets" {
 }
 
 resource "aws_lb" "this" {
-  # depends_on = [
-  #   aws_security_group.alb-http,
-  #   aws_security_group.alb-https
-  # ]
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
   subnets            = tolist(data.aws_subnets.public-subnets.ids)
@@ -40,11 +36,12 @@ resource "aws_lb_listener" "http-listener" {
 }
 
 resource "aws_lb_target_group" "http-target-group" {
-  name     = "${var.application}-${var.environment}-http"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = data.aws_vpc.vpc.id
-  tags     = local.tags
+  name        = "${var.application}-${var.environment}-http"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = data.aws_vpc.vpc.id
+  tags        = local.tags
 }
 
 resource "aws_security_group" "alb-http" {
