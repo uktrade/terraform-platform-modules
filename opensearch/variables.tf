@@ -42,6 +42,6 @@ variable "engine_version" {
 }
 
 variable "args" {
-  default     = null
-  type        = any
+  default = null
+  type    = any
 }
