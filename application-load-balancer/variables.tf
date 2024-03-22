@@ -10,6 +10,6 @@ variable "environment" {
   type = string
 }
 
-variable "space" {
+variable "vpc_name" {
   type = string
 }

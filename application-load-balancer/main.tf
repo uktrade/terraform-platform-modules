@@ -1,14 +1,14 @@
 data "aws_vpc" "vpc" {
   filter {
     name   = "tag:Name"
-    values = [var.space]
+    values = [var.vpc_name]
   }
 }
 
 data "aws_subnets" "public-subnets" {
   filter {
     name   = "tag:Name"
-    values = ["${var.space}-public-*"]
+    values = ["${var.vpc_name}-public-*"]
   }
 }
 
