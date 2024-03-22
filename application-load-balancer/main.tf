@@ -82,9 +82,9 @@ resource "aws_vpc_security_group_egress_rule" "alb-allow-egress" {
   security_group_id = aws_security_group.alb-security-group["${each.key}"].id
   description       = "Allow traffic out on port ${each.value.port}"
   cidr_ipv4         = "0.0.0.0/0"
-  from_port         = each.value.port
   ip_protocol       = "tcp"
-  to_port           = each.value.port
+  from_port         = 0
+  to_port           = 65535
   tags              = local.tags
 }
 
