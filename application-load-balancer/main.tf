@@ -20,16 +20,20 @@ data "aws_acm_certificate" "certificate" {
 locals {
   protocols = {
     http = {
-      port            = 80,
+      port            = 80
       ssl_policy      = null
       certificate_arn = null
-    },
+    }
     https = {
-      port            = 443,
+      port            = 443
       ssl_policy      = "ELBSecurityPolicy-2016-08"
       certificate_arn = "${data.aws_acm_certificate.certificate.arn}"
     }
   }
+  log_types = [
+    "access",
+    "connection"
+  ]
 }
 
 resource "aws_lb" "this" {
@@ -40,12 +44,21 @@ resource "aws_lb" "this" {
     aws_security_group.alb-security-group["http"].id,
     aws_security_group.alb-security-group["https"].id
   ]
+  access_logs {
+    bucket  = aws_s3_bucket.alb-log-bucket.id
+    prefix  = "access"
+    enabled = true
+  }
+  connection_logs {
+    bucket  = aws_s3_bucket.alb-log-bucket.id
+    prefix  = "connection"
+    enabled = true
+  }
   tags = local.tags
-  # Todo: Enable logging
 }
 
 resource "aws_lb_listener" "alb-listener" {
-  for_each = local.protocols
+  for_each          = local.protocols
   load_balancer_arn = aws_lb.this.arn
   port              = each.value.port
   protocol          = upper("${each.key}")
@@ -67,7 +80,7 @@ resource "aws_security_group" "alb-security-group" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb-allow-ingress" {
-  for_each = local.protocols
+  for_each          = local.protocols
   security_group_id = aws_security_group.alb-security-group["${each.key}"].id
   description       = "Allow from anyone on port ${each.value.port}"
   cidr_ipv4         = "0.0.0.0/0"
@@ -78,7 +91,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb-allow-ingress" {
 }
 
 resource "aws_vpc_security_group_egress_rule" "alb-allow-egress" {
-  for_each = local.protocols
+  for_each          = local.protocols
   security_group_id = aws_security_group.alb-security-group["${each.key}"].id
   description       = "Allow traffic out on port ${each.value.port}"
   cidr_ipv4         = "0.0.0.0/0"
@@ -95,4 +108,32 @@ resource "aws_lb_target_group" "http-target-group" {
   target_type = "ip"
   vpc_id      = data.aws_vpc.vpc.id
   tags        = local.tags
+}
+
+resource "aws_s3_bucket" "alb-log-bucket" {
+  bucket = "${var.application}-${var.environment}-alb-logs"
+  tags   = local.tags
+}
+
+resource "aws_s3_bucket_policy" "alb-log-bucket-policy" {
+  bucket = aws_s3_bucket.alb-log-bucket.id
+  policy = data.aws_iam_policy_document.alb-log-bucket-policy-document.json
+}
+
+data "aws_elb_service_account" "main" {}
+
+data "aws_iam_policy_document" "alb-log-bucket-policy-document" {
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_elb_service_account.main.arn]
+    }
+    actions = [
+      "s3:PutObject"
+    ]
+    resources = [
+      aws_s3_bucket.alb-log-bucket.arn,
+      "${aws_s3_bucket.alb-log-bucket.arn}/*"
+    ]
+  }
 }
