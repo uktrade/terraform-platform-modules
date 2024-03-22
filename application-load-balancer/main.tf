@@ -65,7 +65,6 @@ resource "aws_lb_listener" "alb-listener" {
   ssl_policy        = "${each.value.ssl_policy}"
   certificate_arn   = "${each.value.certificate_arn}"
   tags              = local.tags
-
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.http-target-group.arn
