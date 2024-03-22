@@ -76,28 +76,20 @@ resource "aws_security_group" "alb-security-group" {
   name     = "${var.application}-${var.environment}-alb-${each.key}"
   vpc_id   = data.aws_vpc.vpc.id
   tags     = local.tags
-}
-
-resource "aws_vpc_security_group_ingress_rule" "alb-allow-ingress" {
-  for_each          = local.protocols
-  security_group_id = aws_security_group.alb-security-group["${each.key}"].id
-  description       = "Allow from anyone on port ${each.value.port}"
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = each.value.port
-  ip_protocol       = "tcp"
-  to_port           = each.value.port
-  tags              = local.tags
-}
-
-resource "aws_vpc_security_group_egress_rule" "alb-allow-egress" {
-  for_each          = local.protocols
-  security_group_id = aws_security_group.alb-security-group["${each.key}"].id
-  description       = "Allow traffic out on port ${each.value.port}"
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "tcp"
-  from_port         = 0
-  to_port           = 65535
-  tags              = local.tags
+  ingress {
+    description       = "Allow from anyone on port ${each.value.port}"
+    from_port         = each.value.port
+    to_port           = each.value.port
+    protocol          = "tcp"
+    cidr_blocks       = ["0.0.0.0/0"]
+  }
+  egress {
+    description       = "Allow traffic out on port ${each.value.port}"
+    protocol          = "tcp"
+    from_port         = 0
+    to_port           = 65535
+    cidr_blocks       = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_lb_target_group" "http-target-group" {
