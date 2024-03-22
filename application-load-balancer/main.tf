@@ -44,6 +44,7 @@ resource "aws_lb" "this" {
     aws_security_group.alb-security-group["http"].id,
     aws_security_group.alb-security-group["https"].id
   ]
+  # Todo: DBTP-831 Get ALB logs into central log bucket in the Log Archive account
   access_logs {
     bucket  = aws_s3_bucket.alb-log-bucket.id
     prefix  = "access"
