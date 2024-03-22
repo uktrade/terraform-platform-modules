@@ -1,18 +1,18 @@
 data "aws_vpc" "vpc" {
   filter {
-      name = "tag:Name"
-      values = [var.vpc_name]
+    name   = "tag:Name"
+    values = [var.vpc_name]
   }
 }
 
 data "aws_subnets" "private-subnets" {
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["${var.vpc_name}-private*"]
   }
 }
 
-resource "aws_security_group" "security-group" {
+resource "aws_security_group" "default" {
   name        = local.name
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow access from inside the VPC"
@@ -27,37 +27,70 @@ resource "aws_security_group" "security-group" {
       data.aws_vpc.vpc.cidr_block,
     ]
   }
+
+  ingress {
+    description = "Local VPC access"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+
+    cidr_blocks = [
+      data.aws_vpc.vpc.cidr_block,
+    ]
+  }
+
+  ingress {
+    description = "Ingress from Lambda Functions to DB"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+
+    self = true
+  }
+
+  ingress {
+    description = "Ingress from Lambda Functions to Secrets Manager"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+
+    self = true
+  }
+
+  egress {
+    description = "Egress from DB to Lambda Functions"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+
+    self = true
+  }
+
+  egress {
+    description = "Egress from Secrets Manager to Lambda Functions"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+
+    self = true
+  }
+
+  egress {
+    description = "Egress for HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   tags = local.tags
 }
 
-### DEBUG
+###DEBUG
 
 output "test" {
   value = data.aws_subnets.private-subnets.ids
-}  
-### RETAIN TH
-
-# data "aws_secretsmanager_secret" "secret" {
-#   arn = module.this.db_instance_master_user_secret_arn
-# }
-
-# data "aws_secretsmanager_secret_version" "current" {
-#   secret_id = data.aws_secretsmanager_secret.secret.id
-# }
-
-# resource "aws_ssm_parameter" "connection-string" {
-#   name  = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}-rds-postgres", "-", "_"))}"
-#   type  = "SecureString"
-#   value = jsonencode({
-#     "username"=jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current.secret_string)).username,
-#     "password"=urlencode(jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.current.secret_string)).password),
-#     "engine"="postgres",
-#     "port"=module.this.db_instance_port,
-#     "dbname"=module.this.db_instance_name,
-#     "host"=split(":", module.this.db_instance_endpoint)[0]
-#   })
-#   tags = local.tags
-# }
-
+}
 
 

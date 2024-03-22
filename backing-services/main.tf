@@ -27,7 +27,7 @@ module "rds-postgres" {
 ### DEBUG
 
 output "test" {
-  value = module.rds-postgres["dw-postgres"].test
+  value = local.redis
 }
 
 # module "elasticache-redis" {
