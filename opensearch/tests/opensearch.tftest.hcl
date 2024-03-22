@@ -33,7 +33,6 @@ run "setup_tests" {
 run "e2e_test" {
   command = plan
 
-  ## Test generated password
   assert {
     condition = random_password.password.length >= 32
     error_message = "Create a password at least 32 characters in length"
