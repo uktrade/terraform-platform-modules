@@ -39,7 +39,7 @@ resource "aws_lb" "this" {
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
   subnets            = tolist(data.aws_subnets.public-subnets.ids)
-  security_groups    = [
+  security_groups = [
     aws_security_group.alb-security-group["http"].id,
     aws_security_group.alb-security-group["https"].id
   ]
@@ -61,8 +61,8 @@ resource "aws_lb_listener" "alb-listener" {
   load_balancer_arn = aws_lb.this.arn
   port              = each.value.port
   protocol          = upper("${each.key}")
-  ssl_policy        = "${each.value.ssl_policy}"
-  certificate_arn   = "${each.value.certificate_arn}"
+  ssl_policy        = each.value.ssl_policy
+  certificate_arn   = each.value.certificate_arn
   tags              = local.tags
   default_action {
     type             = "forward"
