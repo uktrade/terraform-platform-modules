@@ -12,6 +12,7 @@ data "aws_subnets" "public-subnets" {
   }
 }
 
+# Todo: DBTP-830 Allow for assigning multiple domains/certificates to the application load balancer
 data "aws_acm_certificate" "certificate" {
   domain = var.domains[0]
 }
