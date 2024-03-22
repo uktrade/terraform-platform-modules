@@ -20,8 +20,11 @@ module "application-load-balancer" {
   application = "my-application"
   environment = "my-environmennt"
   vpc_name    = "my-vpc"
-  domains     = [
-    "my.domain.one",
-    "my.domain.two"
-  ]
+
+  config = {
+    domains = [
+      "my.domain.one",
+      "my.domain.two"
+    ]
+  }
 }
