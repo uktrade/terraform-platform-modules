@@ -2,14 +2,16 @@ variable "application" {
   type = string
 }
 
-variable "domains" {
-  type = list(string)
-}
-
 variable "environment" {
   type = string
 }
 
 variable "vpc_name" {
   type = string
+}
+
+variable "config" {
+  type = object({
+    domains = list(string)
+  })
 }
