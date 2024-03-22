@@ -12,9 +12,8 @@ data "aws_subnets" "public-subnets" {
   }
 }
 
-# Todo: This should probably come from outside the module, Should we just pass the domain in from demodjango.tf?
 data "aws_acm_certificate" "certificate" {
-  domain = "v2.demodjango.${var.environment}.uktrade.digital"
+  domain = var.domains[0]
 }
 
 locals {
