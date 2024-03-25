@@ -10,9 +10,13 @@ variable "vpc_name" {
   type = string
 }
 
+variable "name" {
+  type = string
+}
+
 variable "config" {
   type = object({
-    engine                     = optional(string)
+    engine                     = string
     plan                       = optional(string)
     instance                   = optional(string)
     replicas                   = optional(number)
