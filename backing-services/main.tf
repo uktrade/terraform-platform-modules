@@ -25,11 +25,15 @@ module "s3" {
 
 module "elasticache-redis" {
   source = "../elasticache-redis"
+module "elasticache-redis" {
+  source = "../elasticache-redis"
 
+  for_each = local.redis
   for_each = local.redis
 
   application = var.args.application
   environment = var.environment
+  name        = each.key
   vpc_name    = var.vpc_name
 
   config = each.value

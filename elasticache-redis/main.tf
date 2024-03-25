@@ -13,7 +13,7 @@ data "aws_subnets" "private-subnets" {
   }
 }
 
-data "aws_security_group" "base-sg" {
+data "aws_security_group" "base" {
   filter {
     name   = "tag:Name"
     values = ["${var.vpc_name}-base-sg"]
@@ -24,10 +24,10 @@ data "aws_caller_identity" "current" {}
 
 
 resource "aws_elasticache_replication_group" "redis" {
-  replication_group_id       = "${var.application}${var.environment}"
-  description                = "${var.application}-${var.environment}-redis-cluster"
+  replication_group_id       = "${var.name}${var.environment}"
+  description                = "${var.name}-${var.environment}-redis-cluster"
   engine                     = "redis"
-  engine_version             = coalesce(var.config.engine, "7.1")
+  engine_version             = var.config.engine
   node_type                  = coalesce(var.config.instance, "cache.t4g.micro")
   num_node_groups            = 1
   replicas_per_node_group    = coalesce(var.config.replicas, 1)
@@ -39,7 +39,7 @@ resource "aws_elasticache_replication_group" "redis" {
   automatic_failover_enabled = coalesce(var.config.automatic_failover_enabled, false)
   multi_az_enabled           = coalesce(var.config.multi_az_enabled, false)
   subnet_group_name          = aws_elasticache_subnet_group.es-subnet-group.name
-  security_group_ids         = [aws_security_group.redis-security-group.id]
+  security_group_ids         = [aws_security_group.redis.id]
 
   log_delivery_configuration {
     log_type         = "slow-log"
@@ -58,8 +58,8 @@ resource "aws_elasticache_replication_group" "redis" {
   tags = local.tags
 }
 
-resource "aws_security_group" "redis-security-group" {
-  name        = "${var.application}-${var.environment}-redis-security-group"
+resource "aws_security_group" "redis" {
+  name        = "${var.name}-${var.environment}-redis-security-group"
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow ingress from VPC for Redis"
 
@@ -67,7 +67,7 @@ resource "aws_security_group" "redis-security-group" {
     from_port       = 6379
     to_port         = 6379
     protocol        = "tcp"
-    security_groups = [data.aws_security_group.base-sg.id]
+    security_groups = [data.aws_security_group.base.id]
   }
   egress {
     from_port   = 0
@@ -79,7 +79,7 @@ resource "aws_security_group" "redis-security-group" {
 }
 
 resource "aws_ssm_parameter" "endpoint" {
-  name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.environment}-redis", "-", "_"))}"
+  name        = "/copilot/${var.name}/${var.environment}/secrets/${upper(replace("${var.environment}-redis", "-", "_"))}"
   description = "Redis endpoint"
   type        = "SecureString"
   value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
@@ -88,7 +88,7 @@ resource "aws_ssm_parameter" "endpoint" {
 }
 
 resource "aws_elasticache_subnet_group" "es-subnet-group" {
-  name       = "${var.application}-${var.environment}-cache-subnet"
+  name       = "${var.name}-${var.environment}-cache-subnet"
   subnet_ids = tolist(data.aws_subnets.private-subnets.ids)
 
   tags = merge(
@@ -100,19 +100,19 @@ resource "aws_elasticache_subnet_group" "es-subnet-group" {
 }
 
 resource "aws_cloudwatch_log_group" "redis_slow_log_group" {
-  name              = "/aws/elasticache/${var.application}/${var.environment}/${var.application}Redis/slow"
+  name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/slow"
   retention_in_days = 7
   tags              = local.tags
 }
 
 resource "aws_cloudwatch_log_group" "redis_engine_log_group" {
-  name              = "/aws/elasticache/${var.application}/${var.environment}/${var.application}Redis/engine"
+  name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/engine"
   retention_in_days = 7
   tags              = local.tags
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "demodjango_redis_subscription_filter_engine" {
-  name            = "${var.application}-${var.environment}-filter-engine"
+  name            = "${var.name}-${var.environment}-filter-engine"
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
   log_group_name  = aws_cloudwatch_log_group.redis_engine_log_group.name
   filter_pattern  = ""
@@ -120,7 +120,7 @@ resource "aws_cloudwatch_log_subscription_filter" "demodjango_redis_subscription
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "demodjango_redis_subscription_filter_slow" {
-  name            = "${var.application}-${var.environment}-filter-slow"
+  name            = "${var.name}-${var.environment}-filter-slow"
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
   log_group_name  = aws_cloudwatch_log_group.redis_slow_log_group.name
   filter_pattern  = ""
