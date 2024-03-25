@@ -80,7 +80,7 @@ resource "aws_security_group" "redis-security-group" {
 
 resource "aws_ssm_parameter" "endpoint" {
   name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.environment}-redis", "-", "_"))}"
-  description = "redis endpoint"
+  description = "Redis endpoint"
   type        = "SecureString"
   value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
 
