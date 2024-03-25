@@ -1,7 +1,7 @@
 locals {
   args = {
     application = "intranet"
-    services    = yamldecode(file("${path.module}/backing-services.yml"))
+    services = yamldecode(file("${path.module}/backing-services.yml"))
   }
 }
 
