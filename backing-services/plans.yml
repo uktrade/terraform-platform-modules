@@ -184,3 +184,5 @@ postgres:
 s3: {}
 
 monitoring: {}
+
+alb: {}
