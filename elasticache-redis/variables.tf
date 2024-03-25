@@ -10,6 +10,10 @@ variable "vpc_name" {
   type = string
 }
 
+variable "name" {
+  type = string
+}
+
 variable "config" {
   type = object({
     engine                     = optional(string)
