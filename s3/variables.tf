@@ -6,10 +6,6 @@ variable "environment" {
   type = string
 }
 
-variable "name" {
-  type = string
-}
-
 variable "vpc_name" {
   type = string
 }
@@ -17,7 +13,6 @@ variable "vpc_name" {
 variable "config" {
   type = object({
     bucket_name = string
-    type        = string
     versioning  = bool
     retention_policy = optional(object({
       mode  = string
