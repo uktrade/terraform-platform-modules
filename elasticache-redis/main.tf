@@ -112,17 +112,17 @@ resource "aws_cloudwatch_log_group" "redis_engine_log_group" {
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "demodjango_redis_subscription_filter_engine" {
-  name           = "${var.application}-${var.environment}-filter-engine"
-  role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
-  log_group_name = aws_cloudwatch_log_group.redis_engine_log_group.name
+  name            = "${var.application}-${var.environment}-filter-engine"
+  role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
+  log_group_name  = aws_cloudwatch_log_group.redis_engine_log_group.name
   filter_pattern  = ""
   destination_arn = local.central_log_destination_arn
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "demodjango_redis_subscription_filter_slow" {
-  name           = "${var.application}-${var.environment}-filter-slow"
-  role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
-  log_group_name = aws_cloudwatch_log_group.redis_slow_log_group.name
+  name            = "${var.application}-${var.environment}-filter-slow"
+  role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
+  log_group_name  = aws_cloudwatch_log_group.redis_slow_log_group.name
   filter_pattern  = ""
   destination_arn = local.central_log_destination_arn
 }
