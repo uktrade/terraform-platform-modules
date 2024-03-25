@@ -1,16 +1,25 @@
-# variable "vpc_cidr_blocks" {
-#   type = list(string)
-# }
+variable "application" {
+  type = string
+}
 
-# variable "subnet_group_name" {
-#   type = string
-# }
+variable "environment" {
+  type = string
+}
 
-# variable "vpc_id" {
-#   type = string
-# }
+variable "name" {
+  type = string
+}
 
-variable "args" {
-  default = null
-  type    = any
+variable "vpc_name" {
+  type = string
+}
+
+variable "config" {
+  type = object({
+    engine            = optional(string)
+    plan              = optional(string)
+    instance          = optional(string)
+    replicas          = optional(number)
+    apply_immediately = optional(bool)
+  })
 }
