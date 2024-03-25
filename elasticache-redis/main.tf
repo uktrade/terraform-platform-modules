@@ -13,7 +13,7 @@ data "aws_subnets" "private-subnets" {
   }
 }
 
-data "aws_security_group" "base-sg" {
+data "aws_security_group" "base" {
   filter {
     name   = "tag:Name"
     values = ["${var.vpc_name}-base-sg"]
@@ -39,7 +39,7 @@ resource "aws_elasticache_replication_group" "redis" {
   automatic_failover_enabled = coalesce(var.config.automatic_failover_enabled, false)
   multi_az_enabled           = coalesce(var.config.multi_az_enabled, false)
   subnet_group_name          = aws_elasticache_subnet_group.es-subnet-group.name
-  security_group_ids         = [aws_security_group.redis-security-group.id]
+  security_group_ids         = [aws_security_group.redis.id]
 
   log_delivery_configuration {
     log_type         = "slow-log"
@@ -58,7 +58,7 @@ resource "aws_elasticache_replication_group" "redis" {
   tags = local.tags
 }
 
-resource "aws_security_group" "redis-security-group" {
+resource "aws_security_group" "redis" {
   name        = "${var.name}-${var.environment}-redis-security-group"
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow ingress from VPC for Redis"
@@ -67,7 +67,7 @@ resource "aws_security_group" "redis-security-group" {
     from_port       = 6379
     to_port         = 6379
     protocol        = "tcp"
-    security_groups = [data.aws_security_group.base-sg.id]
+    security_groups = [data.aws_security_group.base.id]
   }
   egress {
     from_port   = 0
