@@ -6,7 +6,7 @@ variable "environment" {
   type = string
 }
 
-variable "name" {
+variable "vpc_name" {
   type = string
 }
 
