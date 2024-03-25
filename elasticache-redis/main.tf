@@ -59,7 +59,7 @@ resource "aws_elasticache_replication_group" "redis" {
 }
 
 resource "aws_security_group" "redis-security-group" {
-  name        = "${var.application}-${var.environment}-redis-sg"
+  name        = "${var.application}-${var.environment}-redis-security-group"
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow ingress from VPC for Redis"
 
