@@ -140,7 +140,7 @@ resource "aws_route_table_association" "private" {
 
 
 # Default ACL
-resource "aws_default_network_acl" "deafult-acl" {
+resource "aws_default_network_acl" "default-acl" {
   default_network_acl_id = aws_vpc.vpc.default_network_acl_id
   ingress {
     protocol   = -1
