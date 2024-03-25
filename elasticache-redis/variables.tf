@@ -16,7 +16,7 @@ variable "name" {
 
 variable "config" {
   type = object({
-    engine                     = optional(string)
+    engine                     = string
     plan                       = optional(string)
     instance                   = optional(string)
     replicas                   = optional(number)

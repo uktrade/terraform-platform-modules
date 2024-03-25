@@ -27,7 +27,7 @@ resource "aws_elasticache_replication_group" "redis" {
   replication_group_id       = "${var.name}${var.environment}"
   description                = "${var.name}-${var.environment}-redis-cluster"
   engine                     = "redis"
-  engine_version             = coalesce(var.config.engine, "7.1")
+  engine_version             = var.config.engine
   node_type                  = coalesce(var.config.instance, "cache.t4g.micro")
   num_node_groups            = 1
   replicas_per_node_group    = coalesce(var.config.replicas, 1)
