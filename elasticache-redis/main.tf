@@ -36,6 +36,8 @@ resource "aws_elasticache_replication_group" "redis" {
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
   apply_immediately          = coalesce(var.config.apply_immediately, false)
+  automatic_failover_enabled = coalesce(var.config.automatic_failover_enabled, false)
+  multi_az_enabled           = coalesce(var.config.multi_az_enabled, false)
   subnet_group_name          = aws_elasticache_subnet_group.es-subnet-group.name
   security_group_ids         = [aws_security_group.redis-security-group.id]
 
