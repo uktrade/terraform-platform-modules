@@ -40,29 +40,29 @@ run "e2e_test" {
 
   assert {
     condition = [ for config in aws_opensearch_domain.this.cluster_config : true if contains(var.allowed_instance_types, config.instance_type)][0] == true
-    error_message = "Invalid instance type"
+    error_message = "Invalid instance type, use a supported instance type"
   }
 
   assert {
     condition = length(aws_opensearch_domain.this.domain_name) <= 28
-    error_message = "Name exceeds max character length of 28"
+    error_message = "Domain name exceeds max character length of 28"
   }
 
   assert {
     condition = [ for secopts in aws_opensearch_domain.this.advanced_security_options : true if secopts.enabled ][0] == true
-    error_message = "Advanced Security Options should be enabled"
+    error_message = "Advanced Security Options should be enabled in the opensearch domain"
   }
 
   assert {
     condition = [for ebs in aws_opensearch_domain.this.ebs_options : true if ebs.ebs_enabled == true][0] == true
-    error_message = "EBS must be enabled"
+    error_message = "EBS must be enabled in the opensearch domain"
   }
   assert {
-    condition = [for ebs in aws_opensearch_domain.this.ebs_options : true if can(ebs.volume_size >= 45) ][0] == true
+    condition = aws_opensearch_domain.this.ebs_options[0].volume_size >= 45 
     error_message = "Volume size is too small, minimum is 45"
   }
   assert {
-    condition = [for ebs in aws_opensearch_domain.this.ebs_options : true if can(ebs.throughput <= 125) ][0] == true
+    condition = aws_opensearch_domain.this.ebs_options[0].throughput >= 125
     error_message = "Disk throughput is too low, minimum is 125"
   }
   assert {
