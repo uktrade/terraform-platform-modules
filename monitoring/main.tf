@@ -1,15 +1,12 @@
 data "external" "ecs_cluster_name" {
   program = ["bash", "${path.module}/aws_ecs_cluster_name_data_source.sh"]
-  query = {
+  query   = {
     needle = "${var.application}-${var.environment}-Cluster"
   }
 }
 
-# Todo EnableOpsCenter: {% if config.enable_ops_center %}true{% else %}false{% endif %}
-
 resource "aws_cloudwatch_dashboard" "compute" {
   dashboard_name = "${var.application}-${var.environment}-compute"
-
   dashboard_body = jsonencode({
     widgets : [
       {
@@ -83,27 +80,28 @@ resource "aws_cloudwatch_dashboard" "compute" {
   })
 }
 
-#Resources:
-#
-#  {{ addon_config.prefix }}ResourceGroup:
-#    Type: AWS::ResourceGroups::Group
-#    Properties:
-#      Name: !Sub "${App}-${Env}-group"
-#      Description: !Sub "Resource group for ${App} in ${Env} environment."
-#      ResourceQuery:
-#        Type: TAG_FILTERS_1_0
-#        Query:
-#          TagFilters:
-#            - Key: copilot-application
-#              Values:
-#                - !Sub "${App}"
-#            - Key: copilot-environment
-#              Values:
-#                - !Sub "${Env}"
-#
-#  {{ addon_config.prefix }}ApplicationInsights:
-#    Type: AWS::ApplicationInsights::Application
-#    Properties:
-#      AutoConfigurationEnabled: true
-#      ResourceGroupName: !Ref {{ addon_config.prefix }}ResourceGroup
-#      OpsCenterEnabled: !FindInMap [{{ addon_config.prefix }}EnvConfiguration, !Ref Env, EnableOpsCenter]
+resource "aws_resourcegroups_group" "application-insights-resources" {
+  name = "${var.application}-${var.environment}-application-insights-resources"
+  resource_query {
+    type  = "TAG_FILTERS_1_0"
+    query = jsonencode({
+      TagFilters = [
+        {
+          Key    = "copilot-application",
+          Values = [var.application]
+        },
+        {
+          Key    = "copilot-environment",
+          Values = [var.environment]
+        }
+      ]
+    })
+  }
+}
+
+#resource "aws_applicationinsights_application" "application-insights" {
+#  resource_group_name = aws_resourcegroups_group.application-insights-resources.name
+#  auto_config_enabled = true
+#  # Todo: ops_center_enabled needs to come from backing-services.yml config
+#  ops_center_enabled  = false
+#}
