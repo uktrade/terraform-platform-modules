@@ -36,9 +36,7 @@ def create_or_update_user_secret(ssm, user_secret_name, user_secret_string, even
             Description=user_secret_description,
             Value=json.dumps(user_secret_string),
             Tags=[
-                {'Key': 'custom:cloudformation:stack-name', 'Value': event["StackId"].split('/')[1]},
-                {'Key': 'custom:cloudformation:logical-id', 'Value': event["LogicalResourceId"]},
-                {'Key': 'custom:cloudformation:stack-id', 'Value': event["StackId"]},
+                {'Key': 'managed-by', 'Value': 'Terraform'},
                 {'Key': 'copilot-application', 'Value': copilot_application},
                 {'Key': 'copilot-environment', 'Value': copilot_environment},
             ],
