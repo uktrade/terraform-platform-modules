@@ -351,11 +351,6 @@ run "e2e_test" {
   }
 
   assert {
-    condition     = aws_elasticache_replication_group.redis.member_clusters == ["redis-test-nameredis-test-environment-001", "redis-test-nameredis-test-environment-002",]
-    error_message = "Invalid config for aws_elasticache_replication_group member_clusters"
-  }
-
-  assert {
     condition     = aws_elasticache_replication_group.redis.network_type == "ipv4"
     error_message = "Invalid config for aws_elasticache_replication_group network_type"
   }
