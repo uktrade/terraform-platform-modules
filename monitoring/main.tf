@@ -85,6 +85,7 @@ resource "aws_resourcegroups_group" "application-insights-resources" {
   resource_query {
     type  = "TAG_FILTERS_1_0"
     query = jsonencode({
+      ResourceTypeFilters = ["AWS::AllSupported"]
       TagFilters = [
         {
           Key    = "copilot-application",
@@ -99,9 +100,9 @@ resource "aws_resourcegroups_group" "application-insights-resources" {
   }
 }
 
-#resource "aws_applicationinsights_application" "application-insights" {
-#  resource_group_name = aws_resourcegroups_group.application-insights-resources.name
-#  auto_config_enabled = true
-#  # Todo: ops_center_enabled needs to come from backing-services.yml config
-#  ops_center_enabled  = false
-#}
+resource "aws_applicationinsights_application" "application-insights" {
+  resource_group_name = aws_resourcegroups_group.application-insights-resources.name
+  auto_config_enabled = true
+  # Todo: ops_center_enabled needs to come from backing-services.yml config
+  ops_center_enabled  = false
+}
