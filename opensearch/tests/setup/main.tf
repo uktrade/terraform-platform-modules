@@ -36,3 +36,4 @@ resource "aws_subnet" "secondary" {
     Name = "sandbox-opensearch-private-secondary"
   }
 }
+
