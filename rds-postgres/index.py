@@ -24,9 +24,9 @@ def create_db_user(conn, cursor, username, password, permissions):
 
 
 def create_or_update_user_secret(ssm, user_secret_name, user_secret_string, event):
-    user_secret_description = event['ResourceProperties']['SecretDescription']
-    copilot_application = event['ResourceProperties']['CopilotApplication']
-    copilot_environment = event['ResourceProperties']['CopilotEnvironment']
+    user_secret_description = event['SecretDescription']
+    copilot_application = event['CopilotApplication']
+    copilot_environment = event['CopilotEnvironment']
 
     user_secret = None
 
@@ -59,10 +59,10 @@ def create_or_update_user_secret(ssm, user_secret_name, user_secret_string, even
 def handler(event, context):
     print("REQUEST RECEIVED:\n" + json.dumps(event))
 
-    db_master_user_secret_arn = event['ResourceProperties']['MasterUserSecretArn']
-    user_secret_name = event['ResourceProperties']['SecretName']
-    username = event['ResourceProperties']['Username']
-    user_permissions = event['ResourceProperties']['Permissions']
+    db_master_user_secret_arn = event['MasterUserSecretArn']
+    user_secret_name = event['SecretName']
+    username = event['Username']
+    user_permissions = event['Permissions']
 
     secrets_manager = boto3.client("secretsmanager")
     ssm = boto3.client("ssm")
@@ -71,7 +71,7 @@ def handler(event, context):
 
     user_password = secrets_manager.get_random_password(
         PasswordLength=16,
-        ExcludeCharacters='[]{}()"@/\;=?&`><:|#',
+        ExcludeCharacters='[]{}()"@/\\;=?&`><:|#',
         ExcludePunctuation=True,
         IncludeSpace=False,
     )["RandomPassword"]
@@ -79,55 +79,25 @@ def handler(event, context):
     user_secret_string = {
         "username": username,
         "password": user_password,
-        "engine": master_user["engine"],
-        "port": master_user["port"],
-        "dbname": master_user["dbname"],
-        "host": master_user["host"],
-        "dbInstanceIdentifier": master_user["dbInstanceIdentifier"]
+        "engine": event["DbEngine"],
+        "port": event["DbPort"],
+        "dbname": event["DbName"],
+        "host": event["DbHost"],
+        "dbInstanceIdentifier": event["dbInstanceIdentifier"]
     }
 
     conn = psycopg2.connect(
-        dbname=master_user["dbname"],
+        dbname=event["DbName"],
         user=master_user["username"],
         password=master_user["password"],
-        host=master_user["host"],
-        port=master_user["port"]
+        host=event["DbHost"],
+        port=event["DbPort"]
     )
 
     cursor = conn.cursor()
 
-    response = {"Status": "SUCCESS"}
-
-    try:
-        match event["RequestType"]:
-            case "Create":
-                create_db_user(conn, cursor, username, user_password, user_permissions)
-
-                response = {
-                    **response,
-                    "Data": create_or_update_user_secret(ssm, user_secret_name, user_secret_string, event)
-                }
-            case "Update":
-                create_db_user(conn, cursor, username, user_password, user_permissions)
-
-                response = {
-                    **response,
-                    "Data": create_or_update_user_secret(ssm, user_secret_name, user_secret_string, event)
-                }
-            case "Delete":
-                drop_user(cursor, username)
-
-                response = {
-                    **response,
-                    "Data": ssm.delete_parameter(Name=user_secret_name)
-                }
-            case _:
-                response = {"Status": "FAILED",
-                            "Data": {"Error": f"""Invalid requestType of '${event["RequestType"]}'"""}}
-    except Exception as e:
-        response = {"Status": "FAILED", "Data": {"Error": str(e)}}
+    create_db_user(conn, cursor, username, user_password, user_permissions)
+    create_or_update_user_secret(ssm, user_secret_name, user_secret_string, event)
 
     cursor.close()
     conn.close()
-
-    print(json.dumps(response, default=str))

@@ -54,8 +54,12 @@ data "archive_file" "lambda" {
   output_path = "${path.module}/index.zip"
 }
 
+data "aws_security_group" "rds-endpoint" {
+  name = "${var.vpc_name}-rds-endpoint-sg"
+}
+
 resource "aws_lambda_function" "lambda" {
-  filename      = "${path.module}/lambda.zip"
+  filename      = "${path.module}/index.zip"
   function_name = "${local.name}-rds-create-user"
   role          = aws_iam_role.lambda-execution-role.arn
   handler       = "index.handler"
@@ -66,7 +70,7 @@ resource "aws_lambda_function" "lambda" {
   layers = ["arn:aws:lambda:eu-west-2:763451185160:layer:python-postgres:1"]
 
   vpc_config {
-    security_group_ids = [aws_security_group.default.id]
+    security_group_ids = [aws_security_group.default.id, data.aws_security_group.rds-endpoint.id]
     subnet_ids         = data.aws_subnets.private-subnets.ids
   }
 }
@@ -79,7 +83,7 @@ resource "aws_lambda_invocation" "create-application-user" {
     CopilotEnvironment = var.environment
     MasterUserSecretArn = aws_db_instance.default.master_user_secret[0].secret_arn
     SecretDescription = "RDS application user secret for ${local.name}"
-    SecretName = "/copilot/${var.application}/${var.environment}/secrets/${replace(var.name, "-", "_")}_APPLICATION_USER"
+    SecretName = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}_APPLICATION_USER"
     Username = "application_user"
     Permissions = [
         "SELECT",
@@ -87,7 +91,12 @@ resource "aws_lambda_invocation" "create-application-user" {
         "UPDATE",
         "DELETE",
         "TRIGGER"
-    ]
+    ],
+    DbHost = aws_db_instance.default.address,
+    DbPort = aws_db_instance.default.port,
+    DbEngine = aws_db_instance.default.engine,
+    DbName = aws_db_instance.default.db_name,
+    dbInstanceIdentifier = aws_db_instance.default.resource_id,
   })
 }
 
@@ -99,10 +108,15 @@ resource "aws_lambda_invocation" "create-readonly-user" {
     CopilotEnvironment = var.environment
     MasterUserSecretArn = aws_db_instance.default.master_user_secret[0].secret_arn
     SecretDescription = "RDS application user secret for ${local.name}"
-    SecretName = "/copilot/${var.application}/${var.environment}/secrets/${replace(var.name, "-", "_")}_READ_ONLY_USER"
+    SecretName = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}_READ_ONLY_USER"
     Username = "readonly_user"
     Permissions = [
         "SELECT",
-    ]
+    ],
+    DbHost = aws_db_instance.default.address,
+    DbPort = aws_db_instance.default.port,
+    DbEngine = aws_db_instance.default.engine,
+    DbName = aws_db_instance.default.db_name,
+    dbInstanceIdentifier = aws_db_instance.default.resource_id,    
   })
 }
