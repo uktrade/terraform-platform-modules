@@ -5,7 +5,6 @@ module "s3" {
 
   application = var.args.application
   environment = var.environment
-  name        = each.key
   vpc_name    = var.vpc_name
 
   config = each.value
@@ -24,24 +23,18 @@ module "rds-postgres" {
     config = each.value
 }
 
-### DEBUG
+module "elasticache-redis" {
+  source = "../elasticache-redis"
 
-output "test" {
-  value = local.redis
+  for_each = local.redis
+
+  application = var.args.application
+  environment = var.environment
+  name        = each.key
+  vpc_name    = var.vpc_name
+
+  config = each.value
 }
-
-# module "elasticache-redis" {
-#     source   = "../elasticache-redis"
-
-#     for_each = local.redis
-
-#     application = var.args.application
-#     environment = var.environment
-#     name        = each.key
-#     vpc_name    = var.vpc_name
-
-#     config = each.value 
-# }
 
 # module "opensearch" {
 #     source   = "../opensearch"
