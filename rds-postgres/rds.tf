@@ -71,17 +71,11 @@ resource "aws_db_instance" "default" {
   publicly_accessible                 = false
   iam_database_authentication_enabled = false
 
-  #   snapshot_identifier         = var.snapshot_identifier
-  #   skip_final_snapshot         = var.skip_final_snapshot
-  #   copy_tags_to_snapshot       = var.copy_tags_to_snapshot
-  #   final_snapshot_identifier   = length(var.final_snapshot_identifier) > 0 ? var.final_snapshot_identifier : module.final_snapshot_label.id
+  snapshot_identifier         = local.snapshot_id
+  skip_final_snapshot         = false
+  copy_tags_to_snapshot       = true
 
   enabled_cloudwatch_logs_exports = ["postgresql"]
-  #   performance_insights_enabled          = var.performance_insights_enabled
-  #   performance_insights_kms_key_id       = var.performance_insights_enabled ? var.performance_insights_kms_key_id : null
-  #   performance_insights_retention_period = var.performance_insights_enabled ? var.performance_insights_retention_period : null
-  #   monitoring_interval = var.monitoring_interval
-  #   monitoring_role_arn = var.monitoring_role_arn
 
   depends_on = [
     aws_db_subnet_group.default,

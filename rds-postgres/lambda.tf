@@ -98,6 +98,11 @@ resource "aws_lambda_invocation" "create-application-user" {
     DbName               = aws_db_instance.default.db_name,
     dbInstanceIdentifier = aws_db_instance.default.resource_id,
   })
+
+  depends_on = [
+    aws_lambda_function.lambda,
+    aws_db_instance.default,
+  ]
 }
 
 resource "aws_lambda_invocation" "create-readonly-user" {
@@ -119,4 +124,9 @@ resource "aws_lambda_invocation" "create-readonly-user" {
     DbName               = aws_db_instance.default.db_name,
     dbInstanceIdentifier = aws_db_instance.default.resource_id,
   })
+
+  depends_on = [
+    aws_lambda_function.lambda,
+    aws_db_instance.default,
+  ]
 }
