@@ -50,6 +50,11 @@ run "aws_elasticache_replication_group_unit_test" {
   }
 
   assert {
+    condition     = aws_elasticache_replication_group.redis.replicas_per_node_group == 1
+    error_message = "Invalid config for aws_elasticache_replication_group replicas_per_node_group"
+  }
+
+  assert {
     condition     = aws_elasticache_replication_group.redis.transit_encryption_enabled == true
     error_message = "Invalid config for aws_elasticache_replication_group transit_encryption_enabled"
   }
@@ -87,6 +92,68 @@ run "aws_elasticache_replication_group_unit_test" {
   assert {
     condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "slow-log"][0] == "/aws/elasticache/redis-test-name/redis-test-environment/redis-test-nameRedis/slow"
     error_message = "Invalid config for aws_elasticache_replication_group log_delivery_configuration"
+  }
+}
+
+run "aws_elasticache_replication_group_unit_test2" {
+  command = plan
+
+  variables {
+    config = {
+      "engine"                     = "7.1",
+      "plan"                       = "small",
+      "instance"                   = "test-instance",
+      "replicas"                   = 2,
+      "apply_immediately"          = true,
+      "automatic_failover_enabled" = true,
+      "multi_az_enabled"           = true,
+    }
+  }
+
+  ### Test aws_elasticache_replication_group resource ###
+  assert {
+    condition     = aws_elasticache_replication_group.redis.engine == "redis"
+    error_message = "Invalid config for aws_elasticache_replication_group engine"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.engine_version == "7.1"
+    error_message = "Invalid config for aws_elasticache_replication_group engine_version"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.num_node_groups == 1
+    error_message = "Invalid config for aws_elasticache_replication_group num_node_groups"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.replicas_per_node_group == 2
+    error_message = "Invalid config for aws_elasticache_replication_group replicas_per_node_group"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.transit_encryption_enabled == true
+    error_message = "Invalid config for aws_elasticache_replication_group transit_encryption_enabled"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.at_rest_encryption_enabled == true
+    error_message = "Invalid config for aws_elasticache_replication_group at_rest_encryption_enabled"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.apply_immediately == true
+    error_message = "Invalid config for aws_elasticache_replication_group apply_immediately"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.automatic_failover_enabled == true
+    error_message = "Invalid config for aws_elasticache_replication_group automatic_failover_enabled"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.multi_az_enabled == true
+    error_message = "Invalid config for aws_elasticache_replication_group multi_az_enabled"
   }
 }
 
@@ -202,14 +269,99 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
   }
 }
 
-# run "e2e_test" {
-#   # e2e test takes ~ 20 [mins] to run #
+run "e2e_test" {
+  # e2e test takes ~ 20 [mins] to run #
 
-#   command = apply
+  command = apply
 
-#   ### Test aws_elasticache_replication_group resource ###
-#   assert {
-#     condition     = aws_elasticache_replication_group.redis.replication_group_id == "redis-test-nameredis-test-environment"
-#     error_message = "Invalid config for aws_elasticache_replication_group replication_group_id"
-#   }
-# }
+  ### Test aws_elasticache_replication_group resource ###
+  assert {
+    condition     = aws_elasticache_replication_group.redis.replication_group_id == "redis-test-nameredis-test-environment"
+    error_message = "Invalid config for aws_elasticache_replication_group replication_group_id"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.subnet_group_name == "redis-test-name-redis-test-environment-cache-subnet"
+    error_message = "Invalid config for aws_elasticache_replication_group subnet_group_name"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.engine == "redis"
+    error_message = "Invalid config for aws_elasticache_replication_group engine"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.engine_version == "6.2"
+    error_message = "Invalid config for aws_elasticache_replication_group engine_version"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.num_node_groups == 1
+    error_message = "Invalid config for aws_elasticache_replication_group num_node_groups"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.replicas_per_node_group == 1
+    error_message = "Invalid config for aws_elasticache_replication_group replicas_per_node_group"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.transit_encryption_enabled == true
+    error_message = "Invalid config for aws_elasticache_replication_group transit_encryption_enabled"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.at_rest_encryption_enabled == true
+    error_message = "Invalid config for aws_elasticache_replication_group at_rest_encryption_enabled"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.apply_immediately == false
+    error_message = "Invalid config for aws_elasticache_replication_group apply_immediately"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.automatic_failover_enabled == false
+    error_message = "Invalid config for aws_elasticache_replication_group automatic_failover_enabled"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.multi_az_enabled == false
+    error_message = "Invalid config for aws_elasticache_replication_group multi_az_enabled"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.auth_token_update_strategy == "ROTATE"
+    error_message = "Invalid config for aws_elasticache_replication_group auth_token_update_strategy"
+  }
+
+  assert {
+    condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "engine-log"][0] == "/aws/elasticache/redis-test-name/redis-test-environment/redis-test-nameRedis/engine"
+    error_message = "Invalid config for aws_elasticache_replication_group log_delivery_configuration"
+  }
+
+  assert {
+    condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "slow-log"][0] == "/aws/elasticache/redis-test-name/redis-test-environment/redis-test-nameRedis/slow"
+    error_message = "Invalid config for aws_elasticache_replication_group log_delivery_configuration"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.engine_version_actual == "6.2.6"
+    error_message = "Invalid config for aws_elasticache_replication_group engine_version_actual"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.member_clusters == ["redis-test-nameredis-test-environment-001", "redis-test-nameredis-test-environment-002",]
+    error_message = "Invalid config for aws_elasticache_replication_group member_clusters"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.network_type == "ipv4"
+    error_message = "Invalid config for aws_elasticache_replication_group network_type"
+  }
+
+  assert {
+    condition     = aws_elasticache_replication_group.redis.auto_minor_version_upgrade == "true"
+    error_message = "Invalid config for aws_elasticache_replication_group auto_minor_version_upgrade"
+  }
+}
