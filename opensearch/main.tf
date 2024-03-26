@@ -50,15 +50,15 @@ resource "random_password" "password" {
 
 resource "aws_opensearch_domain" "this" {
   # ToDo: Stupid 28 character limit, need to check and randamize name
-  domain_name    = "${var.config.name}-engine"
+  domain_name    = "demodjango-tf-ant-engine"# "${var.application}-${var.environment}-opensearch"
   engine_version = "OpenSearch_${var.config.engine}"
 
   cluster_config {
     dedicated_master_count   = 1
-    dedicated_master_type    = local.plans[var.config.plan].master ? local.plans[var.config.plan].instance : null
-    dedicated_master_enabled = local.plans[var.config.plan].master
-    instance_type            = local.plans[var.config.plan].instance
-    instance_count           = local.plans[var.config.plan].instances
+    dedicated_master_type    = var.config.master ? var.config.instance : null
+    dedicated_master_enabled = var.config.master
+    instance_type            = var.config.instance
+    instance_count           = var.config.instances
     zone_awareness_enabled   = false
     # zone_awareness_config {
     #   availability_zone_count = var.zone_awareness_enabled ? length(tolist(data.aws_subnets.private-subnets.ids)) : null
@@ -98,13 +98,13 @@ resource "aws_opensearch_domain" "this" {
 
   ebs_options {
     ebs_enabled = true
-    volume_size = coalesce(var.config.volume_size, local.plans[var.config.plan].volume_size)
+    volume_size = var.config.volume_size
     volume_type = "gp3"
     throughput  = 250 # TODO var.throughput
   }
 
   auto_tune_options {
-    desired_state = startswith(local.plans[var.config.plan].instance, "t2") || startswith(local.plans[var.config.plan].instance, "t3") ? "DISABLED" : "ENABLED"
+    desired_state = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DISABLED" : "ENABLED"
     rollback_on_disable = "DEFAULT_ROLLBACK"
   }
   # log_publishing_options {

@@ -15,7 +15,9 @@ variable "config" {
     name            = string,
     engine          = optional(string),
     deletion_policy = optional(string),
-    plan            = optional(string),
+    instances       = optional(number)
+    instance        = optional(string),
     volume_size     = optional(number),
+    master          = optional(bool)
   })
 }
