@@ -2,21 +2,16 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 # resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
-#   for_each = toset(var.args.environment)
-
-
 #   name              = "/aws/opensearch/${local.domain}/index-slow"
 #   retention_in_days = 14
 # }
-
+#
 # resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
-#   for_each = toset(var.args.environment)
 #   name              = "/aws/opensearch/${local.domain}/search-slow"
 #   retention_in_days = 14
 # }
-
+#
 # resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
-#   for_each = toset(var.args.environment)
 #   name              = "/aws/opensearch/${local.domain}/es-application"
 #   retention_in_days = 14
 # }
@@ -50,7 +45,7 @@ resource "random_password" "password" {
 
 resource "aws_opensearch_domain" "this" {
   # ToDo: Stupid 28 character limit, need to check and randamize name
-  domain_name    = "demodjango-tf-ant-engine"# "${var.application}-${var.environment}-opensearch"
+  domain_name    = local.domain
   engine_version = "OpenSearch_${var.config.engine}"
 
   cluster_config {
@@ -107,18 +102,21 @@ resource "aws_opensearch_domain" "this" {
     desired_state = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DISABLED" : "ENABLED"
     rollback_on_disable = "DEFAULT_ROLLBACK"
   }
-  # log_publishing_options {
-  #   cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.arn
-  #   log_type                 = "INDEX_SLOW_LOGS"
-  # }
-  # log_publishing_options {
-  #   cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.arn
-  #   log_type                 = "SEARCH_SLOW_LOGS"
-  # }
-  # log_publishing_options {
-  #   cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.arn
-  #   log_type                 = "ES_APPLICATION_LOGS"
-  # }
+
+#   log_publishing_options {
+#     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.arn
+#     log_type                 = "INDEX_SLOW_LOGS"
+#   }
+#
+#   log_publishing_options {
+#     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.arn
+#     log_type                 = "SEARCH_SLOW_LOGS"
+#   }
+#
+#   log_publishing_options {
+#     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.arn
+#     log_type                 = "ES_APPLICATION_LOGS"
+#   }
 
   node_to_node_encryption {
     enabled = true
@@ -173,13 +171,13 @@ data "aws_vpc" "vpc" {
   #depends_on = [module.platform-vpc]
   filter {
       name = "tag:Name"
-      values = [var.space]
+      values = [var.vpc_name]
   }
 }
 
 data "aws_subnets" "private-subnets" {
   filter {
     name = "tag:Name"
-    values = ["${var.space}-private-*"]
+    values = ["${var.vpc_name}-private-*"]
   }
 }

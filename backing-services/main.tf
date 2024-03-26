@@ -43,8 +43,7 @@ module "opensearch" {
 
   application = var.args.application
   environment = var.environment
-#  vpc_name    = var.vpc_name
 
   config = each.value
-  space  = var.vpc_name
+  vpc_name  = var.vpc_name
 }
