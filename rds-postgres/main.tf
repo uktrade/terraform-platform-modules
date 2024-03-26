@@ -87,10 +87,3 @@ resource "aws_security_group" "default" {
   tags = local.tags
 }
 
-###DEBUG
-
-output "test" {
-  value = data.aws_subnets.private-subnets.ids
-}
-
-
