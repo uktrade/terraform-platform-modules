@@ -79,23 +79,23 @@ resource "aws_lambda_invocation" "create-application-user" {
   function_name = aws_lambda_function.lambda.function_name
 
   input = jsonencode({
-    CopilotApplication = var.application
-    CopilotEnvironment = var.environment
+    CopilotApplication  = var.application
+    CopilotEnvironment  = var.environment
     MasterUserSecretArn = aws_db_instance.default.master_user_secret[0].secret_arn
-    SecretDescription = "RDS application user secret for ${local.name}"
-    SecretName = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}_APPLICATION_USER"
-    Username = "application_user"
+    SecretDescription   = "RDS application user secret for ${local.name}"
+    SecretName          = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}_APPLICATION_USER"
+    Username            = "application_user"
     Permissions = [
-        "SELECT",
-        "INSERT",
-        "UPDATE",
-        "DELETE",
-        "TRIGGER"
+      "SELECT",
+      "INSERT",
+      "UPDATE",
+      "DELETE",
+      "TRIGGER"
     ],
-    DbHost = aws_db_instance.default.address,
-    DbPort = aws_db_instance.default.port,
-    DbEngine = aws_db_instance.default.engine,
-    DbName = aws_db_instance.default.db_name,
+    DbHost               = aws_db_instance.default.address,
+    DbPort               = aws_db_instance.default.port,
+    DbEngine             = aws_db_instance.default.engine,
+    DbName               = aws_db_instance.default.db_name,
     dbInstanceIdentifier = aws_db_instance.default.resource_id,
   })
 }
@@ -104,19 +104,19 @@ resource "aws_lambda_invocation" "create-readonly-user" {
   function_name = aws_lambda_function.lambda.function_name
 
   input = jsonencode({
-    CopilotApplication = var.application
-    CopilotEnvironment = var.environment
+    CopilotApplication  = var.application
+    CopilotEnvironment  = var.environment
     MasterUserSecretArn = aws_db_instance.default.master_user_secret[0].secret_arn
-    SecretDescription = "RDS application user secret for ${local.name}"
-    SecretName = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}_READ_ONLY_USER"
-    Username = "readonly_user"
+    SecretDescription   = "RDS application user secret for ${local.name}"
+    SecretName          = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}_READ_ONLY_USER"
+    Username            = "readonly_user"
     Permissions = [
-        "SELECT",
+      "SELECT",
     ],
-    DbHost = aws_db_instance.default.address,
-    DbPort = aws_db_instance.default.port,
-    DbEngine = aws_db_instance.default.engine,
-    DbName = aws_db_instance.default.db_name,
-    dbInstanceIdentifier = aws_db_instance.default.resource_id,    
+    DbHost               = aws_db_instance.default.address,
+    DbPort               = aws_db_instance.default.port,
+    DbEngine             = aws_db_instance.default.engine,
+    DbName               = aws_db_instance.default.db_name,
+    dbInstanceIdentifier = aws_db_instance.default.resource_id,
   })
 }
