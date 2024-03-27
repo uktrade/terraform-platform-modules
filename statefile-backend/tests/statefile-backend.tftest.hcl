@@ -78,7 +78,9 @@ run "e2e_test" {
   assert {
     # This attribute don't have an index to reference, so we have to iterate through it in a couple of for loops. 
     # Since a for loop requires a list ('[]') or a map ('{}'), we need to reference the first entry in each of the three lists we create here, hence the '[0]'s at the end.
-    condition     = [for rule in aws_s3_bucket_server_side_encryption_configuration.terraform-state-sse.rule : true if[for sse in rule.apply_server_side_encryption_by_default : true if[sse.sse_algorithm == "aws:kms"][0]][0]][0] == true
+    condition = [for rule in aws_s3_bucket_server_side_encryption_configuration.terraform-state-sse.rule :
+      true if[for sse in rule.apply_server_side_encryption_by_default :
+        true if[sse.sse_algorithm == "aws:kms"][0]][0]][0] == true
     error_message = "You must use customer managed KMS keys for server side encryption on this bucket"
   }
 
