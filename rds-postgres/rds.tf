@@ -78,6 +78,12 @@ resource "aws_db_instance" "default" {
 
   enabled_cloudwatch_logs_exports = ["postgresql"]
 
+  # monitoring and performance
+  performance_insights_enabled = true
+  performance_insights_retention_period = 7
+  monitoring_interval = 15
+  monitoring_role_arn = aws_iam_role.enhanced-monitoring.arn
+
   depends_on = [
     aws_db_subnet_group.default,
     aws_security_group.default,
@@ -85,4 +91,29 @@ resource "aws_db_instance" "default" {
   ]
 
   tags = local.tags
+}
+
+resource "aws_iam_role" "enhanced-monitoring" {
+  name_prefix        = "rds-enhanced-monitoring-"
+  assume_role_policy = data.aws_iam_policy_document.enhanced-monitoring.json
+}
+
+resource "aws_iam_role_policy_attachment" "enhanced-monitoring" {
+  role       = aws_iam_role.enhanced-monitoring.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+}
+
+data "aws_iam_policy_document" "enhanced-monitoring" {
+  statement {
+    actions = [
+      "sts:AssumeRole",
+    ]
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["monitoring.rds.amazonaws.com"]
+    }
+  }
 }
