@@ -1,9 +1,3 @@
-provider "aws" {
-  profile             = "sandbox"
-  shared_config_files = ["~/.aws/config"]
-  region              = "eu-west-2"
-}
-
 variables {
   aws_account_name = "sandbox-statefile-test"
 }
