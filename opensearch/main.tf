@@ -1,28 +1,28 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
- resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
-   name              = "/aws/opensearch/${local.domain}/index-slow"
-   retention_in_days = 14
- }
+resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
+  name              = "/aws/opensearch/${local.domain}/index-slow"
+  retention_in_days = 14 # TODO: var.config.index_slow_log_retention_in_days? Default 14?
+}
 
- resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
-   name              = "/aws/opensearch/${local.domain}/search-slow"
-   retention_in_days = 14
- }
+resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
+  name              = "/aws/opensearch/${local.domain}/search-slow"
+  retention_in_days = 14 # TODO: var.config.search_slow_log_retention_in_days? Default 14?
+}
 
- resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
-   name              = "/aws/opensearch/${local.domain}/es-application"
-   retention_in_days = 14
- }
+resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
+  name              = "/aws/opensearch/${local.domain}/es-application"
+  retention_in_days = 14 # TODO: var.config.es_app_log_retention_in_days? Default 14?
+}
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
   name              = "/aws/opensearch/${local.domain}/audit"
-  retention_in_days = 14
+  retention_in_days = 14 # TODO: var.config.audit_log_retention_in_days? Default 14?
 }
 
 resource "aws_cloudwatch_log_resource_policy" "opensearch_log_group_policy" {
-  policy_name = "opensearch_log_group_policy"
+  policy_name     = "opensearch_log_group_policy"
   policy_document = <<CONFIG
 {
   "Version": "2012-10-17",
@@ -78,9 +78,9 @@ resource "aws_opensearch_domain" "this" {
     instance_type            = var.config.instance
     instance_count           = local.instances
     zone_awareness_enabled   = local.zone_awareness_enabled
-     zone_awareness_config {
-       availability_zone_count = local.zone_count
-     }
+    zone_awareness_config {
+      availability_zone_count = local.zone_count
+    }
   }
 
   advanced_security_options {
@@ -97,6 +97,7 @@ resource "aws_opensearch_domain" "this" {
     enabled = true
   }
 
+  # TODO: Not sure what this was for. Still relevant?
   # domain_endpoint_options {
   #   enforce_https       = true
   #   tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
@@ -114,29 +115,29 @@ resource "aws_opensearch_domain" "this" {
   ebs_options {
     ebs_enabled = true
     volume_size = var.config.volume_size
-    volume_type = "gp3"
-    throughput  = 250 # TODO var.throughput
+    volume_type = "gp3" # TODO: var.config.ebs_volume_type? Default to gp3?
+    throughput  = 250   # TODO var.config.throughput? Default to 250?
   }
 
   auto_tune_options {
-    desired_state = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DISABLED" : "ENABLED"
+    desired_state       = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DISABLED" : "ENABLED"
     rollback_on_disable = "DEFAULT_ROLLBACK"
   }
 
-   log_publishing_options {
-     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.arn
-     log_type                 = "INDEX_SLOW_LOGS"
-   }
+  log_publishing_options {
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.arn
+    log_type                 = "INDEX_SLOW_LOGS"
+  }
 
-   log_publishing_options {
-     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.arn
-     log_type                 = "SEARCH_SLOW_LOGS"
-   }
+  log_publishing_options {
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.arn
+    log_type                 = "SEARCH_SLOW_LOGS"
+  }
 
-   log_publishing_options {
-     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.arn
-     log_type                 = "ES_APPLICATION_LOGS"
-   }
+  log_publishing_options {
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.arn
+    log_type                 = "ES_APPLICATION_LOGS"
+  }
 
   log_publishing_options {
     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_audit_logs.arn
@@ -148,7 +149,7 @@ resource "aws_opensearch_domain" "this" {
   }
 
   vpc_options {
-    subnet_ids = local.subnets
+    subnet_ids         = local.subnets
     security_group_ids = [aws_security_group.opensearch-security-group.id]
   }
 
@@ -181,14 +182,14 @@ resource "aws_ssm_parameter" "this-master-user" {
 
 data "aws_vpc" "vpc" {
   filter {
-      name = "tag:Name"
-      values = [var.vpc_name]
+    name   = "tag:Name"
+    values = [var.vpc_name]
   }
 }
 
 data "aws_subnets" "private-subnets" {
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["${var.vpc_name}-private-*"]
   }
 }
