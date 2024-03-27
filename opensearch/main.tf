@@ -120,7 +120,7 @@ resource "aws_opensearch_domain" "this" {
   }
 
   auto_tune_options {
-    desired_state       = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DISABLED" : "ENABLED"
+    desired_state       = local.auto_tune_desired_state
     rollback_on_disable = "DEFAULT_ROLLBACK"
   }
 
