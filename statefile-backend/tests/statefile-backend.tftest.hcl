@@ -25,13 +25,13 @@ run "e2e_test" {
   # Bucket ACL
   assert {
     condition = aws_s3_bucket_acl.terraform-state-acl.bucket == aws_s3_bucket.terraform-state.id
-    error_message = "The bucket ACL is not attached to the terraform state bucket"
+    error_message = "The bucket ACL resource is not attached to the correct S3 bucket"
   }
   
   # Bucket Versioning
   assert {
     condition = aws_s3_bucket_versioning.terraform-state-versioning.bucket == aws_s3_bucket.terraform-state.id
-    error_message = "Ensure the aws_s3_bucket_versioning resource is attached to the correct S3 bucket"
+    error_message = "The bucket versioning resource is not attached to the correct S3 bucket"
   }
   assert {
     condition = aws_s3_bucket_versioning.terraform-state-versioning.versioning_configuration[0].status == "Enabled"
@@ -41,7 +41,7 @@ run "e2e_test" {
   # Bucket ownership control
   assert {
     condition = aws_s3_bucket_ownership_controls.terraform-state-ownership.bucket == aws_s3_bucket.terraform-state.id
-    error_message = "Ensure the aws_s3_bucket_ownership_controls resource is attached to the correct S3 bucket"
+    error_message = "The bucket ownership controls resource is not attached to the correct S3 bucket"
   }
   assert {
     condition = aws_s3_bucket_ownership_controls.terraform-state-ownership.rule[0].object_ownership == "BucketOwnerPreferred"
@@ -51,7 +51,7 @@ run "e2e_test" {
   # Bucket public access block
   assert {
     condition = aws_s3_bucket_public_access_block.block.bucket == aws_s3_bucket.terraform-state.id
-    error_message = "Ensure the aws_s3_bucket_public_access_block resource is attached to the correct s3 bucket"
+    error_message = "The public access block resource is not attached to the correct s3 bucket"
   }
   assert {
     condition = aws_s3_bucket_public_access_block.block.block_public_acls == true
@@ -73,13 +73,13 @@ run "e2e_test" {
   # Bucket server side encryption
   assert {
     condition = aws_s3_bucket_server_side_encryption_configuration.terraform-state-sse.bucket == aws_s3_bucket.terraform-state.id
-    error_message = "Ensure the aws_s3_bucket_server_side_encryption_configuration resource is attached to the correct s3 bucket"
+    error_message = "The server side encryption resource is not attached to the correct s3 bucket"
   }
   assert {
     # This attribute don't have an index to reference, so we have to iterate through it in a couple of for loops. 
     # Since a for loop requires a list ('[]') or a map ('{}'), we need to reference the first entry in each of the three lists we create here, hence the '[0]'s at the end.
     condition =[ for rule in aws_s3_bucket_server_side_encryption_configuration.terraform-state-sse.rule : true if [ for sse in rule.apply_server_side_encryption_by_default : true if[sse.sse_algorithm == "aws:kms"][0]][0]][0] == true
-    error_message = "You must use KMS for server side encryption on this bucket"
+    error_message = "You must use customer managed KMS keys for server side encryption on this bucket"
   }
 
   # DynamoDB table
@@ -107,7 +107,7 @@ run "e2e_test" {
   # KMS Key
   assert {
     condition = aws_kms_alias.key-alias.target_key_id == aws_kms_key.terraform-bucket-key.id
-    error_message = "Ensure the KMS alias is assigned to the correct KMS key"
+    error_message = "The KMS alias is not assigned to the correct KMS key"
   }
   assert {
     condition = aws_kms_alias.key-alias.name == "alias/terraform-platform-state-s3-key-${var.aws_account_name}"
