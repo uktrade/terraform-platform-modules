@@ -6,18 +6,18 @@ data "aws_region" "current" {}
    retention_in_days = 14
  }
 
-# resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
-#   name              = "/aws/opensearch/${local.domain}/search-slow"
-#   retention_in_days = 14
-# }
-#
-# resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
-#   name              = "/aws/opensearch/${local.domain}/es-application"
-#   retention_in_days = 14
-# }
-#
-resource "aws_cloudwatch_log_resource_policy" "opensearch_log_group_index_slow_logs" {
-  policy_name = "opensearch_log_group_index_slow_logs"
+ resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
+   name              = "/aws/opensearch/${local.domain}/search-slow"
+   retention_in_days = 14
+ }
+
+ resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
+   name              = "/aws/opensearch/${local.domain}/es-application"
+   retention_in_days = 14
+ }
+
+resource "aws_cloudwatch_log_resource_policy" "opensearch_log_group_policy" {
+  policy_name = "opensearch_log_group_policy"
   policy_document = <<CONFIG
 {
   "Version": "2012-10-17",
@@ -71,12 +71,12 @@ resource "aws_opensearch_domain" "this" {
   domain_name    = var.config.name
   engine_version = "OpenSearch_${var.config.engine}"
 
-  depends_on = [
-    aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs,
+#  depends_on = [
+#    aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs,
 #    aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs,
 #    aws_cloudwatch_log_group.opensearch_log_group_es_application_logs
-  ]
-
+#  ]
+#
   cluster_config {
     dedicated_master_count   = 1
     dedicated_master_type    = var.config.master ? var.config.instance : null
@@ -137,15 +137,15 @@ resource "aws_opensearch_domain" "this" {
      log_type                 = "INDEX_SLOW_LOGS"
    }
 
-#   log_publishing_options {
-#     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.arn
-#     log_type                 = "SEARCH_SLOW_LOGS"
-#   }
-#
-#   log_publishing_options {
-#     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.arn
-#     log_type                 = "ES_APPLICATION_LOGS"
-#   }
+   log_publishing_options {
+     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.arn
+     log_type                 = "SEARCH_SLOW_LOGS"
+   }
+
+   log_publishing_options {
+     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.arn
+     log_type                 = "ES_APPLICATION_LOGS"
+   }
 
   node_to_node_encryption {
     enabled = true
