@@ -64,7 +64,7 @@ resource "aws_db_instance" "default" {
   parameter_group_name = aws_db_parameter_group.default.name
   db_subnet_group_name = aws_db_subnet_group.default.name
 
-  backup_retention_period = 0
+  backup_retention_period = 7
   backup_window           = "07:00-09:00"
 
   vpc_security_group_ids              = [aws_security_group.default.id]
@@ -72,7 +72,8 @@ resource "aws_db_instance" "default" {
   iam_database_authentication_enabled = false
 
   snapshot_identifier         = local.snapshot_id
-  skip_final_snapshot         = false
+  skip_final_snapshot         = local.skip_final_snapshot
+  final_snapshot_identifier   = local.final_snapshot_identifier
   copy_tags_to_snapshot       = true
 
   enabled_cloudwatch_logs_exports = ["postgresql"]

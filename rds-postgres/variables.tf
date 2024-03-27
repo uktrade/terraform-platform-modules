@@ -21,6 +21,7 @@ variable "config" {
     volume_size         = optional(number)
     iops                = optional(number)
     snapshot_id         = optional(string)
+    skip_final_snapshot = optional(string)
     multi_az            = optional(bool)
     instance            = optional(string)
     storage_type        = optional(string)
