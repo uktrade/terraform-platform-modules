@@ -184,3 +184,7 @@ postgres:
 s3: {}
 
 monitoring: {}
+
+alb: {
+  does-not-matter:
+}

@@ -48,3 +48,27 @@ module "elasticache-redis" {
 
 #     config = each.value
 # }
+
+module "monitoring" {
+  source = "../monitoring"
+
+  for_each = local.monitoring
+
+  application = var.args.application
+  environment = var.environment
+  vpc_name    = var.vpc_name
+
+  config = each.value
+}
+
+module "alb" {
+  source   = "../application-load-balancer"
+
+  for_each = local.alb
+
+  application = var.args.application
+  environment = var.environment
+  vpc_name    = var.vpc_name
+
+  config = each.value
+}

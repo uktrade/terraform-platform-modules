@@ -6,6 +6,9 @@ data "external" "ecs_cluster_name" {
 }
 
 resource "aws_cloudwatch_dashboard" "compute" {
+  # The ECS Cluster is created by AWS Copilot, so may not exist when we run the Terraform
+  count = data.external.ecs_cluster_name.result.cluster_name != "" ? 1 : 0
+
   dashboard_name = "${var.application}-${var.environment}-compute"
   dashboard_body = jsonencode({
     widgets : [

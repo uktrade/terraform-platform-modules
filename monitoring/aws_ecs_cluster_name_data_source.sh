@@ -9,8 +9,4 @@ cluster_name="$(aws ecs list-clusters \
     | jq -r ".clusterArns[] | select(contains(\"$needle\"))" \
     | sed 's/.*cluster\///')"
 
-if [ ! -n "$cluster_name" ]; then
-    exit 1
-fi
-
 echo "{\"cluster_name\": \"$cluster_name\"}"
