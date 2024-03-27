@@ -51,7 +51,7 @@ resource "aws_db_instance" "default" {
   instance_class = local.instance_class
 
   # upgrades
-  allow_major_version_upgrade = false
+  allow_major_version_upgrade = true
   auto_minor_version_upgrade  = true
   apply_immediately           = false
   maintenance_window          = "Mon:00:00-Mon:03:00"
