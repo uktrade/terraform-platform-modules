@@ -3,22 +3,22 @@ data "aws_region" "current" {}
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
   name              = "/aws/opensearch/${local.domain}/index-slow"
-  retention_in_days = 14 # TODO: var.config.index_slow_log_retention_in_days? Default 14?
+  retention_in_days = coalesce(var.config.index_slow_log_retention_in_days, 7)
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
   name              = "/aws/opensearch/${local.domain}/search-slow"
-  retention_in_days = 14 # TODO: var.config.search_slow_log_retention_in_days? Default 14?
+  retention_in_days = coalesce(var.config.search_slow_log_retention_in_days, 7)
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
   name              = "/aws/opensearch/${local.domain}/es-application"
-  retention_in_days = 14 # TODO: var.config.es_app_log_retention_in_days? Default 14?
+  retention_in_days = coalesce(var.config.es_app_log_retention_in_days, 7)
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
   name              = "/aws/opensearch/${local.domain}/audit"
-  retention_in_days = 14 # TODO: var.config.audit_log_retention_in_days? Default 14?
+  retention_in_days = coalesce(var.config.audit_log_retention_in_days, 7)
 }
 
 resource "aws_cloudwatch_log_resource_policy" "opensearch_log_group_policy" {
@@ -70,6 +70,13 @@ resource "random_password" "password" {
 resource "aws_opensearch_domain" "this" {
   domain_name    = local.name
   engine_version = "OpenSearch_${var.config.engine}"
+
+  depends_on = [
+    aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs,
+    aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs,
+    aws_cloudwatch_log_group.opensearch_log_group_es_application_logs,
+    aws_cloudwatch_log_group.opensearch_log_group_audit_logs
+  ]
 
   cluster_config {
     dedicated_master_count   = 1

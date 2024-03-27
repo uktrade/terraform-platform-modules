@@ -20,14 +20,18 @@ variable "vpc_name" {
 
 variable "config" {
   type = object({
-    name            = optional(string),
-    engine          = string,
-    instances       = number,
-    instance        = string,
-    volume_size     = number,
-    master          = bool
-    ebs_volume_type = optional(string)
-    ebs_throughput  = optional(number)
+    name                              = optional(string),
+    engine                            = string,
+    instances                         = number,
+    instance                          = string,
+    volume_size                       = number,
+    master                            = bool
+    ebs_volume_type                   = optional(string)
+    ebs_throughput                    = optional(number)
+    index_slow_log_retention_in_days  = optional(number)
+    search_slow_log_retention_in_days = optional(number)
+    es_app_log_retention_in_days      = optional(number)
+    audit_log_retention_in_days       = optional(number)
   })
 
   validation {

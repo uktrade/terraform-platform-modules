@@ -75,6 +75,26 @@ run "test_create_opensearch" {
     condition     = aws_ssm_parameter.this-master-user.description == "opensearch_password"
     error_message = "Opensearch description should be 'opensearch_password'"
   }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.retention_in_days == 7
+    error_message = "index_slow_logs retention in days should be 7"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.retention_in_days == 7
+    error_message = "search_slow_logs retention in days should be 7"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.retention_in_days == 7
+    error_message = "es_application_logs retention in days should be 7"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.opensearch_log_group_audit_logs.retention_in_days == 7
+    error_message = "audit_logs retention in days should be 7"
+  }
 }
 
 run "test_create_opensearch_x_large_ha" {
@@ -146,14 +166,18 @@ run "test_overrides" {
     vpc_name    = "sandbox-ant"
 
     config = {
-      name            = "override_my_name"
-      engine          = "2.5"
-      instance        = "t3.small.search"
-      instances       = 1
-      volume_size     = 80
-      master          = false
-      ebs_volume_type = "gp3"
-      ebs_throughput  = 500
+      name                              = "override_my_name"
+      engine                            = "2.5"
+      instance                          = "t3.small.search"
+      instances                         = 1
+      volume_size                       = 80
+      master                            = false
+      ebs_volume_type                   = "gp3"
+      ebs_throughput                    = 500
+      index_slow_log_retention_in_days  = 3
+      search_slow_log_retention_in_days = 14
+      es_app_log_retention_in_days      = 30
+      audit_log_retention_in_days       = 1096
     }
   }
 
@@ -171,6 +195,26 @@ run "test_overrides" {
     condition     = aws_opensearch_domain.this.ebs_options[0].throughput == 500
     error_message = "Opensearch throughput should be 500"
   }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.retention_in_days == 3
+    error_message = "index_slow_logs retention in days should be 3"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.retention_in_days == 14
+    error_message = "search_slow_logs retention in days should be 14"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.retention_in_days == 30
+    error_message = "es_application_logs retention in days should be 30"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.opensearch_log_group_audit_logs.retention_in_days == 1096
+    error_message = "audit_logs retention in days should be 1096"
+  }
 }
 
 run "test_volume_type_validation" {
@@ -183,16 +227,24 @@ run "test_volume_type_validation" {
     vpc_name    = "sandbox-ant"
 
     config = {
-      engine          = "2.5"
-      instance        = "t3.small.search"
-      instances       = 1
-      volume_size     = 80
-      master          = false
-      ebs_volume_type = "banana"
+      engine                            = "2.5"
+      instance                          = "t3.small.search"
+      instances                         = 1
+      volume_size                       = 80
+      master                            = false
+      ebs_volume_type                   = "banana"
+      index_slow_log_retention_in_days  = 9
+      search_slow_log_retention_in_days = 10
+      es_app_log_retention_in_days      = 13
+      audit_log_retention_in_days       = 37
     }
   }
 
   expect_failures = [
-    var.config.ebs_volume_type
+    var.config.ebs_volume_type,
+    var.config.index_slow_log_retention_in_days,
+    var.config.search_slow_log_retention_in_days,
+    var.config.es_app_log_retention_in_days,
+    var.config.audit_log_retention_in_days,
   ]
 }
