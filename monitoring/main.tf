@@ -1,6 +1,6 @@
 data "external" "ecs_cluster_name" {
   program = ["bash", "${path.module}/aws_ecs_cluster_name_data_source.sh"]
-  query   = {
+  query = {
     needle = "${var.application}-${var.environment}-Cluster"
   }
 }
@@ -86,7 +86,7 @@ resource "aws_cloudwatch_dashboard" "compute" {
 resource "aws_resourcegroups_group" "application-insights-resources" {
   name = "${var.application}-${var.environment}-application-insights-resources"
   resource_query {
-    type  = "TAG_FILTERS_1_0"
+    type = "TAG_FILTERS_1_0"
     query = jsonencode({
       ResourceTypeFilters = ["AWS::AllSupported"]
       TagFilters = [
