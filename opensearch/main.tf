@@ -45,7 +45,7 @@ CONFIG
 }
 
 resource "aws_security_group" "opensearch-security-group" {
-  name        = "${var.config.name}-${var.environment}--opensearch-sg"
+  name        = "${local.name}-${var.environment}--opensearch-sg"
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow inbound HTTP traffic"
 
@@ -68,7 +68,7 @@ resource "random_password" "password" {
 }
 
 resource "aws_opensearch_domain" "this" {
-  domain_name    = var.config.name
+  domain_name    = local.name
   engine_version = "OpenSearch_${var.config.engine}"
 
   cluster_config {
@@ -115,8 +115,8 @@ resource "aws_opensearch_domain" "this" {
   ebs_options {
     ebs_enabled = true
     volume_size = var.config.volume_size
-    volume_type = "gp3" # TODO: var.config.ebs_volume_type? Default to gp3?
-    throughput  = 250   # TODO var.config.throughput? Default to 250?
+    volume_type = coalesce(var.config.ebs_volume_type, "gp2")
+    throughput  = coalesce(var.config.ebs_throughput, 250)
   }
 
   auto_tune_options {
@@ -161,7 +161,7 @@ resource "aws_opensearch_domain" "this" {
             "Action": "es:*",
             "Principal": "*",
             "Effect": "Allow",
-            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.config.name}/*"
+            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.name}/*"
         }
     ]
 }
@@ -172,7 +172,7 @@ CONFIG
 
 resource "aws_ssm_parameter" "this-master-user" {
   # This will be a problem if you have > 1 opensearch instance per environment
-  name        = "/copilot/${var.config.name}/${var.environment}/secrets/${upper(replace("${var.config.name}-opensearch", "-", "_"))}"
+  name        = local.ssm_parameter_name
   description = "opensearch_password"
   type        = "SecureString"
   value       = "https://${local.master_user}:${urlencode(random_password.password.result)}@${aws_opensearch_domain.this.endpoint}"
