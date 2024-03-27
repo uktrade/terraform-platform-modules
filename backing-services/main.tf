@@ -44,6 +44,6 @@ module "opensearch" {
   application = var.args.application
   environment = var.environment
 
-  config = each.value
-  vpc_name  = var.vpc_name
+  config   = each.value
+  vpc_name = var.vpc_name
 }
