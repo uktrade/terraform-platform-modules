@@ -16,6 +16,11 @@ data "aws_region" "current" {}
    retention_in_days = 14
  }
 
+resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
+  name              = "/aws/opensearch/${local.domain}/audit"
+  retention_in_days = 14
+}
+
 resource "aws_cloudwatch_log_resource_policy" "opensearch_log_group_policy" {
   policy_name = "opensearch_log_group_policy"
   policy_document = <<CONFIG
@@ -54,11 +59,7 @@ resource "aws_security_group" "opensearch-security-group" {
       data.aws_vpc.vpc.cidr_block,
     ]
   }
-  tags = {
-        copilot-application = var.application
-        copilot-environment = var.environment
-        managed-by = "Terraform"
-  }
+  tags = local.tags
 }
 
 resource "random_password" "password" {
@@ -67,29 +68,19 @@ resource "random_password" "password" {
 }
 
 resource "aws_opensearch_domain" "this" {
-  # ToDo: Stupid 28 character limit, need to check and randamize name
   domain_name    = var.config.name
   engine_version = "OpenSearch_${var.config.engine}"
 
-#  depends_on = [
-#    aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs,
-#    aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs,
-#    aws_cloudwatch_log_group.opensearch_log_group_es_application_logs
-#  ]
-#
   cluster_config {
     dedicated_master_count   = 1
     dedicated_master_type    = var.config.master ? var.config.instance : null
     dedicated_master_enabled = var.config.master
     instance_type            = var.config.instance
-    instance_count           = var.config.instances
-    zone_awareness_enabled   = false
-    # zone_awareness_config {
-    #   availability_zone_count = var.zone_awareness_enabled ? length(tolist(data.aws_subnets.private-subnets.ids)) : null
-    # }
-    # zone_awareness_config {
-    #   availability_zone_count = 3
-    # }
+    instance_count           = local.instances
+    zone_awareness_enabled   = local.zone_awareness_enabled
+     zone_awareness_config {
+       availability_zone_count = local.zone_count
+     }
   }
 
   advanced_security_options {
@@ -147,19 +138,19 @@ resource "aws_opensearch_domain" "this" {
      log_type                 = "ES_APPLICATION_LOGS"
    }
 
+  log_publishing_options {
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_audit_logs.arn
+    log_type                 = "AUDIT_LOGS"
+  }
+
   node_to_node_encryption {
     enabled = true
   }
 
   vpc_options {
-    # We get this error when deploying a single instance and supplying the full list of subnet IDs:
-    #  Error: creating OpenSearch Domain: ValidationException: You must specify exactly one subnet.
-    #subnet_ids = [local.instance_subnet_id]
-    subnet_ids = [tolist(data.aws_subnets.private-subnets.ids)[0]]
-
+    subnet_ids = local.subnets
     security_group_ids = [aws_security_group.opensearch-security-group.id]
   }
-
 
   access_policies = <<CONFIG
 {
@@ -175,11 +166,7 @@ resource "aws_opensearch_domain" "this" {
 }
 CONFIG
 
-tags = {
-        copilot-application = var.application
-        copilot-environment = var.environment
-        managed-by = "Terraform"
-  }
+  tags = local.tags
 }
 
 resource "aws_ssm_parameter" "this-master-user" {
@@ -189,15 +176,10 @@ resource "aws_ssm_parameter" "this-master-user" {
   type        = "SecureString"
   value       = "https://${local.master_user}:${urlencode(random_password.password.result)}@${aws_opensearch_domain.this.endpoint}"
 
-  tags = {
-        copilot-application = var.application
-        copilot-environment = var.environment
-        managed-by = "Terraform"
-  }
+  tags = local.tags
 }
 
 data "aws_vpc" "vpc" {
-  #depends_on = [module.platform-vpc]
   filter {
       name = "tag:Name"
       values = [var.vpc_name]

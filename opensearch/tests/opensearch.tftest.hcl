@@ -4,17 +4,20 @@ run "test_create_opensearch" {
   variables {
     application = "my_app"
     environment = "my_env"
-    space = "sandbox-ant"
+    vpc_name = "sandbox-ant"
 
     config = {
         name            = "my-opensearch"
         engine          = "2.5"
-        plan            = "tiny"
+        instance        = "t3.small.search"
+        instances       = 1
+        volume_size     =  80
+        master          = false
     }
   }
 
   assert {
-    condition = aws_opensearch_domain.this.domain_name == "my-opensearch-engine"
+    condition = aws_opensearch_domain.this.domain_name == "my-opensearch"
     error_message = "Opensearch domain_name should be 'my-opensearch-engine'"
   }
 
@@ -64,40 +67,21 @@ run "test_create_opensearch" {
   }
 }
 
-run "test_create_opensearch_override_volume_size" {
-  command = plan
-
-  variables {
-    application = "my_app"
-    environment = "my_env"
-    space = "sandbox-ant"
-
-    config = {
-      name            = "my-opensearch"
-      engine          = "2.5"
-      plan            = "tiny"
-      volume_size     = 500
-    }
-  }
-
-  assert {
-    condition = aws_opensearch_domain.this.ebs_options[0].volume_size == 500
-    error_message = "Opensearch volume_size should be 500"
-  }
-}
-
 run "test_create_opensearch_x_large_ha" {
   command = plan
 
   variables {
     application = "my_app"
     environment = "my_env"
-    space = "sandbox-ant"
+    vpc_name = "sandbox-ant"
 
     config = {
       name            = "my-opensearch"
       engine          = "2.5"
-      plan            = "x-large-ha"
+      instance        = "m6g.2xlarge.search"
+      instances       = 2
+      volume_size     =  1500
+      master          = false
     }
   }
 

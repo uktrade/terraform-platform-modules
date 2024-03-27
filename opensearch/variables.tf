@@ -13,12 +13,11 @@ variable "vpc_name" {
 variable "config" {
   type = object({
     name            = string,
-    engine          = optional(string),
-    deletion_policy = optional(string),
-    instances       = optional(number)
-    instance        = optional(string),
-    volume_size     = optional(number),
-    master          = optional(bool)
+    engine          = string,
+    instances       = number,
+    instance        = string,
+    volume_size     = number,
+    master          = bool
   })
 
   validation {
