@@ -11,7 +11,7 @@ module "s3" {
 }
 
 module "rds-postgres" {
-    source =  "../rds-postgres"
+    source =  "../postgres"
 
     for_each = local.postgres
 
