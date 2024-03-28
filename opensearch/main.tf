@@ -2,22 +2,22 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
-  name              = "/aws/opensearch/${local.domain}/index-slow"
+  name              = "/aws/opensearch/${local.domain_name}/index-slow"
   retention_in_days = coalesce(var.config.index_slow_log_retention_in_days, 7)
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
-  name              = "/aws/opensearch/${local.domain}/search-slow"
+  name              = "/aws/opensearch/${local.domain_name}/search-slow"
   retention_in_days = coalesce(var.config.search_slow_log_retention_in_days, 7)
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
-  name              = "/aws/opensearch/${local.domain}/es-application"
+  name              = "/aws/opensearch/${local.domain_name}/es-application"
   retention_in_days = coalesce(var.config.es_app_log_retention_in_days, 7)
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
-  name              = "/aws/opensearch/${local.domain}/audit"
+  name              = "/aws/opensearch/${local.domain_name}/audit"
   retention_in_days = coalesce(var.config.audit_log_retention_in_days, 7)
 }
 
@@ -45,7 +45,7 @@ CONFIG
 }
 
 resource "aws_security_group" "opensearch-security-group" {
-  name        = "${local.name}-${var.environment}"
+  name        = local.domain_name
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow inbound HTTP traffic"
 
@@ -68,7 +68,7 @@ resource "random_password" "password" {
 }
 
 resource "aws_opensearch_domain" "this" {
-  domain_name    = local.name
+  domain_name    = local.domain_name
   engine_version = "OpenSearch_${var.config.engine}"
 
   depends_on = [
@@ -168,7 +168,7 @@ resource "aws_opensearch_domain" "this" {
             "Action": "es:*",
             "Principal": "*",
             "Effect": "Allow",
-            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.name}/*"
+            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.domain_name}/*"
         }
     ]
 }

@@ -7,13 +7,10 @@ locals {
     copilot-environment = var.environment
   }
 
-  name               = replace(var.config.name, "_", "-")
-  ssm_parameter_name = "/copilot/${local.name}/${var.environment}/secrets/${upper(replace("${local.name}-opensearch", "-", "_"))}"
+  name               = replace(var.name, "_", "-")
+  domain_name        = replace("${local.name}-${var.environment}", "_", "-")
+  ssm_parameter_name = "/copilot/${local.name}/${var.environment}/secrets/OPENSEARCH_PASSWORD"
 
-  max_domain_length = 28
-  raw_domain        = "${var.environment}-${local.name}"
-
-  domain      = length(local.raw_domain) <= local.max_domain_length ? local.raw_domain : substr(local.raw_domain, 0, local.max_domain_length)
   master_user = "opensearch_user"
 
   instances              = coalesce(var.config.instances, 1)

@@ -19,10 +19,10 @@ run "test_create_opensearch" {
   variables {
     application = "my_app"
     environment = "my_env"
+    name        = "my_name"
     vpc_name    = "terraform-tests-vpc"
 
     config = {
-      name        = "my_name"
       engine      = "2.5"
       instance    = "t3.small.search"
       instances   = 1
@@ -32,8 +32,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.domain_name == "my-name"
-    error_message = "Opensearch domain_name should be 'my-name'"
+    condition     = aws_opensearch_domain.this.domain_name == "my-name-my-env"
+    error_message = "Opensearch domain_name should be 'my-name-my-env'"
   }
 
   assert {
@@ -107,8 +107,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/MY_NAME_OPENSEARCH"
-    error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/MY_NAME_OPENSEARCH'"
+    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD"
+    error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD'"
   }
 
   assert {
@@ -143,6 +143,7 @@ run "test_create_opensearch_x_large_ha" {
   variables {
     application = "my_app"
     environment = "my_env"
+    name        = "my_name"
     vpc_name    = "terraform-tests-vpc"
 
     config = {
@@ -186,8 +187,8 @@ run "test_create_opensearch_x_large_ha" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/MY_NAME_OPENSEARCH"
-    error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/MY_NAME_OPENSEARCH'"
+    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD"
+    error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD'"
   }
 
   assert {
@@ -202,6 +203,7 @@ run "test_overrides" {
   variables {
     application = "my_app"
     environment = "my_env"
+    name        = "my_name"
     vpc_name    = "terraform-tests-vpc"
 
     config = {
@@ -257,6 +259,7 @@ run "test_volume_type_validation" {
   variables {
     application = "my_app"
     environment = "my_env"
+    name        = "my_name"
     vpc_name    = "terraform-tests-vpc"
 
     config = {

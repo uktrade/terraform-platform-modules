@@ -1,13 +1,13 @@
 run "test_create_opensearch" {
-  command = apply
+  command = plan
 
   variables {
     application = "my_app"
     environment = "my_env"
-    vpc_name    = "terraform-tests-vpc"
+    name        = "my_name"
+    vpc_name    = "sandbox-ant" #""terraform-tests-vpc"
 
     config = {
-      name        = "my_name"
       engine      = "2.5"
       instance    = "t3.small.search"
       instances   = 1
@@ -17,8 +17,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.domain_name == "my-name"
-    error_message = "Opensearch domain_name should be 'my-name"
+    condition     = aws_opensearch_domain.this.domain_name == "my-name-my-env"
+    error_message = "Opensearch domain_name should be 'my-name-my-env"
   }
 
   assert {
@@ -57,8 +57,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/MY_NAME_OPENSEARCH"
-    error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/MY_NAME_OPENSEARCH'"
+    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD"
+    error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD'"
   }
 
   assert {
