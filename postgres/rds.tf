@@ -42,7 +42,7 @@ resource "aws_db_instance" "default" {
   db_name                     = "main"
   username                    = "postgres"
   manage_master_user_password = true
-  multi_az = local.multi_az
+  multi_az                    = local.multi_az
 
   # version
   engine         = "postgres"
@@ -70,18 +70,18 @@ resource "aws_db_instance" "default" {
   publicly_accessible                 = false
   iam_database_authentication_enabled = false
 
-  snapshot_identifier         = local.snapshot_id
-  skip_final_snapshot         = local.skip_final_snapshot
-  final_snapshot_identifier   = local.final_snapshot_identifier
-  copy_tags_to_snapshot       = true
+  snapshot_identifier       = local.snapshot_id
+  skip_final_snapshot       = local.skip_final_snapshot
+  final_snapshot_identifier = local.final_snapshot_identifier
+  copy_tags_to_snapshot     = true
 
   enabled_cloudwatch_logs_exports = ["postgresql"]
 
   # monitoring and performance
-  performance_insights_enabled = true
+  performance_insights_enabled          = true
   performance_insights_retention_period = 7
-  monitoring_interval = 15
-  monitoring_role_arn = aws_iam_role.enhanced-monitoring.arn
+  monitoring_interval                   = 15
+  monitoring_role_arn                   = aws_iam_role.enhanced-monitoring.arn
 
   depends_on = [
     aws_db_subnet_group.default,
