@@ -12,6 +12,8 @@ variable "vpc_name" {
 
 variable "config" {
   type = object({
-    domains = list(string)
+    domains = string
+    san_domains = optional(list(string))
+    domains_list = map(string)
   })
 }

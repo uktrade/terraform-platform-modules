@@ -1,3 +1,32 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 2.7.0"
+      configuration_aliases = [
+        aws.sandbox,
+        aws.dev
+      ]
+    }
+  }
+}
+
+
+locals{
+  protocols = {
+    http = {
+      port            = 80
+      ssl_policy      = null
+      certificate_arn = null
+    }
+    https = {
+      port            = 443
+      ssl_policy      = "ELBSecurityPolicy-2016-08"
+      certificate_arn = "${aws_acm_certificate.certificate.arn}"
+    }
+  }
+}
+
 data "aws_vpc" "vpc" {
   filter {
     name   = "tag:Name"
@@ -12,30 +41,6 @@ data "aws_subnets" "public-subnets" {
   }
 }
 
-# Todo: DBTP-830 Allow for assigning multiple domains/certificates to the application load balancer
-data "aws_acm_certificate" "certificate" {
-  domain = var.config.domains[0]
-}
-
-locals {
-  protocols = {
-    http = {
-      port            = 80
-      ssl_policy      = null
-      certificate_arn = null
-    }
-    https = {
-      port            = 443
-      ssl_policy      = "ELBSecurityPolicy-2016-08"
-      certificate_arn = "${data.aws_acm_certificate.certificate.arn}"
-    }
-  }
-  log_types = [
-    "access",
-    "connection"
-  ]
-}
-
 resource "aws_lb" "this" {
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
@@ -44,15 +49,9 @@ resource "aws_lb" "this" {
     aws_security_group.alb-security-group["http"].id,
     aws_security_group.alb-security-group["https"].id
   ]
-  # Todo: DBTP-831 Get ALB logs into central log bucket in the Log Archive account
   access_logs {
-    bucket  = aws_s3_bucket.alb-log-bucket.id
-    prefix  = "access"
-    enabled = true
-  }
-  connection_logs {
-    bucket  = aws_s3_bucket.alb-log-bucket.id
-    prefix  = "connection"
+    bucket  = "dbt-access-logs"
+    prefix  = "${var.application}/${var.environment}"
     enabled = true
   }
   tags = local.tags
@@ -102,30 +101,74 @@ resource "aws_lb_target_group" "http-target-group" {
   tags        = local.tags
 }
 
-resource "aws_s3_bucket" "alb-log-bucket" {
-  bucket = "${var.application}-${var.environment}-alb-logs"
-  tags   = local.tags
-}
+resource "aws_acm_certificate" "certificate" {
 
-resource "aws_s3_bucket_policy" "alb-log-bucket-policy" {
-  bucket = aws_s3_bucket.alb-log-bucket.id
-  policy = data.aws_iam_policy_document.alb-log-bucket-policy-document.json
-}
+  domain_name = var.config.domains
+  subject_alternative_names = coalesce(var.config.san_domains, [])
+  validation_method = "DNS"
+  key_algorithm = "RSA_2048"
+  tags = local.tags
 
-data "aws_elb_service_account" "main" {}
-
-data "aws_iam_policy_document" "alb-log-bucket-policy-document" {
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = [data.aws_elb_service_account.main.arn]
-    }
-    actions = [
-      "s3:PutObject"
-    ]
-    resources = [
-      aws_s3_bucket.alb-log-bucket.arn,
-      "${aws_s3_bucket.alb-log-bucket.arn}/*"
-    ]
+  lifecycle {
+    create_before_destroy = true
   }
 }
+
+data "aws_route53_zone" "r53-zone" {
+  provider = aws.dev
+
+  for_each = var.config.domains_list
+  name     = each.value
+}
+
+data "aws_route53_zone" "dev-root" {
+  provider = aws.dev
+
+  name         = "uktrade.digital"
+}
+
+resource "aws_route53_record" "validation-record" {
+  provider = aws.dev
+
+  count = length(var.config.domains_list)
+  zone_id = data.aws_route53_zone.r53-zone[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name].zone_id
+  name = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
+  type = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
+  records = [tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_value]
+  ttl = 300
+}
+
+
+
+# Code for multiple domains
+# resource "aws_acm_certificate" "certificate-additional" {
+
+#   for_each = coalesce(toset(var.config.additional-domains), [])
+#   domain_name = each.value
+#   validation_method = "DNS"
+#   key_algorithm = "RSA_2048"
+#   tags = local.tags
+
+#   lifecycle {
+#     create_before_destroy = true
+#   }
+# }
+
+# resource "aws_route53_record" "validation-record-additional" {
+#   provider = aws.dev
+
+#   #count = can( var.args.acm_certificate.dns_validation_route53_zone ) ? 1 : 0
+#   for_each = coalesce(toset(var.config.additional-domains), [])
+#   zone_id = data.aws_route53_zone.r53-zone.zone_id
+#   name = tolist(aws_acm_certificate.certificate-additional[each.key].domain_validation_options)[0].resource_record_name
+#   type = tolist(aws_acm_certificate.certificate-additional[each.key].domain_validation_options)[0].resource_record_type
+#   records = [tolist(aws_acm_certificate.certificate-additional[each.key].domain_validation_options)[0].resource_record_value]
+#   ttl = 300
+# }
+
+# resource "aws_lb_listener_certificate" "additional-https" {
+#   depends_on = [ aws_acm_certificate.certificate-additional ]
+#   for_each = coalesce(toset(var.config.additional-domains), [])
+#   listener_arn    = aws_lb_listener.alb-listener["https"].arn
+#   certificate_arn = aws_acm_certificate.certificate-additional[each.key].arn
+# }
