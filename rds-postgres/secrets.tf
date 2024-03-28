@@ -1,5 +1,3 @@
-# Create an SSM parameter that stores the master secret ARN
-
 resource "aws_ssm_parameter" "master-secret-arn" {
   name  = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}-rds-master-arn", "-", "_"))}"
   type  = "SecureString"
