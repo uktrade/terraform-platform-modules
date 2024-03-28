@@ -50,8 +50,8 @@ resource "aws_iam_role" "lambda-execution-role" {
 
 data "archive_file" "lambda" {
   type        = "zip"
-  source_file = "${path.module}/index.py"
-  output_path = "${path.module}/index.zip"
+  source_file = "${path.module}/manage_users.py"
+  output_path = "${path.module}/manage_users.zip"
 }
 
 data "aws_security_group" "rds-endpoint" {
@@ -59,10 +59,10 @@ data "aws_security_group" "rds-endpoint" {
 }
 
 resource "aws_lambda_function" "lambda" {
-  filename      = "${path.module}/index.zip"
+  filename      = "${path.module}/manage_users.zip"
   function_name = "${local.name}-rds-create-user"
   role          = aws_iam_role.lambda-execution-role.arn
-  handler       = "index.handler"
+  handler       = "manage_users.handler"
   runtime       = "python3.11"
   memory_size   = 128
   timeout       = 10
