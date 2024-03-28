@@ -4,7 +4,7 @@ run "test_create_opensearch" {
   variables {
     application = "my_app"
     environment = "my_env"
-    vpc_name    = "sandbox-ant"
+    vpc_name    = "terraform-tests-vpc"
 
     config = {
       name        = "my_name"
