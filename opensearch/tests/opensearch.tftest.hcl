@@ -4,7 +4,7 @@ run "test_create_opensearch" {
   variables {
     application = "my_app"
     environment = "my_env"
-    vpc_name    = "sandbox-ant"
+    vpc_name    = "terraform-tests-vpc"
 
     config = {
       name        = "my_name"
@@ -128,7 +128,7 @@ run "test_create_opensearch_x_large_ha" {
   variables {
     application = "my_app"
     environment = "my_env"
-    vpc_name    = "sandbox-ant"
+    vpc_name    = "terraform-tests-vpc"
 
     config = {
       name        = "my_name"
@@ -187,7 +187,7 @@ run "test_overrides" {
   variables {
     application = "my_app"
     environment = "my_env"
-    vpc_name    = "sandbox-ant"
+    vpc_name    = "terraform-tests-vpc"
 
     config = {
       name                              = "my_name"
@@ -242,7 +242,7 @@ run "test_volume_type_validation" {
   variables {
     application = "my_app"
     environment = "my_env"
-    vpc_name    = "sandbox-ant"
+    vpc_name    = "terraform-tests-vpc"
 
     config = {
       name                              = "my_name"
