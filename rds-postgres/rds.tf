@@ -42,7 +42,6 @@ resource "aws_db_instance" "default" {
   db_name                     = "main"
   username                    = "postgres"
   manage_master_user_password = true
-  # master_user_secret_kms_key_id ?
   multi_az = local.multi_az
 
   # version
