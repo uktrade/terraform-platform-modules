@@ -1,11 +1,11 @@
 run "test_create_opensearch" {
-  command = plan
+  command = apply
 
   variables {
     application = "my_app"
     environment = "my_env"
     name        = "my_name"
-    vpc_name    = "sandbox-ant" #""terraform-tests-vpc"
+    vpc_name    = "terraform-tests-vpc"
 
     config = {
       engine      = "2.5"
