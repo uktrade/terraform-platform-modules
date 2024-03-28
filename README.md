@@ -2,13 +2,13 @@
 
 ## Testing
 
-The short tests that run against the terraform plan for a module can be run by `cd`-ing into the module folder and running:
+The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
 
 ```shell
 terraform test
 ```
 
-To run the longer end to end tests that actually deploy the module, do assertions and tear back down are run from the 
+To run the longer end to end tests that actually deploy the module (via `terrafrom apply`), perform assertions and tear back down are run from the 
 same directory as follows:
 
 ```shell
