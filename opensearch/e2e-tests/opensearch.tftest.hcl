@@ -4,10 +4,10 @@ run "test_create_opensearch" {
   variables {
     application = "my_app"
     environment = "my_env"
-    name        = "my_name"
     vpc_name    = "sandbox-ant"
 
     config = {
+      name        = "my_name"
       engine      = "2.5"
       instance    = "t3.small.search"
       instances   = 1

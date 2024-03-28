@@ -45,7 +45,7 @@ CONFIG
 }
 
 resource "aws_security_group" "opensearch-security-group" {
-  name        = "${local.name}-${var.environment}--opensearch-sg"
+  name        = "${local.name}-${var.environment}"
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow inbound HTTP traffic"
 
@@ -91,7 +91,7 @@ resource "aws_opensearch_domain" "this" {
   }
 
   advanced_security_options {
-    enabled                        = true # TODO var.security_options_enabled
+    enabled                        = true
     anonymous_auth_enabled         = false
     internal_user_database_enabled = true
     master_user_options {
@@ -178,7 +178,6 @@ CONFIG
 }
 
 resource "aws_ssm_parameter" "this-master-user" {
-  # This will be a problem if you have > 1 opensearch instance per environment
   name        = local.ssm_parameter_name
   description = "opensearch_password"
   type        = "SecureString"

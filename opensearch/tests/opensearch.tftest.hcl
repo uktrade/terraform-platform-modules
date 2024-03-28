@@ -67,27 +67,27 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition = aws_opensearch_domain.this.tags.application == "my_app"
+    condition     = aws_opensearch_domain.this.tags.application == "my_app"
     error_message = "application tag was not as expected"
   }
 
   assert {
-    condition = aws_opensearch_domain.this.tags.environment == "my_env"
+    condition     = aws_opensearch_domain.this.tags.environment == "my_env"
     error_message = "environment tag was not as expected"
   }
 
   assert {
-    condition = aws_opensearch_domain.this.tags.managed-by  == "DBT Platform - Terraform"
+    condition     = aws_opensearch_domain.this.tags.managed-by == "DBT Platform - Terraform"
     error_message = "managed-by tag was not as expected"
   }
 
   assert {
-    condition = aws_opensearch_domain.this.tags.copilot-application == "my_app"
+    condition     = aws_opensearch_domain.this.tags.copilot-application == "my_app"
     error_message = "copilot-application tag was not as expected"
   }
 
   assert {
-    condition = aws_opensearch_domain.this.tags.copilot-environment == "my_env"
+    condition     = aws_opensearch_domain.this.tags.copilot-environment == "my_env"
     error_message = "copilot-environment tag was not as expected"
   }
 
@@ -245,7 +245,7 @@ run "test_volume_type_validation" {
     vpc_name    = "sandbox-ant"
 
     config = {
-      name        = "my_name"
+      name                              = "my_name"
       engine                            = "2.5"
       instance                          = "t3.small.search"
       instances                         = 1
