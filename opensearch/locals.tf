@@ -1,7 +1,10 @@
 locals {
   tags = {
-    Application = var.application
-    Environment = var.environment
+    application = var.application
+    environment = var.environment
+    managed-by  = "DBT Platform - Terraform"
+    copilot-application = var.application
+    copilot-environment = var.environment
   }
 
   name               = replace(coalesce(var.config.name, var.name), "_", "-")

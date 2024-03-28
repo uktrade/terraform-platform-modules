@@ -67,6 +67,31 @@ run "test_create_opensearch" {
   }
 
   assert {
+    condition = aws_opensearch_domain.this.tags.application == "my_app"
+    error_message = "application tag was not as expected"
+  }
+
+  assert {
+    condition = aws_opensearch_domain.this.tags.environment == "my_env"
+    error_message = "environment tag was not as expected"
+  }
+
+  assert {
+    condition = aws_opensearch_domain.this.tags.managed-by  == "DBT Platform - Terraform"
+    error_message = "managed-by tag was not as expected"
+  }
+
+  assert {
+    condition = aws_opensearch_domain.this.tags.copilot-application == "my_app"
+    error_message = "copilot-application tag was not as expected"
+  }
+
+  assert {
+    condition = aws_opensearch_domain.this.tags.copilot-environment == "my_env"
+    error_message = "copilot-environment tag was not as expected"
+  }
+
+  assert {
     condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/MY_NAME_OPENSEARCH"
     error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/MY_NAME_OPENSEARCH'"
   }
