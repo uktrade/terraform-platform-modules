@@ -6,21 +6,13 @@ variable "environment" {
   type = string
 }
 
-variable "name" {
-  type = string
-  validation {
-    condition     = length(var.name) <= 28
-    error_message = "The name ${var.name} is too long at ${length(var.name)} chars. It must be at most 28 chars"
-  }
-}
-
 variable "vpc_name" {
   type = string
 }
 
 variable "config" {
   type = object({
-    name                              = optional(string),
+    name                              = string,
     engine                            = string,
     instances                         = number,
     instance                          = string,

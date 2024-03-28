@@ -4,10 +4,10 @@ run "test_create_opensearch" {
   variables {
     application = "my_app"
     environment = "my_env"
-    name        = "my_name"
     vpc_name    = "sandbox-ant"
 
     config = {
+      name        = "my_name"
       engine      = "2.5"
       instance    = "t3.small.search"
       instances   = 1
@@ -128,10 +128,10 @@ run "test_create_opensearch_x_large_ha" {
   variables {
     application = "my_app"
     environment = "my_env"
-    name        = "my-opensearch"
     vpc_name    = "sandbox-ant"
 
     config = {
+      name        = "my_name"
       engine      = "2.5"
       instance    = "m6g.2xlarge.search"
       instances   = 2
@@ -171,8 +171,8 @@ run "test_create_opensearch_x_large_ha" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-opensearch/my_env/secrets/MY_OPENSEARCH_OPENSEARCH"
-    error_message = "Parameter store parameter name should be '/copilot/my-opensearch/my_env/secrets/MY_OPENSEARCH_OPENSEARCH'"
+    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/MY_NAME_OPENSEARCH"
+    error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/MY_NAME_OPENSEARCH'"
   }
 
   assert {
@@ -187,11 +187,10 @@ run "test_overrides" {
   variables {
     application = "my_app"
     environment = "my_env"
-    name        = "my_name"
     vpc_name    = "sandbox-ant"
 
     config = {
-      name                              = "override_my_name"
+      name                              = "my_name"
       engine                            = "2.5"
       instance                          = "t3.small.search"
       instances                         = 1
@@ -204,11 +203,6 @@ run "test_overrides" {
       es_app_log_retention_in_days      = 30
       audit_log_retention_in_days       = 1096
     }
-  }
-
-  assert {
-    condition     = aws_opensearch_domain.this.domain_name == "override-my-name"
-    error_message = "Opensearch domain_name should be 'override-my-name'"
   }
 
   assert {
@@ -248,10 +242,10 @@ run "test_volume_type_validation" {
   variables {
     application = "my_app"
     environment = "my_env"
-    name        = "my_name"
     vpc_name    = "sandbox-ant"
 
     config = {
+      name        = "my_name"
       engine                            = "2.5"
       instance                          = "t3.small.search"
       instances                         = 1

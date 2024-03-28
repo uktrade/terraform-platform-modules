@@ -7,7 +7,7 @@ locals {
     copilot-environment = var.environment
   }
 
-  name               = replace(coalesce(var.config.name, var.name), "_", "-")
+  name               = replace(var.config.name, "_", "-")
   ssm_parameter_name = "/copilot/${local.name}/${var.environment}/secrets/${upper(replace("${local.name}-opensearch", "-", "_"))}"
 
   max_domain_length = 28
