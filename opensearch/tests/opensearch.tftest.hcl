@@ -1,3 +1,18 @@
+override_data {
+  target = data.aws_vpc.vpc
+  values = {
+    id         = "vpc-00112233aabbccdef"
+    cidr_block = "10.0.0.0/16"
+  }
+}
+
+override_data {
+  target = data.aws_subnets.private-subnets
+  values = {
+    ids = ["subnet-000111222aaabbb01", "subnet-000111222aaabbb02", "subnet-000111222aaabbb03"]
+  }
+}
+
 run "test_create_opensearch" {
   command = plan
 
