@@ -1,30 +1,22 @@
 locals {
-  # tags = {
-  #     Application = var.application
-  #     Environment = var.environment
-  #     Name = var.name
-  # }
+  tags = {
+    application         = var.application
+    environment         = var.environment
+    managed-by          = "DBT Platform - Terraform"
+    copilot-application = var.application
+    copilot-environment = var.environment
+  }
 
-  # domain        = "${var.name}-engine"
+  name               = replace(var.name, "_", "-")
+  domain_name        = replace("${local.name}-${var.environment}", "_", "-")
+  ssm_parameter_name = "/copilot/${local.name}/${var.environment}/secrets/OPENSEARCH_PASSWORD"
+
   master_user = "opensearch_user"
+
+  instances              = coalesce(var.config.instances, 1)
+  zone_awareness_enabled = local.instances > 1
+  zone_count             = local.zone_awareness_enabled ? local.instances : null
+  subnets                = slice(tolist(data.aws_subnets.private-subnets.ids), 0, local.instances)
+
+  auto_tune_desired_state = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DISABLED" : "ENABLED"
 }
-
-# locals {
-#     for_each = fileset("${path.module}/config/app", "*.yml")
-#     source =  yamldecode(templatefile("${path.module}/config/app/${each.value}", {}))
-#     addons_map = {for subnet_items in flatten([for type in local.source : [
-#             for addons in type.addons : {
-#                 enabled_addon = addons
-#             }
-#         ]
-#         ]) : "${subnet_items.enabled_addon}" => true
-#     }
-# }
-
-# locals {
-#     addons_map = {for addon_items in flatten([for addons in var.args.addons :  {
-#                 enabled_addon = addons
-#             }
-#         ]) : "${addon_items.enabled_addon}" => true
-#     }
-# }
