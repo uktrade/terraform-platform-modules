@@ -78,18 +78,18 @@ resource "aws_security_group" "alb-security-group" {
   vpc_id   = data.aws_vpc.vpc.id
   tags     = local.tags
   ingress {
-    description       = "Allow from anyone on port ${each.value.port}"
-    from_port         = each.value.port
-    to_port           = each.value.port
-    protocol          = "tcp"
-    cidr_blocks       = ["0.0.0.0/0"]
+    description = "Allow from anyone on port ${each.value.port}"
+    from_port   = each.value.port
+    to_port     = each.value.port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
-    description       = "Allow traffic out on port ${each.value.port}"
-    protocol          = "tcp"
-    from_port         = 0
-    to_port           = 65535
-    cidr_blocks       = ["0.0.0.0/0"]
+    description = "Allow traffic out on port ${each.value.port}"
+    protocol    = "tcp"
+    from_port   = 0
+    to_port     = 65535
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
