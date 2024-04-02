@@ -1,47 +1,36 @@
-# variable "vpc_id" {
-#     type = string
-# }
-
-# variable "subnet_ids" {
-#     type = list
-# }
-
-variable "security_options_enabled" { type = bool }
-variable "volume_type" {
-  type = string
-}
-variable "throughput" {
-  type = number
-}
-variable "ebs_enabled" {
-  type = bool
-}
-variable "ebs_volume_size" {
-  type = number
-}
-variable "instance_type" { type = string }
-variable "instance_count" { type = number }
-variable "dedicated_master_enabled" {
-  type    = bool
-  default = false
-}
-variable "dedicated_master_count" {
-  type    = number
-  default = 0
-}
-variable "dedicated_master_type" {
-  type    = string
-  default = null
-}
-variable "zone_awareness_enabled" {
-  type    = bool
-  default = false
-}
-variable "engine_version" {
+variable "application" {
   type = string
 }
 
-variable "args" {
-  default = null
-  type    = any
+variable "environment" {
+  type = string
+}
+
+variable "name" {
+  type = string
+}
+
+variable "vpc_name" {
+  type = string
+}
+
+variable "config" {
+  type = object({
+    engine                            = string,
+    instances                         = number,
+    instance                          = string,
+    volume_size                       = number,
+    master                            = bool
+    ebs_volume_type                   = optional(string)
+    ebs_throughput                    = optional(number)
+    index_slow_log_retention_in_days  = optional(number)
+    search_slow_log_retention_in_days = optional(number)
+    es_app_log_retention_in_days      = optional(number)
+    audit_log_retention_in_days       = optional(number)
+  })
+
+  validation {
+    condition     = contains(["standard", "gp2", "gp3", "io1", "io2", "sc1", "st1"], coalesce(var.config.ebs_volume_type, "gp2"))
+    error_message = "var.config.ebs_volume_type must be one of: standard, gp2, gp3, io1, io2, sc1 or st1"
+  }
 }

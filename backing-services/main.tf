@@ -23,28 +23,28 @@ module "postgres" {
     config = each.value
 }
 
-# module "elasticache-redis" {
-#   source = "../elasticache-redis"
+module "elasticache-redis" {
+  source = "../elasticache-redis"
 
-#   for_each = local.redis
+  for_each = local.redis
 
-#   application = var.args.application
-#   environment = var.environment
-#   name        = each.key
-#   vpc_name    = var.vpc_name
+  application = var.args.application
+  environment = var.environment
+  name        = each.key
+  vpc_name    = var.vpc_name
 
-#   config = each.value
-# }
+  config = each.value
+}
 
-# module "opensearch" {
-#     source   = "../opensearch"
+module "opensearch" {
+  source = "../opensearch"
 
-#     for_each = local.openserch
+  for_each = local.opensearch
 
-#     application = var.args.application
-#     environment = var.environment
-#     name        = each.key
-#     vpc_name    = var.vpc_name
+  application = var.args.application
+  environment = var.environment
+  name        = each.key
+  vpc_name    = var.vpc_name
 
-#     config = each.value
-# }
+  config = each.value
+}
