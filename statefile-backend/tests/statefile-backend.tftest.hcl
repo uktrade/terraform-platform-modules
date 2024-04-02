@@ -13,7 +13,7 @@ run "e2e_test" {
 
   assert {
     condition     = aws_s3_bucket.terraform-state.tags["purpose"] != ""
-    error_message = "Please enter purpose tag"
+    error_message = "Purpose tag should not be empty"
   }
 
   # Bucket ACL
