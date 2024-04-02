@@ -126,4 +126,4 @@ resource "aws_cloudwatch_log_subscription_filter" "demodjango_redis_subscription
   filter_pattern  = ""
   destination_arn = local.central_log_destination_arn
 }
-
+# Test
