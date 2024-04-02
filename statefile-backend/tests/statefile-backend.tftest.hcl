@@ -1,5 +1,5 @@
 variables {
-  aws_account_name = "sandbox-statefile-test"
+  aws_account_name = "sandbox-test"
 }
 
 run "e2e_test" {
@@ -7,7 +7,7 @@ run "e2e_test" {
 
   # Bucket
   assert {
-    condition     = aws_s3_bucket.terraform-state.bucket == "terraform-platform-state-${var.aws_account_name}"
+    condition     = aws_s3_bucket.terraform-state.bucket == "terraform-platform-state-sandbox-test"
     error_message = "Invalid bucket name"
   }
 
@@ -80,7 +80,7 @@ run "e2e_test" {
 
   # DynamoDB table
   assert {
-    condition     = aws_dynamodb_table.terraform-state.name == "terraform-platform-lockdb-${var.aws_account_name}"
+    condition     = aws_dynamodb_table.terraform-state.name == "terraform-platform-lockdb-sandbox-test"
     error_message = "Invalid name for dynamoDB table"
   }
   assert {
@@ -107,7 +107,7 @@ run "e2e_test" {
     error_message = "The KMS alias is not assigned to the correct KMS key"
   }
   assert {
-    condition     = aws_kms_alias.key-alias.name == "alias/terraform-platform-state-s3-key-${var.aws_account_name}"
+    condition     = aws_kms_alias.key-alias.name == "alias/terraform-platform-state-s3-key-sandbox-test"
     error_message = "KMS key alias is incorrect"
   }
 }
