@@ -36,18 +36,17 @@ module "elasticache-redis" {
   config = each.value
 }
 
-# module "opensearch" {
-#     source   = "../opensearch"
+module "opensearch" {
+  source = "../opensearch"
 
-#     for_each = local.openserch
+  for_each = local.opensearch
 
-#     application = var.args.application
-#     environment = var.environment
-#     name        = each.key
-#     vpc_name    = var.vpc_name
-
-#     config = each.value
-# }
+  application = var.args.application
+  environment = var.environment
+  name        = each.key
+  vpc_name    = var.vpc_name
+  config = each.value
+}
 
 module "monitoring" {
   source = "../monitoring"
@@ -69,6 +68,5 @@ module "alb" {
   application = var.args.application
   environment = var.environment
   vpc_name    = var.vpc_name
-
   config = each.value
 }
