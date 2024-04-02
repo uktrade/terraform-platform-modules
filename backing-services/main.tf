@@ -36,18 +36,18 @@ module "elasticache-redis" {
   config = each.value
 }
 
-# module "opensearch" {
-#     source   = "../opensearch"
+module "opensearch" {
+  source = "../opensearch"
 
-#     for_each = local.openserch
+  for_each = local.opensearch
 
-#     application = var.args.application
-#     environment = var.environment
-#     name        = each.key
-#     vpc_name    = var.vpc_name
+  application = var.args.application
+  environment = var.environment
+  name        = each.key
+  vpc_name    = var.vpc_name
 
-#     config = each.value
-# }
+  config = each.value
+}
 
 module "alb" {
   source = "../application-load-balancer"
