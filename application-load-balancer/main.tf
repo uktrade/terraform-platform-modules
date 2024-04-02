@@ -5,14 +5,14 @@ terraform {
       version = ">= 2.7.0"
       configuration_aliases = [
         aws.sandbox,
-        aws.dev
+        aws.dev,
+        aws.prod,
       ]
     }
   }
 }
 
-
-locals{
+locals {
   protocols = {
     http = {
       port            = 80
@@ -25,6 +25,13 @@ locals{
       certificate_arn = "${aws_acm_certificate.certificate.arn}"
     }
   }
+
+  # The primary domain for every application follows these naming standard.
+  domain_prefix = coalesce(var.config.domain_prefix, "internal")
+  domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "prod.uktrade.digital") : coalesce(var.config.env_root, "uktrade.digital")
+  domain_name   = var.environment == "prod" ? "${local.domain_prefix}.${var.application}.${local.domain_suffix}" : "${local.domain_prefix}.${var.environment}.${var.application}.${local.domain_suffix}"
+  # Create a complete domain list, primary domain plus all CDN/SAN domains.
+  full_list = merge({ "${local.domain_name}" = "${var.application}.uktrade.digital" }, var.config.cdn_domains_list)
 }
 
 data "aws_vpc" "vpc" {
@@ -77,18 +84,18 @@ resource "aws_security_group" "alb-security-group" {
   vpc_id   = data.aws_vpc.vpc.id
   tags     = local.tags
   ingress {
-    description       = "Allow from anyone on port ${each.value.port}"
-    from_port         = each.value.port
-    to_port           = each.value.port
-    protocol          = "tcp"
-    cidr_blocks       = ["0.0.0.0/0"]
+    description = "Allow from anyone on port ${each.value.port}"
+    from_port   = each.value.port
+    to_port     = each.value.port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
-    description       = "Allow traffic out on port ${each.value.port}"
-    protocol          = "tcp"
-    from_port         = 0
-    to_port           = 65535
-    cidr_blocks       = ["0.0.0.0/0"]
+    description = "Allow traffic out on port ${each.value.port}"
+    protocol    = "tcp"
+    from_port   = 0
+    to_port     = 65535
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -101,74 +108,107 @@ resource "aws_lb_target_group" "http-target-group" {
   tags        = local.tags
 }
 
+# Certificate will be referenced by its primary standard domain but we include all the CDN domains in the SAN field.
 resource "aws_acm_certificate" "certificate" {
-
-  domain_name = var.config.domains
-  subject_alternative_names = coalesce(var.config.san_domains, [])
-  validation_method = "DNS"
-  key_algorithm = "RSA_2048"
-  tags = local.tags
+  domain_name               = local.domain_name
+  subject_alternative_names = coalesce(try([for san, dom in var.config.cdn_domains_list : san], null), [])
+  validation_method         = "DNS"
+  key_algorithm             = "RSA_2048"
+  tags                      = local.tags
 
   lifecycle {
     create_before_destroy = true
   }
 }
 
-data "aws_route53_zone" "r53-zone" {
+#############################################################
+# Dev R53 account - Only run for non-production applications.
+
+# This makes sure the correct root domain is selected for each of the certificate fqdn. 
+data "aws_route53_zone" "domain-root" {
   provider = aws.dev
 
-  for_each = var.config.domains_list
-  name     = each.value
+  count = var.environment != "prod" ? length(local.full_list) : 0
+  name  = local.full_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
 }
 
-data "aws_route53_zone" "dev-root" {
+resource "aws_route53_record" "validation-record-san" {
   provider = aws.dev
 
-  name         = "uktrade.digital"
-}
-
-resource "aws_route53_record" "validation-record" {
-  provider = aws.dev
-
-  count = length(var.config.domains_list)
-  zone_id = data.aws_route53_zone.r53-zone[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name].zone_id
-  name = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
-  type = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
+  count   = var.environment != "prod" ? length(local.full_list) : 0
+  zone_id = data.aws_route53_zone.domain-root[count.index].zone_id
+  name    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
+  type    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
   records = [tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_value]
-  ttl = 300
+  ttl     = 300
+}
+
+# Add ALB DNS name to application internal DNS record.
+data "aws_route53_zone" "domain-alb" {
+  provider = aws.dev
+
+  count = var.environment != "prod" ? 1 : 0
+  name  = "${var.application}.${local.domain_suffix}"
+}
+
+resource "aws_route53_record" "alb-record" {
+  provider = aws.dev
+
+  count   = var.environment != "prod" ? 1 : 0
+  zone_id = data.aws_route53_zone.domain-alb[0].zone_id
+  name    = local.domain_name
+  type    = "CNAME"
+  records = [aws_lb.this.dns_name]
+  ttl     = 300
 }
 
 
+#########################################################
+# Prod R53 account - Only run for production applications.
 
-# Code for multiple domains
-# resource "aws_acm_certificate" "certificate-additional" {
+data "aws_route53_zone" "domain-root-prod" {
+  provider = aws.prod
 
-#   for_each = coalesce(toset(var.config.additional-domains), [])
-#   domain_name = each.value
-#   validation_method = "DNS"
-#   key_algorithm = "RSA_2048"
-#   tags = local.tags
+  count = var.environment == "prod" ? 1 : 0
+  name  = local.full_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
+}
 
-#   lifecycle {
-#     create_before_destroy = true
-#   }
-# }
+# This makes sure the correct root domain is selected for each of the certificate fqdn.
+resource "aws_route53_record" "validation-record-prod" {
+  provider = aws.prod
 
-# resource "aws_route53_record" "validation-record-additional" {
-#   provider = aws.dev
+  count   = var.environment == "prod" ? length(local.full_list) : 0
+  zone_id = data.aws_route53_zone.domain-root-prod[0].zone_id
+  name    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
+  type    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
+  records = [tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_value]
+  ttl     = 300
+}
 
-#   #count = can( var.args.acm_certificate.dns_validation_route53_zone ) ? 1 : 0
-#   for_each = coalesce(toset(var.config.additional-domains), [])
-#   zone_id = data.aws_route53_zone.r53-zone.zone_id
-#   name = tolist(aws_acm_certificate.certificate-additional[each.key].domain_validation_options)[0].resource_record_name
-#   type = tolist(aws_acm_certificate.certificate-additional[each.key].domain_validation_options)[0].resource_record_type
-#   records = [tolist(aws_acm_certificate.certificate-additional[each.key].domain_validation_options)[0].resource_record_value]
-#   ttl = 300
-# }
+# Add ALB DNS name to application internal DNS record.
+data "aws_route53_zone" "domain-alb-prod" {
+  provider = aws.prod
 
-# resource "aws_lb_listener_certificate" "additional-https" {
-#   depends_on = [ aws_acm_certificate.certificate-additional ]
-#   for_each = coalesce(toset(var.config.additional-domains), [])
-#   listener_arn    = aws_lb_listener.alb-listener["https"].arn
-#   certificate_arn = aws_acm_certificate.certificate-additional[each.key].arn
-# }
+  count = var.environment == "prod" ? 1 : 0
+  name  = "${var.application}.${local.domain_suffix}"
+}
+
+resource "aws_route53_record" "alb-record-prod" {
+  provider = aws.prod
+
+  count   = var.environment == "prod" ? 1 : 0
+  zone_id = data.aws_route53_zone.domain-alb-prod[0].zone_id
+  name    = local.domain_name
+  type    = "CNAME"
+  records = [aws_lb.this.dns_name]
+  ttl     = 300
+}
+
+
+output "cert-arn" {
+  value = aws_acm_certificate.certificate.arn
+}
+
+output "alb-arn" {
+  value = aws_lb.this.arn
+}

@@ -7,8 +7,4 @@ locals {
     copilot-environment = var.environment
     managed-by          = "Terraform"
   }
-  # log_types = [
-  #   "access",
-  #   "connection"
-  # ]
 }

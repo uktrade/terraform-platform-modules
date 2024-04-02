@@ -50,16 +50,17 @@ module "elasticache-redis" {
 # }
 
 module "alb" {
-    source   = "../application-load-balancer"
+  source = "../application-load-balancer"
 
-    for_each = local.alb
-    providers = {
-          aws.sandbox = aws.sandbox
-          aws.dev = aws.dev
-    }
-    application = var.args.application
-    environment = var.environment
-    vpc_name    = var.vpc_name
+  for_each = local.alb
+  providers = {
+    aws.sandbox = aws.sandbox
+    aws.dev     = aws.dev
+    aws.prod    = aws.prod
+  }
+  application = var.args.application
+  environment = var.environment
+  vpc_name    = var.vpc_name
 
-    config = each.value
+  config = each.value
 }
