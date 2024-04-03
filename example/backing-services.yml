@@ -11,17 +11,12 @@ dw-redis:
 
 dw-postgres:
   type: postgres
-  version: 14.4
+  version: 14
   environments:
     "*":
-      min_capacity: 0.5 # AllowedValues: from 0.5 through 128
-      max_capacity: 8   # AllowedValues: from 0.5 through 128
-    staging:
-      deletion_protection: true
-      deletion_policy: Retain
+      multi_az: false
     prod:
       deletion_protection: true
-      deletion_policy: Retain
 
 dw-opensearch:
   type: opensearch
@@ -52,6 +47,7 @@ dw-s3-bucket:
     staging:
       bucket_name: xyz-test-acme-widgets-ltd
       versioning: false
+
     training:
       bucket_name: digital-workspace-v2-training
   objects:

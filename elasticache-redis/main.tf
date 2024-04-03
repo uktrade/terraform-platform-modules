@@ -24,7 +24,7 @@ data "aws_caller_identity" "current" {}
 
 
 resource "aws_elasticache_replication_group" "redis" {
-  replication_group_id       = "${var.name}${var.environment}"
+  replication_group_id       = "${var.name}-${var.environment}"
   description                = "${var.name}-${var.environment}-redis-cluster"
   engine                     = "redis"
   engine_version             = var.config.engine
@@ -43,14 +43,14 @@ resource "aws_elasticache_replication_group" "redis" {
 
   log_delivery_configuration {
     log_type         = "slow-log"
-    destination      = aws_cloudwatch_log_group.redis_slow_log_group.name
+    destination      = aws_cloudwatch_log_group.redis-slow-log-group.name
     destination_type = "cloudwatch-logs"
     log_format       = "json"
   }
 
   log_delivery_configuration {
     log_type         = "engine-log"
-    destination      = aws_cloudwatch_log_group.redis_engine_log_group.name
+    destination      = aws_cloudwatch_log_group.redis-engine-log-group.name
     destination_type = "cloudwatch-logs"
     log_format       = "json"
   }
@@ -64,10 +64,10 @@ resource "aws_security_group" "redis" {
   description = "Allow ingress from VPC for Redis"
 
   ingress {
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
-    security_groups = [data.aws_security_group.base.id]
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = [data.aws_vpc.vpc.cidr_block]
   }
   egress {
     from_port   = 0
@@ -99,30 +99,30 @@ resource "aws_elasticache_subnet_group" "es-subnet-group" {
   )
 }
 
-resource "aws_cloudwatch_log_group" "redis_slow_log_group" {
+resource "aws_cloudwatch_log_group" "redis-slow-log-group" {
   name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/slow"
   retention_in_days = 7
   tags              = local.tags
 }
 
-resource "aws_cloudwatch_log_group" "redis_engine_log_group" {
+resource "aws_cloudwatch_log_group" "redis-engine-log-group" {
   name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/engine"
   retention_in_days = 7
   tags              = local.tags
 }
 
-resource "aws_cloudwatch_log_subscription_filter" "demodjango_redis_subscription_filter_engine" {
-  name            = "${var.name}-${var.environment}-filter-engine"
+resource "aws_cloudwatch_log_subscription_filter" "demodjango-redis-subscription-filter-engine" {
+  name            = "/aws/elasticache/${var.name}/${var.environment}/engine"
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
-  log_group_name  = aws_cloudwatch_log_group.redis_engine_log_group.name
+  log_group_name  = aws_cloudwatch_log_group.redis-engine-log-group.name
   filter_pattern  = ""
   destination_arn = local.central_log_destination_arn
 }
 
-resource "aws_cloudwatch_log_subscription_filter" "demodjango_redis_subscription_filter_slow" {
-  name            = "${var.name}-${var.environment}-filter-slow"
+resource "aws_cloudwatch_log_subscription_filter" "demodjango-redis-subscription-filter-slow" {
+  name            = "/aws/elasticache/${var.name}/${var.environment}/slow"
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
-  log_group_name  = aws_cloudwatch_log_group.redis_slow_log_group.name
+  log_group_name  = aws_cloudwatch_log_group.redis-slow-log-group.name
   filter_pattern  = ""
   destination_arn = local.central_log_destination_arn
 }
