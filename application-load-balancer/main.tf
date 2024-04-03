@@ -99,7 +99,7 @@ resource "aws_acm_certificate" "certificate" {
   }
 }
 
-#############################################################
+################################################################
 # Dev R53 account - Will only be run for non-production domains.
 
 # This makes sure the correct root domain is selected for each of the certificate fqdn. 
