@@ -21,6 +21,7 @@ locals {
   }
 
   # The primary domain for every application follows these naming standard.
+  # non-prod = internal.<application name>.uktrade.digital, prod = internal.<application name>.prod.uktrade.digital
   domain_prefix = coalesce(var.config.domain_prefix, "internal")
   domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "prod.uktrade.digital") : coalesce(var.config.env_root, "uktrade.digital")
   domain_name   = var.environment == "prod" ? "${local.domain_prefix}.${var.application}.${local.domain_suffix}" : "${local.domain_prefix}.${var.environment}.${var.application}.${local.domain_suffix}"
