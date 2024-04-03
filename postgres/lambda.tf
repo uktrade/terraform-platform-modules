@@ -83,7 +83,7 @@ resource "aws_lambda_invocation" "create-application-user" {
     CopilotEnvironment  = var.environment
     MasterUserSecretArn = aws_db_instance.default.master_user_secret[0].secret_arn
     SecretDescription   = "RDS application user secret for ${local.name}"
-    SecretName          = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}_APPLICATION_USER"
+    SecretName          = "/copilot/${var.application}/${var.environment}/secrets/${local.application_user_secret_name}"
     Username            = "application_user"
     Permissions = [
       "SELECT",
@@ -113,7 +113,7 @@ resource "aws_lambda_invocation" "create-readonly-user" {
     CopilotEnvironment  = var.environment
     MasterUserSecretArn = aws_db_instance.default.master_user_secret[0].secret_arn
     SecretDescription   = "RDS application user secret for ${local.name}"
-    SecretName          = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}_READ_ONLY_USER"
+    SecretName          = "/copilot/${var.application}/${var.environment}/secrets/${local.read_only_secret_name}"
     Username            = "readonly_user"
     Permissions = [
       "SELECT",

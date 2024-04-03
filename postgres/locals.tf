@@ -31,4 +31,9 @@ locals {
   iops         = contains(["io1", "io2"], local.storage_type) ? var.config.iops : null
 
   instance_class = coalesce(var.config.instance, "db.t3.micro")
+
+  secret_prefix                = upper(replace(var.name, "-", "_"))
+  rds_master_secret_name       = "${local.secret_prefix}_RDS_MASTER_ARN"
+  read_only_secret_name        = "${local.secret_prefix}_READ_ONLY_USER"
+  application_user_secret_name = "${local.secret_prefix}_APPLICATION_USER"
 }
