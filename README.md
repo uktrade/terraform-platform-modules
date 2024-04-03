@@ -67,7 +67,7 @@ my-opensearch:
 
 ## Application Load Balancer module
 
-This module will create a ALB that lets you specify multiple domain names for use in the https listener rule.  In addition it will create the required certificates for all the domains specified.
+This module will create a ALB that lets you specify multiple domain names for use in the HTTPS listener rule.  In addition it will create the required certificates for all the domains specified.
 
 The primary domain will always follow the pattern:
 
