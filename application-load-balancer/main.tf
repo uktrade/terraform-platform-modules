@@ -1,4 +1,5 @@
 terraform {
+  required_version = ">= 1.7.3"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -46,7 +47,7 @@ resource "aws_lb_listener" "alb-listener" {
   for_each          = local.protocols
   load_balancer_arn = aws_lb.this.arn
   port              = each.value.port
-  protocol          = upper("${each.key}")
+  protocol          = upper(each.key)
   ssl_policy        = each.value.ssl_policy
   certificate_arn   = each.value.certificate_arn
   tags              = local.tags

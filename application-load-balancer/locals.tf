@@ -16,7 +16,7 @@ locals {
     https = {
       port            = 443
       ssl_policy      = "ELBSecurityPolicy-2016-08"
-      certificate_arn = "${aws_acm_certificate.certificate.arn}"
+      certificate_arn = aws_acm_certificate.certificate.arn
     }
   }
 
@@ -26,7 +26,7 @@ locals {
   domain_name   = var.environment == "prod" ? "${local.domain_prefix}.${var.application}.${local.domain_suffix}" : "${local.domain_prefix}.${var.environment}.${var.application}.${local.domain_suffix}"
 
   # Create a complete domain list, primary domain plus all CDN/SAN domains.
-  full_list = merge({ "${local.domain_name}" = "${var.application}.uktrade.digital" }, var.config.cdn_domains_list)
+  full_list = merge({ (local.domain_name) = "${var.application}.uktrade.digital" }, var.config.cdn_domains_list)
 
   # Production checks
   number_of_non_production_domains = var.environment != "prod" ? length(local.full_list) : 0
