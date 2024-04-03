@@ -64,9 +64,9 @@ resource "aws_security_group" "redis" {
   description = "Allow ingress from VPC for Redis"
 
   ingress {
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
+    from_port = 6379
+    to_port   = 6379
+    protocol  = "tcp"
     #security_groups = [data.aws_security_group.base.id]
     cidr_blocks = [data.aws_vpc.vpc.cidr_block]
   }
