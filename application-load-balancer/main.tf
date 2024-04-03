@@ -12,28 +12,6 @@ terraform {
   }
 }
 
-locals {
-  protocols = {
-    http = {
-      port            = 80
-      ssl_policy      = null
-      certificate_arn = null
-    }
-    https = {
-      port            = 443
-      ssl_policy      = "ELBSecurityPolicy-2016-08"
-      certificate_arn = "${aws_acm_certificate.certificate.arn}"
-    }
-  }
-
-  # The primary domain for every application follows these naming standard.
-  domain_prefix = coalesce(var.config.domain_prefix, "internal")
-  domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "prod.uktrade.digital") : coalesce(var.config.env_root, "uktrade.digital")
-  domain_name   = var.environment == "prod" ? "${local.domain_prefix}.${var.application}.${local.domain_suffix}" : "${local.domain_prefix}.${var.environment}.${var.application}.${local.domain_suffix}"
-  # Create a complete domain list, primary domain plus all CDN/SAN domains.
-  full_list = merge({ "${local.domain_name}" = "${var.application}.uktrade.digital" }, var.config.cdn_domains_list)
-}
-
 data "aws_vpc" "vpc" {
   filter {
     name   = "tag:Name"
@@ -111,7 +89,7 @@ resource "aws_lb_target_group" "http-target-group" {
 # Certificate will be referenced by its primary standard domain but we include all the CDN domains in the SAN field.
 resource "aws_acm_certificate" "certificate" {
   domain_name               = local.domain_name
-  subject_alternative_names = coalesce(try([for san, dom in var.config.cdn_domains_list : san], null), [])
+  subject_alternative_names = coalesce(try((keys(var.config.cdn_domains_list)), null), [])
   validation_method         = "DNS"
   key_algorithm             = "RSA_2048"
   tags                      = local.tags
