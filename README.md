@@ -71,7 +71,7 @@ This module will create a ALB that lets you specify multiple domain names for us
 
 The primary domain will always follow the pattern:
 
-For non production: `internal.<application name>.uktrade.digital`
+For non-production: `internal.<application_name>.uktrade.digital`
 
 For production: `internal.<application name>.prod.uktrade.digital`
 
