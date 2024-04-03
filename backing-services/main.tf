@@ -10,18 +10,18 @@ module "s3" {
   config = each.value
 }
 
-# module "rds-postgres" {
-#     source =  "../rds-postgres"
+module "postgres" {
+  source = "../postgres"
 
-#     for_each = local.postgres
+  for_each = local.postgres
 
-#     application = var.args.application
-#     environment = var.environment
-#     name        = each.key
-#     vpc_name    = var.vpc_name
+  application = var.args.application
+  environment = var.environment
+  name        = each.key
+  vpc_name    = var.vpc_name
 
-#     config = each.value
-# }
+  config = each.value
+}
 
 module "elasticache-redis" {
   source = "../elasticache-redis"
