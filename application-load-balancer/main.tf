@@ -142,7 +142,7 @@ resource "aws_route53_record" "alb-record" {
 
 
 #########################################################
-# Prod R53 account - Only run for production applications.
+# Prod R53 account - Will only run for production domains.
 
 data "aws_route53_zone" "domain-root-prod" {
   provider = aws.prod
