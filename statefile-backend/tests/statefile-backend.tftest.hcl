@@ -39,7 +39,7 @@ run "e2e_test" {
   }
   assert {
     condition     = aws_s3_bucket_ownership_controls.terraform-state-ownership.rule[0].object_ownership == "BucketOwnerPreferred"
-    error_message = "Set object_ownership to 'BucketOwnerPreferred'"
+    error_message = "'object_ownership' should be 'BucketOwnerPreferred'"
   }
 
   # Bucket public access block
@@ -49,19 +49,19 @@ run "e2e_test" {
   }
   assert {
     condition     = aws_s3_bucket_public_access_block.block.block_public_acls == true
-    error_message = "'block_public_acls' must be set to true in the aws_s3_bucket_public_access_block resource"
+    error_message = "'block_public_acls' should be 'true' in 'aws_s3_bucket_public_access_block' resource"
   }
   assert {
     condition     = aws_s3_bucket_public_access_block.block.block_public_policy == true
-    error_message = "'block_public_policy' must be set to true in the aws_s3_bucket_public_access_block resource"
+    error_message = "'block_public_policy' should be 'true' in 'aws_s3_bucket_public_access_block' resource"
   }
   assert {
     condition     = aws_s3_bucket_public_access_block.block.ignore_public_acls == true
-    error_message = "'ignore_public_acls' must be set to true in the aws_s3_bucket_public_access_block resource"
+    error_message = "'ignore_public_acls' should be 'true' in 'aws_s3_bucket_public_access_block' resource"
   }
   assert {
     condition     = aws_s3_bucket_public_access_block.block.restrict_public_buckets == true
-    error_message = "'restrict_public_buckets' must be set to true in the aws_s3_bucket_public_access_block resource"
+    error_message = "'restrict_public_buckets' should be 'true' in 'aws_s3_bucket_public_access_block' resource"
   }
 
   # Bucket server side encryption
