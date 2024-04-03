@@ -11,16 +11,16 @@ module "s3" {
 }
 
 module "postgres" {
-    source =  "../postgres"
+  source = "../postgres"
 
-    for_each = local.postgres
+  for_each = local.postgres
 
-    application = var.args.application
-    environment = var.environment
-    name        = each.key
-    vpc_name    = var.vpc_name
+  application = var.args.application
+  environment = var.environment
+  name        = each.key
+  vpc_name    = var.vpc_name
 
-    config = each.value
+  config = each.value
 }
 
 module "elasticache-redis" {
