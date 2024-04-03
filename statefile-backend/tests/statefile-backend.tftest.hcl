@@ -74,7 +74,7 @@ run "e2e_test" {
     # Since this nested for loop returns a tuple ('[]' around the expression), we reference the first entry in each with '[0]'
     condition = [for rule in aws_s3_bucket_server_side_encryption_configuration.terraform-state-sse.rule :
       true if[for sse in rule.apply_server_side_encryption_by_default :
-        true if[sse.sse_algorithm == "aws:kms"][0]][0]][0] == true
+    true if[sse.sse_algorithm == "aws:kms"][0]][0]][0] == true
     error_message = "You must use customer managed KMS keys for server side encryption on this bucket"
   }
 
@@ -97,7 +97,7 @@ run "e2e_test" {
   }
   assert {
     condition = [for att in aws_dynamodb_table.terraform-state.attribute :
-      true if[att.name == "LockID" && att.type == "S"][0]][0] == true
+    true if[att.name == "LockID" && att.type == "S"][0]][0] == true
     error_message = "The 'LockID' key must be of type string ('S')"
   }
 
