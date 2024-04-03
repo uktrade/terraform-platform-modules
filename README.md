@@ -73,7 +73,7 @@ The primary domain will always follow the pattern:
 
 For non-production: `internal.<application_name>.uktrade.digital`
 
-For production: `internal.<application name>.prod.uktrade.digital`
+For production: `internal.<application_name>.prod.uktrade.digital`
 
 Additional domains (cdn_domains_list) are the domain names that will be configured in CloudFront.   
 
