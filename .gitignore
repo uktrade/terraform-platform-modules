@@ -1,1 +1,5 @@
 .terraform
+*.tfstate
+*.tfstate.backup
+*.zip
+**/.terraform.lock.hcl
