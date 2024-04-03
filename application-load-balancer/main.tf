@@ -106,14 +106,14 @@ resource "aws_acm_certificate" "certificate" {
 data "aws_route53_zone" "domain-root" {
   provider = aws.dev
 
-  count = var.environment != "prod" ? length(local.full_list) : 0
+  count = local.number_of_non_production_domains
   name  = local.full_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
 }
 
 resource "aws_route53_record" "validation-record-san" {
   provider = aws.dev
 
-  count   = var.environment != "prod" ? length(local.full_list) : 0
+  count   = local.number_of_non_production_domains
   zone_id = data.aws_route53_zone.domain-root[count.index].zone_id
   name    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
   type    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
@@ -125,14 +125,14 @@ resource "aws_route53_record" "validation-record-san" {
 data "aws_route53_zone" "domain-alb" {
   provider = aws.dev
 
-  count = var.environment != "prod" ? 1 : 0
+  count = local.only_create_for_non_production
   name  = "${var.application}.${local.domain_suffix}"
 }
 
 resource "aws_route53_record" "alb-record" {
   provider = aws.dev
 
-  count   = var.environment != "prod" ? 1 : 0
+  count   = local.only_create_for_non_production
   zone_id = data.aws_route53_zone.domain-alb[0].zone_id
   name    = local.domain_name
   type    = "CNAME"
@@ -147,7 +147,7 @@ resource "aws_route53_record" "alb-record" {
 data "aws_route53_zone" "domain-root-prod" {
   provider = aws.prod
 
-  count = var.environment == "prod" ? 1 : 0
+  count = local.number_of_production_domains
   name  = local.full_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
 }
 
@@ -155,7 +155,7 @@ data "aws_route53_zone" "domain-root-prod" {
 resource "aws_route53_record" "validation-record-prod" {
   provider = aws.prod
 
-  count   = var.environment == "prod" ? length(local.full_list) : 0
+  count   = local.number_of_production_domains
   zone_id = data.aws_route53_zone.domain-root-prod[0].zone_id
   name    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
   type    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
@@ -167,14 +167,14 @@ resource "aws_route53_record" "validation-record-prod" {
 data "aws_route53_zone" "domain-alb-prod" {
   provider = aws.prod
 
-  count = var.environment == "prod" ? 1 : 0
+  count = local.only_create_for_production
   name  = "${var.application}.${local.domain_suffix}"
 }
 
 resource "aws_route53_record" "alb-record-prod" {
   provider = aws.prod
 
-  count   = var.environment == "prod" ? 1 : 0
+  count   = local.only_create_for_production
   zone_id = data.aws_route53_zone.domain-alb-prod[0].zone_id
   name    = local.domain_name
   type    = "CNAME"
