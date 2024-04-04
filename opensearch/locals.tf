@@ -9,7 +9,7 @@ locals {
 
   name               = replace(var.name, "_", "-")
   domain_name        = replace("${local.name}-${var.environment}", "_", "-")
-  ssm_parameter_name = "/copilot/${local.name}/${var.environment}/secrets/OPENSEARCH_PASSWORD"
+  ssm_parameter_name = "/copilot/${var.application}/${var.environment}/secrets/OPENSEARCH_URI"
 
   master_user = "opensearch_user"
 
