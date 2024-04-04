@@ -1,14 +1,3 @@
-terraform {
-  required_version = ">= 1.7.5"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~>5.38.0"
-    }
-  }
-}
-
-
 # VPC
 resource "aws_vpc" "vpc" {
   cidr_block           = "${var.arg_config.cidr}${local.vpc_cidr_mask}"
