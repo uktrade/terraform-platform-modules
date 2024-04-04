@@ -64,3 +64,15 @@ module "alb" {
 
   config = each.value
 }
+
+module "monitoring" {
+  source = "../monitoring"
+
+  for_each = local.monitoring
+
+  application = var.args.application
+  environment = var.environment
+  vpc_name    = var.vpc_name
+
+  config = each.value
+}

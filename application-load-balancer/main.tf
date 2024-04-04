@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.7.3"
+  required_version = ">= 1.7.5"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -103,7 +103,7 @@ resource "aws_acm_certificate" "certificate" {
 ################################################################
 # Dev R53 account - Will only be run for non-production domains.
 
-# This makes sure the correct root domain is selected for each of the certificate fqdn. 
+# This makes sure the correct root domain is selected for each of the certificate fqdn.
 data "aws_route53_zone" "domain-root" {
   provider = aws.dev
 
