@@ -5,6 +5,20 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_vpc.vpc
+  values = {
+    id         = "vpc-00112233aabbccdef"
+    cidr_block = "10.0.0.0/16"
+  }
+}
+override_data {
+  target = data.aws_subnets.private-subnets
+  values = {
+    ids = ["subnet-000111222aaabbb01"]
+  }
+}
+
 variables {
   application = "test-application"
   environment = "test-environment"
@@ -23,11 +37,6 @@ variables {
   }
 }
 
-run "setup_tests" {
-  module {
-    source = "./tests/setup"
-  }
-}
 
 run "aws_security_group_unit_test" {
   command = plan
