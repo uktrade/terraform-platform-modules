@@ -1,30 +1,3 @@
-# override_data {
-#   target = data.aws_vpc.vpc
-#   values = {
-#     id         = "vpc-00112233aabbccdef"
-#     cidr_block = "10.0.0.0/16"
-#   }
-# }
-
-# override_data {
-#   target = data.aws_subnets.private-subnets
-#   values = {
-#     ids = ["subnet-000111222aaabbb01", "subnet-000111222aaabbb02", "subnet-000111222aaabbb03"]
-#   }
-# }
-
-# override_data {
-#   target = aws_security_group.vpc-core-sg
-#   values = {
-#     name        = "sandbox-postgres-base-sg"
-#     description = "Base security group for VPC"
-#     vpc_id      = "vpc-00112233aabbccdef"
-#     tags = {
-#       Name = "sandbox-postgres-base-sg"
-#     }
-#   }
-# }
-
 override_data {
   target = data.aws_security_group.rds-endpoint
   values = {
@@ -466,5 +439,20 @@ run "aws_lambda_invocation_unit_test" {
   assert {
     condition     = aws_lambda_invocation.create-readonly-user.terraform_key == "tf"
     error_message = "Invalid config for aws_lambda_invocation.create-readonly-user terraform_key parameter, should be tf"
+  }
+}
+
+run "aws_ssm_parameter_unit_test" {
+  command = plan
+
+  ### Test aws_ssm_parameter.master-secret-arn resource ###
+  assert {
+    condition     = aws_ssm_parameter.master-secret-arn.name == "/copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
+    error_message = "Invalid config for aws_ssm_parameter.master-secret-arn name parameter, should be /copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.master-secret-arn.type == "SecureString"
+    error_message = "Invalid config for aws_ssm_parameter.master-secret-arn type parameter, should be SecureString"
   }
 }
