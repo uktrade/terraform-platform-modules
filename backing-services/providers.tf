@@ -1,5 +1,4 @@
 provider "aws" {
-  version                  = "~>4.66.0"
   region                   = "eu-west-2"
   profile                  = "sandbox"
   alias                    = "sandbox"
@@ -7,7 +6,6 @@ provider "aws" {
 }
 
 provider "aws" {
-  version                  = "~>4.66.0"
   region                   = "us-east-1"
   profile                  = "dev"
   alias                    = "dev"
@@ -15,7 +13,6 @@ provider "aws" {
 }
 
 provider "aws" {
-  version                  = "~>4.66.0"
   region                   = "us-east-1"
   profile                  = "prod"
   alias                    = "prod"
