@@ -11,8 +11,8 @@ run "test_compute_dashboard_is_created" {
   command = plan
 
   variables {
-    application = "my_app"
-    environment = "my_env"
+    application = "my-app"
+    environment = "my-env"
     vpc_name    = "terraform-tests-vpc"
 
     config = {
@@ -22,7 +22,12 @@ run "test_compute_dashboard_is_created" {
 
   # Compute Dashboard
   assert {
-    condition     = aws_cloudwatch_dashboard.compute.dashboard_name == "my_app-my_env-compute"
+    condition     = aws_cloudwatch_dashboard.compute.dashboard_name == "my-app-my-env-compute"
     error_message = "dashboard_name is incorrect"
   }
+
+#  assert {
+#    condition     = aws_cloudwatch_dashboard.compute.dashboard_name == "my-app-my-env-compute"
+#    error_message = "dashboard_name is incorrect"
+#  }
 }
