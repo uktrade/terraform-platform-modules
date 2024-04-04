@@ -1,4 +1,5 @@
 # Terraform platform modules
+
 ## Testing
 
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
@@ -64,6 +65,34 @@ my-opensearch:
       engine: '2.7'  # Downgrade the engine.
 ```
 
+## Application Load Balancer module
+
+This module will create a ALB that lets you specify multiple domain names for use in the HTTPS listener rule.  In addition it will create the required certificates for all the domains specified.
+
+The primary domain will always follow the pattern:
+
+For non-production: `internal.<application_name>.uktrade.digital`
+
+For production: `internal.<application_name>.prod.uktrade.digital`
+
+Additional domains (cdn_domains_list) are the domain names that will be configured in CloudFront.   
+
+### Route 53 record creation
+
+The R53 domains for non production and production are stored in different AWS accounts.  The last half of the Terraform code needs to be able to run in the correct AWS account.  This where the environment check is used and the appropriate provider is defined.
+
+example `backing-services.yml` config.
+
+```yaml
+my-application-alb:
+  type: alb
+  environments:
+    dev: 
+      cdn_domains_list: {dev.my-application.uktrade.digital: "my-application.uktrade.digital"} 
+    prod:
+      domain: {my-application.great.gov.uk: "great.gov.uk"} 
+```
+
 ## Monitoring
 
 This will provision a CloudWatch Compute Dashboard and Application Insights for `<application>-<environment>`.
@@ -79,3 +108,4 @@ demodjango-tf-monitoring:
     prod:
       enable_ops_center: true
 ```
+
