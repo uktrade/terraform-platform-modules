@@ -6,6 +6,11 @@ variable "environment" {
   type = string
 }
 
+variable "vpc_name" {
+  type = string
+  default = "not-used"
+}
+
 variable "config" {
   type = object({
     bucket_name = string
