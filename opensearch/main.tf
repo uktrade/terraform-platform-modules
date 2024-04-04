@@ -59,6 +59,17 @@ resource "aws_security_group" "opensearch-security-group" {
       data.aws_vpc.vpc.cidr_block,
     ]
   }
+
+  egress {
+    description = "Allow traffic out on all ports"
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+
+    cidr_blocks = [
+      "0.0.0.0/0"
+    ]
+  }
   tags = local.tags
 }
 
@@ -103,16 +114,6 @@ resource "aws_opensearch_domain" "this" {
   encrypt_at_rest {
     enabled = true
   }
-
-  # TODO: Not sure what this was for. Still relevant?
-  # domain_endpoint_options {
-  #   enforce_https       = true
-  #   tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
-
-  #   custom_endpoint_enabled         = true
-  #   custom_endpoint                 = local.custom_domain
-  #   custom_endpoint_certificate_arn = data.aws_acm_certificate.opensearch.arn
-  # }
 
   domain_endpoint_options {
     enforce_https       = true
