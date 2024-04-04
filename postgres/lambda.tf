@@ -48,12 +48,6 @@ resource "aws_iam_role" "lambda-execution-role" {
   }
 }
 
-data "archive_file" "lambda" {
-  type        = "zip"
-  source_file = "${path.module}/manage_users.py"
-  output_path = "${path.module}/manage_users.zip"
-}
-
 data "aws_security_group" "rds-endpoint" {
   name = "${var.vpc_name}-rds-endpoint-sg"
 }

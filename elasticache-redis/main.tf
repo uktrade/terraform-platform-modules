@@ -13,13 +13,6 @@ data "aws_subnets" "private-subnets" {
   }
 }
 
-data "aws_security_group" "base" {
-  filter {
-    name   = "tag:Name"
-    values = ["${var.vpc_name}-base-sg"]
-  }
-}
-
 data "aws_caller_identity" "current" {}
 
 
