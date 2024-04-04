@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 2.7.0"
+      version = "~>4.66.0"
       configuration_aliases = [
         aws.sandbox,
         aws.dev,

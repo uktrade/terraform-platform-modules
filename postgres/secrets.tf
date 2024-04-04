@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~>4.66.0"
+    }
+  }
+}
+
 resource "aws_ssm_parameter" "master-secret-arn" {
   name  = "/copilot/${var.application}/${var.environment}/secrets/${local.rds_master_secret_name}"
   type  = "SecureString"
