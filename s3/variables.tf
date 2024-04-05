@@ -7,7 +7,7 @@ variable "environment" {
 }
 
 variable "vpc_name" {
-  type = string
+  type    = string
   default = "not-used"
 }
 
