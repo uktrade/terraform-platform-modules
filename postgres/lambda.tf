@@ -52,6 +52,8 @@ data "aws_security_group" "rds-endpoint" {
   name = "${var.vpc_name}-rds-endpoint-sg"
 }
 
+# This file needs to exist, but it's not directly used in the Terraform so...
+# tflint-ignore: terraform_unused_declarations
 data "archive_file" "lambda" {
   type        = "zip"
   source_file = "${path.module}/manage_users.py"

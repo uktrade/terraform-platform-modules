@@ -1,14 +1,3 @@
-terraform {
-  required_version = ">= 1.7.5"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 2.7.0"
-    }
-  }
-}
-
-
 # VPC
 resource "aws_vpc" "vpc" {
   cidr_block           = "${var.arg_config.cidr}${local.vpc_cidr_mask}"
@@ -135,7 +124,7 @@ resource "aws_route" "private-route" {
 }
 
 # If there is only 1 NAT gateway, only 1 route table is created and all subnets are assigned to this route table.
-# If there are multiple NAT gateways, equivelent number of route tables are created and therfore matching AZ subnets are assigned to the matching route tables. 
+# If there are multiple NAT gateways, equivelent number of route tables are created and therfore matching AZ subnets are assigned to the matching route tables.
 resource "aws_route_table_association" "private" {
   for_each       = var.arg_config.az_map.private
   subnet_id      = aws_subnet.private[each.key].id
