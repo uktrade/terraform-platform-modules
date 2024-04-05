@@ -1,5 +1,5 @@
 resource "aws_db_parameter_group" "default" {
-  name   = local.name
+  name   = "${local.name}-${local.family}"
   family = local.family
 
   tags = local.tags

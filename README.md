@@ -1,4 +1,5 @@
 # Terraform platform modules
+
 ## Testing
 
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
@@ -22,12 +23,12 @@ This module is configured by a yaml file and two simple args:
 locals {
   args = {
     application = "my-app-tf"
-    services    = yamldecode(file("backing-services.yml"))
+    services    = yamldecode(file("extensions.yml"))
   }
 }
 
-module "backing-services" {
-  source     = "git::ssh://git@github.com/uktrade/terraform-platform-modules.git//backing-services?depth=1&ref=main"
+module "extensions" {
+  source     = "git::ssh://git@github.com/uktrade/terraform-platform-modules.git//extensions?depth=1&ref=main"
 
   args        = local.args
   environment = "my-env"
@@ -37,7 +38,7 @@ module "backing-services" {
 
 ## Opensearch module configuration options
 
-The options available for configuring the opensearch module should be applied in the `backing-services.yml` file. They 
+The options available for configuring the opensearch module should be applied in the `extensions.yml` file. They 
 should look something like this:
 
 ```yaml
@@ -59,16 +60,43 @@ my-opensearch:
       #    master: false
       #    instance: m6g.xlarge.search
     env-one:  # Per-environment overrides for any of the defaults in the previous section
-      name: my-app-env-one  # The name of the opensearch instance. 28 char limit and unique per account.
       plan: large    # Override the plan.
       engine: '2.7'  # Downgrade the engine.
+```
+
+## Application Load Balancer module
+
+This module will create a ALB that lets you specify multiple domain names for use in the HTTPS listener rule.  In addition it will create the required certificates for all the domains specified.
+
+The primary domain will always follow the pattern:
+
+For non-production: `internal.<application_name>.uktrade.digital`
+
+For production: `internal.<application_name>.prod.uktrade.digital`
+
+Additional domains (cdn_domains_list) are the domain names that will be configured in CloudFront.   
+
+### Route 53 record creation
+
+The R53 domains for non production and production are stored in different AWS accounts.  The last half of the Terraform code needs to be able to run in the correct AWS account.  This where the environment check is used and the appropriate provider is defined.
+
+example `extensions.yml` config.
+
+```yaml
+my-application-alb:
+  type: alb
+  environments:
+    dev: 
+      cdn_domains_list: {dev.my-application.uktrade.digital: "my-application.uktrade.digital"} 
+    prod:
+      domain: {my-application.great.gov.uk: "great.gov.uk"} 
 ```
 
 ## Monitoring
 
 This will provision a CloudWatch Compute Dashboard and Application Insights for `<application>-<environment>`.
 
-Example usage in `backing-services.yml`...
+Example usage in `extensions.yml`...
 
 ```yaml
 demodjango-tf-monitoring:
@@ -79,3 +107,4 @@ demodjango-tf-monitoring:
     prod:
       enable_ops_center: true
 ```
+

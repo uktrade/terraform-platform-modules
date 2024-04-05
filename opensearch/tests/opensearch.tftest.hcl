@@ -32,8 +32,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.domain_name == "my-name-my-env"
-    error_message = "Opensearch domain_name should be 'my-name-my-env'"
+    condition     = aws_opensearch_domain.this.domain_name == "my-env-my-name"
+    error_message = "Opensearch domain_name should be 'my-env-my-name'"
   }
 
   assert {
@@ -107,8 +107,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD"
-    error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD'"
+    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my_app/my_env/secrets/OPENSEARCH_URI"
+    error_message = "Parameter store parameter name should be '/copilot/my_app/my_env/secrets/OPENSEARCH_URI'"
   }
 
   assert {
@@ -187,8 +187,8 @@ run "test_create_opensearch_x_large_ha" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD"
-    error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD'"
+    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my_app/my_env/secrets/OPENSEARCH_URI"
+    error_message = "Parameter store parameter name should be '/copilot/my_app/my_env/secrets/OPENSEARCH_URI'"
   }
 
   assert {
@@ -284,4 +284,28 @@ run "test_volume_type_validation" {
     var.config.es_app_log_retention_in_days,
     var.config.audit_log_retention_in_days,
   ]
+}
+
+run "test_domain_name_truncation" {
+  command = plan
+
+  variables {
+    application = "my_app"
+    environment = "my_prod_environment"
+    name        = "my_really_large_name"
+    vpc_name    = "terraform-tests-vpc"
+
+    config = {
+      engine      = "2.5"
+      instance    = "t3.small.search"
+      instances   = 1
+      volume_size = 80
+      master      = false
+    }
+  }
+
+  assert {
+    condition     = aws_opensearch_domain.this.domain_name == "my-prod-environment-my-reall"
+    error_message = "Opensearch domain_name should be 'my-prod-environment-my-reall'"
+  }
 }

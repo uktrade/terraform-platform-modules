@@ -1,12 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 2.7.0"
-    }
-  }
-}
-
 resource "aws_s3_bucket" "terraform-state" {
   bucket = "terraform-platform-state-${var.aws_account_name}"
   tags = merge(

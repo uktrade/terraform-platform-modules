@@ -1,5 +1,22 @@
+override_data {
+  target = data.aws_vpc.vpc
+  values = {
+    id         = "vpc-00112233aabbccdef"
+    cidr_block = "10.0.0.0/16"
+  }
+}
+
+override_data {
+  target = data.aws_subnets.private-subnets
+  values = {
+    ids = ["subnet-000111222aaabbb01", "subnet-000111222aaabbb02", "subnet-000111222aaabbb03"]
+  }
+}
+
+# Need to work out how to make this work for command = apply. Prob need to add a vpc in the setup.
+
 run "test_create_opensearch" {
-  command = apply
+  command = plan
 
   variables {
     application = "my_app"
@@ -17,8 +34,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.domain_name == "my-name-my-env"
-    error_message = "Opensearch domain_name should be 'my-name-my-env"
+    condition     = aws_opensearch_domain.this.domain_name == "my-env-my-name"
+    error_message = "Opensearch domain_name should be 'my-env-my-name"
   }
 
   assert {
@@ -57,8 +74,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD"
-    error_message = "Parameter store parameter name should be '/copilot/my-name/my_env/secrets/OPENSEARCH_PASSWORD'"
+    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my_app/my_env/secrets/OPENSEARCH_URI"
+    error_message = "Parameter store parameter name should be '/copilot/my_app/my_env/secrets/OPENSEARCH_URI'"
   }
 
   assert {

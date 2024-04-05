@@ -48,14 +48,16 @@ resource "aws_iam_role" "lambda-execution-role" {
   }
 }
 
+data "aws_security_group" "rds-endpoint" {
+  name = "${var.vpc_name}-rds-endpoint-sg"
+}
+
+# This file needs to exist, but it's not directly used in the Terraform so...
+# tflint-ignore: terraform_unused_declarations
 data "archive_file" "lambda" {
   type        = "zip"
   source_file = "${path.module}/manage_users.py"
   output_path = "${path.module}/manage_users.zip"
-}
-
-data "aws_security_group" "rds-endpoint" {
-  name = "${var.vpc_name}-rds-endpoint-sg"
 }
 
 resource "aws_lambda_function" "lambda" {

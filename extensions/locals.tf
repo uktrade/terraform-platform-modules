@@ -15,10 +15,11 @@ locals {
     }
   }
 
-  // filter services per backing-service type
+  // filter services per extension type
   postgres   = { for k, v in local.services : k => v if v.type == "postgres" }
   s3         = { for k, v in local.services : k => v if v.type == "s3" }
   redis      = { for k, v in local.services : k => v if v.type == "redis" }
   opensearch = { for k, v in local.services : k => v if v.type == "opensearch" }
   monitoring = { for k, v in local.services : k => v if v.type == "monitoring" }
+  alb        = { for k, v in local.services : k => v if v.type == "alb" }
 }

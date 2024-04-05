@@ -12,30 +12,6 @@ data "aws_subnets" "public-subnets" {
   }
 }
 
-# Todo: DBTP-830 Allow for assigning multiple domains/certificates to the application load balancer
-data "aws_acm_certificate" "certificate" {
-  domain = var.config.domains[0]
-}
-
-locals {
-  protocols = {
-    http = {
-      port            = 80
-      ssl_policy      = null
-      certificate_arn = null
-    }
-    https = {
-      port            = 443
-      ssl_policy      = "ELBSecurityPolicy-2016-08"
-      certificate_arn = "${data.aws_acm_certificate.certificate.arn}"
-    }
-  }
-  log_types = [
-    "access",
-    "connection"
-  ]
-}
-
 resource "aws_lb" "this" {
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
@@ -44,15 +20,9 @@ resource "aws_lb" "this" {
     aws_security_group.alb-security-group["http"].id,
     aws_security_group.alb-security-group["https"].id
   ]
-  # Todo: DBTP-831 Get ALB logs into central log bucket in the Log Archive account
   access_logs {
-    bucket  = aws_s3_bucket.alb-log-bucket.id
-    prefix  = "access"
-    enabled = true
-  }
-  connection_logs {
-    bucket  = aws_s3_bucket.alb-log-bucket.id
-    prefix  = "connection"
+    bucket  = "dbt-access-logs"
+    prefix  = "${var.application}/${var.environment}"
     enabled = true
   }
   tags = local.tags
@@ -62,7 +32,7 @@ resource "aws_lb_listener" "alb-listener" {
   for_each          = local.protocols
   load_balancer_arn = aws_lb.this.arn
   port              = each.value.port
-  protocol          = upper("${each.key}")
+  protocol          = upper(each.key)
   ssl_policy        = each.value.ssl_policy
   certificate_arn   = each.value.certificate_arn
   tags              = local.tags
@@ -102,30 +72,107 @@ resource "aws_lb_target_group" "http-target-group" {
   tags        = local.tags
 }
 
-resource "aws_s3_bucket" "alb-log-bucket" {
-  bucket = "${var.application}-${var.environment}-alb-logs"
-  tags   = local.tags
-}
+# Certificate will be referenced by its primary standard domain but we include all the CDN domains in the SAN field.
+resource "aws_acm_certificate" "certificate" {
+  domain_name               = local.domain_name
+  subject_alternative_names = coalesce(try((keys(var.config.cdn_domains_list)), null), [])
+  validation_method         = "DNS"
+  key_algorithm             = "RSA_2048"
+  tags                      = local.tags
 
-resource "aws_s3_bucket_policy" "alb-log-bucket-policy" {
-  bucket = aws_s3_bucket.alb-log-bucket.id
-  policy = data.aws_iam_policy_document.alb-log-bucket-policy-document.json
-}
-
-data "aws_elb_service_account" "main" {}
-
-data "aws_iam_policy_document" "alb-log-bucket-policy-document" {
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = [data.aws_elb_service_account.main.arn]
-    }
-    actions = [
-      "s3:PutObject"
-    ]
-    resources = [
-      aws_s3_bucket.alb-log-bucket.arn,
-      "${aws_s3_bucket.alb-log-bucket.arn}/*"
-    ]
+  lifecycle {
+    create_before_destroy = true
   }
+}
+
+################################################################
+# Dev R53 account - Will only be run for non-production domains.
+
+# This makes sure the correct root domain is selected for each of the certificate fqdn.
+data "aws_route53_zone" "domain-root" {
+  provider = aws.dev
+
+  count = local.number_of_non_production_domains
+  name  = local.full_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
+}
+
+resource "aws_route53_record" "validation-record-san" {
+  provider = aws.dev
+
+  count   = local.number_of_non_production_domains
+  zone_id = data.aws_route53_zone.domain-root[count.index].zone_id
+  name    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
+  type    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
+  records = [tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_value]
+  ttl     = 300
+}
+
+# Add ALB DNS name to application internal DNS record.
+data "aws_route53_zone" "domain-alb" {
+  provider = aws.dev
+
+  count = local.only_create_for_non_production
+  name  = "${var.application}.${local.domain_suffix}"
+}
+
+resource "aws_route53_record" "alb-record" {
+  provider = aws.dev
+
+  count   = local.only_create_for_non_production
+  zone_id = data.aws_route53_zone.domain-alb[0].zone_id
+  name    = local.domain_name
+  type    = "CNAME"
+  records = [aws_lb.this.dns_name]
+  ttl     = 300
+}
+
+
+#########################################################
+# Prod R53 account - Will only run for production domains.
+
+data "aws_route53_zone" "domain-root-prod" {
+  provider = aws.prod
+
+  count = local.number_of_production_domains
+  name  = local.full_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
+}
+
+# This makes sure the correct root domain is selected for each of the certificate fqdn.
+resource "aws_route53_record" "validation-record-prod" {
+  provider = aws.prod
+
+  count   = local.number_of_production_domains
+  zone_id = data.aws_route53_zone.domain-root-prod[0].zone_id
+  name    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
+  type    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
+  records = [tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_value]
+  ttl     = 300
+}
+
+# Add ALB DNS name to application internal DNS record.
+data "aws_route53_zone" "domain-alb-prod" {
+  provider = aws.prod
+
+  count = local.only_create_for_production
+  name  = "${var.application}.${local.domain_suffix}"
+}
+
+resource "aws_route53_record" "alb-record-prod" {
+  provider = aws.prod
+
+  count   = local.only_create_for_production
+  zone_id = data.aws_route53_zone.domain-alb-prod[0].zone_id
+  name    = local.domain_name
+  type    = "CNAME"
+  records = [aws_lb.this.dns_name]
+  ttl     = 300
+}
+
+
+output "cert-arn" {
+  value = aws_acm_certificate.certificate.arn
+}
+
+output "alb-arn" {
+  value = aws_lb.this.arn
 }
