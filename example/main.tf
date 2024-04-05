@@ -1,12 +1,12 @@
 locals {
   args = {
     application = "my-application"
-    services    = yamldecode(file("${path.module}/backing-services.yml"))
+    services    = yamldecode(file("${path.module}/extensions.yml"))
   }
 }
 
-module "backing-services-staging" {
-  source = "../backing-services"
+module "extensions-staging" {
+  source = "../extensions"
 
   args = local.args
 
