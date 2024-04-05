@@ -23,5 +23,5 @@ resource "aws_route53_record" "ns-records" {
   ttl      = 172800
   type     = "NS"
   zone_id  = data.aws_route53_zone.root-zone.zone_id
-  records  = slice(aws_route53_zone.new-zone[each.key].name_servers, 0, 4)
+  records  = [for ns in aws_route53_zone.new-zone[each.key].name_servers : "${ns}."]
 }
