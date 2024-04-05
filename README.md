@@ -60,7 +60,6 @@ my-opensearch:
       #    master: false
       #    instance: m6g.xlarge.search
     env-one:  # Per-environment overrides for any of the defaults in the previous section
-      name: my-app-env-one  # The name of the opensearch instance. 28 char limit and unique per account.
       plan: large    # Override the plan.
       engine: '2.7'  # Downgrade the engine.
 ```
