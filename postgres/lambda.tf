@@ -52,6 +52,12 @@ data "aws_security_group" "rds-endpoint" {
   name = "${var.vpc_name}-rds-endpoint-sg"
 }
 
+data "archive_file" "lambda" {
+  type        = "zip"
+  source_file = "${path.module}/manage_users.py"
+  output_path = "${path.module}/manage_users.zip"
+}
+
 resource "aws_lambda_function" "lambda" {
   filename      = "${path.module}/manage_users.zip"
   function_name = "${local.name}-rds-create-user"
