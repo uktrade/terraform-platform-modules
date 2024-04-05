@@ -1,4 +1,5 @@
 terraform {
+  required_version = ">= 1.7.5"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -116,26 +117,29 @@ resource "aws_nat_gateway" "public" {
 
 # Private Routing
 resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.vpc.id
+  for_each = toset(var.arg_config.nat_gateways)
+  vpc_id   = aws_vpc.vpc.id
   tags = merge(
     local.tags,
     {
-      Name = "${var.arg_name}-rt-private"
+      Name = "${var.arg_name}-rt-private-${each.key}"
     }
   )
 }
 
 resource "aws_route" "private-route" {
   for_each               = toset(var.arg_config.nat_gateways)
-  route_table_id         = aws_route_table.private.id
+  route_table_id         = aws_route_table.private[each.key].id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.public[each.key].id
 }
 
+# If there is only 1 NAT gateway, only 1 route table is created and all subnets are assigned to this route table.
+# If there are multiple NAT gateways, equivelent number of route tables are created and therfore matching AZ subnets are assigned to the matching route tables. 
 resource "aws_route_table_association" "private" {
   for_each       = var.arg_config.az_map.private
   subnet_id      = aws_subnet.private[each.key].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = var.arg_config.nat_gateways == ["a"] ? aws_route_table.private["a"].id : aws_route_table.private[each.key].id
 }
 
 
