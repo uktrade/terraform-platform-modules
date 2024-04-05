@@ -74,8 +74,15 @@ resource "aws_security_group" "opensearch-security-group" {
 }
 
 resource "random_password" "password" {
-  length  = 32
-  special = true
+  length      = 32
+  upper       = true
+  special     = true
+  lower       = true
+  numeric     = true
+  min_upper   = 1
+  min_special = 1
+  min_lower   = 1
+  min_numeric = 1
 }
 
 resource "aws_opensearch_domain" "this" {
