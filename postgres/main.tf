@@ -12,6 +12,12 @@ data "aws_subnets" "private-subnets" {
   }
 }
 
+data "archive_file" "lambda" {
+  type        = "zip"
+  source_file = "${path.module}/manage_users.py"
+  output_path = "${path.module}/manage_users.zip"
+}
+
 resource "aws_security_group" "default" {
   name        = local.name
   vpc_id      = data.aws_vpc.vpc.id

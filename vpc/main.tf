@@ -116,18 +116,19 @@ resource "aws_nat_gateway" "public" {
 
 # Private Routing
 resource "aws_route_table" "private" {
+  for_each = toset(var.arg_config.nat_gateways)
   vpc_id = aws_vpc.vpc.id
   tags = merge(
     local.tags,
     {
-      Name = "${var.arg_name}-rt-private"
+      Name = "${var.arg_name}-rt-private-${each.key}"
     }
   )
 }
 
 resource "aws_route" "private-route" {
   for_each               = toset(var.arg_config.nat_gateways)
-  route_table_id         = aws_route_table.private.id
+  route_table_id         = aws_route_table.private[each.key].id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.public[each.key].id
 }
@@ -135,7 +136,7 @@ resource "aws_route" "private-route" {
 resource "aws_route_table_association" "private" {
   for_each       = var.arg_config.az_map.private
   subnet_id      = aws_subnet.private[each.key].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = var.arg_config.nat_gateways == ["a"] ? aws_route_table.private["a"].id : aws_route_table.private[each.key].id
 }
 
 
