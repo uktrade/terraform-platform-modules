@@ -6,6 +6,10 @@ variable "environment" {
   type = string
 }
 
+variable "name" {
+  type = string
+}
+
 # Todo: Do something better than having the dummy unused variable
 # tflint-ignore: terraform_unused_declarations
 variable "vpc_name" {
@@ -16,7 +20,7 @@ variable "vpc_name" {
 variable "config" {
   type = object({
     bucket_name = string
-    versioning  = bool
+    versioning  = optional(bool)
     retention_policy = optional(object({
       mode  = string
       days  = optional(number)
