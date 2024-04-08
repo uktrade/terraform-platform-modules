@@ -77,7 +77,7 @@ resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
   }
 }
 
-// create objects based on the config.objects key test
+// create objects based on the config.objects key test test
 resource "aws_s3_object" "object" {
   for_each = { for item in lookup(var.config, "objects", []) : item.key => item.body }
 
