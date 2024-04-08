@@ -42,13 +42,19 @@ resource "aws_s3_bucket_versioning" "this-versioning" {
   bucket = aws_s3_bucket.this.id
 
   versioning_configuration {
-    status = lookup(var.config, "versioning", false) ? "Enabled" : "Disabled"
+    status = coalesce(var.config.versioning, false) ? "Enabled" : "Disabled"
   }
 }
 
 resource "aws_kms_key" "kms-key" {
   description = "KMS Key for S3 encryption"
   tags        = local.tags
+}
+
+resource "aws_kms_alias" "s3-bucket" {
+  depends_on    = [aws_kms_key.kms-key]
+  name          = "alias/${local.name}-key"
+  target_key_id = aws_kms_key.kms-key.id
 }
 
 // require server side encryption
@@ -79,9 +85,12 @@ resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
 
 // create objects based on the config.objects key
 resource "aws_s3_object" "object" {
-  for_each = { for item in lookup(var.config, "objects", []) : item.key => item.body }
+  for_each = { for item in coalesce(var.config.objects, []) : item.key => item.body }
 
   bucket  = aws_s3_bucket.this.id
   key     = each.key
   content = each.value
+
+  kms_key_id             = aws_kms_key.kms-key.arn
+  server_side_encryption = "aws:kms"
 }
