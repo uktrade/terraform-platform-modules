@@ -2,7 +2,7 @@ variables {
   vpc_name    = "test-vpc"
   application = "test-application"
   environment = "test-environment"
-  config      = {
+  config = {
     enable_ops_center = true
   }
 }
@@ -59,7 +59,7 @@ run "test_application_insights_resource_group_is_created" {
   }
 
   assert {
-    condition     = jsondecode(aws_resourcegroups_group.application-insights-resources.resource_query[0].query).ResourceTypeFilters == [
+    condition = jsondecode(aws_resourcegroups_group.application-insights-resources.resource_query[0].query).ResourceTypeFilters == [
       "AWS::AllSupported"
     ]
     error_message = "ResourceTypeFilters is incorrect"
@@ -111,7 +111,7 @@ run "test_application_insights_application_can_be_created_with_ops_center_disabl
   command = plan
 
   variables {
-    config      = {
+    config = {
       enable_ops_center = false
     }
   }
