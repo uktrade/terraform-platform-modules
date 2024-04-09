@@ -81,11 +81,11 @@ resource "aws_resourcegroups_group" "application-insights-resources" {
       ResourceTypeFilters = ["AWS::AllSupported"]
       TagFilters = [
         {
-          Key    = "copilot-application",
+          Key    = "copilot-application"
           Values = [var.application]
         },
         {
-          Key    = "copilot-environment",
+          Key    = "copilot-environment"
           Values = [var.environment]
         }
       ]
