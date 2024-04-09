@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 variables {
   vpc_name    = "test-vpc"
   application = "test-application"
