@@ -29,6 +29,8 @@ resource "aws_lb" "this" {
 }
 
 resource "aws_lb_listener" "alb-listener" {
+  depends_on = [time_sleep.wait_20_seconds]
+
   for_each          = local.protocols
   load_balancer_arn = aws_lb.this.arn
   port              = each.value.port
@@ -83,6 +85,15 @@ resource "aws_acm_certificate" "certificate" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+# When adding additional SAN domains to an already created certificate, 
+# this pause is needed to give time for the records to be validated.
+resource "time_sleep" "wait_20_seconds" {
+  depends_on = [aws_route53_record.validation-record-san[0]]
+
+  create_duration = "20s"
+  
 }
 
 ################################################################
