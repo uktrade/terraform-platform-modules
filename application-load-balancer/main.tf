@@ -93,7 +93,7 @@ resource "time_sleep" "wait_20_seconds" {
   depends_on = [aws_route53_record.validation-record-san[0]]
 
   create_duration = "20s"
-  
+
 }
 
 ################################################################
