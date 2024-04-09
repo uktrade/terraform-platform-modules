@@ -75,7 +75,7 @@ run "aws_db_parameter_group_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_db_parameter_group.default.name == "test-application-test-environment-test-name"
+    condition     = aws_db_parameter_group.default.name == "test-application-test-environment-test-name-postgres14"
     error_message = "Invalid name for aws_db_parameter_group.default"
   }
 
