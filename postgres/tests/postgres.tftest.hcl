@@ -27,7 +27,7 @@ variables {
   config = {
     version             = 14,
     deletion_protection = true,
-    multi_az = false,
+    multi_az            = false,
   }
 }
 
@@ -55,7 +55,7 @@ run "aws_security_group_unit_test" {
     condition     = aws_security_group.default.tags.environment == "test-environment"
     error_message = "Invalid tags for aws_security_group.default copilot-environment"
   }
-  
+
   assert {
     condition     = aws_security_group.default.tags.copilot-application == "test-application"
     error_message = "Invalid tags for aws_security_group.default application"
