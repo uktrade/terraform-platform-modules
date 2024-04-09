@@ -58,6 +58,16 @@ run "aws_security_group_unit_test" {
   }
 
   assert {
+    condition     = aws_security_group.default.tags.environment == "test-environment"
+    error_message = "Invalid tags for aws_security_group.default copilot-environment"
+  }
+  
+  assert {
+    condition     = aws_security_group.default.tags.copilot-application == "test-application"
+    error_message = "Invalid tags for aws_security_group.default application"
+  }
+
+  assert {
     condition     = aws_security_group.default.tags.copilot-environment == "test-environment"
     error_message = "Invalid tags for aws_security_group.default copilot-environment"
   }
