@@ -27,13 +27,7 @@ variables {
   config = {
     version             = 14,
     deletion_protection = true,
-    # volume_size         = optional(number)
-    # iops                = optional(number)
-    # snapshot_id         = optional(string)
-    # skip_final_snapshot = optional(string)
     multi_az = false,
-    # instance            = optional(string)
-    # storage_type        = optional(string)
   }
 }
 
@@ -41,7 +35,7 @@ variables {
 run "aws_security_group_unit_test" {
   command = plan
 
-  ### Test aws_security_group.default resource ###
+  # Test aws_security_group.default resource
   assert {
     condition     = aws_security_group.default.name == "test-application-test-environment-test-name"
     error_message = "Invalid name for aws_security_group.default"
@@ -81,7 +75,7 @@ run "aws_security_group_unit_test" {
 run "aws_db_parameter_group_unit_test" {
   command = plan
 
-  ### Test aws_db_parameter_group.default resource ###
+  # Test aws_db_parameter_group.default resource
   assert {
     condition     = aws_db_parameter_group.default.name == "test-application-test-environment-test-name"
     error_message = "Invalid name for aws_db_parameter_group.default"
@@ -112,7 +106,7 @@ run "aws_db_parameter_group_unit_test" {
 run "aws_db_subnet_group_unit_test" {
   command = plan
 
-  ### Test aws_db_subnet_group.default resource ###
+  # Test aws_db_subnet_group.default resource
   assert {
     condition     = aws_db_subnet_group.default.name == "test-application-test-environment-test-name"
     error_message = "Invalid name for aws_db_subnet_group.default"
@@ -127,7 +121,7 @@ run "aws_db_subnet_group_unit_test" {
 run "aws_kms_key_unit_test" {
   command = plan
 
-  ### Test aws_kms_key.default resource ###
+  # Test aws_kms_key.default resource
   assert {
     condition     = aws_kms_key.default.description == "test-application-test-environment-test-name KMS key"
     error_message = "Invalid description for aws_kms_key.default"
@@ -162,7 +156,7 @@ run "aws_kms_key_unit_test" {
 run "aws_db_instance_unit_test" {
   command = plan
 
-  ### Test aws_db_instance.default resource version ###
+  # Test aws_db_instance.default resource version
   assert {
     condition     = aws_db_instance.default.db_name == "main"
     error_message = "Invalid db_name for aws_db_instance.default"
@@ -188,7 +182,7 @@ run "aws_db_instance_unit_test" {
     error_message = "Invalid config for aws_db_instance.default username parameter, should be postgres"
   }
 
-  ### Test aws_db_instance.default resource storage ###
+  # Test aws_db_instance.default resource storage
   assert {
     condition     = aws_db_instance.default.storage_encrypted == true
     error_message = "Invalid config for aws_db_instance.default storage_encrypted parameter, should be true"
@@ -234,7 +228,7 @@ run "aws_db_instance_unit_test" {
     error_message = "Invalid config for aws_db_instance.default copy_tags_to_snapshot , should be true"
   }
 
-  ### Test aws_db_instance.default resource monitoring ###
+  # Test aws_db_instance.default resource monitoring
   assert {
     condition     = aws_db_instance.default.performance_insights_enabled == true
     error_message = "Invalid config for aws_db_instance.default performance_insights_enabled parameter, should be true"
@@ -250,7 +244,7 @@ run "aws_db_instance_unit_test" {
     error_message = "Invalid config for aws_db_instance.default monitoring_interval parameter, should be 15"
   }
 
-  ### Test aws_db_instance.default resource upgrades ###
+  # Test aws_db_instance.default resource upgrades
   assert {
     condition     = aws_db_instance.default.allow_major_version_upgrade == true
     error_message = "Invalid config for aws_db_instance.default allow_major_version_upgrade, should be true"
@@ -276,7 +270,7 @@ run "aws_db_instance_unit_test" {
 run "aws_iam_role_unit_test" {
   command = plan
 
-  ### Test aws_iam_role.enhanced-monitoring resource ###
+  # Test aws_iam_role.enhanced-monitoring resource
   assert {
     condition     = aws_iam_role.enhanced-monitoring.name_prefix == "rds-enhanced-monitoring-"
     error_message = "Invalid name_prefix for aws_iam_role.enhanced-monitoring"
@@ -307,13 +301,13 @@ run "aws_iam_role_unit_test" {
     error_message = "Invalid config for aws_iam_role.enhanced-monitoring assume_role_policy Version, should be 2012-10-17"
   }
 
-  ### Test aws_iam_role_policy_attachment.enhanced-monitoring resource ###
+  # Test aws_iam_role_policy_attachment.enhanced-monitoring resource
   assert {
     condition     = aws_iam_role_policy_attachment.enhanced-monitoring.policy_arn == "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
     error_message = "Invalid policy_arn for aws_iam_role_policy_attachment.enhanced-monitoring"
   }
 
-  ### Test aws_iam_role.lambda-execution-role resource ###
+  # Test aws_iam_role.lambda-execution-role resource
   assert {
     condition     = aws_iam_role.lambda-execution-role.name == "test-application-test-environment-test-name-lambda-role"
     error_message = "Invalid name for aws_iam_role.lambda-execution-role"
@@ -345,10 +339,10 @@ run "aws_iam_role_unit_test" {
   }
 }
 
-run "aws_cloudwatch_log_subscription_filter_unit_test" {
+run "aws_cloudwatch_log_rds_subscription_filter_unit_test" {
   command = plan
 
-  ### Test aws_cloudwatch_log_subscription_filter.rds resource ###
+  # Test aws_cloudwatch_log_subscription_filter.rds resource
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.rds.name == "/aws/rds/instance/test-application/test-environment/test-name/postgresql"
     error_message = "Invalid name for aws_cloudwatch_log_subscription_filter.rds"
@@ -368,7 +362,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
 run "aws_lambda_function_unit_test" {
   command = plan
 
-  ### Test aws_lambda_function.lambda resource ###
+  # Test aws_lambda_function.lambda resource
   assert {
     condition     = aws_lambda_function.lambda.filename == "./manage_users.zip"
     error_message = "Invalid config for aws_lambda_function.lambda filename parameter, should be ./manage_users.zip"
@@ -418,7 +412,7 @@ run "aws_lambda_function_unit_test" {
 run "aws_lambda_invocation_unit_test" {
   command = plan
 
-  ### Test aws_lambda_invocation.create-application-user resource ###
+  # Test aws_lambda_invocation.create-application-user resource
   assert {
     condition     = aws_lambda_invocation.create-application-user.function_name == "test-application-test-environment-test-name-rds-create-user"
     error_message = "Invalid config for aws_lambda_invocation.create-application-user function_name parameter, should be test-application-test-environment-test-name-rds-create-user"
@@ -439,7 +433,7 @@ run "aws_lambda_invocation_unit_test" {
     error_message = "Invalid config for aws_lambda_invocation.create-application-user terraform_key parameter, should be tf"
   }
 
-  ### Test aws_lambda_invocation.create-readonly-user resource ###
+  # Test aws_lambda_invocation.create-readonly-user resource
   assert {
     condition     = aws_lambda_invocation.create-readonly-user.function_name == "test-application-test-environment-test-name-rds-create-user"
     error_message = "Invalid config for aws_lambda_invocation.create-readonly-user function_name parameter, should be test-application-test-environment-test-name-rds-create-user"
@@ -461,10 +455,10 @@ run "aws_lambda_invocation_unit_test" {
   }
 }
 
-run "aws_ssm_parameter_unit_test" {
+run "aws_ssm_parameter_master_secret_arn_unit_test" {
   command = plan
 
-  ### Test aws_ssm_parameter.master-secret-arn resource ###
+  # Test aws_ssm_parameter.master-secret-arn resource
   assert {
     condition     = aws_ssm_parameter.master-secret-arn.name == "/copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
     error_message = "Invalid config for aws_ssm_parameter.master-secret-arn name parameter, should be /copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
