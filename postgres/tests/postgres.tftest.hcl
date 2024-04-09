@@ -35,7 +35,6 @@ variables {
 run "aws_security_group_unit_test" {
   command = plan
 
-  # Test aws_security_group.default resource
   assert {
     condition     = aws_security_group.default.name == "test-application-test-environment-test-name"
     error_message = "Invalid name for aws_security_group.default"
@@ -75,7 +74,6 @@ run "aws_security_group_unit_test" {
 run "aws_db_parameter_group_unit_test" {
   command = plan
 
-  # Test aws_db_parameter_group.default resource
   assert {
     condition     = aws_db_parameter_group.default.name == "test-application-test-environment-test-name"
     error_message = "Invalid name for aws_db_parameter_group.default"
@@ -106,7 +104,6 @@ run "aws_db_parameter_group_unit_test" {
 run "aws_db_subnet_group_unit_test" {
   command = plan
 
-  # Test aws_db_subnet_group.default resource
   assert {
     condition     = aws_db_subnet_group.default.name == "test-application-test-environment-test-name"
     error_message = "Invalid name for aws_db_subnet_group.default"
@@ -121,7 +118,6 @@ run "aws_db_subnet_group_unit_test" {
 run "aws_kms_key_unit_test" {
   command = plan
 
-  # Test aws_kms_key.default resource
   assert {
     condition     = aws_kms_key.default.description == "test-application-test-environment-test-name KMS key"
     error_message = "Invalid description for aws_kms_key.default"
@@ -342,7 +338,6 @@ run "aws_iam_role_unit_test" {
 run "aws_cloudwatch_log_rds_subscription_filter_unit_test" {
   command = plan
 
-  # Test aws_cloudwatch_log_subscription_filter.rds resource
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.rds.name == "/aws/rds/instance/test-application/test-environment/test-name/postgresql"
     error_message = "Invalid name for aws_cloudwatch_log_subscription_filter.rds"
@@ -362,7 +357,6 @@ run "aws_cloudwatch_log_rds_subscription_filter_unit_test" {
 run "aws_lambda_function_unit_test" {
   command = plan
 
-  # Test aws_lambda_function.lambda resource
   assert {
     condition     = aws_lambda_function.lambda.filename == "./manage_users.zip"
     error_message = "Invalid config for aws_lambda_function.lambda filename parameter, should be ./manage_users.zip"
@@ -458,7 +452,6 @@ run "aws_lambda_invocation_unit_test" {
 run "aws_ssm_parameter_master_secret_arn_unit_test" {
   command = plan
 
-  # Test aws_ssm_parameter.master-secret-arn resource
   assert {
     condition     = aws_ssm_parameter.master-secret-arn.name == "/copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
     error_message = "Invalid config for aws_ssm_parameter.master-secret-arn name parameter, should be /copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
