@@ -1,5 +1,18 @@
 # Terraform platform modules
 
+## Using [Terraform workspaces](https://developer.hashicorp.com/terraform/language/state/workspaces) for development
+
+In your `<application>-deploy` codebase:
+
+- `aws sso login`
+- `cd terraform`
+- `terraform init`
+- If first time `terraform workspace new <workspace>` else `terraform workspace select <workspace>`
+  - `workspace` will normally be the name of your environment
+- Change name of environments/spaces in `<application>.tf` to your environment/space
+  - This step should go away in due course, but for now we need to do this and not commit the changes to `main`
+- `terraform plan|apply`
+
 ## Testing
 
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
@@ -8,7 +21,7 @@ The short tests that run against the `terraform plan` for a module can be run by
 terraform test
 ```
 
-To run the longer end to end tests that actually deploy the module (via `terrafrom apply`), perform assertions and tear back down are run from the 
+To run the longer end-to-end tests that actually deploy the module (via `terraform apply`), perform assertions and tear back down are run from the 
 same directory as follows:
 
 ```shell
