@@ -3,6 +3,6 @@ locals {
   subnet_cidr_mask = ".0/24"
   region           = "eu-west-2"
   tags = {
-    managed-by = "Terraform"
+    managed-by = "DBT Platform - Terraform"
   }
 }
