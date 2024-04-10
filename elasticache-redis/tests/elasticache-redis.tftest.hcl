@@ -181,7 +181,7 @@ run "aws_ssm_parameter_unit_test" {
 
   ### Test aws_ssm_parameter resource ###
   assert {
-    condition     = aws_ssm_parameter.endpoint.name == "/copilot/redis-test-name/redis-test-environment/secrets/REDIS_TEST_ENVIRONMENT_REDIS"
+    condition     = aws_ssm_parameter.endpoint.name == "/copilot/redis-test-application/redis-test-environment/secrets/REDIS_TEST_NAME"
     error_message = "Invalid config for aws_ssm_parameter name"
   }
 
