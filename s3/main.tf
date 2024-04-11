@@ -94,3 +94,4 @@ resource "aws_s3_object" "object" {
   kms_key_id             = aws_kms_key.kms-key.arn
   server_side_encryption = "aws:kms"
 }
+# test
