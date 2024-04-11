@@ -1,3 +1,8 @@
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+}
+
 locals {
   tags = {
     application         = var.application
@@ -9,7 +14,7 @@ locals {
 
   name               = replace(var.name, "_", "-")
   domain_name        = substr(replace("${var.environment}-${local.name}", "_", "-"), 0, 28)
-  ssm_parameter_name = "/copilot/${var.application}/${var.environment}/secrets/OPENSEARCH_URI"
+  ssm_parameter_name = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}_OPENSEARCH_URI", "-", "_"))}"
 
   master_user = "opensearch_user"
 

@@ -107,8 +107,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my_app/my_env/secrets/OPENSEARCH_URI"
-    error_message = "Parameter store parameter name should be '/copilot/my_app/my_env/secrets/OPENSEARCH_URI'"
+    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my_app/my_env/secrets/MY_NAME_OPENSEARCH_URI"
+    error_message = "Parameter store parameter name should be '/copilot/my_app/my_env/secrets/MY_NAME_OPENSEARCH_URI'"
   }
 
   assert {
@@ -187,8 +187,8 @@ run "test_create_opensearch_x_large_ha" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my_app/my_env/secrets/OPENSEARCH_URI"
-    error_message = "Parameter store parameter name should be '/copilot/my_app/my_env/secrets/OPENSEARCH_URI'"
+    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my_app/my_env/secrets/MY_NAME_OPENSEARCH_URI"
+    error_message = "Parameter store parameter name should be '/copilot/my_app/my_env/secrets/MY_NAME_OPENSEARCH_URI'"
   }
 
   assert {
