@@ -16,3 +16,4 @@ resource "aws_route53_record" "ns-records" {
   zone_id  = data.aws_route53_zone.root-zone.zone_id
   records  = [for ns in aws_route53_zone.new-zone[each.key].name_servers : "${ns}."]
 }
+#test
