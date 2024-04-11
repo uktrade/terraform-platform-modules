@@ -128,13 +128,15 @@ Note:  We are currently treating the terraform-deployment branch on the _demodja
 
 ### Task: Deploy a vpc using the VPC Terraform module
 
-Repository required: _platform-terraform_
+Repository to execute code: _terraform-platform_
 
-### How to use
+#### How to use
 
-In _platform-terraform_ repository, there are two Terraform files that need to be updated when adding new AWS accounts or creating new VPCs, `providers.tf` and `vpcs.tf`.
+In _terraform-platform_ repository, `dbt-platform/dev/vpc` directory, there are two Terraform files that need to be updated when adding new AWS accounts or creating new VPCs: 
+- `providers.tf` 
+- `vpcs.tf`.
 
-### providers.tf
+#### providers.tf
 
 This file will contain a map of all AWS accounts that will have VPCs managed by this Terraform code.  If a new AWS account is needed add a new entry as per example.
 
@@ -147,7 +149,7 @@ provider "aws" {
 }
 ```
 
-### vpcs.tf
+#### vpcs.tf
 
 Here you define a new module per AWS account, within that module you can specify multiple VPCs.  The module will contain the VPC's unique configuration and will in-turn call the main VPC module that deploys the VPC.
 
@@ -192,22 +194,22 @@ module "vpc-<name_of_dev_aws_account>" {
 
 VARIABLES
 
-Module name:  
+- Module name:
 The naming convention is `vpc-<name_of_aws_account>`
 eg. `vpc-sandbox`
 
-VPC name:
+- VPC name:
 What you want to call the VPC.
 eg. `sandbox`
 
-cidr:
+- cidr:
 Here you enter in the first 2 Octets of the VPC network address.  This should be sequential, so make a note of previous CIDR and increment by one.  This value has to be unique unless the VPC is ephemeral, e.g. used for review apps.
 eg. `10.1`
 
-nat_gateways:
+- nat_gateways:
 There are two options here, `local.nat_gateways_dev` and `local.nat_gateways_prod`.  For dev we only need to deploy the 1 NAT gateway and for prod we deploy 3 NAT gateways.
 
-az_map:
+- az_map:
 There are two options here, `local.az_map_dev` and `local.az_map_prod`.  This defines how many availability zones the subnets are deployed into.  For dev we only need two, for prod we have all three.
 
 ---
@@ -217,48 +219,94 @@ There are two options here, `local.az_map_dev` and `local.az_map_prod`.  This de
 Repository required: _demodjango_deploy_
 
 - Terraform
-  - in `terraform/demodjango.tf`, edit the `environment` and `vpc_name` under `module.extensions-tf` 
+  - `terraform/demodjango.tf`, edit the `environment` and `vpc_name` under `module.extensions-tf` code block to use your name for the `environment` value and the name of the VPC you provisioned in the previous step, eg:
   
-  ``` terraform
-  module "extensions-tf" {
-  # Use this source when testing with local module
-  #source = "../../terraform-platform-modules/extensions"
-  source = "git::ssh://git@github.com/uktrade/terraform-platform-modules.git//extensions?depth=1&ref=main"
+    ``` terraform
+      module "extensions-tf" {
+      # Use this source when testing with local module
+      # source = "../../terraform-platform-modules/extensions"
+      source = "git::ssh://git@github.com/uktrade/terraform-platform-modules.git//extensions?depth=1&ref=main"
 
-  args        = local.args
-  environment = "willg"
-  vpc_name    = "sandbox-will"
-  }
-  ```
+      args        = local.args
+      environment = "willg"
+      vpc_name    = "sandbox-will"
+      }
+    ```
+  - You may wish to use the local `source` for the module code when testing
   - `cd terraform`
-  - Create or select a Terraform workspace for your environment `terraform workspace new|select <environment>`
+  - Create or select a Terraform workspace for your environment 
+    ``` terraform
+      terraform workspace new|select <environment>
+    ```
   - `terraform apply`
   
   
 - AWS Copilot
   - cd into `copilot` directory
-    - Make any required changes to have valid AWS Copilot configuration for your environment
-      - Copy the VPC IDs, Subnet IDs and certificate ARN from the AWS Console to your environment manifest
-      - These can be found in the VPC that was set up by following the instructions in
-      [Deploy a vpc using the VPC Terraform module](#task-deploy-a-vpc-using-the-vpc-terraform-module)
-      - The certificate ARN can be found by going to:
-        - load balancers, select the load balancer that is named after your {application_environment}
-        Eg: `demodjango-will`
-        - go to “_Listeners and rules_” & select the listener that listens on https:443 & click the value for that listener under “_Default SSL/TLS certificate_” header
-        - collect the certificate ARN, eg: `arn:aws:acm:eu-west-2:1234567890:certificate/abc12345-1234-1234-12c3-01234567890ab`
-      - You will also need to grab the “_Domain_” name on this certificate page, eg: `internal.{env}.demodjango.uktrade.digital`
-      - Set the alias and copy the Application Load Balancer ARN from the AWS console to the `http` section for your environment in `copilot/web/manifest.yml`
-      ```
-      <environment>:
+      - `copilot/environments/{env}/manifest.yml`, copy the VPC IDs and Subnet IDs from the AWS Console to your environment manifest
+      - These values can be found in the VPC that was set up by following the instructions in
+      [Deploy a vpc using the VPC Terraform module](#task-deploy-a-vpc-using-the-vpc-terraform-module), eg:
+      
+        ```yaml
+          network:
+            vpc:
+              id: vpc-01234567
+              subnets:
+                public:
+                  - id: subnet-1234567
+                  - id: subnet-2468012
+                private:
+                  - id: subnet-35791357
+                  - id: subnet-4680246
+        ```
+      
+      - Copy the certificate ARN from the AWS Console. The cert arn can be found by going to:
+        - aws console, load balancers, select the load balancer that contains your {env} name
+        - go to “_Listeners and rules_” & select the listener that listens on _https:443_ , click the value for that listener under the “_Default SSL/TLS certificate_” header. This brings you to an AWS Certificate Manager page
+        - copy the certificate ARN, eg: `arn:aws:acm:eu-west-2:1234567890:certificate/abc12345-1234-1234-12c3-01234567890ab`
+        - `copilot/environments/{env}/manifest.yml` add the cert arn here under the previously added code block
+        
+        ```yaml
         http:
-          alb: arn:aws:elasticloadbalancing:eu-west-2:852676506468:loadbalancer/app/demodjango-willg/bc968fa0a4fcd257
-          alias: internal.willg.demodjango.uktrade.digital
+          public:
+            certificates:
+              - arn:aws:acm:eu-west-2:1234567890:certificate/abc12345-1234-1234-12c3-01234567890ab
+        ```
+        
+      - On the AWS Certificate Manager page you will also need to grab the “_Domain_” name, eg: `internal.{env}.demodjango.uktrade.digital`
+      - `copilot/web/manifest.yml`,  create a key that matches your {env} name under the `environments` key following the pattern in the yml code example below. 
+      - Under the `http` key, set `alias` to the domain name you just copied. 
+      - On the AWS Load Balancers console page, copy the _Application Load Balancer ARN_ for your {env} to the `alb` section of the code block, eg:
+      
+      ```yaml
+      environments:
+        {env}:
+          http:
+            alb: arn:aws:elasticloadbalancing:eu-west-2:123456789012:loadbalancer/app/demodjango-{env}/ab123a456b789cd
+            alias: internal.{env}.demodjango.uktrade.digital
       ```
-  - Add the `DJANGO_SECRET_KEY` secret for you environment `copilot secret init --name DJANGO_SECRET_KEY --values <environment>='<something_random>'`
+  - `copilot/web/manifest.yml`, check that the REDIS_ENDPOINT is:
+    `/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/DEMODJANGO_REDIS_ENDPOINT`
+    
+    and not hardcoded to:
+    
+    `/copilot/${COPILOT_APPLICATION_NAME}-redis/${COPILOT_ENVIRONMENT_NAME}/secrets/WILLG_REDIS`
+    
+  
+
   - Deploy environment
     - `copilot app init demodjango`
     - `copilot env init --name <environment> --profile $AWS_PROFILE --default-config`
     - `copilot env deploy --name <environment>`
+    
+  - If while deploying the environment you encounter the error: 
+  ```
+    Lookup override at copilot/environments/overrides: cdk.json does not exist under copilot/environments/overrides
+  ``` 
+  Solve by deleting the overrides directory as this doesn’t exist on the GitHub repo _terraform-deploy_ branch
+        
+  - Add the `DJANGO_SECRET_KEY` secret for you environment, ensure the secret value is in quotes: `copilot secret init --name DJANGO_SECRET_KEY --values <environment>='<something_random>'`
+  
   - Deploy the web service with bootstrap image
     - Set the `web` service to use the `copilot-bootstrap` image for now
     - `copilot svc init --name web`
