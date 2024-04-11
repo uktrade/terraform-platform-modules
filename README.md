@@ -15,6 +15,14 @@ In your `<application>-deploy` codebase:
 
 ## Testing
 
+_terraform-platform-modules_ seems to need `sandbox` AWS account login but no _.envrc_ file in repo. Had to manually export these for running the Terraform tests and `aws sso login`:
+```
+export AWS_PROFILE=sandbox
+export AWS_REGION=eu-west-2
+export AWS_DEFAULT_REGION=eu-west-2
+```
+
+
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
 
 ```shell
@@ -219,6 +227,20 @@ There are two options here, `local.az_map_dev` and `local.az_map_prod`.  This de
 Repository required: _demodjango_deploy_
 
 - Terraform
+
+  In order to get the Terraform part working:
+  - Need to have a _prod_ profile with the following configuartion in ~/.aws/config file
+  - “Failed to get shared config profile, prod” will appear if you don’t have a _prod_ profile set up
+    ```
+      [profile prod]
+      sso_start_url = https://uktrade.awsapps.com/start
+      sso_region = eu-west-2
+      sso_account_id = 684092750218
+      sso_role_name = AdministratorAccess
+      region = eu-west-2
+      output = json
+    ```
+
   - `terraform/demodjango.tf`, edit the `environment` and `vpc_name` under `module.extensions-tf` code block to use your name for the `environment` value and the name of the VPC you provisioned in the previous step, eg:
   
     ``` terraform
@@ -233,6 +255,15 @@ Repository required: _demodjango_deploy_
       }
     ```
   - You may wish to use the local `source` for the module code when testing
+  
+  - `terraform/extensions.yml` add bucket config for the new environment to `demodjango-s3-bucket` code block
+    ``` terraform
+      environments:
+        {env}:
+          bucket_name: demodjango-{env}
+          versioning: false
+    ```
+
   - `cd terraform`
   - Create or select a Terraform workspace for your environment 
     ``` terraform
@@ -292,7 +323,12 @@ Repository required: _demodjango_deploy_
     
     `/copilot/${COPILOT_APPLICATION_NAME}-redis/${COPILOT_ENVIRONMENT_NAME}/secrets/WILLG_REDIS`
     
-  
+  - `copilot/web/addons/demodjango-s3-bucket.yml` kms key issue - we had to   manually add a `KmsAlias` under the `demodjangoKMSKeyConfigMap` module (There’s an open ticket to fix this step):
+    ```
+    demodjangoKMSKeyConfigMap:
+      {env}:
+        KmsAlias: 'alias/demodjango-{env}-demodjangoS3Bucket-key'
+    ```
 
   - Deploy environment
     - `copilot app init demodjango`
