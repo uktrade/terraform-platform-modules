@@ -121,19 +121,132 @@ demodjango-monitoring:
       enable_ops_center: true
 ```
 
+
 ## Using our `demodjango` application for testing
 
-Note: We are currently treating the `terraform-deployment` branch as our `main` branch for this work.
+Note:  We are currently treating the terraform-deployment branch on the _demodjango-deploy_ repository as our `main` branch for this work.
+
+### Task: Deploy a vpc using the VPC Terraform module
+
+Repository required: _platform-terraform_
+
+### How to use
+
+In _platform-terraform_ repository, there are two Terraform files that need to be updated when adding new AWS accounts or creating new VPCs, `providers.tf` and `vpcs.tf`.
+
+### providers.tf
+
+This file will contain a map of all AWS accounts that will have VPCs managed by this Terraform code.  If a new AWS account is needed add a new entry as per example.
+
+```terraform
+provider "aws" {
+  region                   = "eu-west-2"
+  profile                  = "profile_name_of_aws_account"
+  alias                    = "profile_name_of_aws_account"
+  shared_credentials_files = ["~/.aws/config"]
+}
+```
+
+### vpcs.tf
+
+Here you define a new module per AWS account, within that module you can specify multiple VPCs.  The module will contain the VPC's unique configuration and will in-turn call the main VPC module that deploys the VPC.
+
+example modules
+```terraform
+module "vpc-<name_of_dev_aws_account>" {
+  for_each  =  {
+      "name_of_dev_vpc_1" = {
+          cidr         = "10.0"
+          nat_gateways = local.nat_gateways_dev
+          az_map       = local.az_map_dev
+        }
+      "name_of_dev_vpc_2" = {
+           cidr         = "10.1"
+           nat_gateways = local.nat_gateways_dev
+           az_map       = local.az_map_dev
+         }
+    }
+  
+  source = "../../../tf-vpc-module"
+  providers =  { aws = aws.sandbox }
+  arg_key = each.key
+  arg_value = each.value
+}
+
+
+module "vpc-<name_of_dev_aws_account>" {
+  for_each = {
+      "name_of_prod_vpc" = {
+          cidr         = "10.2"
+          nat_gateways = local.nat_gateways_prod
+          az_map       = local.az_map_prod
+        }
+    }
+
+  source = "../../../tf-vpc-module"
+  providers = { aws = aws.platform-sandbox}
+  arg_key = each.key
+  arg_value = each.value
+}
+```
+
+VARIABLES
+
+Module name:  
+The naming convention is `vpc-<name_of_aws_account>`
+eg. `vpc-sandbox`
+
+VPC name:
+What you want to call the VPC.
+eg. `sandbox`
+
+cidr:
+Here you enter in the first 2 Octets of the VPC network address.  This should be sequential, so make a note of previous CIDR and increment by one.  This value has to be unique unless the VPC is ephemeral, e.g. used for review apps.
+eg. `10.1`
+
+nat_gateways:
+There are two options here, `local.nat_gateways_dev` and `local.nat_gateways_prod`.  For dev we only need to deploy the 1 NAT gateway and for prod we deploy 3 NAT gateways.
+
+az_map:
+There are two options here, `local.az_map_dev` and `local.az_map_prod`.  This defines how many availability zones the subnets are deployed into.  For dev we only need two, for prod we have all three.
+
+---
+
+### Task: Deploy environment infrastructure using Terraform and Copilot
+
+Repository required: _demodjango_deploy_
 
 - Terraform
-  - Edit the `environment` and `vpc_name` under `module.extensions-tf` in `terraform/demodjango.tf`
+  - in `terraform/demodjango.tf`, edit the `environment` and `vpc_name` under `module.extensions-tf` 
+  
+  ``` terraform
+  module "extensions-tf" {
+  # Use this source when testing with local module
+  #source = "../../terraform-platform-modules/extensions"
+  source = "git::ssh://git@github.com/uktrade/terraform-platform-modules.git//extensions?depth=1&ref=main"
+
+  args        = local.args
+  environment = "willg"
+  vpc_name    = "sandbox-will"
+  }
+  ```
   - `cd terraform`
   - Create or select a Terraform workspace for your environment `terraform workspace new|select <environment>`
   - `terraform apply`
+  
+  
 - AWS Copilot
-  - `cd ..`
+  - cd into `copilot` directory
     - Make any required changes to have valid AWS Copilot configuration for your environment
       - Copy the VPC IDs, Subnet IDs and certificate ARN from the AWS Console to your environment manifest
+      - These can be found in the VPC that was set up by following the instructions in
+      [Deploy a vpc using the VPC Terraform module](#task-deploy-a-vpc-using-the-vpc-terraform-module)
+      - The certificate ARN can be found by going to:
+        - load balancers, select the load balancer that is named after your {application_environment}
+        Eg: `demodjango-will`
+        - go to “_Listeners and rules_” & select the listener that listens on https:443 & click the value for that listener under “_Default SSL/TLS certificate_” header
+        - collect the certificate ARN, eg: `arn:aws:acm:eu-west-2:1234567890:certificate/abc12345-1234-1234-12c3-01234567890ab`
+      - You will also need to grab the “_Domain_” name on this certificate page, eg: `internal.{env}.demodjango.uktrade.digital`
       - Set the alias and copy the Application Load Balancer ARN from the AWS console to the `http` section for your environment in `copilot/web/manifest.yml`
       ```
       <environment>:
