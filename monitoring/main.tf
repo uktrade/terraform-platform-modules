@@ -98,3 +98,4 @@ resource "aws_applicationinsights_application" "application-insights" {
   auto_config_enabled = true
   ops_center_enabled  = var.config.enable_ops_center
 }
+# test
