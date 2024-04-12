@@ -103,8 +103,11 @@ resource "aws_opensearch_domain" "this" {
     instance_type            = var.config.instance
     instance_count           = local.instances
     zone_awareness_enabled   = local.zone_awareness_enabled
-    zone_awareness_config {
-      availability_zone_count = local.zone_count
+    dynamic "zone_awareness_config" {
+      for_each = local.zone_awareness_enabled ? [1] : []
+      content {
+        availability_zone_count = local.zone_count
+      }
     }
   }
 
@@ -131,7 +134,7 @@ resource "aws_opensearch_domain" "this" {
     ebs_enabled = true
     volume_size = var.config.volume_size
     volume_type = coalesce(var.config.ebs_volume_type, "gp2")
-    throughput  = coalesce(var.config.ebs_throughput, 250)
+    throughput  = var.config.ebs_volume_type == "gp3" ? coalesce(var.config.ebs_throughput, 250) : null
   }
 
   auto_tune_options {
