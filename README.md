@@ -222,7 +222,7 @@ There are two options here, `local.az_map_dev` and `local.az_map_prod`.  This de
 
 ---
 
-### Task: Deploy environment infrastructure using Terraform and Copilot
+### Task: Deploy environment infrastructure using Terraform and AWS Copilot
 
 Repository required: _demodjango_deploy_
 
