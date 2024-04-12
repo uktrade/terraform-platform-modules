@@ -21,12 +21,27 @@ run "e2e_test" {
   }
 
   assert {
-    condition     = aws_s3_bucket.this.tags["Environment"] == "s3-test-environment"
+    condition     = aws_s3_bucket.this.tags["environment"] == "s3-test-environment"
     error_message = "Invalid s3 bucket tags"
   }
 
   assert {
-    condition     = aws_s3_bucket.this.tags["Application"] == "s3-test-application"
+    condition     = aws_s3_bucket.this.tags["application"] == "s3-test-application"
+    error_message = "Invalid s3 bucket tags"
+  }
+
+  assert {
+    condition     = aws_s3_bucket.this.tags["copilot-application"] == "s3-test-application"
+    error_message = "Invalid s3 bucket tags"
+  }
+
+  assert {
+    condition     = aws_s3_bucket.this.tags["copilot-environment"] == "s3-test-environment"
+    error_message = "Invalid s3 bucket tags"
+  }
+
+  assert {
+    condition     = aws_s3_bucket.this.tags["managed-by"] == "DBT Platform - Terraform"
     error_message = "Invalid s3 bucket tags"
   }
 
@@ -50,12 +65,12 @@ run "e2e_test" {
 
   ### Test aws_kms_key tags ###
   assert {
-    condition     = aws_kms_key.kms-key.tags["Application"] == "s3-test-application"
+    condition     = aws_kms_key.kms-key.tags["application"] == "s3-test-application"
     error_message = "Invalid s3 KMS key tags"
   }
 
   assert {
-    condition     = aws_kms_key.kms-key.tags["Environment"] == "s3-test-environment"
+    condition     = aws_kms_key.kms-key.tags["environment"] == "s3-test-environment"
     error_message = "Invalid s3 KMS key tags"
   }
 

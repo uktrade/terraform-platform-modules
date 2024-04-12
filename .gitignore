@@ -3,3 +3,5 @@
 *.tfstate.backup
 *.zip
 **/.terraform.lock.hcl
+*.envrc
+*.idea*
