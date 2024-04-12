@@ -58,7 +58,7 @@ variables {
   environment = "env"
   vpc_name    = "vpc-name"
   config = {
-    domain_prefix = "dom-prefix",
+    domain_prefix    = "dom-prefix",
     cdn_domains_list = { "dev.my-application.uktrade.digital" : "my-application.uktrade.digital" },
   }
 }
@@ -277,7 +277,7 @@ run "aws_route53_record_prod_unit_test" {
     environment = "prod"
     vpc_name    = "vpc-name"
     config = {
-      domain_prefix = "dom-prefix",
+      domain_prefix    = "dom-prefix",
       cdn_domains_list = { "dev.my-application.uktrade.digital" : "my-application.uktrade.digital" },
     }
   }
