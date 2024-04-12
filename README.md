@@ -134,7 +134,7 @@ demodjango-monitoring:
 
 Note:  We are currently treating the terraform-deployment branch on the _demodjango-deploy_ repository as our `main` branch for this work.
 
-### Task: Deploy a vpc using the VPC Terraform module
+### Task: Deploy a Virtual Private Cloud using the VPC Terraform module
 
 Repository to execute code: _terraform-platform_
 
