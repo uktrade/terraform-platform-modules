@@ -274,7 +274,7 @@ Repository required: _demodjango_deploy_
   
 - AWS Copilot
   - cd into `copilot` directory
-      - `copilot/environments/{env}/manifest.yml`, copy the VPC IDs and Subnet IDs from the AWS Console to your environment manifest
+      - `copilot/environments/<environment>/manifest.yml`, copy the VPC IDs and Subnet IDs from the AWS Console to your environment manifest
       - These values can be found in the VPC that was set up by following the instructions in
       [Deploy a vpc using the VPC Terraform module](#task-deploy-a-vpc-using-the-vpc-terraform-module), eg:
       
@@ -292,7 +292,7 @@ Repository required: _demodjango_deploy_
         ```
       
       - Copy the certificate ARN from the AWS Console. The cert arn can be found by going to:
-        - aws console, load balancers, select the load balancer that contains your {env} name
+        - aws console, load balancers, select the load balancer that contains your {environment} name
         - go to “_Listeners and rules_” & select the listener that listens on _https:443_ , click the value for that listener under the “_Default SSL/TLS certificate_” header. This brings you to an AWS Certificate Manager page
         - copy the certificate ARN, eg: `arn:aws:acm:eu-west-2:1234567890:certificate/abc12345-1234-1234-12c3-01234567890ab`
         - `copilot/environments/<environment>/manifest.yml` add the certificate ARN here under the previously added code block
@@ -304,17 +304,17 @@ Repository required: _demodjango_deploy_
               - arn:aws:acm:eu-west-2:1234567890:certificate/abc12345-1234-1234-12c3-01234567890ab
         ```
         
-      - On the AWS Certificate Manager page you will also need to grab the “_Domain_” name, eg: `internal.{env}.demodjango.uktrade.digital`
-      - `copilot/web/manifest.yml`,  create a key that matches your {env} name under the `environments` key following the pattern in the yml code example below. 
+      - On the AWS Certificate Manager page you will also need to grab the “_Domain_” name, eg: `internal.<environment>.demodjango.uktrade.digital`
+      - `copilot/web/manifest.yml`,  create a key that matches your {environment} name under the `environments` key following the pattern in the yml code example below. 
       - Under the `http` key, set `alias` to the domain name you just copied. 
-      - On the AWS Load Balancers console page, copy the _Application Load Balancer ARN_ for your {env} to the `alb` section of the code block, eg:
+      - On the AWS Load Balancers console page, copy the _Application Load Balancer ARN_ for your {environment} to the `alb` section of the code block, eg:
       
       ```yaml
       environments:
-        {env}:
+        <environment>:
           http:
-            alb: arn:aws:elasticloadbalancing:eu-west-2:123456789012:loadbalancer/app/demodjango-{env}/ab123a456b789cd
-            alias: internal.{env}.demodjango.uktrade.digital
+            alb: arn:aws:elasticloadbalancing:eu-west-2:123456789012:loadbalancer/app/demodjango-<environment>/ab123a456b789cd
+            alias: internal.<environment>.demodjango.uktrade.digital
       ```
   - `copilot/web/manifest.yml`, check that the REDIS_ENDPOINT is:
     `/copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/DEMODJANGO_REDIS_ENDPOINT`
@@ -326,8 +326,8 @@ Repository required: _demodjango_deploy_
   - `copilot/web/addons/demodjango-s3-bucket.yml` kms key issue - we had to   manually add a `KmsAlias` under the `demodjangoKMSKeyConfigMap` module (There’s an open ticket to fix this step):
     ```
     demodjangoKMSKeyConfigMap:
-      {env}:
-        KmsAlias: 'alias/demodjango-{env}-demodjangoS3Bucket-key'
+      <environment>
+        KmsAlias: 'alias/demodjango-<environment>-demodjangoS3Bucket-key'
     ```
 
   - Deploy environment
