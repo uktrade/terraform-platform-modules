@@ -1,19 +1,19 @@
 variables {
   args = {
     application = "test-application",
-    services    = {
-        "test-s3": {
-            "type":"s3",
-            "services": ["web"],
-            "bucket_name":"extensions-test-bucket",
-            "versioning": false,
-            "environments": {
-                "test": {
-                    "bucket_name":"extensions-test-bucket",
-                    "versioning": false
-                }
-            }
+    services = {
+      "test-s3" : {
+        "type" : "s3",
+        "services" : ["web"],
+        "bucket_name" : "extensions-test-bucket",
+        "versioning" : false,
+        "environments" : {
+          "test" : {
+            "bucket_name" : "extensions-test-bucket",
+            "versioning" : false
+          }
         }
+      }
     }
   }
   application = "test-application"
@@ -43,19 +43,19 @@ run "aws_ssm_parameter_unit_test" {
   }
 
   assert {
-    condition     = jsondecode(aws_ssm_parameter.addons.value) == {
-        "test-s3": {
-            "type":"s3",
-            "services": ["web"],
-            "bucket_name":"extensions-test-bucket",
-            "versioning": false,
-            "environments": {
-                "test": {
-                    "bucket_name":"extensions-test-bucket",
-                    "versioning": false
-                }
-            }
+    condition = jsondecode(aws_ssm_parameter.addons.value) == {
+      "test-s3" : {
+        "type" : "s3",
+        "services" : ["web"],
+        "bucket_name" : "extensions-test-bucket",
+        "versioning" : false,
+        "environments" : {
+          "test" : {
+            "bucket_name" : "extensions-test-bucket",
+            "versioning" : false
+          }
         }
+      }
     }
     error_message = "Invalid config for aws_ssm_parameter value"
   }
