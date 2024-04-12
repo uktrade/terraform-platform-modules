@@ -22,4 +22,12 @@ locals {
   opensearch = { for k, v in local.services : k => v if v.type == "opensearch" }
   monitoring = { for k, v in local.services : k => v if v.type == "monitoring" }
   alb        = { for k, v in local.services : k => v if v.type == "alb" }
+
+  tags = {
+    application         = var.args.application
+    environment         = var.environment
+    managed-by          = "DBT Platform - Terraform"
+    copilot-application = var.args.application
+    copilot-environment = var.environment
+  }
 }
