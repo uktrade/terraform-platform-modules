@@ -27,28 +27,28 @@ override_data {
   target = data.aws_route53_zone.domain-root
   values = {
     count = 0
-    name  = "dom-prefix.env.app.uktrade.digital"
+    name  = "dom-prefix-root.env.app.uktrade.digital"
   }
 }
 override_data {
   target = data.aws_route53_zone.domain-alb
   values = {
     count = 0
-    name  = "dom-prefix.env.app.uktrade.digital"
+    name  = "dom-prefix-alb.env.app.uktrade.digital"
   }
 }
 override_data {
   target = data.aws_route53_zone.domain-root-prod
   values = {
     count = 1
-    name  = "dom-prefix.env.app.uktrade.digital"
+    name  = "dom-prefix-root-prod.env.app.uktrade.digital"
   }
 }
 override_data {
   target = data.aws_route53_zone.domain-alb-prod
   values = {
     count = 1
-    name  = "dom-prefix.env.app.uktrade.digital"
+    name  = "dom-prefix-alb-prod.env.app.uktrade.digital"
   }
 }
 
@@ -59,7 +59,6 @@ variables {
   vpc_name    = "vpc-name"
   config = {
     domain_prefix = "dom-prefix",
-    # env_root          = "test-env-root",
     cdn_domains_list = { "dev.my-application.uktrade.digital" : "my-application.uktrade.digital" },
   }
 }
@@ -279,7 +278,6 @@ run "aws_route53_record_prod_unit_test" {
     vpc_name    = "vpc-name"
     config = {
       domain_prefix = "dom-prefix",
-      # env_root          = "test-env-root",
       cdn_domains_list = { "dev.my-application.uktrade.digital" : "my-application.uktrade.digital" },
     }
   }
