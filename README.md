@@ -259,8 +259,8 @@ Repository required: _demodjango_deploy_
   - `terraform/extensions.yml` add bucket config for the new environment to `demodjango-s3-bucket` code block
     ``` terraform
       environments:
-        {env}:
-          bucket_name: demodjango-{env}
+        <environment>:
+          bucket_name: demodjango-<environment>
           versioning: false
     ```
 
