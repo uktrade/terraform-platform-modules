@@ -10,5 +10,9 @@ terraform {
         aws.prod,
       ]
     }
+    time = {
+      source  = "hashicorp/time"
+      version = ">=0.11.1"
+    }
   }
 }
