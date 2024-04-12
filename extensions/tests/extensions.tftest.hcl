@@ -1,7 +1,20 @@
 variables {
   args = {
     application = "test-application",
-    services    = {}
+    services    = {
+        "test-s3": {
+            "type":"s3",
+            "services": ["web"],
+            "bucket_name":"extensions-test-bucket",
+            "versioning": false,
+            "environments": {
+                "test": {
+                    "bucket_name":"extensions-test-bucket",
+                    "versioning": false
+                }
+            }
+        }
+    }
   }
   application = "test-application"
   environment = "test-environment"
@@ -30,7 +43,20 @@ run "aws_ssm_parameter_unit_test" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.addons.value == "{}"
+    condition     = jsondecode(aws_ssm_parameter.addons.value) == {
+        "test-s3": {
+            "type":"s3",
+            "services": ["web"],
+            "bucket_name":"extensions-test-bucket",
+            "versioning": false,
+            "environments": {
+                "test": {
+                    "bucket_name":"extensions-test-bucket",
+                    "versioning": false
+                }
+            }
+        }
+    }
     error_message = "Invalid config for aws_ssm_parameter value"
   }
 
