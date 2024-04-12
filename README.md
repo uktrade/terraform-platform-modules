@@ -295,7 +295,7 @@ Repository required: _demodjango_deploy_
         - aws console, load balancers, select the load balancer that contains your {env} name
         - go to “_Listeners and rules_” & select the listener that listens on _https:443_ , click the value for that listener under the “_Default SSL/TLS certificate_” header. This brings you to an AWS Certificate Manager page
         - copy the certificate ARN, eg: `arn:aws:acm:eu-west-2:1234567890:certificate/abc12345-1234-1234-12c3-01234567890ab`
-        - `copilot/environments/{env}/manifest.yml` add the cert arn here under the previously added code block
+        - `copilot/environments/<environment>/manifest.yml` add the certificate ARN here under the previously added code block
         
         ```yaml
         http:
