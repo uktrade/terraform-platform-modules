@@ -71,6 +71,8 @@ resource "aws_lambda_function" "lambda" {
 
   layers = ["arn:aws:lambda:eu-west-2:763451185160:layer:python-postgres:1"]
 
+  source_code_hash = data.archive_file.lambda.output_base64sha256
+
   vpc_config {
     security_group_ids = [aws_security_group.default.id, data.aws_security_group.rds-endpoint.id]
     subnet_ids         = data.aws_subnets.private-subnets.ids
