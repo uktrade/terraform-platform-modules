@@ -250,8 +250,8 @@ Repository required: _demodjango_deploy_
       source = "git::ssh://git@github.com/uktrade/terraform-platform-modules.git//extensions?depth=1&ref=main"
 
       args        = local.args
-      environment = "willg"
-      vpc_name    = "sandbox-will"
+      environment = "homer"
+      vpc_name    = "sandbox-homer"
       }
     ```
   - You may wish to use the local `source` for the module code when testing
