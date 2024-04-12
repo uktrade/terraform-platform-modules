@@ -1,7 +1,7 @@
 variables {
-  args        = {
+  args = {
     application = "test-application",
-    services = {}
+    services    = {}
   }
   application = "test-application"
   environment = "test-environment"
