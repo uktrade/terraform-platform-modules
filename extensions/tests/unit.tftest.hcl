@@ -21,15 +21,12 @@ variables {
   vpc_name    = "test-vpc"
 }
 
-provider "aws" {
-  region                   = "eu-west-2"
-  profile                  = "sandbox"
-  alias                    = "prod"
-  shared_credentials_files = ["~/.aws/config"]
+mock_provider "aws" {
+  alias = "prod"
 }
 
 run "aws_ssm_parameter_unit_test" {
-  command = apply
+  command = plan
 
   ### Test aws_ssm_parameter resource ###
   assert {
