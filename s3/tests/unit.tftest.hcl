@@ -220,4 +220,3 @@ run "aws_s3_bucket_object_lock_configuration_nopolicy_unit_test" {
     error_message = "Invalid s3 bucket object lock configuration"
   }
 }
-
