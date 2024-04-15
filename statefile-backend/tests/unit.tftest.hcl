@@ -139,5 +139,3 @@ run "aws_dynamodb_table_unit_test" {
     error_message = "The 'LockID' key must be of type string ('S')"
   }
 }
-
-
