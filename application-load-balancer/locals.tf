@@ -25,12 +25,15 @@ locals {
   domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "prod.uktrade.digital") : coalesce(var.config.env_root, "uktrade.digital")
   domain_name   = var.environment == "prod" ? "${local.domain_prefix}.${var.application}.${local.domain_suffix}" : "${local.domain_prefix}.${var.environment}.${var.application}.${local.domain_suffix}"
 
-  # Create a complete domain list, primary domain plus all CDN/SAN domains.
-  full_list = merge({ (local.domain_name) = "${var.application}.uktrade.digital" }, var.config.cdn_domains_list)
+  # Create map of all items in address list with its base domain. eg { x.y.base.com: base.com }
+  additional_address_fqdn = try({ for k in var.config.additional_address_list : "${k}.${var.environment}.${var.application}.${local.domain_suffix}" => "${var.application}.${local.domain_suffix}" }, {})
 
-  # Production checks
-  number_of_non_production_domains = var.environment != "prod" ? length(local.full_list) : 0
-  only_create_for_non_production   = var.environment != "prod" ? 1 : 0
-  number_of_production_domains     = var.environment == "prod" ? length(local.full_list) : 0
-  only_create_for_production       = var.environment == "prod" ? 1 : 0
+  # A List of domains that can be used in the SAN part of the certificate.
+  san_list = merge(local.additional_address_fqdn, var.config.cdn_domains_list)
+
+  # Create a complete domain list, primary domain plus all CDN/SAN domains.
+  full_list = merge({ (local.domain_name) = "${var.application}.${local.domain_suffix}" }, local.san_list)
+
+  # Count total number of domains.
+  number_of_domains = length(local.full_list)
 }

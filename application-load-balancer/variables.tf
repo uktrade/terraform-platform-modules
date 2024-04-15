@@ -12,8 +12,9 @@ variable "vpc_name" {
 
 variable "config" {
   type = object({
-    domain_prefix    = optional(string)
-    env_root         = optional(string)
-    cdn_domains_list = optional(map(string))
+    domain_prefix           = optional(string)
+    env_root                = optional(string)
+    cdn_domains_list        = optional(map(string))
+    additional_address_list = optional(list(string))
   })
 }
