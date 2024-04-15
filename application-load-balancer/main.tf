@@ -185,5 +185,5 @@ output "cert-arn" {
 }
 
 output "alb-arn" {
-  value = aws_lb.this.arn
+  value = aws_lb.this.arn.test
 }
