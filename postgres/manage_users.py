@@ -43,7 +43,7 @@ def create_or_update_user_secret(ssm, user_secret_name, user_secret_string, even
                 {'Key': 'copilot-application', 'Value': copilot_application},
                 {'Key': 'copilot-environment', 'Value': copilot_environment},
             ],
-            Type="String",
+            Type="SecureString",
         )
     except ClientError as error:
         if error.response["Error"]["Code"] == "ParameterAlreadyExists":
