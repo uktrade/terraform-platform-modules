@@ -95,7 +95,7 @@ If there are multiple web services on the application, you can add the additiona
 
 ### Route 53 record creation
 
-The R53 domains for non production and production are stored in different AWS accounts.  The last half of the Terraform code needs to be able to run in the correct AWS account.  This is determined by the provider passed in from the application-deploy aws-domain alias.
+The R53 domains for non-production and production are stored in different AWS accounts.  The last half of the Terraform code needs to be able to run in the correct AWS account.  This is determined by the provider passed in from the `<application>-deploy` `aws-domain` alias.
 
 example `extensions.yml` config.
 
