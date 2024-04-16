@@ -104,8 +104,10 @@ my-application-alb:
   type: alb
   environments:
     dev: 
-      cdn_domains_list: {dev.my-application.uktrade.digital: "my-application.uktrade.digital"} 
-      additional_address_list: ["internal.my-web-service-2"]
+      cdn_domains_list:
+        dev.my-application.uktrade.digital: my-application.uktrade.digital
+      additional_address_list:
+        - internal.my-web-service-2
     prod:
       domain: {my-application.great.gov.uk: "great.gov.uk"} 
 ```
