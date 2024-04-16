@@ -28,7 +28,7 @@ locals {
   # Create map of all items in address list with its base domain. eg { x.y.base.com: base.com }
   additional_address_fqdn = try({ for k in var.config.additional_address_list : "${k}.${var.environment}.${var.application}.${local.domain_suffix}" => "${var.application}.${local.domain_suffix}" }, {})
 
-  # A List of domains that can be used in the SAN part of the certificate.
+  # A List of domains that can be used in the Subject Alternative Name (SAN) part of the certificate.
   san_list = merge(local.additional_address_fqdn, var.config.cdn_domains_list)
 
   # Create a complete domain list, primary domain plus all CDN/SAN domains.
