@@ -55,9 +55,7 @@ module "alb" {
 
   for_each = local.alb
   providers = {
-    aws.sandbox = aws.sandbox
-    aws.dev     = aws.dev
-    aws.prod    = aws.prod
+    aws.domain = aws.domain
   }
   application = var.args.application
   environment = var.environment

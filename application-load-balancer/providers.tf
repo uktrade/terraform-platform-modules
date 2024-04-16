@@ -5,9 +5,7 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5"
       configuration_aliases = [
-        aws.sandbox,
-        aws.dev,
-        aws.prod,
+        aws.domain,
       ]
     }
     time = {
