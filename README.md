@@ -87,7 +87,7 @@ For non-production: `internal.<application_name>.uktrade.digital`
 
 For production: `internal.<application_name>.prod.uktrade.digital`
 
-Additional domains (`cdn_domains_list`) are the domain names that will be configured in CloudFront. In the map the key is the fqdn and the value is the applications base domain (the application R53 zone).  
+Additional domains (`cdn_domains_list`) are the domain names that will be configured in CloudFront. In the map the key is the fully qualified domain name and the value is the application's base domain (the application's Route 53 zone).  
 
 If there are multiple web services on the application, you can add the additional domain to your certificate by adding the prefix name (eg. `internal.static`) to the variable `additional_address_list` see extension.yml example below.  `Note: this is just the prefix, no need to add env.uktrade.digital`
 
