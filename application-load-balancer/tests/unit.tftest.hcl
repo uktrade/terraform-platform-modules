@@ -33,20 +33,6 @@ override_data {
     name  = "dom-prefix-alb.env.app.uktrade.digital"
   }
 }
-# override_data {
-#   target = data.aws_route53_zone.domain-root-prod
-#   values = {
-#     count = 1
-#     name  = "dom-prefix-root-prod.env.app.uktrade.digital"
-#   }
-# }
-# override_data {
-#   target = data.aws_route53_zone.domain-alb-prod
-#   values = {
-#     count = 1
-#     name  = "dom-prefix-alb-prod.env.app.uktrade.digital"
-#   }
-# }
 
 
 variables {
