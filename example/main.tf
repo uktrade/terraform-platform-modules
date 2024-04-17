@@ -6,11 +6,11 @@ locals {
 }
 
 module "extensions-staging" {
-  source = "../extensions"
-  args = local.args
+  source      = "../extensions"
+  args        = local.args
   environment = "my-environment"
   vpc_name    = "my-vpc"
-  providers   = {
+  providers = {
     aws.domain = aws.domain
   }
 }
