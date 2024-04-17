@@ -14,6 +14,12 @@ variables {
 run "aws_s3_bucket_unit_test" {
   command = plan
 
+# TODO: How do we test outputs
+#  assert {
+#    condition     = ???.bucket_name == "dbt-terraform-test-s3-module"
+#    error_message = "Invalid name for aws_s3_bucket"
+#  }
+
   assert {
     condition     = aws_s3_bucket.this.bucket == "dbt-terraform-test-s3-module"
     error_message = "Invalid name for aws_s3_bucket"
@@ -48,6 +54,7 @@ run "aws_s3_bucket_unit_test" {
     condition     = aws_s3_bucket.this.tags["managed-by"] == "DBT Platform - Terraform"
     error_message = "Invalid value for aws_s3_bucket tags parameter."
   }
+
 }
 
 run "aws_iam_policy_document_unit_test" {

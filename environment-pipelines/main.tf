@@ -21,3 +21,15 @@ resource "aws_iam_role" "environment_pipeline_role" {
     managed-by = "DBT Platform - Terraform"
   }
 }
+
+module "artifact_store" {
+  source = "../s3"
+
+  application = var.application
+  environment = "not-applicable"
+  name = "${var.application}-environment-pipeline-artifact-store"
+
+  config = {
+    bucket_name = "${var.application}-environment-pipeline-artifact-store"
+  }
+}
