@@ -7,6 +7,9 @@ locals {
 
 module "extensions-staging" {
   source = "../extensions"
+  providers = {
+    aws.domain = aws.domain
+  }
 
   args = local.args
 
