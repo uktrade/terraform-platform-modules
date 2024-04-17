@@ -9,8 +9,5 @@ terraform {
 }
 
 provider "aws" {
-  region                   = "eu-west-2"
-  profile                  = "dev"
-  alias                    = "domain"
-  shared_credentials_files = ["~/.aws/config"]
+  alias = "domain"
 }

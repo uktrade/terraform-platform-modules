@@ -1,13 +1,9 @@
 mock_provider "aws" {
-  alias = "prod"
-}
-
-mock_provider "aws" {
-  alias = "dev"
-}
-
-mock_provider "aws" {
   alias = "sandbox"
+}
+
+mock_provider "aws" {
+  alias = "domain"
 }
 
 override_data {
@@ -35,20 +31,6 @@ override_data {
   values = {
     count = 0
     name  = "dom-prefix-alb.env.app.uktrade.digital"
-  }
-}
-override_data {
-  target = data.aws_route53_zone.domain-root-prod
-  values = {
-    count = 1
-    name  = "dom-prefix-root-prod.env.app.uktrade.digital"
-  }
-}
-override_data {
-  target = data.aws_route53_zone.domain-alb-prod
-  values = {
-    count = 1
-    name  = "dom-prefix-alb-prod.env.app.uktrade.digital"
   }
 }
 
@@ -256,56 +238,17 @@ run "aws_route53_record_unit_test" {
   }
 
   assert {
-    condition     = aws_route53_record.alb-record[0].name == "dom-prefix.env.app.uktrade.digital"
-    error_message = "Invalid value for aws_route53_record.validation-record-san name parameter, should be: dom-prefix.env.app.uktrade.digital"
+    condition     = aws_route53_record.alb-record.name == "dom-prefix.env.app.uktrade.digital"
+    error_message = "Invalid value for aws_route53_record.alb-record name parameter, should be: dom-prefix.env.app.uktrade.digital"
   }
 
   assert {
-    condition     = aws_route53_record.alb-record[0].ttl == 300
-    error_message = "Invalid value for aws_route53_record.alb-record[0] ttl parameter, should be: 300"
+    condition     = aws_route53_record.alb-record.ttl == 300
+    error_message = "Invalid value for aws_route53_record.alb-record ttl parameter, should be: 300"
   }
 
   assert {
-    condition     = aws_route53_record.alb-record[0].type == "CNAME"
-    error_message = "Invalid value for aws_route53_record.alb-record[0] type parameter, should be: CNAME"
-  }
-}
-
-run "aws_route53_record_prod_unit_test" {
-  variables {
-    application = "prod-app"
-    environment = "prod"
-    vpc_name    = "vpc-name"
-    config = {
-      domain_prefix    = "dom-prefix",
-      cdn_domains_list = { "dev.my-application.uktrade.digital" : "my-application.uktrade.digital" },
-    }
-  }
-
-  command = plan
-
-  assert {
-    condition     = aws_route53_record.validation-record-prod[0].ttl == 300
-    error_message = "Invalid value for aws_route53_record.validation-record-prod ttl parameter, should be: 300"
-  }
-
-  assert {
-    condition     = aws_route53_record.validation-record-prod[1].ttl == 300
-    error_message = "Invalid value for aws_route53_record.validation-record-prod ttl parameter, should be: 300"
-  }
-
-  assert {
-    condition     = aws_route53_record.alb-record-prod[0].name == "dom-prefix.prod-app.prod.uktrade.digital"
-    error_message = "Invalid value for aws_route53_record.alb-record-prod[0] name parameter, should be: dom-prefix.prod-app.prod.uktrade.digital"
-  }
-
-  assert {
-    condition     = aws_route53_record.alb-record-prod[0].ttl == 300
-    error_message = "Invalid value for aws_route53_record.alb-record-prod[0] ttl parameter, should be: 300"
-  }
-
-  assert {
-    condition     = aws_route53_record.alb-record-prod[0].type == "CNAME"
-    error_message = "Invalid value for aws_route53_record.alb-record-prod[0] type parameter, should be: CNAME"
+    condition     = aws_route53_record.alb-record.type == "CNAME"
+    error_message = "Invalid value for aws_route53_record.alb-record type parameter, should be: CNAME"
   }
 }
