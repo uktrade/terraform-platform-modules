@@ -15,6 +15,7 @@ locals {
   name               = replace(var.name, "_", "-")
   domain_name        = substr(replace("${var.environment}-${local.name}", "_", "-"), 0, 28)
   ssm_parameter_name = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}_ENDPOINT", "-", "_"))}"
+  filter_name = "${var.application}-${var.environment}-${var.name}"
 
   master_user = "opensearch_user"
 

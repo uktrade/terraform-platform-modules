@@ -4,21 +4,25 @@ data "aws_region" "current" {}
 resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
   name              = "/aws/opensearch/${local.domain_name}/index-slow"
   retention_in_days = coalesce(var.config.index_slow_log_retention_in_days, 7)
+  depends_on = [aws_opensearch_domain.this]
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
   name              = "/aws/opensearch/${local.domain_name}/search-slow"
   retention_in_days = coalesce(var.config.search_slow_log_retention_in_days, 7)
+  depends_on = [aws_opensearch_domain.this]
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
   name              = "/aws/opensearch/${local.domain_name}/es-application"
   retention_in_days = coalesce(var.config.es_app_log_retention_in_days, 7)
+  depends_on = [aws_opensearch_domain.this]
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
   name              = "/aws/opensearch/${local.domain_name}/audit"
   retention_in_days = coalesce(var.config.audit_log_retention_in_days, 7)
+  depends_on = [aws_opensearch_domain.this]
 }
 
 resource "aws_cloudwatch_log_resource_policy" "opensearch_log_group_policy" {
