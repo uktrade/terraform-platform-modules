@@ -14,11 +14,10 @@ variables {
 run "aws_s3_bucket_unit_test" {
   command = plan
 
-# TODO: How do we test outputs
-#  assert {
-#    condition     = ???.bucket_name == "dbt-terraform-test-s3-module"
-#    error_message = "Invalid name for aws_s3_bucket"
-#  }
+  assert {
+    condition     = output.bucket_name == "dbt-terraform-test-s3-module"
+    error_message = "Invalid name for aws_s3_bucket"
+  }
 
   assert {
     condition     = aws_s3_bucket.this.bucket == "dbt-terraform-test-s3-module"
