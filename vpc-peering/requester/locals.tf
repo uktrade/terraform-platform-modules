@@ -1,16 +1,8 @@
-# locals {
-#   tags = {
-#     managed-by = "DBT Platform - Terraform"
-#     connection-name = var.arg_name
-#     source-vpc = var.arg_config.source_vpc_name
-#   }
-# }
-
 locals {
   tags = {
-    managed-by      = "DBT Platform - Terraform"
-    connection-name = var.name
-    target-vpc      = var.config.accepter_vpc_name
-    target-account  = var.config.accepter_account_id
+    managed-by     = "DBT Platform - Terraform"
+    Name           = var.name
+    remote-vpc     = var.config.accepter_vpc_name
+    remote-account = var.config.accepter_account_id
   }
 }
