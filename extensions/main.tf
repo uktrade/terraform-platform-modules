@@ -55,9 +55,7 @@ module "alb" {
 
   for_each = local.alb
   providers = {
-    aws.sandbox = aws.sandbox
-    aws.dev     = aws.dev
-    aws.prod    = aws.prod
+    aws.domain = aws.domain
   }
   application = var.args.application
   environment = var.environment
@@ -76,4 +74,11 @@ module "monitoring" {
   vpc_name    = var.vpc_name
 
   config = each.value
+}
+
+resource "aws_ssm_parameter" "addons" {
+  name  = "/copilot/applications/${var.args.application}/environments/${var.environment}/addons"
+  type  = "String"
+  value = jsonencode(var.args.services)
+  tags  = local.tags
 }
