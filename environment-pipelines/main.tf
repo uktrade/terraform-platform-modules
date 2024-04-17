@@ -14,4 +14,10 @@ resource "aws_iam_role" "environment_pipeline_role" {
       },
     ]
   })
+
+  tags = {
+    application = "${var.application}"
+    copilot-application = "${var.application}"
+    managed-by = "DBT Platform - Terraform"
+  }
 }
