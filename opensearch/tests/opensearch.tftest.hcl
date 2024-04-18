@@ -326,8 +326,6 @@ run "test_create_cloudwatch_subscription_filters" {
       volume_size = 80
       master      = false
     }
-    
-    domain_name = "my-env-my-name"
   }
 
   assert {
