@@ -247,7 +247,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.role_arn == "arn:aws:iam::852676506468:role/CWLtoSubscriptionFilterRole"
+    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.role_arn == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter role_arn"
   }
 
@@ -268,7 +268,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.role_arn == "arn:aws:iam::852676506468:role/CWLtoSubscriptionFilterRole"
+    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.role_arn == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter role_arn"
   }
 }
