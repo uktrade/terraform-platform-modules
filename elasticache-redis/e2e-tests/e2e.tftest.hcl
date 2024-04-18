@@ -11,7 +11,7 @@ variables {
 
 run "setup_tests" {
   module {
-    source = "./e2e_tests/setup"
+    source = "./e2e-tests/setup"
   }
 }
 
