@@ -15,8 +15,7 @@ locals {
   name               = replace(var.name, "_", "-")
   domain_name        = substr(replace("${var.environment}-${local.name}", "_", "-"), 0, 28)
   ssm_parameter_name = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}_ENDPOINT", "-", "_"))}"
-
-  master_user = "opensearch_user"
+  master_user        = "opensearch_user"
 
   instances              = coalesce(var.config.instances, 1)
   zone_awareness_enabled = local.instances > 1

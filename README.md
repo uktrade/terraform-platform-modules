@@ -1,18 +1,5 @@
 # Terraform platform modules
 
-## Using [Terraform workspaces](https://developer.hashicorp.com/terraform/language/state/workspaces) for development
-
-In your `<application>-deploy` codebase:
-
-- `aws sso login`
-- `cd terraform`
-- `terraform init`
-- If first time `terraform workspace new <workspace>` else `terraform workspace select <workspace>`
-  - `workspace` will normally be the name of your environment
-- Change name of environments/spaces in `<application>.tf` to your environment/space
-  - This step should go away in due course, but for now we need to do this and not commit the changes to `main`
-- `terraform plan|apply`
-
 ## Testing
 
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
@@ -30,7 +17,7 @@ terraform test -test-directory e2e-tests
 
 ## Backing services module
 
-This module is configured by a yaml file and two simple args:
+This module is configured by a YAML file and two simple args:
 
 ```terraform
 locals {
@@ -133,9 +120,8 @@ demodjango-monitoring:
 Note: We are currently treating the `terraform-deployment` branch as our `main` branch for this work.
 
 - Terraform
-  - Edit the `environment` and `vpc_name` under `module.extensions-tf` in `terraform/demodjango.tf`
+  - Edit the `environment` and `vpc_name` under `module.extensions-tf` in `terraform/<environment>/main.tf`
   - `cd terraform`
-  - Create or select a Terraform workspace for your environment `terraform workspace new|select <environment>`
   - `terraform apply`
 - AWS Copilot
   - `cd ..`
@@ -145,8 +131,8 @@ Note: We are currently treating the `terraform-deployment` branch as our `main` 
       ```
       <environment>:
         http:
-          alb: arn:aws:elasticloadbalancing:eu-west-2:852676506468:loadbalancer/app/demodjango-willg/bc968fa0a4fcd257
-          alias: internal.willg.demodjango.uktrade.digital
+          alb: arn:aws:elasticloadbalancing:eu-west-2:852676506468:loadbalancer/app/demodjango-<environment>/bc968fa0a4fcd257
+          alias: internal.<environment>.demodjango.uktrade.digital
       ```
   - Add the `DJANGO_SECRET_KEY` secret for you environment `copilot secret init --name DJANGO_SECRET_KEY --values <environment>='<something_random>'`
   - Deploy environment
