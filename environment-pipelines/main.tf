@@ -1,5 +1,5 @@
 resource "aws_codepipeline" "codepipeline" {
-  name     = "tf-test-pipeline"
+  name     = "${var.application}-environment-pipeline"
   role_arn = aws_iam_role.environment_pipeline_role.arn
 
   artifact_store {
@@ -7,7 +7,7 @@ resource "aws_codepipeline" "codepipeline" {
     type     = "S3"
 
     encryption_key {
-      id = module.artifact_store.kms_key_arn
+      id   = module.artifact_store.kms_key_arn
       type = "KMS"
     }
   }
@@ -61,7 +61,7 @@ module "artifact_store" {
 
   application = var.application
   environment = "not-applicable"
-  name = "${var.application}-environment-pipeline-artifact-store"
+  name        = "${var.application}-environment-pipeline-artifact-store"
 
   config = {
     bucket_name = "${var.application}-environment-pipeline-artifact-store"
@@ -77,6 +77,13 @@ module "artifact_store" {
 #  restrict_public_buckets = true
 #}
 
+resource "aws_iam_role" "environment_pipeline_role" {
+  name               = "${var.application}-environment-pipeline-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+
+  tags = local.tags
+}
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     effect = "Allow"
@@ -88,13 +95,6 @@ data "aws_iam_policy_document" "assume_role" {
 
     actions = ["sts:AssumeRole"]
   }
-}
-
-resource "aws_iam_role" "environment_pipeline_role" {
-  name = "${var.application}-environment-pipeline-role"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-
-  tags = local.tags
 }
 
 data "aws_iam_policy_document" "codepipeline_policy" {
@@ -130,6 +130,17 @@ data "aws_iam_policy_document" "codepipeline_policy" {
     ]
 
     resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "kms:GenerateDataKey",
+      "kms:Decrypt"
+    ]
+    resources = [
+      module.artifact_store.kms_key_arn
+    ]
   }
 }
 
