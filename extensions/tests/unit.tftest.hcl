@@ -25,6 +25,10 @@ mock_provider "aws" {
   alias = "prod"
 }
 
+mock_provider "aws" {
+  alias = "domain"
+}
+
 run "aws_ssm_parameter_unit_test" {
   command = plan
 
