@@ -9,8 +9,9 @@ variable "config" {
     accepter_account_id = string
     accepter_vpc        = string
     accepter_vpc_name   = string
-    requester_vpc       = string
+    accepter_region     = optional(string)
     accepter_subnet     = string
+    requester_vpc       = string
     security_group_map  = optional(map(string))
   })
 }

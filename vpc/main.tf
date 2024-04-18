@@ -200,7 +200,7 @@ resource "aws_security_group_rule" "vpc-core-egress-all" {
 # VPC Enpoint required for RDS secrets manager
 resource "aws_vpc_endpoint" "rds-vpc-endpoint" {
   vpc_id              = aws_vpc.vpc.id
-  service_name        = "com.amazonaws.eu-west-2.secretsmanager"
+  service_name        = "com.amazonaws.${local.region}.secretsmanager"
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = data.aws_subnets.private-subnets.ids

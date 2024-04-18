@@ -1,8 +1,8 @@
 resource "aws_vpc_peering_connection" "this" {
   peer_owner_id = var.config.accepter_account_id
   peer_vpc_id   = var.config.accepter_vpc
+  peer_region   = coalesce(var.config.accepter_region, "eu-west-2")
   vpc_id        = var.config.requester_vpc
-  auto_accept   = true
 
   tags = local.tags
 }
