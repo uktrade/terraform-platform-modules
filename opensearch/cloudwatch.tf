@@ -5,7 +5,7 @@ data "aws_ssm_parameter" "destination-arn" {
 resource "aws_cloudwatch_log_subscription_filter" "opensearch_log_group_index_slow_logs" {
   name            = "/aws/opensearch/${var.application}/${var.environment}/${var.name}/opensearch_log_group_index_slow"
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
-  log_group_name  = "/aws/opensearch/${local.filter_name}/opensearch_log_group_index_slow_logs"
+  log_group_name  = "/aws/opensearch/${local.domain_name}/index-slow"
   filter_pattern  = ""
   destination_arn = jsondecode(data.aws_ssm_parameter.destination-arn.value)["prod"]
 
@@ -15,7 +15,7 @@ resource "aws_cloudwatch_log_subscription_filter" "opensearch_log_group_index_sl
 resource "aws_cloudwatch_log_subscription_filter" "opensearch_log_group_search_slow_logs" {
   name            = "/aws/opensearch/${var.application}/${var.environment}/${var.name}/opensearch_log_group_search_slow"
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
-  log_group_name  = "/aws/opensearch/${local.filter_name}/opensearch_log_group_search_slow_logs"
+  log_group_name  = "/aws/opensearch/${local.domain_name}/search-slow"
   filter_pattern  = ""
   destination_arn = jsondecode(data.aws_ssm_parameter.destination-arn.value)["prod"]
 
@@ -25,7 +25,7 @@ resource "aws_cloudwatch_log_subscription_filter" "opensearch_log_group_search_s
 resource "aws_cloudwatch_log_subscription_filter" "opensearch_log_group_es_application_logs" {
   name            = "/aws/opensearch/${var.application}/${var.environment}/${var.name}/opensearch_log_group_es_application"
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
-  log_group_name  = "/aws/opensearch/${local.filter_name}/opensearch_log_group_es_application_logs"
+  log_group_name  = "/aws/opensearch/${local.domain_name}/es-application"
   filter_pattern  = ""
   destination_arn = jsondecode(data.aws_ssm_parameter.destination-arn.value)["prod"]
 
@@ -35,7 +35,7 @@ resource "aws_cloudwatch_log_subscription_filter" "opensearch_log_group_es_appli
 resource "aws_cloudwatch_log_subscription_filter" "opensearch_log_group_audit_logs" {
   name            = "/aws/opensearch/${var.application}/${var.environment}/${var.name}/opensearch_log_group_audit"
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
-  log_group_name  = "/aws/opensearch/${local.filter_name}/openopensearch_log_group_audit_logssearch"
+  log_group_name  = "/aws/opensearch/${local.domain_name}/audit"
   filter_pattern  = ""
   destination_arn = jsondecode(data.aws_ssm_parameter.destination-arn.value)["prod"]
 
