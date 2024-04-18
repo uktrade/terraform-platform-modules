@@ -87,7 +87,7 @@ resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
 resource "aws_s3_object" "object" {
   for_each = { for item in coalesce(var.config.objects, []) : item.key => item.body }
 
-  bucket  = aws_s3_bucket.this.id
+  bucket  = aws_s3_bucket.this.test.id
   key     = each.key
   content = each.value
 
