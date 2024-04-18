@@ -309,3 +309,62 @@ run "test_domain_name_truncation" {
     error_message = "Opensearch domain_name should be 'my-prod-environment-my-reall'"
   }
 }
+
+run "test_create_cloudwatch_subscription_filters" {
+  command = plan
+
+  variables {
+    application = "my_app"
+    environment = "my_env"
+    name        = "my_name"
+    vpc_name    = "terraform-tests-vpc"
+
+    config = {
+      engine      = "2.5"
+      instance    = "t3.small.search"
+      instances   = 1
+      volume_size = 80
+      master      = false
+    }
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_index_slow_logs.name == "/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_index_slow"
+    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_index_slow_logs' should be '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_index_slow'"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_search_slow_logs.name == "/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_search_slow"
+    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_search_slow_logs' should be '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_search_slow'"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_es_application_logs.name == "/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_es_application"
+    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_es_application_logs' should be '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_es_application'"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_audit_logs.name == "/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_audit"
+    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_audit_logs' should be '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_audit'"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_index_slow_logs.log_group_name == "/aws/opensearch/my-env-my-name/index-slow"
+    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_index_slow_logs' should be '/aws/opensearch/my-env-my-name/index-slow'"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_search_slow_logs.log_group_name == "/aws/opensearch/my-env-my-name/search-slow"
+    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_search_slow_logs' should be '/aws/opensearch/my-env-my-name/search-slow'"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_es_application_logs.log_group_name == "/aws/opensearch/my-env-my-name/es-application"
+    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_es_application_logs' should be '/aws/opensearch/my-env-my-name/es-application'"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_audit_logs.log_group_name == "/aws/opensearch/my-env-my-name/audit"
+    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_audit_logs' should be '/aws/opensearch/my-env-my-name/audit'"
+  }
+}
