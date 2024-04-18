@@ -29,7 +29,7 @@ resource "aws_lb" "this" {
 }
 
 resource "aws_lb_listener" "alb-listener" {
-  depends_on = [time_sleep.wait_20_seconds]
+  depends_on = [aws_acm_certificate_validation.cert_validate]
 
   for_each          = local.protocols
   load_balancer_arn = aws_lb.this.arn
@@ -77,7 +77,7 @@ resource "aws_lb_target_group" "http-target-group" {
 # Certificate will be referenced by its primary standard domain but we include all the CDN domains in the SAN field.
 resource "aws_acm_certificate" "certificate" {
   domain_name               = local.domain_name
-  subject_alternative_names = coalesce(try((keys(var.config.cdn_domains_list)), null), [])
+  subject_alternative_names = coalesce(try((keys(local.san_list)), null), [])
   validation_method         = "DNS"
   key_algorithm             = "RSA_2048"
   tags                      = local.tags
@@ -87,30 +87,28 @@ resource "aws_acm_certificate" "certificate" {
   }
 }
 
-# When adding additional SAN domains to an already created certificate, 
-# this pause is needed to give time for the records to be validated.
-resource "time_sleep" "wait_20_seconds" {
-  depends_on = [aws_route53_record.validation-record-san[0]]
-
-  create_duration = "20s"
-
+resource "aws_acm_certificate_validation" "cert_validate" {
+  certificate_arn         = aws_acm_certificate.certificate.arn
+  validation_record_fqdns = [for record in aws_route53_record.validation-record-san : record.fqdn]
 }
 
-################################################################
-# Dev R53 account - Will only be run for non-production domains.
+## End of Application Load Balancer section.
+
+
+## Start of section that updates AWS R53 records in either the Dev or Prod AWS account, dependant on the provider aws.domain. 
 
 # This makes sure the correct root domain is selected for each of the certificate fqdn.
 data "aws_route53_zone" "domain-root" {
-  provider = aws.dev
+  provider = aws.domain
 
-  count = local.number_of_non_production_domains
+  count = local.number_of_domains
   name  = local.full_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
 }
 
 resource "aws_route53_record" "validation-record-san" {
-  provider = aws.dev
+  provider = aws.domain
 
-  count   = local.number_of_non_production_domains
+  count   = local.number_of_domains
   zone_id = data.aws_route53_zone.domain-root[count.index].zone_id
   name    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
   type    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
@@ -120,60 +118,29 @@ resource "aws_route53_record" "validation-record-san" {
 
 # Add ALB DNS name to application internal DNS record.
 data "aws_route53_zone" "domain-alb" {
-  provider = aws.dev
+  provider = aws.domain
 
-  count = local.only_create_for_non_production
-  name  = "${var.application}.${local.domain_suffix}"
+  name = "${var.application}.${local.domain_suffix}"
 }
 
 resource "aws_route53_record" "alb-record" {
-  provider = aws.dev
+  provider = aws.domain
 
-  count   = local.only_create_for_non_production
-  zone_id = data.aws_route53_zone.domain-alb[0].zone_id
+  zone_id = data.aws_route53_zone.domain-alb.zone_id
   name    = local.domain_name
   type    = "CNAME"
   records = [aws_lb.this.dns_name]
   ttl     = 300
 }
 
+# This is only run if there are additional application domains (not to be confused with CDN domains).
+# Add ALB DNS name to applications additional domain.
+resource "aws_route53_record" "additional-address" {
+  provider = aws.domain
 
-#########################################################
-# Prod R53 account - Will only run for production domains.
-
-data "aws_route53_zone" "domain-root-prod" {
-  provider = aws.prod
-
-  count = local.number_of_production_domains
-  name  = local.full_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
-}
-
-# This makes sure the correct root domain is selected for each of the certificate fqdn.
-resource "aws_route53_record" "validation-record-prod" {
-  provider = aws.prod
-
-  count   = local.number_of_production_domains
-  zone_id = data.aws_route53_zone.domain-root-prod[0].zone_id
-  name    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
-  type    = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
-  records = [tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_value]
-  ttl     = 300
-}
-
-# Add ALB DNS name to application internal DNS record.
-data "aws_route53_zone" "domain-alb-prod" {
-  provider = aws.prod
-
-  count = local.only_create_for_production
-  name  = "${var.application}.${local.domain_suffix}"
-}
-
-resource "aws_route53_record" "alb-record-prod" {
-  provider = aws.prod
-
-  count   = local.only_create_for_production
-  zone_id = data.aws_route53_zone.domain-alb-prod[0].zone_id
-  name    = local.domain_name
+  count   = var.config.additional_address_list == null ? 0 : length(var.config.additional_address_list)
+  zone_id = data.aws_route53_zone.domain-alb.zone_id
+  name    = "${var.config.additional_address_list[count.index]}.${var.environment}.${var.application}.${local.domain_suffix}"
   type    = "CNAME"
   records = [aws_lb.this.dns_name]
   ttl     = 300

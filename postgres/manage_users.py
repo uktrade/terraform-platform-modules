@@ -8,7 +8,6 @@ def drop_user(cursor, username):
     cursor.execute(f"SELECT * FROM pg_catalog.pg_user WHERE usename = '{username}'")
 
     if cursor.fetchone() is not None:
-        cursor.execute(f"GRANT {username} TO postgres")
         cursor.execute(f"DROP OWNED BY {username}")
         cursor.execute(f"DROP USER {username}")
 
@@ -20,6 +19,10 @@ def create_db_user(conn, cursor, username, password, permissions):
     cursor.execute(f"GRANT {username} to postgres;")
     cursor.execute(f"GRANT {', '.join(permissions)} ON ALL TABLES IN SCHEMA public TO {username};")
     cursor.execute(f"ALTER DEFAULT PRIVILEGES FOR USER {username} IN SCHEMA public GRANT {', '.join(permissions)} ON TABLES TO {username};")
+
+    if 'INSERT' in permissions:
+        cursor.execute(f"GRANT CREATE ON SCHEMA public TO {username};")
+
     conn.commit()
 
 
@@ -40,7 +43,7 @@ def create_or_update_user_secret(ssm, user_secret_name, user_secret_string, even
                 {'Key': 'copilot-application', 'Value': copilot_application},
                 {'Key': 'copilot-environment', 'Value': copilot_environment},
             ],
-            Type="String",
+            Type="SecureString",
         )
     except ClientError as error:
         if error.response["Error"]["Code"] == "ParameterAlreadyExists":

@@ -1,5 +1,18 @@
 # Terraform platform modules
 
+## Using [Terraform workspaces](https://developer.hashicorp.com/terraform/language/state/workspaces) for development
+
+In your `<application>-deploy` codebase:
+
+- `aws sso login`
+- `cd terraform`
+- `terraform init`
+- If first time `terraform workspace new <workspace>` else `terraform workspace select <workspace>`
+  - `workspace` will normally be the name of your environment
+- Change name of environments/spaces in `<application>.tf` to your environment/space
+  - This step should go away in due course, but for now we need to do this and not commit the changes to `main`
+- `terraform plan|apply`
+
 ## Testing
 
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
@@ -8,7 +21,7 @@ The short tests that run against the `terraform plan` for a module can be run by
 terraform test
 ```
 
-To run the longer end to end tests that actually deploy the module (via `terrafrom apply`), perform assertions and tear back down are run from the 
+To run the longer end-to-end tests that actually deploy the module (via `terraform apply`), perform assertions and tear back down are run from the 
 same directory as follows:
 
 ```shell
@@ -74,11 +87,15 @@ For non-production: `internal.<application_name>.uktrade.digital`
 
 For production: `internal.<application_name>.prod.uktrade.digital`
 
-Additional domains (cdn_domains_list) are the domain names that will be configured in CloudFront.   
+Additional domains (`cdn_domains_list`) are the domain names that will be configured in CloudFront. In the map the key is the fully qualified domain name and the value is the application's base domain (the application's Route 53 zone).  
+
+If there are multiple web services on the application, you can add the additional domain to your certificate by adding the prefix name (eg. `internal.static`) to the variable `additional_address_list` see extension.yml example below.  `Note: this is just the prefix, no need to add env.uktrade.digital`
+
+`cdn_domains_list` and `additional_address_list` are optional.
 
 ### Route 53 record creation
 
-The R53 domains for non production and production are stored in different AWS accounts.  The last half of the Terraform code needs to be able to run in the correct AWS account.  This where the environment check is used and the appropriate provider is defined.
+The R53 domains for non-production and production are stored in different AWS accounts.  The last half of the Terraform code needs to be able to run in the correct AWS account.  This is determined by the provider passed in from the `<application>-deploy` `aws-domain` alias.
 
 example `extensions.yml` config.
 
@@ -87,7 +104,10 @@ my-application-alb:
   type: alb
   environments:
     dev: 
-      cdn_domains_list: {dev.my-application.uktrade.digital: "my-application.uktrade.digital"} 
+      cdn_domains_list:
+        dev.my-application.uktrade.digital: my-application.uktrade.digital
+      additional_address_list:
+        - internal.my-web-service-2
     prod:
       domain: {my-application.great.gov.uk: "great.gov.uk"} 
 ```
