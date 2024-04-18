@@ -1,25 +1,59 @@
-resource "aws_iam_role" "environment_pipeline_role" {
-  name = "${var.application}-environment-pipeline-role"
+resource "aws_codepipeline" "codepipeline" {
+  name     = "tf-test-pipeline"
+  role_arn = aws_iam_role.environment_pipeline_role.arn
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      },
-    ]
-  })
+  artifact_store {
+    location = module.artifact_store.bucket_name
+    type     = "S3"
 
-  tags = {
-    application = "${var.application}"
-    copilot-application = "${var.application}"
-    managed-by = "DBT Platform - Terraform"
+    encryption_key {
+      id = module.artifact_store.kms_key_arn
+      type = "KMS"
+    }
   }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["source_output"]
+
+      configuration = {
+        ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
+        FullRepositoryId = var.repository
+        BranchName       = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name             = "Build"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      input_artifacts  = ["source_output"]
+      output_artifacts = ["build_output"]
+      version          = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+
+  tags = local.tags
+}
+
+data "aws_codestarconnections_connection" "github_codestar_connection" {
+  name = var.application
 }
 
 module "artifact_store" {
@@ -32,4 +66,75 @@ module "artifact_store" {
   config = {
     bucket_name = "${var.application}-environment-pipeline-artifact-store"
   }
+}
+
+#resource "aws_s3_bucket_public_access_block" "codepipeline_bucket_pab" {
+#  bucket = module.artifact_store.id
+#
+#  block_public_acls       = true
+#  block_public_policy     = true
+#  ignore_public_acls      = true
+#  restrict_public_buckets = true
+#}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["codepipeline.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "environment_pipeline_role" {
+  name = "${var.application}-environment-pipeline-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+
+  tags = local.tags
+}
+
+data "aws_iam_policy_document" "codepipeline_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketVersioning",
+      "s3:PutObjectAcl",
+      "s3:PutObject",
+    ]
+
+    resources = [
+      module.artifact_store.arn,
+      "${module.artifact_store.arn}/*"
+    ]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["codestar-connections:UseConnection"]
+    resources = [data.aws_codestarconnections_connection.github_codestar_connection.arn]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "codebuild:BatchGetBuilds",
+      "codebuild:StartBuild",
+    ]
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "codepipeline_policy" {
+  name   = "codepipeline_policy"
+  role   = aws_iam_role.environment_pipeline_role.id
+  policy = data.aws_iam_policy_document.codepipeline_policy.json
 }
