@@ -285,7 +285,7 @@ resource "aws_security_group_rule" "rds-db-egress-https" {
   to_port           = 443
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.rds-vpc-endpoint-sg.id
+  security_group_id = aws_security_group.rds-vpc-endpoint-sg.id.test
 }
 
 data "aws_subnets" "private-subnets" {
