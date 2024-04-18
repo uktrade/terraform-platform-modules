@@ -7,7 +7,7 @@
         "draft": true,
         "pull-request-header": ":robot: Next release",
         "pull-request-footer": " ",
-        "bootstrap-sha": "a6cf9c8eb10ef9382a7b1a6e8c24c9c215bbd55e"
+        "bootstrap-sha": "fd22b9b7e9b2879a33de1d1eaad22eb892668d7c"
     }
   }
 }
