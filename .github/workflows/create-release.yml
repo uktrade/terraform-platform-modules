@@ -17,7 +17,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-config.json
-          manifest-file: release-manifest.json
+          manifest-file: .release-manifest.json
       - name: tag major and minor versions
         if: ${{ steps.release.outputs.release_created }}
         run: |
