@@ -31,17 +31,12 @@ resource "aws_codebuild_project" "environment_terraform" {
 #    }
   }
 
-#  logs_config {
-#    cloudwatch_logs {
-#      group_name = "${var.application}-environment-terraform"
-#    }
-#  }
-#
-#    s3_logs {
-#      status   = "ENABLED"
-#      location = "${module.artifact_store.id}/build-log"
-#    }
-#  }
+  logs_config {
+    cloudwatch_logs {
+      group_name  = aws_cloudwatch_log_group.environment_terraform_codebuild.name
+      stream_name = aws_cloudwatch_log_stream.environment_terraform_codebuild.name
+    }
+  }
 
   source {
     type            = "CODEPIPELINE"
@@ -65,4 +60,15 @@ resource "aws_codebuild_project" "environment_terraform" {
 #  }
 
   tags = local.tags
+}
+
+resource "aws_cloudwatch_log_group" "environment_terraform_codebuild" {
+  name           = "codebuild/${var.application}-environment-terraform/log-group"
+  # checkov:skip=CKV_AWS_338:Retains logs for 3 months instead of 1 year
+  retention_in_days = 90
+}
+
+resource "aws_cloudwatch_log_stream" "environment_terraform_codebuild" {
+  name           = "codebuild/${var.application}-environment-terraform/log-stream"
+  log_group_name = aws_cloudwatch_log_group.environment_terraform_codebuild.name
 }

@@ -100,9 +100,8 @@ data "aws_iam_policy_document" "environment_codebuild_policy" {
       "logs:PutLogEvents"
     ]
     resources = [
-#      aws_cloudwatch_log_group.codebuild_log_group.arn,
-#      "${aws_cloudwatch_log_group.codebuild_log_group.arn}:*"
-      "*"
+      aws_cloudwatch_log_group.environment_terraform_codebuild.arn,
+      "${aws_cloudwatch_log_group.environment_terraform_codebuild.arn}:*"
     ]
   }
 
@@ -117,69 +116,3 @@ resource "aws_iam_role_policy" "environment_codebuild_access_artifact_store_role
   role   = aws_iam_role.environment_codebuild_role.name
   policy = data.aws_iam_policy_document.access_artifact_store_policy.json
 }
-
-#data "aws_iam_policy_document" "environment_codebuild_policy" {
-#  statement {
-#    effect = "Allow"
-#
-#    actions = [
-#      "logs:CreateLogGroup",
-#      "logs:CreateLogStream",
-#      "logs:PutLogEvents",
-#    ]
-#
-#    resources = ["*"]
-#  }
-#
-#  statement {
-#    effect = "Allow"
-#
-#    actions = [
-#      "ec2:CreateNetworkInterface",
-#      "ec2:DescribeDhcpOptions",
-#      "ec2:DescribeNetworkInterfaces",
-#      "ec2:DeleteNetworkInterface",
-#      "ec2:DescribeSubnets",
-#      "ec2:DescribeSecurityGroups",
-#      "ec2:DescribeVpcs",
-#    ]
-#
-#    resources = ["*"]
-#  }
-#
-#  statement {
-#    effect    = "Allow"
-#    actions   = ["ec2:CreateNetworkInterfacePermission"]
-#    resources = ["arn:aws:ec2:us-east-1:123456789012:network-interface/*"]
-#
-#    condition {
-#      test     = "StringEquals"
-#      variable = "ec2:Subnet"
-#
-#      values = [
-#        aws_subnet.example1.arn,
-#        aws_subnet.example2.arn,
-#      ]
-#    }
-#
-#    condition {
-#      test     = "StringEquals"
-#      variable = "ec2:AuthorizedService"
-#      values   = ["codebuild.amazonaws.com"]
-#    }
-#  }
-#
-#  statement {
-#    effect  = "Allow"
-#    actions = ["s3:*"]
-#    resources = [
-#      aws_s3_bucket.example.arn,
-#      "${aws_s3_bucket.example.arn}/*",
-#    ]
-#  }
-#}
-#
-#resource "aws_iam_role_policy" "environment_codebuild_role_policy" {
-#  role   = aws_iam_role.environment_codebuild_role.name
-#  policy = data.aws_iam_policy_document.environment_codebuild_policy.json
-#}
