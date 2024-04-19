@@ -19,6 +19,7 @@ variables {
           "test-environment" : {
             "engine" : "2.11",
             "plan" : "small",
+            "volume_size": 512
           }
         }
       }
@@ -144,8 +145,8 @@ run "opensearch_plan_small_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-opensearch.volume_size == 200
-    error_message = "Invalid value for resolved_config.test-opensearch volume_size parameter, should be 200"
+    condition     = output.resolved_config.test-opensearch.volume_size == 512
+    error_message = "Invalid value for resolved_config.test-opensearch volume_size parameter, should be 512"
   }
 }
 
@@ -154,18 +155,6 @@ run "opensearch_plan_medium_ha_service_test" {
     args = {
       application = "test-application",
       services = {
-        "test-s3" : {
-          "type" : "s3",
-          "services" : ["web"],
-          "bucket_name" : "extensions-test-bucket",
-          "versioning" : false,
-          "environments" : {
-            "test" : {
-              "bucket_name" : "extensions-test-bucket",
-              "versioning" : false
-            }
-          }
-        },
         "test-opensearch" : {
           "type" : "opensearch",
           "name" : "test-medium-ha"
@@ -178,7 +167,6 @@ run "opensearch_plan_medium_ha_service_test" {
         }
       }
     }
-    application = "test-application"
     environment = "test-environment"
     vpc_name    = "test-vpc"
   }
