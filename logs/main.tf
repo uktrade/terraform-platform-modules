@@ -1,0 +1,91 @@
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "log-policy" {
+  statement {
+    sid = "StateMachineToCloudWatchLogs123"
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+
+    resources = ["arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/copilot/${var.application}-${var.environment}-*:log-stream:*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = data.aws_caller_identity.current.account_id
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+    }
+
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "log-policy" {
+  policy_document = data.aws_iam_policy_document.log-policy.json
+  policy_name     = "cloudwatch-log-policy"
+}
+
+data "aws_iam_policy_document" "elasticache-log-policy" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+
+    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/${var.application}/${var.environment}/*"]
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+    }
+
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "elasticache-log-policy" {
+  policy_document = data.aws_iam_policy_document.elasticache-log-policy.json
+  policy_name     = "elasticache-log-policy"
+}
+
+data "aws_iam_policy_document" "opensearch-log-policy" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+
+    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/${var.application}/${var.environment}/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = data.aws_caller_identity.current.account_id
+    }
+
+    principals {
+      identifiers = ["es.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "opensearch-log-policy" {
+  policy_document = data.aws_iam_policy_document.opensearch-log-policy.json
+  policy_name     = "opensearch-log-policy"
+}
