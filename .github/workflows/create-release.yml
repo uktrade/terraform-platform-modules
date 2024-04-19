@@ -17,7 +17,6 @@ jobs:
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: simple
           manifest-file: .release-manifest.json
           config-file: release-config.json
       - uses: actions/checkout@v4
