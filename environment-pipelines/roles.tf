@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-data "aws_iam_policy_document" "codepipeline_policy" {
+data "aws_iam_policy_document" "access_artifact_store_policy" {
   statement {
     effect = "Allow"
 
@@ -68,7 +68,7 @@ data "aws_iam_policy_document" "codepipeline_policy" {
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name   = "codepipeline_policy"
   role   = aws_iam_role.environment_pipeline_role.id
-  policy = data.aws_iam_policy_document.codepipeline_policy.json
+  policy = data.aws_iam_policy_document.access_artifact_store_policy.json
 }
 
 data "aws_iam_policy_document" "assume_environment_codebuild_role" {
@@ -113,6 +113,10 @@ resource "aws_iam_role_policy" "environment_codebuild_role_policy" {
   policy = data.aws_iam_policy_document.environment_codebuild_policy.json
 }
 
+resource "aws_iam_role_policy" "environment_codebuild_access_artifact_store_role_policy" {
+  role   = aws_iam_role.environment_codebuild_role.name
+  policy = data.aws_iam_policy_document.access_artifact_store_policy.json
+}
 
 #data "aws_iam_policy_document" "environment_codebuild_policy" {
 #  statement {

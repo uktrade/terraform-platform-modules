@@ -1,8 +1,8 @@
 version: 0.2
 env:
   variables:
-#    COPILOT_VERSION: 1.32.1
-#    DYFF_VERSION: 1.5.8
+    COPILOT_VERSION: 1.32.1
+    DYFF_VERSION: 1.5.8
 phases:
   install:
     commands:
@@ -14,5 +14,4 @@ phases:
     commands:
       - echo "Post Build Phase"
 artifacts:
-  files:
-#    - "infrastructure/*"
+  files: []
