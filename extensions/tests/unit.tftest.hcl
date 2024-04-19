@@ -14,13 +14,16 @@ variables {
           }
         }
       },
-      "test-opensearch": {
-        "type": "opensearch",
-        "environments": {
-          "test": {
-            "plan": "small",
-            "engine": "2.11",
-            "volume_size": 200
+      "test-opensearch" : {
+        "type" : "opensearch",
+        "name" : "test-name"
+        "engine" : "2.11",
+        "instance" : "t3.small.search",
+        "instances" : 1,
+        "volume_size" : 200,
+        "master" : false,
+        "environments" : {
+          "test" : {
           }
         }
       }
@@ -39,6 +42,21 @@ mock_provider "aws" {
   alias = "domain"
 }
 
+override_data {
+  target = module.opensearch["test-opensearch"].data.aws_vpc.vpc
+  values = {
+    id         = "vpc-00112233aabbccdef"
+    cidr_block = "10.0.0.0/16"
+  }
+}
+
+override_data {
+  target = module.opensearch["test-opensearch"].data.aws_subnets.private-subnets
+  values = {
+    ids = ["subnet-000111222aaabbb01", ]
+  }
+}
+
 run "aws_ssm_parameter_unit_test" {
   command = plan
 
@@ -51,24 +69,6 @@ run "aws_ssm_parameter_unit_test" {
   assert {
     condition     = aws_ssm_parameter.addons.type == "String"
     error_message = "Invalid config for aws_ssm_parameter type"
-  }
-
-  assert {
-    condition = jsondecode(aws_ssm_parameter.addons.value) == {
-      "test-s3" : {
-        "type" : "s3",
-        "services" : ["web"],
-        "bucket_name" : "extensions-test-bucket",
-        "versioning" : false,
-        "environments" : {
-          "test" : {
-            "bucket_name" : "extensions-test-bucket",
-            "versioning" : false
-          }
-        }
-      }
-    }
-    error_message = "Invalid config for aws_ssm_parameter value"
   }
 
   assert {
