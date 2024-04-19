@@ -291,7 +291,7 @@ resource "aws_security_group_rule" "rds-db-egress-https" {
 data "aws_subnets" "private-subnets" {
   depends_on = [aws_subnet.private]
   filter {
-    name   = "tag:Name"
+    name   = "tag:Nametest"
     values = ["${var.arg_name}-private-*"]
   }
 }
