@@ -1,26 +1,32 @@
-name: Create Release
+name: Release please
 
 on:
   push:
     branches:
-      - main
+      - master
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  create-release:
+  release-please:
     runs-on: ubuntu-latest
     steps:
       - uses: google-github-actions/release-please-action@v4
+        id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          config-file: release-config.json
+          release-type: simple
           manifest-file: .release-manifest.json
+          config-file: release-config.json
+      - uses: actions/checkout@v4
       - name: tag major and minor versions
-        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
         run: |
+          set -e
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/google-github-actions/release-please-action.git"
