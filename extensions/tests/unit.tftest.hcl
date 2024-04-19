@@ -13,6 +13,16 @@ variables {
             "versioning" : false
           }
         }
+      },
+      "test-opensearch": {
+        "type": "opensearch",
+        "environments": {
+          "test": {
+            "plan": "small",
+            "engine": "2.11",
+            "volume_size": 200
+          }
+        }
       }
     }
   }
