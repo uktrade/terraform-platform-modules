@@ -28,7 +28,7 @@ jobs:
           git tag --delete ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
           git push origin :${{ steps.release.outputs.major }} || true
           git push origin :${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
-          git tag -a ${{ steps.release.outputs.major }} -m "Release v${{ steps.release.outputs.major }}"
-          git tag -a ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} -m "Release v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}"
+          git tag --annotate ${{ steps.release.outputs.major }} --message "Release v${{ steps.release.outputs.major }}"
+          git tag --annotate ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} --message "Release v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}"
           git push origin ${{ steps.release.outputs.major }}
           git push origin ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}
