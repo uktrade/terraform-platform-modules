@@ -14,11 +14,11 @@ variables {
       },
       "test-opensearch" : {
         "type" : "opensearch",
-        "name" : "test-small"
-        "engine" : "2.11",
-        "plan" : "small"
+        "name" : "test-small",
         "environments" : {
-          "test" : {
+          "test-environment" : {
+            "engine" : "2.11",
+            "plan" : "small",
           }
         }
       }
@@ -169,10 +169,10 @@ run "opensearch_plan_medium_ha_service_test" {
         "test-opensearch" : {
           "type" : "opensearch",
           "name" : "test-medium-ha"
-          "engine" : "2.11",
-          "plan" : "medium-ha"
           "environments" : {
-            "test" : {
+            "test-environment" : {
+              "engine" : "2.11",
+              "plan" : "medium-ha"
             }
           }
         }
