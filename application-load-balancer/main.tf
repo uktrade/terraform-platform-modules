@@ -134,7 +134,7 @@ resource "aws_route53_record" "alb-record" {
 }
 
 # This is only run if there are additional application domains (not to be confused with CDN domains).
-# Add ALB DNS name to applications additional domain.
+# Add ALB DNS name to applications additional domain. test
 resource "aws_route53_record" "additional-address" {
   provider = aws.domain
 
