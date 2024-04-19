@@ -5,7 +5,7 @@ data "aws_route53_zone" "root-zone" {
 resource "aws_route53_zone" "new-zone" {
   for_each = toset(var.zones)
   name     = "${each.key}.${data.aws_route53_zone.root-zone.name}"
-  tags     = local.tags
+  tags     = local.FAIL
 }
 
 resource "aws_route53_record" "ns-records" {

@@ -10,6 +10,9 @@ resource "aws_vpc" "vpc" {
   )
 }
 
+module "fakemodule" {
+  source = "../FAIL"
+} 
 
 # Subnets
 ##Private

@@ -121,7 +121,7 @@ run "aws_kms_alias_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_kms_alias.s3-bucket.name == "alias/s3-test-application-s3-test-environment-s3-test-name-key"
+    condition     = aws_kms_alias.s3-bucket.name == "alias/s3-test-application-s3-test-environment-s3-test-name-key-FAIL"
     error_message = "Invalid value for aws_kms_alias.s3-bucket name parameter, should be alias/s3-test-application-s3-test-environment-s3-test-name-key"
   }
 }
