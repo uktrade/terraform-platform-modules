@@ -15,13 +15,13 @@ data "aws_iam_policy_document" "log-policy" {
     condition {
       test     = "StringEquals"
       variable = "aws:SourceAccount"
-      values   = data.aws_caller_identity.current.account_id
+      values   = [data.aws_caller_identity.current.account_id]
     }
 
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
-      values   = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      values   = ["arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
     }
 
     principals {
@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "elasticache-log-policy" {
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
-      values   = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      values   = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
     }
 
     principals {
@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "opensearch-log-policy" {
     condition {
       test     = "StringEquals"
       variable = "aws:SourceAccount"
-      values   = data.aws_caller_identity.current.account_id
+      values   = [data.aws_caller_identity.current.account_id]
     }
 
     principals {
