@@ -223,7 +223,7 @@ resource "aws_security_group" "rds-vpc-endpoint-sg" {
   tags = merge(
     local.tags,
     {
-      Name = "${var.arg_name}-rds-endpoint-sg"
+      Name = "${var.arg_name_test}-rds-endpoint-sg"
     }
   )
 }
@@ -291,7 +291,7 @@ resource "aws_security_group_rule" "rds-db-egress-https" {
 data "aws_subnets" "private-subnets" {
   depends_on = [aws_subnet.private]
   filter {
-    name   = "tag:Nametest"
+    name   = "tag:Name"
     values = ["${var.arg_name}-private-*"]
   }
 }
