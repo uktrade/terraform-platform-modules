@@ -24,8 +24,8 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/google-github-actions/release-please-action.git"
-          git tag -d ${{ steps.release.outputs.major }} || true
-          git tag -d ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
+          git tag --delete ${{ steps.release.outputs.major }} || true
+          git tag --delete ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
           git push origin :${{ steps.release.outputs.major }} || true
           git push origin :${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
           git tag -a ${{ steps.release.outputs.major }} -m "Release v${{ steps.release.outputs.major }}"
