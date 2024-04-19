@@ -5,10 +5,8 @@ variables {
       "test-s3" : {
         "type" : "s3",
         "services" : ["web"],
-        "bucket_name" : "extensions-test-bucket",
-        "versioning" : false,
         "environments" : {
-          "test" : {
+          "test-environment" : {
             "bucket_name" : "extensions-test-bucket",
             "versioning" : false
           }
