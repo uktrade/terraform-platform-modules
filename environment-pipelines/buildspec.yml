@@ -28,7 +28,7 @@ phases:
       - chmod +x /usr/bin/copilot
       - pip install dbt-platform-helper==$PLATFORM_HELPER_VERSION
       - VERSION_OUTPUT+="\n$(platform-helper --version)"
-      - VERSION_OUTPUT+="\nCopilot $(copilot --version)"
+      - VERSION_OUTPUT+="\n$(copilot --version)"
       - VERSION_OUTPUT+="\n$(python3 --version)"
       - VERSION_OUTPUT+="\n$(pip --version)"
       - echo -e "=============\nTool Versions\n-------------\n$VERSION_OUTPUT"
