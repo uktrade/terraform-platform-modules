@@ -26,7 +26,8 @@ resource "aws_codepipeline" "codepipeline" {
       configuration = {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
         FullRepositoryId = var.repository
-        BranchName       = "main"
+        # TODO: Revert this back to "main" before merging.
+        BranchName       = "DBTP-911-Barebones-Pipeline"
       }
     }
   }
@@ -67,13 +68,3 @@ module "artifact_store" {
     bucket_name = "${var.application}-environment-pipeline-artifact-store"
   }
 }
-
-#resource "aws_s3_bucket_public_access_block" "codepipeline_bucket_pab" {
-#  bucket = module.artifact_store.id
-#
-#  block_public_acls       = true
-#  block_public_policy     = true
-#  ignore_public_acls      = true
-#  restrict_public_buckets = true
-#}
-
