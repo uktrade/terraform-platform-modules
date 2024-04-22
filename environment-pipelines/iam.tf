@@ -104,7 +104,6 @@ data "aws_iam_policy_document" "environment_codebuild_policy" {
       "${aws_cloudwatch_log_group.environment_terraform_codebuild.arn}:*"
     ]
   }
-
 }
 
 resource "aws_iam_role_policy" "environment_codebuild_role_policy" {

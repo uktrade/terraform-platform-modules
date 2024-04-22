@@ -1,5 +1,19 @@
 mock_provider "aws" {}
 
+override_data {
+  target = data.aws_iam_policy_document.assume_role
+  values = {
+    json = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"codepipeline.amazonaws.com\"},\"Effect\":\"Allow\"}]}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.environment_codebuild_policy
+  values = {
+   json = "{\"Statement\":[{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Sid\":\"CloudWatchLogs\",\"Resource\":[\"*\"]}]}"
+  }
+}
+
 run "test_create_pipelines" {
   command = plan
 
@@ -41,6 +55,7 @@ run "test_create_pipelines_with_different_application" {
 
   variables {
     application = "my-other-app"
+    repository  = "my-repository"
   }
 
   assert {
