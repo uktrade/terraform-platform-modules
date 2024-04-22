@@ -19,7 +19,7 @@ variables {
           "test-environment" : {
             "engine" : "2.11",
             "plan" : "small",
-            "volume_size": 512
+            "volume_size" : 512
           }
         }
       }
