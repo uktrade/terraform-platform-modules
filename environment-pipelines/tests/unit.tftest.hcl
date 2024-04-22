@@ -1,9 +1,11 @@
+mock_provider "aws" {}
 
 run "test_create_pipelines" {
   command = plan
 
   variables {
     application = "my-app"
+    repository = "my-repository"
   }
 
   # IAM Role for the pipeline.
