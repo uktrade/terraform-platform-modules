@@ -1,41 +1,29 @@
-override_data {
-  target = data.aws_vpc.vpc
-  values = {
-    id         = "vpc-00112233aabbccdef"
-    cidr_block = "10.0.0.0/16"
+variables {
+  vpc_name    = "sandbox-opensearch"
+  application = "opensearch-application"
+  environment = "test"
+  name        = "opensearch-name"
+  config = {
+    engine      = "2.5"
+    instance    = "t3.small.search"
+    instances   = 1
+    volume_size = 80
+    master      = false
   }
 }
 
-override_data {
-  target = data.aws_subnets.private-subnets
-  values = {
-    ids = ["subnet-000111222aaabbb01", "subnet-000111222aaabbb02", "subnet-000111222aaabbb03"]
+run "setup_tests" {
+  module {
+    source = "./e2e-tests/setup"
   }
 }
 
-# Need to work out how to make this work for command = apply. Prob need to add a vpc in the setup.
-
-run "test_create_opensearch" {
-  command = plan
-
-  variables {
-    application = "my_app"
-    environment = "my_env"
-    name        = "my_name"
-    vpc_name    = "terraform-tests-vpc"
-
-    config = {
-      engine      = "2.5"
-      instance    = "t3.small.search"
-      instances   = 1
-      volume_size = 80
-      master      = false
-    }
-  }
+run "opensearch_e2e_test" {
+  command = apply
 
   assert {
-    condition     = aws_opensearch_domain.this.domain_name == "my-env-my-name"
-    error_message = "Opensearch domain_name should be 'my-env-my-name"
+    condition     = aws_opensearch_domain.this.domain_name == "test-opensearch-name"
+    error_message = "Opensearch domain_name should be 'test-opensearch-name"
   }
 
   assert {
@@ -44,7 +32,7 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == null
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == ""
     error_message = "Opensearch dedicated_master_type should be null"
   }
 
@@ -69,13 +57,23 @@ run "test_create_opensearch" {
   }
 
   assert {
+    condition     = aws_opensearch_domain.this.ebs_options[0].volume_type == "gp2"
+    error_message = "Opensearch volume_type should be 'gp2'"
+  }
+
+  assert {
+    condition     = aws_opensearch_domain.this.ebs_options[0].throughput == 0
+    error_message = "Opensearch throughput should be null"
+  }
+
+  assert {
     condition     = aws_opensearch_domain.this.auto_tune_options[0].desired_state == "DISABLED"
     error_message = "Opensearch desired_state should be 'DISABLED'"
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my_app/my_env/secrets/OPENSEARCH_URI"
-    error_message = "Parameter store parameter name should be '/copilot/my_app/my_env/secrets/OPENSEARCH_URI'"
+    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/opensearch-application/test/secrets/OPENSEARCH_NAME_ENDPOINT"
+    error_message = "Parameter store parameter name should be '/copilot/opensearch-application/test/secrets/OPENSEARCH_NAME_ENDPOINT'"
   }
 
   assert {
