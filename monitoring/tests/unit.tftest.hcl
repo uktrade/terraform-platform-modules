@@ -100,12 +100,12 @@ run "test_application_insights_application_is_created" {
 
   assert {
     condition     = aws_applicationinsights_application.application-insights.auto_config_enabled == true
-    error_message = "auto_config_enabled should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_applicationinsights_application.application-insights.ops_center_enabled == true
-    error_message = "ops_center_enabled should be true"
+    error_message = "Should be: true"
   }
 }
 
@@ -120,6 +120,6 @@ run "test_application_insights_application_can_be_created_with_ops_center_disabl
 
   assert {
     condition     = aws_applicationinsights_application.application-insights.ops_center_enabled == false
-    error_message = "ops_center_enabled should be false"
+    error_message = "Should be: false"
   }
 }

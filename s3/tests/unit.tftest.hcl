@@ -21,7 +21,7 @@ run "aws_s3_bucket_unit_test" {
 
   assert {
     condition     = aws_s3_bucket.this.force_destroy == false
-    error_message = "Invalid value for aws_s3_bucket force_destroy parameter, should be false."
+    error_message = "Should be: false."
   }
 
   assert {
@@ -55,17 +55,17 @@ run "aws_iam_policy_document_unit_test" {
 
   assert {
     condition     = [for el in data.aws_iam_policy_document.bucket-policy.statement[0].condition : true if el.variable == "aws:SecureTransport"][0] == true
-    error_message = "Invalid value for aws_iam_policy_document bucket_policy.statement.condition.variable, should be aws:SecureTransport"
+    error_message = "Should be: aws:SecureTransport"
   }
 
   assert {
     condition     = data.aws_iam_policy_document.bucket-policy.statement[0].effect == "Deny"
-    error_message = "Invalid value for aws_iam_policy_document bucket_policy.statement.effect, should be Deny"
+    error_message = "Should be: Deny"
   }
 
   assert {
     condition     = [for el in data.aws_iam_policy_document.bucket-policy.statement[0].actions : true if el == "s3:*"][0] == true
-    error_message = "Invalid value for aws_iam_policy_document bucket_policy.statement.actions, should be s3:*"
+    error_message = "Should be: s3:*"
   }
 }
 
@@ -74,7 +74,7 @@ run "aws_s3_bucket_versioning_unit_test" {
 
   assert {
     condition     = aws_s3_bucket_versioning.this-versioning.versioning_configuration[0].status == "Disabled"
-    error_message = "Invalid value for aws_s3_bucket_versioning versioning_configuration parameter, should be Disabled"
+    error_message = "Should be: Disabled"
   }
 }
 
@@ -83,27 +83,27 @@ run "aws_kms_key_unit_test" {
 
   assert {
     condition     = aws_kms_key.kms-key.bypass_policy_lockout_safety_check == false
-    error_message = "Invalid value for aws_kms_key bypass_policy_lockout_safety_check parameter, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_kms_key.kms-key.customer_master_key_spec == "SYMMETRIC_DEFAULT"
-    error_message = "Invalid value for aws_kms_key customer_master_key_spec parameter, should be SYMMETRIC_DEFAULT"
+    error_message = "Should be: SYMMETRIC_DEFAULT"
   }
 
   assert {
     condition     = aws_kms_key.kms-key.enable_key_rotation == false
-    error_message = "Invalid value for aws_kms_key enable_key_rotation parameter, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_kms_key.kms-key.is_enabled == true
-    error_message = "Invalid value for aws_kms_key is_enabled parameter, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_kms_key.kms-key.key_usage == "ENCRYPT_DECRYPT"
-    error_message = "Invalid value for aws_kms_key key_usage parameter, should be ENCRYPT_DECRYPT"
+    error_message = "Should be: ENCRYPT_DECRYPT"
   }
 
   assert {
@@ -122,7 +122,7 @@ run "aws_kms_alias_unit_test" {
 
   assert {
     condition     = aws_kms_alias.s3-bucket.name == "alias/dbt-terraform-test-s3-module-key"
-    error_message = "Invalid value for aws_kms_alias.s3-bucket name parameter, should be alias/dbt-terraform-test-s3-module-key"
+    error_message = "Should be: alias/dbt-terraform-test-s3-module-key"
   }
 }
 
@@ -150,7 +150,7 @@ run "aws_s3_bucket_versioning_enabled_unit_test" {
   ### Test aws_s3_bucket_versioning resource ###
   assert {
     condition     = aws_s3_bucket_versioning.this-versioning.versioning_configuration[0].status == "Enabled"
-    error_message = "Invalid value for aws_s3_bucket_versioning versioning_configuration.status, should be Enabled"
+    error_message = "Should be: Enabled"
   }
 }
 
@@ -169,12 +169,12 @@ run "aws_s3_bucket_object_lock_configuration_governance_unit_test" {
 
   assert {
     condition     = [for el in aws_s3_bucket_object_lock_configuration.object-lock-config[0].rule : true if el.default_retention[0].mode == "GOVERNANCE"][0] == true
-    error_message = "Invalid value for aws_s3_bucket_object_lock_configuration default_retention.mode parameter, should be GOVERNANCE"
+    error_message = "Should be: GOVERNANCE"
   }
 
   assert {
     condition     = [for el in aws_s3_bucket_object_lock_configuration.object-lock-config[0].rule : true if el.default_retention[0].days == 1][0] == true
-    error_message = "Invalid value for aws_s3_bucket_object_lock_configuration default_retention.days parameter, should be 1"
+    error_message = "Should be: 1"
   }
 }
 
