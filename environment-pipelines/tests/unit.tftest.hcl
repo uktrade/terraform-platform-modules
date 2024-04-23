@@ -16,9 +16,9 @@ override_data {
 
 variables {
   expected_tags = {
-    application = "my-app"
+    application         = "my-app"
     copilot-application = "my-app"
-    managed-by = "DBT Platform - Terraform"
+    managed-by          = "DBT Platform - Terraform"
   }
 }
 
@@ -27,7 +27,7 @@ run "test_create_pipelines" {
 
   variables {
     application = "my-app"
-    repository = "my-repository"
+    repository  = "my-repository"
   }
 
   # IAM Role for the pipeline.

@@ -27,7 +27,7 @@ resource "aws_codepipeline" "codepipeline" {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
         FullRepositoryId = var.repository
         # TODO: Revert this back to "main" before merging.
-        BranchName       = "DBTP-911-Barebones-Pipeline"
+        BranchName = "DBTP-911-Barebones-Pipeline"
       }
     }
   }
