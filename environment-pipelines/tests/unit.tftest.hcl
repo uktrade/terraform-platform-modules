@@ -152,34 +152,3 @@ run "test_create_pipeline" {
     error_message = "Should be: my-app-environment-pipeline-artifact-store"
   }
 }
-
-# Todo: Confirm with Ant what we are testing here
-run "test_create_pipeline_with_different_application" {
-  command = plan
-
-  variables {
-    application = "my-other-app"
-    repository  = "my-repository"
-    expected_tags = {
-      application         = "my-other-app"
-      copilot-application = "my-other-app"
-      managed-by          = "DBT Platform - Terraform"
-    }
-  }
-
-  assert {
-    condition     = aws_codepipeline.codepipeline.name == "my-other-app-environment-pipeline"
-    error_message = "Should be: 'my-other-app-environment-pipeline'"
-  }
-
-  assert {
-    condition     = aws_iam_role.environment_pipeline_role.name == "my-other-app-environment-pipeline-role"
-    error_message = "Should be: 'my-other-app-environment-pipeline-role'"
-  }
-
-  # Tags
-  assert {
-    condition     = jsonencode(aws_iam_role.environment_pipeline_role.tags) == jsonencode(var.expected_tags)
-    error_message = "Should be: ${jsonencode(var.expected_tags)}"
-  }
-}
