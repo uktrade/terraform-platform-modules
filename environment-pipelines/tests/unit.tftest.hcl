@@ -92,8 +92,8 @@ run "test_create_pipeline" {
 
   # Build stage
   assert {
-    condition     = aws_codepipeline.codepipeline.stage[1].name == "InstallTools"
-    error_message = "Should be: InstallTools"
+    condition     = aws_codepipeline.codepipeline.stage[1].name == "Build"
+    error_message = "Should be: Build"
   }
   assert {
     condition     = aws_codepipeline.codepipeline.stage[1].action[0].name == "InstallTools"
