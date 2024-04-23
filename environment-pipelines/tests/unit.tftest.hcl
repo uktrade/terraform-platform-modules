@@ -25,26 +25,45 @@ variables {
 run "test_create_pipeline" {
   command = plan
 
+  # CodePipeline
   variables {
     application = "my-app"
     repository  = "my-repository"
   }
-
   assert {
     condition     = aws_codepipeline.codepipeline.name == "my-app-environment-pipeline"
     error_message = "Invalid name for aws_codepipeline.codepipeline.name, should be: my-app-environment-pipeline"
   }
-
   # Cannot test aws_codepipeline.codepipeline.role_arn on a plan
-
 #  assert {
 #    condition     = [for key, value in aws_codepipeline.codepipeline.artifact_store : value if key == "location"] == "my-app-environment-pipeline-artifact-store"
+##    condition = aws_codepipeline.codepipeline.artifact_store.location == "my-app-environment-pipeline-artifact-store"
+##    condition = aws_codepipeline.codepipeline.artifact_store[0].location == "my-app-environment-pipeline-artifact-store"
 #    error_message = "Invalid name for aws_codepipeline.codepipeline.artifact_store.location, should be: my-app-environment-pipeline-artifact-store"
 #  }
-
   assert {
     condition     = aws_codepipeline.codepipeline.stage[0].name == "Source"
     error_message = "Invalid name for aws_codepipeline.codepipeline.name, should be: Source"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[0].action[0].name == "Source"
+    error_message = "Invalid name for aws_codepipeline.codepipeline.action.name, should be: Source"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[0].action[0].owner == "AWS"
+    error_message = "Invalid name for aws_codepipeline.codepipeline.action.owner, should be: AWS"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[0].action[0].provider == "CodeStarSourceConnection"
+    error_message = "Should be: CodeStarSourceConnection"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[0].action[0].version == "1"
+    error_message = "Should be: 1"
+  }
+  assert {
+    condition     = one(aws_codepipeline.codepipeline.stage[0].action[0].output_artifacts) == "source_output"
+    error_message = "Should be: [\"source_output\"]"
   }
 
   # IAM Role for the pipeline.
