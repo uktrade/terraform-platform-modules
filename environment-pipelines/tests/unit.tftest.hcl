@@ -35,13 +35,20 @@ run "test_create_pipeline" {
     condition     = aws_codepipeline.codepipeline.name == "my-app-environment-pipeline"
     error_message = "Should be: my-app-environment-pipeline"
   }
-  # Cannot test aws_codepipeline.codepipeline.role_arn on a plan
-#  assert {
-#    condition     = [for key, value in aws_codepipeline.codepipeline.artifact_store : value if key == "location"] == "my-app-environment-pipeline-artifact-store"
-##    condition = aws_codepipeline.codepipeline.artifact_store.location == "my-app-environment-pipeline-artifact-store"
-##    condition = aws_codepipeline.codepipeline.artifact_store[0].location == "my-app-environment-pipeline-artifact-store"
-#    error_message = "Should be: my-app-environment-pipeline-artifact-store"
-#  }
+  # aws_codepipeline.codepipeline.role_arn cannot be tested on a plan
+  assert {
+    condition     = tolist(aws_codepipeline.codepipeline.artifact_store)[0].location == "my-app-environment-pipeline-artifact-store"
+    error_message = "Should be: my-app-environment-pipeline-artifact-store"
+  }
+  assert {
+    condition     = tolist(aws_codepipeline.codepipeline.artifact_store)[0].type == "S3"
+    error_message = "Should be: S3"
+  }
+  # aws_codepipeline.codepipeline.artifact_store.encryption_key.id cannot be tested on a plan
+  assert {
+    condition     = tolist(aws_codepipeline.codepipeline.artifact_store)[0].encryption_key[0].type == "KMS"
+    error_message = "Should be: KMS"
+  }
   assert {
     condition     = aws_codepipeline.codepipeline.stage[0].name == "Source"
     error_message = "Should be: Source"
