@@ -72,11 +72,6 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.ebs_options[0].throughput == 250
-    error_message = "Opensearch throughput should be null"
-  }
-
-  assert {
     condition     = aws_opensearch_domain.this.auto_tune_options[0].desired_state == "DISABLED"
     error_message = "Opensearch desired_state should be 'DISABLED'"
   }

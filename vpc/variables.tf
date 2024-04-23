@@ -3,7 +3,16 @@ variable "arg_name" {
   type    = string
 }
 
+# variable "arg_config" {
+#   default = null
+#   type    = any
+# }
+
 variable "arg_config" {
-  default = null
-  type    = any
+  type = object({
+    cidr         = string
+    nat_gateways = any
+    az_map       = any
+    region       = optional(string)
+  })
 }
