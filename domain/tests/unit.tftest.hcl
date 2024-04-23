@@ -10,7 +10,7 @@ run "aws_route53_zone_unit_test" {
   command = plan
 
   assert {
-    condition     = [for el in aws_route53_zone.new-zone : true if el.name == "a.test-zone"][0] == true
+    condition     = [for el in aws_route53_zone.new-zone : true if el.name == "a.test-zone"][0] == false
     error_message = "Invalid name for aws_route53_zone.new-zone.a, should be a.test-zone"
   }
 
