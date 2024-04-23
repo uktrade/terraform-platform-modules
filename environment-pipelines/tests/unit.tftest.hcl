@@ -37,6 +37,16 @@ run "test_create_pipeline" {
 
   # Cannot test aws_codepipeline.codepipeline.role_arn on a plan
 
+#  assert {
+#    condition     = [for key, value in aws_codepipeline.codepipeline.artifact_store : value if key == "location"] == "my-app-environment-pipeline-artifact-store"
+#    error_message = "Invalid name for aws_codepipeline.codepipeline.artifact_store.location, should be: my-app-environment-pipeline-artifact-store"
+#  }
+
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[0].name == "Source"
+    error_message = "Invalid name for aws_codepipeline.codepipeline.name, should be: Source"
+  }
+
   # IAM Role for the pipeline.
   assert {
     condition     = aws_iam_role.environment_pipeline_role.name == "my-app-environment-pipeline-role"
@@ -49,7 +59,7 @@ run "test_create_pipeline" {
     error_message = "Invalid value for aws_iam_role.environment_pipeline_role.tags, should be: ${jsonencode(var.expected_tags)}"
   }
 
-  # S3 artifact-store bucket.
+  # artifact-store S3 bucket.
   assert {
     condition     = module.artifact_store.bucket_name == "my-app-environment-pipeline-artifact-store"
     error_message = "Invalid name for aws_s3_bucket, should be: my-app-environment-pipeline-artifact-store"
