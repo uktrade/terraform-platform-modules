@@ -13,6 +13,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_ssm_parameter.destination-arn
+  values = {
+    value = "{\"prod\":\"arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups\"}"
+  }
+}
+
 run "test_create_opensearch" {
   command = plan
 
