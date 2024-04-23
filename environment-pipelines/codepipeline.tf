@@ -1,3 +1,7 @@
+data "aws_codestarconnections_connection" "github_codestar_connection" {
+  name = var.application
+}
+
 resource "aws_codepipeline" "codepipeline" {
   name     = "${var.application}-environment-pipeline"
   role_arn = aws_iam_role.environment_pipeline_role.arn
@@ -51,10 +55,6 @@ resource "aws_codepipeline" "codepipeline" {
   }
 
   tags = local.tags
-}
-
-data "aws_codestarconnections_connection" "github_codestar_connection" {
-  name = var.application
 }
 
 module "artifact_store" {

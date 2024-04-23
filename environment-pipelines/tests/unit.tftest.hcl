@@ -15,6 +15,8 @@ override_data {
 }
 
 variables {
+  application = "my-app"
+  repository  = "my-repository"
   expected_tags = {
     application         = "my-app"
     copilot-application = "my-app"
@@ -22,14 +24,8 @@ variables {
   }
 }
 
-run "test_create_pipeline" {
+run "test_code_pipeline" {
   command = plan
-
-  # CodePipeline
-  variables {
-    application = "my-app"
-    repository  = "my-repository"
-  }
 
   assert {
     condition     = aws_codepipeline.codepipeline.name == "my-app-environment-pipeline"
@@ -133,6 +129,10 @@ run "test_create_pipeline" {
     condition     = jsonencode(aws_codepipeline.codepipeline.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
+}
+
+run "test_iam" {
+  command = plan
 
   # IAM Role for the pipeline.
   assert {
@@ -140,11 +140,17 @@ run "test_create_pipeline" {
     error_message = "Should be: 'my-app-environment-pipeline-role'"
   }
 
+  # Todo: Much more
+
   # Tags
   assert {
     condition     = jsonencode(aws_iam_role.environment_pipeline_role.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
+}
+
+run "test_artifact_store" {
+  command = plan
 
   # artifact-store S3 bucket.
   assert {
