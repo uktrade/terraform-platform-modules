@@ -3,14 +3,14 @@ mock_provider "aws" {}
 override_data {
   target = data.aws_iam_policy_document.assume_role
   values = {
-    json = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Principal\":{\"Service\":\"codepipeline.amazonaws.com\"},\"Effect\":\"Allow\"}]}"
+    json = "{}"
   }
 }
 
 override_data {
-  target = data.aws_iam_policy_document.environment_codebuild_policy
+  target = data.aws_iam_policy_document.assume_environment_codebuild_role
   values = {
-   json = "{\"Statement\":[{\"Action\":[\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Sid\":\"CloudWatchLogs\",\"Resource\":[\"*\"]}]}"
+    json = "{}"
   }
 }
 
