@@ -49,12 +49,18 @@ run "test_create_pipeline" {
     condition     = tolist(aws_codepipeline.codepipeline.artifact_store)[0].encryption_key[0].type == "KMS"
     error_message = "Should be: KMS"
   }
+
+  # Source stage
   assert {
     condition     = aws_codepipeline.codepipeline.stage[0].name == "Source"
     error_message = "Should be: Source"
   }
   assert {
-    condition     = aws_codepipeline.codepipeline.stage[0].action[0].name == "Source"
+    condition     = aws_codepipeline.codepipeline.stage[0].action[0].name == "GitCheckout"
+    error_message = "Should be: Git checkout"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[0].action[0].category == "Source"
     error_message = "Should be: Source"
   }
   assert {
@@ -71,7 +77,55 @@ run "test_create_pipeline" {
   }
   assert {
     condition     = one(aws_codepipeline.codepipeline.stage[0].action[0].output_artifacts) == "source_output"
-    error_message = "Should be: [\"source_output\"]"
+    error_message = "Should be: source_output"
+  }
+  # aws_codepipeline.codepipeline.stage[0].action[0].configuration.ConnectionArn cannot be tested on a plan
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[0].action[0].configuration.FullRepositoryId == "my-repository"
+    error_message = "Should be: my-repository"
+  }
+  assert {
+    # TODO: Revert this back to "main" before merging.
+    condition     = aws_codepipeline.codepipeline.stage[0].action[0].configuration.BranchName == "DBTP-911-Barebones-Pipeline"
+    error_message = "Should be: main"
+  }
+
+  # Build stage
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[1].name == "InstallTools"
+    error_message = "Should be: InstallTools"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[1].action[0].name == "InstallTools"
+    error_message = "Should be: InstallTools"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[1].action[0].category == "Build"
+    error_message = "Should be: Build"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[1].action[0].owner == "AWS"
+    error_message = "Should be: AWS"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[1].action[0].provider == "CodeBuild"
+    error_message = "Should be: CodeBuild"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[1].action[0].version == "1"
+    error_message = "Should be: 1"
+  }
+  assert {
+    condition     = one(aws_codepipeline.codepipeline.stage[1].action[0].input_artifacts) == "source_output"
+    error_message = "Should be: source_output"
+  }
+  assert {
+    condition     = one(aws_codepipeline.codepipeline.stage[1].action[0].output_artifacts) == "build_output"
+    error_message = "Should be: build_output"
+  }
+  assert {
+    condition     = aws_codepipeline.codepipeline.stage[1].action[0].configuration.ProjectName == "my-app-environment-terraform"
+    error_message = "Should be: my-app-environment-terraform"
   }
 
   # IAM Role for the pipeline.

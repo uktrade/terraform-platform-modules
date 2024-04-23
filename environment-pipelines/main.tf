@@ -16,7 +16,7 @@ resource "aws_codepipeline" "codepipeline" {
     name = "Source"
 
     action {
-      name             = "Source"
+      name             = "GitCheckout"
       category         = "Source"
       owner            = "AWS"
       provider         = "CodeStarSourceConnection"
@@ -33,10 +33,10 @@ resource "aws_codepipeline" "codepipeline" {
   }
 
   stage {
-    name = "Build"
+    name = "InstallTools"
 
     action {
-      name             = "Build"
+      name             = "InstallTools"
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
