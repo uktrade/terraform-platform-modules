@@ -81,24 +81,3 @@ resource "aws_cloudwatch_log_resource_policy" "log-resource-policy" {
   policy_document = data.aws_iam_policy_document.log-resource-policy.json
   policy_name     = "${var.application}-${var.environment}-LogResourcePolicy"
 }
-
-
-
-#
-#data "aws_iam_policy_document" "elasticache-log-policy" {
-#
-#}
-#
-#resource "aws_cloudwatch_log_resource_policy" "elasticache-log-policy" {
-#  policy_document = data.aws_iam_policy_document.elasticache-log-policy.json
-#  policy_name     = "elasticache-log-policy"
-#}
-#
-#data "aws_iam_policy_document" "opensearch-log-policy" {
-#
-#}
-#
-#resource "aws_cloudwatch_log_resource_policy" "opensearch-log-policy" {
-#  policy_document = data.aws_iam_policy_document.opensearch-log-policy.json
-#  policy_name     = "opensearch-log-policy"
-#}

@@ -85,6 +85,7 @@ resource "aws_ssm_parameter" "addons" {
 
 module "logs" {
   source = "../logs"
+
   application = var.args.application
   environment = var.environment
 }
