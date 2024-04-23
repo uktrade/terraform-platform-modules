@@ -128,6 +128,12 @@ run "test_create_pipeline" {
     error_message = "Should be: my-app-environment-terraform"
   }
 
+  # Tags
+  assert {
+    condition     = jsonencode(aws_codepipeline.codepipeline.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+
   # IAM Role for the pipeline.
   assert {
     condition     = aws_iam_role.environment_pipeline_role.name == "my-app-environment-pipeline-role"
