@@ -14,6 +14,14 @@ override_data {
   }
 }
 
+variables {
+  expected_tags = {
+    application = "my-app"
+    copilot-application = "my-app"
+    managed-by = "DBT Platform - Terraform"
+  }
+}
+
 run "test_create_pipelines" {
   command = plan
 
@@ -29,18 +37,8 @@ run "test_create_pipelines" {
   }
 
   assert {
-    condition     = aws_iam_role.environment_pipeline_role.tags.application == "my-app"
-    error_message = "Invalid value for aws_iam_role.environment_pipeline_role.tags.application parameter, should be: 'my-app'"
-  }
-
-  assert {
-    condition     = aws_iam_role.environment_pipeline_role.tags.copilot-application == "my-app"
-    error_message = "Invalid value for aws_iam_role.environment_pipeline_role.tags.copilot-application parameter, should be: 'my-app'"
-  }
-
-  assert {
-    condition     = aws_iam_role.environment_pipeline_role.tags.managed-by == "DBT Platform - Terraform"
-    error_message = "Invalid value for aws_iam_role.environment_pipeline_role.tags.managed-by parameter, should be: 'DBT Platform - Terraform'"
+    condition     = jsonencode(aws_iam_role.environment_pipeline_role.tags) == jsonencode(var.expected_tags)
+    error_message = "Invalid value for aws_iam_role.environment_pipeline_role.tags parameter, should be: ${jsonencode(var.expected_tags)}"
   }
 
   # S3 artifact-store bucket.
