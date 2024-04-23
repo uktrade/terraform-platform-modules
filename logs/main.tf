@@ -2,9 +2,9 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
-data "aws_iam_policy_document" "log-policy" {
+data "aws_iam_policy_document" "log-resource-policy" {
   statement {
-    sid = "StateMachineToCloudWatchLogs123"
+    sid = "StateMachineToCloudWatchLogs"
     actions = [
       "logs:CreateLogStream",
       "logs:PutLogEvents",
@@ -29,14 +29,7 @@ data "aws_iam_policy_document" "log-policy" {
       type        = "Service"
     }
   }
-}
 
-resource "aws_cloudwatch_log_resource_policy" "log-policy" {
-  policy_document = data.aws_iam_policy_document.log-policy.json
-  policy_name     = "cloudwatch-log-policy"
-}
-
-data "aws_iam_policy_document" "elasticache-log-policy" {
   statement {
     actions = [
       "logs:CreateLogStream",
@@ -51,19 +44,18 @@ data "aws_iam_policy_document" "elasticache-log-policy" {
       values   = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
     }
 
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+
     principals {
       identifiers = ["delivery.logs.amazonaws.com"]
       type        = "Service"
     }
   }
-}
 
-resource "aws_cloudwatch_log_resource_policy" "elasticache-log-policy" {
-  policy_document = data.aws_iam_policy_document.elasticache-log-policy.json
-  policy_name     = "elasticache-log-policy"
-}
-
-data "aws_iam_policy_document" "opensearch-log-policy" {
   statement {
     actions = [
       "logs:CreateLogStream",
@@ -85,7 +77,28 @@ data "aws_iam_policy_document" "opensearch-log-policy" {
   }
 }
 
-resource "aws_cloudwatch_log_resource_policy" "opensearch-log-policy" {
-  policy_document = data.aws_iam_policy_document.opensearch-log-policy.json
-  policy_name     = "opensearch-log-policy"
+resource "aws_cloudwatch_log_resource_policy" "log-resource-policy" {
+  policy_document = data.aws_iam_policy_document.log-resource-policy.json
+  policy_name     = "${var.application}-${var.environment}-LogResourcePolicy"
 }
+
+
+
+#
+#data "aws_iam_policy_document" "elasticache-log-policy" {
+#
+#}
+#
+#resource "aws_cloudwatch_log_resource_policy" "elasticache-log-policy" {
+#  policy_document = data.aws_iam_policy_document.elasticache-log-policy.json
+#  policy_name     = "elasticache-log-policy"
+#}
+#
+#data "aws_iam_policy_document" "opensearch-log-policy" {
+#
+#}
+#
+#resource "aws_cloudwatch_log_resource_policy" "opensearch-log-policy" {
+#  policy_document = data.aws_iam_policy_document.opensearch-log-policy.json
+#  policy_name     = "opensearch-log-policy"
+#}
