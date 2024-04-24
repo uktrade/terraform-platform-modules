@@ -30,7 +30,7 @@ run "aws_vpc_unit_test" {
   }
 
   assert {
-    condition     = aws_vpc.vpc.tags.managed-by == "Terraform"
+    condition     = aws_vpc.vpc.tags.managed-by == "DBT Platform - Terraform"
     error_message = "Invalid VPC tags"
   }
 
