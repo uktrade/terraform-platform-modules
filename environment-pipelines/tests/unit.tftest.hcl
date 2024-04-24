@@ -123,7 +123,6 @@ run "test_code_pipeline" {
     condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-environment-pipeline"
     error_message = "Should be: my-app-environment-pipeline"
   }
-
   # Tags
   assert {
     condition     = jsonencode(aws_codepipeline.environment_pipeline.tags) == jsonencode(var.expected_tags)
@@ -138,6 +137,82 @@ run "test_codebuild" {
     condition     = aws_codebuild_project.environment_pipeline.name == "my-app-environment-pipeline"
     error_message = "Should be: my-app-environment-pipeline"
   }
+  assert {
+    condition     = aws_codebuild_project.environment_pipeline.description == "Provisions the my-app application's extensions."
+    error_message = "Should be: 'Provisions the my-app application's extensions.'"
+  }
+  assert {
+    condition     = aws_codebuild_project.environment_pipeline.build_timeout == 5
+    error_message = "Should be: 5"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.environment_pipeline.artifacts).type == "CODEPIPELINE"
+    error_message = "Should be: 'CODEPIPELINE'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.environment_pipeline.cache).type == "S3"
+    error_message = "Should be: 'S3'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.environment_pipeline.cache).location == "my-app-environment-pipeline-artifact-store"
+    error_message = "Should be: 'my-app-environment-pipeline-artifact-store'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.environment_pipeline.environment).compute_type == "BUILD_GENERAL1_SMALL"
+    error_message = "Should be: 'BUILD_GENERAL1_SMALL'"
+  }
+  assert {
+
+    condition     = one(aws_codebuild_project.environment_pipeline.environment).image == "amazonlinux:2023"
+    error_message = "Should be: 'amazonlinux:2023'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.environment_pipeline.environment).type == "LINUX_CONTAINER"
+    error_message = "Should be: 'LINUX_CONTAINER'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.environment_pipeline.environment).image_pull_credentials_type == "CODEBUILD"
+    error_message = "Should be: 'CODEBUILD'"
+  }
+  assert {
+    condition     = aws_codebuild_project.environment_pipeline.logs_config[0].cloudwatch_logs[0].group_name == "codebuild/my-app-environment-terraform/log-group"
+    error_message = "Should be: 'codebuild/my-app-environment-terraform/log-group'"
+  }
+  assert {
+    condition     = aws_codebuild_project.environment_pipeline.logs_config[0].cloudwatch_logs[0].stream_name == "codebuild/my-app-environment-terraform/log-stream"
+    error_message = "Should be: 'codebuild/my-app-environment-terraform/log-group'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.environment_pipeline.source).type == "CODEPIPELINE"
+    error_message = "Should be: 'CODEPIPELINE'"
+  }
+  # Not sure how valuable this is. Just tests content of the buildspec.yml
+  assert {
+    condition     = length(regexall(".*echo \"Install Phase\".*", aws_codebuild_project.environment_pipeline.source[0].buildspec)) > 0
+    error_message = "Should contain: 'echo \"Install Phase\"'"
+  }
+  assert {
+    condition     = jsonencode(aws_codebuild_project.environment_pipeline.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+
+  # Cloudwatch config:
+  assert {
+    condition     = aws_cloudwatch_log_group.environment_pipeline_codebuild.name == "codebuild/my-app-environment-terraform/log-group"
+    error_message = "Should be: 'codebuild/my-app-environment-terraform/log-group'"
+  }
+  assert {
+    condition     = aws_cloudwatch_log_group.environment_pipeline_codebuild.retention_in_days == 90
+    error_message = "Should be: 90"
+  }
+  assert {
+    condition     = aws_cloudwatch_log_stream.environment_pipeline_codebuild.name == "codebuild/my-app-environment-terraform/log-stream"
+    error_message = "Should be: 'codebuild/my-app-environment-terraform/log-stream'"
+  }
+  assert {
+    condition     = aws_cloudwatch_log_stream.environment_pipeline_codebuild.log_group_name == "codebuild/my-app-environment-terraform/log-group"
+    error_message = "Should be: 'codebuild/my-app-environment-terraform/log-group'"
+  }
 }
 
 run "test_iam" {
@@ -148,12 +223,10 @@ run "test_iam" {
     condition     = aws_iam_role.environment_pipeline_codepipeline.name == "my-app-environment-pipeline-codepipeline"
     error_message = "Should be: 'my-app-environment-pipeline-codepipeline'"
   }
-
   assert {
     condition     = aws_iam_role.environment_pipeline_codepipeline.assume_role_policy == "{\"Sid\": \"AssumePipelineRole\"}"
     error_message = "Should be: {\"Sid\": \"AssumePipelineRole\"}"
   }
-
   assert {
     condition     = jsonencode(aws_iam_role.environment_pipeline_codepipeline.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
@@ -164,12 +237,10 @@ run "test_iam" {
     condition     = aws_iam_role.environment_pipeline_codebuild.name == "my-app-environment-pipeline-codebuild"
     error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
   }
-
   assert {
     condition     = aws_iam_role.environment_pipeline_codebuild.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
     error_message = "Should be: {\"Sid\": \"AssumeCodebuildRole\"}"
   }
-
   assert {
     condition     = jsonencode(aws_iam_role.environment_pipeline_codebuild.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
