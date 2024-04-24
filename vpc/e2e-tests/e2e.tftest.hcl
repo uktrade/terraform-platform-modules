@@ -26,7 +26,7 @@ run "e2e_tests" {
   }
 
   assert {
-    condition     = aws_vpc.vpc.tags.managed-by == "Terraform"
+    condition     = aws_vpc.vpc.tags.managed-by == "DBT Platform - Terraform"
     error_message = "Invalid VPC tags"
   }
 
