@@ -8,17 +8,17 @@ run "log_resource_policy_unit_test" {
 
   assert {
     condition     = [for el in data.aws_iam_policy_document.log-resource-policy.statement[0].condition : true if el.variable == "aws:SourceArn"][0] == true
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement condition variable should be aws:SourceArn"
+    error_message = "Should be: aws:SourceArn"
   }
 
   assert {
     condition     = [for el in data.aws_iam_policy_document.log-resource-policy.statement[0].condition : true if el.variable == "aws:SourceAccount"][0] == true
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement condition variable should be aws:SourceAccount"
+    error_message = "Should be: aws:SourceAccount"
   }
 
   assert {
     condition     = jsondecode(data.aws_iam_policy_document.log-resource-policy.json).Statement[0].Principal.Service == "delivery.logs.amazonaws.com"
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement principal service should be delivery.logs.amazonaws.com"
+    error_message = "Should be: delivery.logs.amazonaws.com"
   }
 
   assert {
@@ -28,17 +28,17 @@ run "log_resource_policy_unit_test" {
 
   assert {
     condition     = [for el in data.aws_iam_policy_document.log-resource-policy.statement[1].condition : true if el.variable == "aws:SourceArn"][0] == true
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement condition variable should be aws:SourceArn"
+    error_message = "Should be: aws:SourceArn"
   }
 
   assert {
     condition     = [for el in data.aws_iam_policy_document.log-resource-policy.statement[1].condition : true if el.variable == "aws:SourceAccount"][0] == true
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement condition variable should be aws:SourceAccount"
+    error_message = "Should be: aws:SourceAccount"
   }
 
   assert {
     condition     = jsondecode(data.aws_iam_policy_document.log-resource-policy.json).Statement[1].Principal.Service == "delivery.logs.amazonaws.com"
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement principal service should be delivery.logs.amazonaws.com"
+    error_message = "Should be: delivery.logs.amazonaws.com"
   }
 
   assert {
@@ -48,12 +48,12 @@ run "log_resource_policy_unit_test" {
 
   assert {
     condition     = [for el in data.aws_iam_policy_document.log-resource-policy.statement[2].condition : true if el.variable == "aws:SourceAccount"][0] == true
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement condition variable should be aws:SourceAccount"
+    error_message = "Should be: aws:SourceAccount"
   }
 
   assert {
     condition     = jsondecode(data.aws_iam_policy_document.log-resource-policy.json).Statement[2].Principal.Service == "es.amazonaws.com"
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement principal service should be es.amazonaws.com"
+    error_message = "Should be: es.amazonaws.com"
   }
 
   assert {
