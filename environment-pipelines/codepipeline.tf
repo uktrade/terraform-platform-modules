@@ -2,9 +2,9 @@ data "aws_codestarconnections_connection" "github_codestar_connection" {
   name = var.application
 }
 
-resource "aws_codepipeline" "codepipeline" {
+resource "aws_codepipeline" "environment_pipeline" {
   name     = "${var.application}-environment-pipeline"
-  role_arn = aws_iam_role.environment_pipeline_role.arn
+  role_arn = aws_iam_role.environment_pipeline_codepipeline.arn
 
   artifact_store {
     location = module.artifact_store.bucket_name
@@ -49,7 +49,7 @@ resource "aws_codepipeline" "codepipeline" {
       version          = "1"
 
       configuration = {
-        ProjectName = "${var.application}-environment-terraform"
+        ProjectName = "${var.application}-environment-pipeline"
       }
     }
   }

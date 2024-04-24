@@ -1,11 +1,4 @@
-resource "aws_iam_role" "environment_pipeline_role" {
-  name               = "${var.application}-environment-pipeline-role"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-
-  tags = local.tags
-}
-
-data "aws_iam_policy_document" "assume_role" {
+data "aws_iam_policy_document" "assume_codepipeline_role" {
   statement {
     effect = "Allow"
 
@@ -18,7 +11,7 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-data "aws_iam_policy_document" "access_artifact_store_policy" {
+data "aws_iam_policy_document" "access_artifact_store" {
   statement {
     effect = "Allow"
 
@@ -65,13 +58,7 @@ data "aws_iam_policy_document" "access_artifact_store_policy" {
   }
 }
 
-resource "aws_iam_role_policy" "codepipeline_policy" {
-  name   = "codepipeline_policy"
-  role   = aws_iam_role.environment_pipeline_role.id
-  policy = data.aws_iam_policy_document.access_artifact_store_policy.json
-}
-
-data "aws_iam_policy_document" "assume_environment_codebuild_role" {
+data "aws_iam_policy_document" "assume_codebuild_role" {
   statement {
     effect = "Allow"
 
@@ -84,13 +71,7 @@ data "aws_iam_policy_document" "assume_environment_codebuild_role" {
   }
 }
 
-resource "aws_iam_role" "environment_codebuild_role" {
-  name               = "${var.application}-environment-codebuild-role"
-  assume_role_policy = data.aws_iam_policy_document.assume_environment_codebuild_role.json
-}
-
-
-data "aws_iam_policy_document" "environment_codebuild_policy" {
+data "aws_iam_policy_document" "write_environment_pipeline_codebuild_logs" {
   statement {
     sid    = "CloudWatchLogs"
     effect = "Allow"
@@ -100,18 +81,39 @@ data "aws_iam_policy_document" "environment_codebuild_policy" {
       "logs:PutLogEvents"
     ]
     resources = [
-      aws_cloudwatch_log_group.environment_terraform_codebuild.arn,
-      "${aws_cloudwatch_log_group.environment_terraform_codebuild.arn}:*"
+      aws_cloudwatch_log_group.environment_pipeline_codebuild.arn,
+      "${aws_cloudwatch_log_group.environment_pipeline_codebuild.arn}:*"
     ]
   }
 }
 
-resource "aws_iam_role_policy" "environment_codebuild_role_policy" {
-  role   = aws_iam_role.environment_codebuild_role.name
-  policy = data.aws_iam_policy_document.environment_codebuild_policy.json
+resource "aws_iam_role" "environment_pipeline_codepipeline" {
+  name               = "${var.application}-environment-pipeline-codepipeline"
+  assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
+  tags               = local.tags
 }
 
-resource "aws_iam_role_policy" "environment_codebuild_access_artifact_store_role_policy" {
-  role   = aws_iam_role.environment_codebuild_role.name
-  policy = data.aws_iam_policy_document.access_artifact_store_policy.json
+resource "aws_iam_role" "environment_pipeline_codebuild" {
+  name               = "${var.application}-environment-pipeline-codebuild"
+  assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
+  tags               = local.tags
 }
+
+resource "aws_iam_role_policy" "artifact_store_access_for_environment_codepipeline" {
+  name   = "${var.application}-artifact-store-access-for-environment-codepipeline"
+  role   = aws_iam_role.environment_pipeline_codepipeline.id
+  policy = data.aws_iam_policy_document.access_artifact_store.json
+}
+
+resource "aws_iam_role_policy" "artifact_store_access_for_environment_codebuild" {
+  name   = "${var.application}-artifact-store-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.access_artifact_store.json
+}
+
+resource "aws_iam_role_policy" "log_access_for_environment_codebuild" {
+  name   = "${var.application}-log-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.write_environment_pipeline_codebuild_logs.json
+}
+
