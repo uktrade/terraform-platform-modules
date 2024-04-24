@@ -131,6 +131,15 @@ run "test_code_pipeline" {
   }
 }
 
+run "test_codebuild" {
+  command = plan
+
+  assert {
+    condition     = aws_codebuild
+    error_message = "Should be: my-app-environment-pipeline"
+  }
+}
+
 run "test_iam" {
   command = plan
 
@@ -205,3 +214,4 @@ run "test_artifact_store" {
     error_message = "Should be: my-app-environment-pipeline-artifact-store"
   }
 }
+
