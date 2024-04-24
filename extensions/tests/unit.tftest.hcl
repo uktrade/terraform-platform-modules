@@ -97,17 +97,17 @@ run "s3_service_test" {
 
   assert {
     condition     = output.resolved_config.test-s3.bucket_name == "extensions-test-bucket"
-    error_message = "Invalid value for resolved_config.test-s3 bucket_name parameter, should be extensions-test-bucket"
+    error_message = "Should be: extensions-test-bucket"
   }
 
   assert {
     condition     = output.resolved_config.test-s3.type == "s3"
-    error_message = "Invalid value for resolved_config.test-s3 type parameter, should be s3"
+    error_message = "Should be: s3"
   }
 
   assert {
     condition     = output.resolved_config.test-s3.versioning == false
-    error_message = "Invalid value for resolved_config.test-s3 versioning parameter, should be false"
+    error_message = "Should be: false"
   }
 }
 
@@ -116,37 +116,37 @@ run "opensearch_plan_small_service_test" {
 
   assert {
     condition     = output.resolved_config.test-opensearch.engine == "2.11"
-    error_message = "Invalid value for resolved_config.test-opensearch engine parameter, should be 2.11"
+    error_message = "Should be: 2.11"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.instance == "t3.medium.search"
-    error_message = "Invalid value for resolved_config.test-opensearch instance parameter, should be t3.medium.search"
+    error_message = "Should be: t3.medium.search"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.instances == 1
-    error_message = "Invalid value for resolved_config.test-opensearch instances parameter, should be 1"
+    error_message = "Should be: 1"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.master == false
-    error_message = "Invalid value for resolved_config.test-opensearch master parameter, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.name == "test-small"
-    error_message = "Invalid value for resolved_config.test-opensearch name parameter, should be test-small"
+    error_message = "Should be: test-small"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.type == "opensearch"
-    error_message = "Invalid value for resolved_config.test-opensearch type parameter, should be opensearch"
+    error_message = "Should be: opensearch"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.volume_size == 512
-    error_message = "Invalid value for resolved_config.test-opensearch volume_size parameter, should be 512"
+    error_message = "Should be: 512"
   }
 }
 
@@ -175,36 +175,36 @@ run "opensearch_plan_medium_ha_service_test" {
 
   assert {
     condition     = output.resolved_config.test-opensearch.engine == "2.11"
-    error_message = "Invalid value for resolved_config.test-opensearch engine parameter, should be 2.11"
+    error_message = "Should be: 2.11"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.instance == "m6g.large.search"
-    error_message = "Invalid value for resolved_config.test-opensearch instance parameter, should be m6g.large.search"
+    error_message = "Should be: m6g.large.search"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.instances == 2
-    error_message = "Invalid value for resolved_config.test-opensearch instances parameter, should be 2"
+    error_message = "Should be: 2"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.master == false
-    error_message = "Invalid value for resolved_config.test-opensearch master parameter, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.name == "test-medium-ha"
-    error_message = "Invalid value for resolved_config.test-opensearch name parameter, should be test-medium-ha"
+    error_message = "Should be: test-medium-ha"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.type == "opensearch"
-    error_message = "Invalid value for resolved_config.test-opensearch type parameter, should be opensearch"
+    error_message = "Should be: opensearch"
   }
 
   assert {
     condition     = output.resolved_config.test-opensearch.volume_size == 512
-    error_message = "Invalid value for resolved_config.test-opensearch volume_size parameter, should be 512"
+    error_message = "Should be: 512"
   }
 }

@@ -7,22 +7,22 @@ run "aws_s3_bucket_unit_test" {
 
   assert {
     condition     = aws_s3_bucket.terraform-state.bucket == "terraform-platform-state-sandbox-test"
-    error_message = "Invalid value for aws_s3_bucket.terraform-state bucket parameter, should be terraform-platform-state-sandbox-test"
+    error_message = "Should be: terraform-platform-state-sandbox-test"
   }
 
   assert {
     condition     = aws_s3_bucket.terraform-state.force_destroy == false
-    error_message = "Invalid value for aws_s3_bucket.terraform-state force_destroy parameter, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_s3_bucket.terraform-state.tags["managed-by"] == "Terraform"
-    error_message = "Invalid tag for aws_s3_bucket.terraform-state purpose, should be Terraform statefile storage - DBT Platform"
+    error_message = "Should be: Terraform statefile storage - DBT Platform"
   }
 
   assert {
     condition     = aws_s3_bucket.terraform-state.tags["purpose"] == "Terraform statefile storage - DBT Platform"
-    error_message = "Invalid tag for aws_s3_bucket.terraform-state purpose, should be Terraform statefile storage - DBT Platform"
+    error_message = "Should be: Terraform statefile storage - DBT Platform"
   }
 }
 
@@ -31,7 +31,7 @@ run "aws_s3_bucket_acl_unit_test" {
 
   assert {
     condition     = aws_s3_bucket_acl.terraform-state-acl.acl == "private"
-    error_message = "Invalid value for aws_s3_bucket_acl.terraform-state-acl acl parameter, should be private"
+    error_message = "Should be: private"
   }
 }
 
@@ -40,7 +40,7 @@ run "aws_s3_bucket_versioning_unit_test" {
 
   assert {
     condition     = aws_s3_bucket_versioning.terraform-state-versioning.versioning_configuration[0].status == "Enabled"
-    error_message = "Invalid value for aws_s3_bucket_versioning.terraform-state-versioning versioning_configuration parameter, should be Enabled"
+    error_message = "Should be: Enabled"
   }
 }
 
@@ -49,7 +49,7 @@ run "aws_s3_bucket_ownership_controls_unit_test" {
 
   assert {
     condition     = aws_s3_bucket_ownership_controls.terraform-state-ownership.rule[0].object_ownership == "BucketOwnerPreferred"
-    error_message = "'object_ownership' should be 'BucketOwnerPreferred'"
+    error_message = "Should be: 'BucketOwnerPreferred'"
   }
 }
 
@@ -58,22 +58,22 @@ run "aws_s3_bucket_public_access_block_unit_test" {
 
   assert {
     condition     = aws_s3_bucket_public_access_block.block.block_public_acls == true
-    error_message = "Invalid value for aws_s3_bucket_public_access_block block_public_acls parameter, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_s3_bucket_public_access_block.block.block_public_policy == true
-    error_message = "Invalid value for aws_s3_bucket_public_access_block block_public_policy parameter, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_s3_bucket_public_access_block.block.ignore_public_acls == true
-    error_message = "Invalid value for aws_s3_bucket_public_access_block ignore_public_acls parameter, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_s3_bucket_public_access_block.block.restrict_public_buckets == true
-    error_message = "Invalid value for aws_s3_bucket_public_access_block restrict_public_buckets parameter, should be true"
+    error_message = "Should be: true"
   }
 }
 
@@ -81,7 +81,7 @@ run "aws_s3_bucket_server_side_encryption_configuration_unit_test" {
   command = plan
 
   assert {
-    # This attribute don't have an index to reference, so we have to iterate through it in a couple of for loops. 
+    # This attribute don't have an index to reference, so we have to iterate through it in a couple of for loops.
     # Since this nested for loop returns a tuple ('[]' around the expression), we reference the first entry in each with '[0]'
     condition = [for rule in aws_s3_bucket_server_side_encryption_configuration.terraform-state-sse.rule :
       true if[for sse in rule.apply_server_side_encryption_by_default :
@@ -95,7 +95,7 @@ run "aws_kms_alias_unit_test" {
 
   assert {
     condition     = aws_kms_key.terraform-bucket-key.is_enabled == true
-    error_message = "Invalid value for aws_kms_alias.terraform-bucket-key is_enabled parameter, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
@@ -110,7 +110,7 @@ run "aws_kms_key_unit_test" {
 
   assert {
     condition     = aws_kms_key.terraform-bucket-key.bypass_policy_lockout_safety_check == false
-    error_message = "Invalid value for aws_kms_alias.terraform-bucket-key bypass_policy_lockout_safety_check parameter, should be false"
+    error_message = "Should be: false"
   }
 }
 

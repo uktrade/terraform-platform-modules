@@ -13,6 +13,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_ssm_parameter.destination-arn
+  values = {
+    value = "{\"prod\":\"arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups\"}"
+  }
+}
+
 run "test_create_opensearch" {
   command = plan
 
@@ -33,47 +40,47 @@ run "test_create_opensearch" {
 
   assert {
     condition     = aws_opensearch_domain.this.domain_name == "my-env-my-name"
-    error_message = "Opensearch domain_name should be 'my-env-my-name'"
+    error_message = "Should be: 'my-env-my-name'"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.engine_version == "OpenSearch_2.5"
-    error_message = "Opensearch engine_version should be 'OpenSearch_2.5'"
+    error_message = "Should be: 'OpenSearch_2.5'"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == null
-    error_message = "Opensearch dedicated_master_type should be null"
+    error_message = "Should be: null"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == false
-    error_message = "Opensearch dedicated_master_enabled should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].instance_type == "t3.small.search"
-    error_message = "Opensearch instance_type should be 't3.small.search'"
+    error_message = "Should be: 't3.small.search'"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].instance_count == 1
-    error_message = "Opensearch instance_count should be 1"
+    error_message = "Should be: 1"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.ebs_options[0].volume_size == 80
-    error_message = "Opensearch volume_size should be 80"
+    error_message = "Should be: 80"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.ebs_options[0].volume_type == "gp2"
-    error_message = "Opensearch volume_type should be 'gp2'"
+    error_message = "Should be: 'gp2'"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.auto_tune_options[0].desired_state == "DISABLED"
-    error_message = "Opensearch desired_state should be 'DISABLED'"
+    error_message = "Should be: 'DISABLED'"
   }
 
   assert {
@@ -103,32 +110,32 @@ run "test_create_opensearch" {
 
   assert {
     condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT"
-    error_message = "Parameter store parameter name should be '/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT'"
+    error_message = "Should be: '/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT'"
   }
 
   assert {
     condition     = aws_ssm_parameter.this-master-user.description == "opensearch_password"
-    error_message = "Opensearch description should be 'opensearch_password'"
+    error_message = "Should be: 'opensearch_password'"
   }
 
   assert {
     condition     = aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.retention_in_days == 7
-    error_message = "index_slow_logs retention in days should be 7"
+    error_message = "Should be: 7"
   }
 
   assert {
     condition     = aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.retention_in_days == 7
-    error_message = "search_slow_logs retention in days should be 7"
+    error_message = "Should be: 7"
   }
 
   assert {
     condition     = aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.retention_in_days == 7
-    error_message = "es_application_logs retention in days should be 7"
+    error_message = "Should be: 7"
   }
 
   assert {
     condition     = aws_cloudwatch_log_group.opensearch_log_group_audit_logs.retention_in_days == 7
-    error_message = "audit_logs retention in days should be 7"
+    error_message = "Should be: 7"
   }
 }
 
@@ -153,42 +160,42 @@ run "test_create_opensearch_x_large_ha" {
 
   assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == null
-    error_message = "Opensearch dedicated_master_type should be null"
+    error_message = "Should be: null"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == false
-    error_message = "Opensearch dedicated_master_enabled should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].instance_type == "m6g.2xlarge.search"
-    error_message = "Opensearch instance_type should be 'm6g.2xlarge.search'"
+    error_message = "Should be: 'm6g.2xlarge.search'"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].instance_count == 2
-    error_message = "Opensearch instance_count should be 2"
+    error_message = "Should be: 2"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.ebs_options[0].volume_size == 1500
-    error_message = "Opensearch volume_size should be 1500"
+    error_message = "Should be: 1500"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.auto_tune_options[0].desired_state == "ENABLED"
-    error_message = "Opensearch desired_state should be 'ENABLED'"
+    error_message = "Should be: 'ENABLED'"
   }
 
   assert {
     condition     = aws_ssm_parameter.this-master-user.name == "/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT"
-    error_message = "Parameter store parameter name should be '/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT'"
+    error_message = "Should be: '/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT'"
   }
 
   assert {
     condition     = aws_ssm_parameter.this-master-user.description == "opensearch_password"
-    error_message = "Opensearch description should be 'opensearch_password'"
+    error_message = "Should be: 'opensearch_password'"
   }
 }
 
@@ -219,32 +226,32 @@ run "test_overrides" {
 
   assert {
     condition     = aws_opensearch_domain.this.ebs_options[0].volume_type == "gp3"
-    error_message = "Opensearch volume_type should be 'gp3'"
+    error_message = "Should be: 'gp3'"
   }
 
   assert {
     condition     = aws_opensearch_domain.this.ebs_options[0].throughput == 500
-    error_message = "Opensearch throughput should be 500"
+    error_message = "Should be: 500"
   }
 
   assert {
     condition     = aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.retention_in_days == 3
-    error_message = "index_slow_logs retention in days should be 3"
+    error_message = "Should be: 3"
   }
 
   assert {
     condition     = aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.retention_in_days == 14
-    error_message = "search_slow_logs retention in days should be 14"
+    error_message = "Should be: 14"
   }
 
   assert {
     condition     = aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.retention_in_days == 30
-    error_message = "es_application_logs retention in days should be 30"
+    error_message = "Should be: 30"
   }
 
   assert {
     condition     = aws_cloudwatch_log_group.opensearch_log_group_audit_logs.retention_in_days == 1096
-    error_message = "audit_logs retention in days should be 1096"
+    error_message = "Should be: 1096"
   }
 }
 
@@ -301,7 +308,7 @@ run "test_domain_name_truncation" {
 
   assert {
     condition     = aws_opensearch_domain.this.domain_name == "my-prod-environment-my-reall"
-    error_message = "Opensearch domain_name should be 'my-prod-environment-my-reall'"
+    error_message = "Should be: 'my-prod-environment-my-reall'"
   }
 }
 
@@ -325,41 +332,41 @@ run "test_create_cloudwatch_subscription_filters" {
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_index_slow_logs.name == "/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_index_slow"
-    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_index_slow_logs' should be '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_index_slow'"
+    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_index_slow_logs'Should be: '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_index_slow'"
   }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_search_slow_logs.name == "/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_search_slow"
-    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_search_slow_logs' should be '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_search_slow'"
+    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_search_slow_logs'Should be: '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_search_slow'"
   }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_es_application_logs.name == "/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_es_application"
-    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_es_application_logs' should be '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_es_application'"
+    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_es_application_logs'Should be: '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_es_application'"
   }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_audit_logs.name == "/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_audit"
-    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_audit_logs' should be '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_audit'"
+    error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_audit_logs'Should be: '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_audit'"
   }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_index_slow_logs.log_group_name == "/aws/opensearch/my-env-my-name/index-slow"
-    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_index_slow_logs' should be '/aws/opensearch/my-env-my-name/index-slow'"
+    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_index_slow_logs'Should be: '/aws/opensearch/my-env-my-name/index-slow'"
   }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_search_slow_logs.log_group_name == "/aws/opensearch/my-env-my-name/search-slow"
-    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_search_slow_logs' should be '/aws/opensearch/my-env-my-name/search-slow'"
+    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_search_slow_logs'Should be: '/aws/opensearch/my-env-my-name/search-slow'"
   }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_es_application_logs.log_group_name == "/aws/opensearch/my-env-my-name/es-application"
-    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_es_application_logs' should be '/aws/opensearch/my-env-my-name/es-application'"
+    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_es_application_logs'Should be: '/aws/opensearch/my-env-my-name/es-application'"
   }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_audit_logs.log_group_name == "/aws/opensearch/my-env-my-name/audit"
-    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_audit_logs' should be '/aws/opensearch/my-env-my-name/audit'"
+    error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_audit_logs'Should be: '/aws/opensearch/my-env-my-name/audit'"
   }
 }

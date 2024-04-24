@@ -42,7 +42,7 @@ run "aws_security_group_unit_test" {
 
   assert {
     condition     = aws_security_group.default.revoke_rules_on_delete == false
-    error_message = "Config for aws_security_group.default.revoke_rules_on_delete should be false."
+    error_message = "Should be: false."
   }
 
   assert {
@@ -111,7 +111,7 @@ run "aws_db_subnet_group_unit_test" {
 
   assert {
     condition     = length(aws_db_subnet_group.default.subnet_ids) == 1
-    error_message = "Invalid number of subnet_ids for aws_db_subnet_group.default, should be 1"
+    error_message = "Should be: 1"
   }
 }
 
@@ -125,27 +125,27 @@ run "aws_kms_key_unit_test" {
 
   assert {
     condition     = aws_kms_key.default.is_enabled == true
-    error_message = "Invalid config for aws_kms_key.default is_enabled parameter, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_kms_key.default.bypass_policy_lockout_safety_check == false
-    error_message = "Invalid config for aws_kms_key.default bypass_policy_lockout_safety_check parameter, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_kms_key.default.enable_key_rotation == false
-    error_message = "Invalid config for aws_kms_key.default enable_key_rotation parameter, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_kms_key.default.key_usage == "ENCRYPT_DECRYPT"
-    error_message = "Invalid config for aws_kms_key.default key_usage parameter, should be ENCRYPT_DECRYPT"
+    error_message = "Should be: ENCRYPT_DECRYPT"
   }
 
   assert {
     condition     = aws_kms_key.default.customer_master_key_spec == "SYMMETRIC_DEFAULT"
-    error_message = "Invalid config for aws_kms_key.default customer_master_key_spec parameter, should be SYMMETRIC_DEFAULT"
+    error_message = "Should be: SYMMETRIC_DEFAULT"
   }
 }
 
@@ -165,100 +165,100 @@ run "aws_db_instance_unit_test" {
 
   assert {
     condition     = aws_db_instance.default.engine == "postgres"
-    error_message = "Invalid config for aws_db_instance.default engine parameter, should be postgres"
+    error_message = "Should be: postgres"
   }
 
   assert {
     condition     = aws_db_instance.default.engine_version == "14"
-    error_message = "Invalid config for aws_db_instance.default engine_version parameter, should be 14"
+    error_message = "Should be: 14"
   }
 
   assert {
     condition     = aws_db_instance.default.username == "postgres"
-    error_message = "Invalid config for aws_db_instance.default username parameter, should be postgres"
+    error_message = "Should be: postgres"
   }
 
   # Test aws_db_instance.default resource storage
   assert {
     condition     = aws_db_instance.default.storage_encrypted == true
-    error_message = "Invalid config for aws_db_instance.default storage_encrypted parameter, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_db_instance.default.publicly_accessible == false
-    error_message = "Invalid config for aws_db_instance.default publicly_accessible parameter, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_db_instance.default.iam_database_authentication_enabled == false
-    error_message = "Invalid config for aws_db_instance.default iam_database_authentication_enabled parameter, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_db_instance.default.multi_az == false
-    error_message = "Invalid config for aws_db_instance.default multi_az parameter, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_db_instance.default.backup_retention_period == 7
-    error_message = "Invalid config for aws_db_instance.default backup_retention_period, should be 7"
+    error_message = "Should be: 7"
   }
 
   assert {
     condition     = aws_db_instance.default.backup_window == "07:00-09:00"
-    error_message = "Invalid config for aws_db_instance.default backup_window, should be 07:00-09:00"
+    error_message = "Should be: 07:00-09:00"
   }
 
   assert {
     condition     = aws_db_instance.default.allocated_storage == 20
-    error_message = "Invalid config for aws_db_instance.default allocated_storage, should be 20"
+    error_message = "Should be: 20"
   }
 
   assert {
     condition     = aws_db_instance.default.manage_master_user_password == true
-    error_message = "Invalid config for aws_db_instance.default manage_master_user_password, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_db_instance.default.copy_tags_to_snapshot == true
-    error_message = "Invalid config for aws_db_instance.default copy_tags_to_snapshot , should be true"
+    error_message = "Should be: true"
   }
 
   # Test aws_db_instance.default resource monitoring
   assert {
     condition     = aws_db_instance.default.performance_insights_enabled == true
-    error_message = "Invalid config for aws_db_instance.default performance_insights_enabled parameter, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_db_instance.default.performance_insights_retention_period == 7
-    error_message = "Invalid config for aws_db_instance.default performance_insights_retention_period parameter, should be 7"
+    error_message = "Should be: 7"
   }
 
   assert {
     condition     = aws_db_instance.default.monitoring_interval == 15
-    error_message = "Invalid config for aws_db_instance.default monitoring_interval parameter, should be 15"
+    error_message = "Should be: 15"
   }
 
   # Test aws_db_instance.default resource upgrades
   assert {
     condition     = aws_db_instance.default.allow_major_version_upgrade == true
-    error_message = "Invalid config for aws_db_instance.default allow_major_version_upgrade, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_db_instance.default.apply_immediately == false
-    error_message = "Invalid config for aws_db_instance.default apply_immediately, should be false"
+    error_message = "Should be: false"
   }
 
   assert {
     condition     = aws_db_instance.default.auto_minor_version_upgrade == true
-    error_message = "Invalid config for aws_db_instance.default auto_minor_version_upgrade, should be true"
+    error_message = "Should be: true"
   }
 
   assert {
     condition     = aws_db_instance.default.maintenance_window == "mon:00:00-mon:03:00"
-    error_message = "Invalid config for aws_db_instance.default maintenance_window, should be mon:00:00-mon:03:00"
+    error_message = "Should be: mon:00:00-mon:03:00"
   }
 
 }
@@ -274,27 +274,27 @@ run "aws_iam_role_unit_test" {
 
   assert {
     condition     = aws_iam_role.enhanced-monitoring.max_session_duration == 3600
-    error_message = "Invalid config for aws_iam_role.enhanced-monitoring max_session_duration, should be 3600"
+    error_message = "Should be: 3600"
   }
 
   assert {
     condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Statement[0].Action == "sts:AssumeRole"
-    error_message = "Invalid config for aws_iam_role.enhanced-monitoring assume_role_policy Action, should be sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
   }
 
   assert {
     condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Statement[0].Effect == "Allow"
-    error_message = "Invalid config for aws_iam_role.enhanced-monitoring max_session_duration Effect, should be Allow"
+    error_message = "Should be: Allow"
   }
 
   assert {
     condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Statement[0].Principal.Service == "monitoring.rds.amazonaws.com"
-    error_message = "Invalid config for aws_iam_role.enhanced-monitoring max_session_duration Principal.Service, should be monitoring.rds.amazonaws.com"
+    error_message = "Should be: monitoring.rds.amazonaws.com"
   }
 
   assert {
     condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Version == "2012-10-17"
-    error_message = "Invalid config for aws_iam_role.enhanced-monitoring assume_role_policy Version, should be 2012-10-17"
+    error_message = "Should be: 2012-10-17"
   }
 
   # Test aws_iam_role_policy_attachment.enhanced-monitoring resource
@@ -311,27 +311,27 @@ run "aws_iam_role_unit_test" {
 
   assert {
     condition     = aws_iam_role.lambda-execution-role.max_session_duration == 3600
-    error_message = "Invalid config for aws_iam_role.lambda-execution-role max_session_duration, should be 3600"
+    error_message = "Should be: 3600"
   }
 
   assert {
     condition     = jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).Statement[0].Action == "sts:AssumeRole"
-    error_message = "Invalid config for aws_iam_role.lambda-execution-role assume_role_policy Action, should be sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
   }
 
   assert {
     condition     = jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).Statement[0].Effect == "Allow"
-    error_message = "Invalid config for aws_iam_role.lambda-execution-role max_session_duration Effect, should be Allow"
+    error_message = "Should be: Allow"
   }
 
   assert {
     condition     = jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).Statement[0].Principal.Service == "lambda.amazonaws.com"
-    error_message = "Invalid config for aws_iam_role.lambda-execution-role max_session_duration Principal.Service, should be lambda.amazonaws.com"
+    error_message = "Should be: lambda.amazonaws.com"
   }
 
   assert {
     condition     = jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).Version == "2012-10-17"
-    error_message = "Invalid config for aws_iam_role.lambda-execution-role assume_role_policy Version, should be 2012-10-17"
+    error_message = "Should be: 2012-10-17"
   }
 }
 
@@ -350,7 +350,7 @@ run "aws_cloudwatch_log_rds_subscription_filter_unit_test" {
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.rds.distribution == "ByLogStream"
-    error_message = "Invalid config for aws_cloudwatch_log_subscription_filter.rds distribution parameter, should be ByLogStream"
+    error_message = "Should be: ByLogStream"
   }
 }
 
@@ -359,47 +359,47 @@ run "aws_lambda_function_unit_test" {
 
   assert {
     condition     = aws_lambda_function.lambda.filename == "./manage_users.zip"
-    error_message = "Invalid config for aws_lambda_function.lambda filename parameter, should be ./manage_users.zip"
+    error_message = "Should be: ./manage_users.zip"
   }
 
   assert {
     condition     = aws_lambda_function.lambda.function_name == "test-application-test-environment-test-name-rds-create-user"
-    error_message = "Invalid config for aws_lambda_function.lambda function_name parameter, should be test-application-test-environment-test-name-rds-create-user"
+    error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
   }
 
   assert {
     condition     = aws_lambda_function.lambda.handler == "manage_users.handler"
-    error_message = "Invalid config for aws_lambda_function.lambda handler parameter, should be manage_users.handler"
+    error_message = "Should be: manage_users.handler"
   }
 
   assert {
     condition     = aws_lambda_function.lambda.runtime == "python3.11"
-    error_message = "Invalid config for aws_lambda_function.lambda runtime parameter, should be python3.11"
+    error_message = "Should be: python3.11"
   }
 
   assert {
     condition     = aws_lambda_function.lambda.memory_size == 128
-    error_message = "Invalid config for aws_lambda_function.lambda memory_size parameter, should be 128"
+    error_message = "Should be: 128"
   }
 
   assert {
     condition     = aws_lambda_function.lambda.timeout == 10
-    error_message = "Invalid config for aws_lambda_function.lambda timeout parameter, should be 10"
+    error_message = "Should be: 10"
   }
 
   assert {
     condition     = length(aws_lambda_function.lambda.layers) == 1
-    error_message = "Invalid number of layers for aws_lambda_function.lambda layers parameter, should be 1"
+    error_message = "Should be: 1"
   }
 
   assert {
     condition     = endswith(aws_lambda_function.lambda.layers[0], ":layer:python-postgres:1") == true
-    error_message = "Invalid config for aws_lambda_function.lambda layers parameter, should be end with layer:python-postgres:1"
+    error_message = "Should be: end with layer:python-postgres:1"
   }
 
   assert {
     condition     = [for el in aws_lambda_function.lambda.vpc_config : true if el.ipv6_allowed_for_dual_stack == false][0] == true
-    error_message = "Invalid vpc_config for aws_lambda_function.lambda ipv6_allowed_for_dual_stack parameter, should be false"
+    error_message = "Should be: false"
   }
 }
 
@@ -409,43 +409,43 @@ run "aws_lambda_invocation_unit_test" {
   # Test aws_lambda_invocation.create-application-user resource
   assert {
     condition     = aws_lambda_invocation.create-application-user.function_name == "test-application-test-environment-test-name-rds-create-user"
-    error_message = "Invalid config for aws_lambda_invocation.create-application-user function_name parameter, should be test-application-test-environment-test-name-rds-create-user"
+    error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
   }
 
   assert {
     condition     = aws_lambda_invocation.create-application-user.lifecycle_scope == "CREATE_ONLY"
-    error_message = "Invalid config for aws_lambda_invocation.create-application-user lifecycle_scope parameter, should be CREATE_ONLY"
+    error_message = "Should be: CREATE_ONLY"
   }
 
   assert {
     condition     = aws_lambda_invocation.create-application-user.qualifier == "$LATEST"
-    error_message = "Invalid config for aws_lambda_invocation.create-application-user qualifier parameter, should be $LATEST"
+    error_message = "Should be: $LATEST"
   }
 
   assert {
     condition     = aws_lambda_invocation.create-application-user.terraform_key == "tf"
-    error_message = "Invalid config for aws_lambda_invocation.create-application-user terraform_key parameter, should be tf"
+    error_message = "Should be: tf"
   }
 
   # Test aws_lambda_invocation.create-readonly-user resource
   assert {
     condition     = aws_lambda_invocation.create-readonly-user.function_name == "test-application-test-environment-test-name-rds-create-user"
-    error_message = "Invalid config for aws_lambda_invocation.create-readonly-user function_name parameter, should be test-application-test-environment-test-name-rds-create-user"
+    error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
   }
 
   assert {
     condition     = aws_lambda_invocation.create-readonly-user.lifecycle_scope == "CREATE_ONLY"
-    error_message = "Invalid config for aws_lambda_invocation.create-readonly-user lifecycle_scope parameter, should be CREATE_ONLY"
+    error_message = "Should be: CREATE_ONLY"
   }
 
   assert {
     condition     = aws_lambda_invocation.create-readonly-user.qualifier == "$LATEST"
-    error_message = "Invalid config for aws_lambda_invocation.create-readonly-user qualifier parameter, should be $LATEST"
+    error_message = "Should be: $LATEST"
   }
 
   assert {
     condition     = aws_lambda_invocation.create-readonly-user.terraform_key == "tf"
-    error_message = "Invalid config for aws_lambda_invocation.create-readonly-user terraform_key parameter, should be tf"
+    error_message = "Should be: tf"
   }
 }
 
@@ -454,11 +454,11 @@ run "aws_ssm_parameter_master_secret_arn_unit_test" {
 
   assert {
     condition     = aws_ssm_parameter.master-secret-arn.name == "/copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
-    error_message = "Invalid config for aws_ssm_parameter.master-secret-arn name parameter, should be /copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
+    error_message = "Should be: /copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
   }
 
   assert {
     condition     = aws_ssm_parameter.master-secret-arn.type == "SecureString"
-    error_message = "Invalid config for aws_ssm_parameter.master-secret-arn type parameter, should be SecureString"
+    error_message = "Should be: SecureString"
   }
 }
