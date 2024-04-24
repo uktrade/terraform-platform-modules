@@ -101,7 +101,7 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
 
 resource "aws_iam_role_policy" "artifact_store_access_for_environment_codepipeline" {
   name   = "${var.application}-artifact-store-access-for-environment-codepipeline"
-  role   = aws_iam_role.environment_pipeline_codepipeline.id
+  role   = aws_iam_role.environment_pipeline_codepipeline.name
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
 

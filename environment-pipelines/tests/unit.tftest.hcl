@@ -145,7 +145,6 @@ run "test_iam" {
     error_message = "Should be: {\"Sid\": \"AssumePipelineRole\"}"
   }
 
-  # Tags
   assert {
     condition     = jsonencode(aws_iam_role.environment_pipeline_codepipeline.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
@@ -162,11 +161,39 @@ run "test_iam" {
     error_message = "Should be: {\"Sid\": \"AssumeCodebuildRole\"}"
   }
 
-  # Tags
   assert {
     condition     = jsonencode(aws_iam_role.environment_pipeline_codebuild.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
+
+  # Policy links
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.name  == "my-app-artifact-store-access-for-environment-codepipeline"
+    error_message = "Should be: 'my-app-artifact-store-access-for-environment-codepipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.role  == "my-app-environment-pipeline-codepipeline"
+    error_message = "Should be: 'my-app-environment-pipeline-codepipeline'"
+  }
+  # aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codebuild.name  == "my-app-artifact-store-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-artifact-store-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codebuild.role  == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.artifact_store_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.log_access_for_environment_codebuild.name  == "my-app-log-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-log-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.log_access_for_environment_codebuild.role  == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.policy cannot be tested on a plan
 }
 
 run "test_artifact_store" {
