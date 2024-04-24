@@ -135,7 +135,7 @@ run "test_codebuild" {
   command = plan
 
   assert {
-    condition     = aws_codebuild
+    condition     = aws_codebuild_project.environment_pipeline.name == "my-app-environment-pipeline"
     error_message = "Should be: my-app-environment-pipeline"
   }
 }

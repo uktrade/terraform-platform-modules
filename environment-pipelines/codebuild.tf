@@ -1,6 +1,6 @@
 resource "aws_codebuild_project" "environment_pipeline" {
-  name          = "${var.application}-environment-terraform"
-  description   = "Runs the ${var.application} application's extensions terraform."
+  name          = "${var.application}-environment-pipeline"
+  description   = "Provisions the ${var.application} application's extensions."
   build_timeout = 5
   service_role  = aws_iam_role.environment_pipeline_codebuild.arn
 
