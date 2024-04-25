@@ -109,12 +109,12 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.opensearch_master_user_connection_string.name == "/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT"
+    condition     = aws_ssm_parameter.opensearch_endpoint.name == "/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT"
     error_message = "Should be: '/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT'"
   }
 
   assert {
-    condition     = aws_ssm_parameter.opensearch_master_user_connection_string.description == "opensearch_password"
+    condition     = aws_ssm_parameter.opensearch_endpoint.description == "opensearch_password"
     error_message = "Should be: 'opensearch_password'"
   }
 
@@ -189,12 +189,12 @@ run "test_create_opensearch_x_large_ha" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.opensearch_master_user_connection_string.name == "/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT"
+    condition     = aws_ssm_parameter.opensearch_endpoint.name == "/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT"
     error_message = "Should be: '/copilot/my_app/my_env/secrets/MY_NAME_ENDPOINT'"
   }
 
   assert {
-    condition     = aws_ssm_parameter.opensearch_master_user_connection_string.description == "opensearch_password"
+    condition     = aws_ssm_parameter.opensearch_endpoint.description == "opensearch_password"
     error_message = "Should be: 'opensearch_password'"
   }
 }
