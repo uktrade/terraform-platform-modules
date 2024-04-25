@@ -83,7 +83,6 @@ resource "random_password" "password" {
   min_special = 1
   min_lower   = 1
   min_numeric = 1
-  # override_special = "!$%*-_+,."
 }
 
 resource "aws_opensearch_domain" "this" {
@@ -189,7 +188,7 @@ CONFIG
   tags = local.tags
 }
 
-resource "aws_ssm_parameter" "opensearch_endpoint" {
+resource "aws_ssm_parameter" "opensearch_master_user_connection_string" {
   name        = local.ssm_parameter_name
   description = "opensearch_password"
   type        = "SecureString"
