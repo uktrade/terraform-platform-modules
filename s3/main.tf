@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "this" {
-  bucket = var.config.bucket_name1
+  bucket = config.bucket_name1
 
   tags = local.tags
 }
