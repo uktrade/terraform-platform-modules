@@ -185,7 +185,6 @@ run "test_codebuild" {
     condition     = one(aws_codebuild_project.environment_pipeline.source).type == "CODEPIPELINE"
     error_message = "Should be: 'CODEPIPELINE'"
   }
-  # Not sure how valuable this is. Just tests content of the buildspec.yml
   assert {
     condition     = length(regexall(".*echo \"Install Phase\".*", aws_codebuild_project.environment_pipeline.source[0].buildspec)) > 0
     error_message = "Should contain: 'echo \"Install Phase\"'"
