@@ -15,7 +15,7 @@ run "aws_s3_bucket_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_s3_bucket.this.bucket == "dbt-terraform-test-s3-module"
+    condition     = aws_s3_bucket.this.bucket == "dbt-terraform-test-s3-module-test"
     error_message = "Invalid name for aws_s3_bucket"
   }
 
