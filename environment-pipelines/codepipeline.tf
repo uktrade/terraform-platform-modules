@@ -30,7 +30,7 @@ resource "aws_codepipeline" "environment_pipeline" {
       configuration = {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
         FullRepositoryId = var.repository
-        BranchName = "main"
+        BranchName       = "main"
       }
     }
   }
