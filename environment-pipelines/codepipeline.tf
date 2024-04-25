@@ -51,12 +51,12 @@ resource "aws_codepipeline" "environment_pipeline" {
 
         configuration = {
           ProjectName = "${var.application}-environment-pipeline"
-#          EnvironmentVariables = jsonencode([
-#            {
-#              name  = "ENVIRONMENT"
-#              value = stage.value.env
-#            }
-#          ])
+          EnvironmentVariables = jsonencode([
+            {
+              name  = "ENVIRONMENT"
+              value = stage.value.env
+            }
+          ])
         }
       }
     }
