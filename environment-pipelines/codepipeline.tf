@@ -36,8 +36,10 @@ resource "aws_codepipeline" "environment_pipeline" {
     }
   }
 
-  stage {
-    name = "Build"
+  dynamic "stage" {
+    for_each = local.stages
+    content {
+      name = "Build"
 
     action {
       name             = "InstallTools"
@@ -48,8 +50,15 @@ resource "aws_codepipeline" "environment_pipeline" {
       output_artifacts = ["build_output"]
       version          = "1"
 
-      configuration = {
-        ProjectName = "${var.application}-environment-pipeline"
+        configuration = {
+          ProjectName = "${var.application}-environment-pipeline"
+#          EnvironmentVariables = jsonencode([
+#            {
+#              name  = "ENVIRONMENT"
+#              value = stage.value.env
+#            }
+#          ])
+        }
       }
     }
   }

@@ -35,7 +35,8 @@ phases:
 
   build:
     commands:
-      - echo "Build Phase"
+      - echo "Terraform Plan Phase"
+      - echo "Working on environment ${ENVIRONMENT}"
   post_build:
     commands:
       - echo "Post Build Phase"

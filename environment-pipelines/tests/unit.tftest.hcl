@@ -22,6 +22,16 @@ variables {
     copilot-application = "my-app"
     managed-by          = "DBT Platform - Terraform"
   }
+
+  environments = [
+    {
+      name = "dev"
+    },
+    {
+      name = "prod"
+      requires_approval = true
+    }
+  ]
 }
 
 run "test_code_pipeline" {
