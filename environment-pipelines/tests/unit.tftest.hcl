@@ -81,8 +81,7 @@ run "test_code_pipeline" {
     error_message = "Should be: my-repository"
   }
   assert {
-    # TODO: Revert this back to "main" before merging.
-    condition     = aws_codepipeline.environment_pipeline.stage[0].action[0].configuration.BranchName == "DBTP-911-Barebones-Pipeline"
+    condition     = aws_codepipeline.environment_pipeline.stage[0].action[0].configuration.BranchName == "main"
     error_message = "Should be: main"
   }
 
