@@ -1,5 +1,5 @@
 # VPC
-resource "aws_vpc" "vpc" {
+resource "aws_vpc_fake" "vpc" {
   cidr_block           = "${var.arg_config.cidr}${local.vpc_cidr_mask}"
   enable_dns_hostnames = true
   tags = merge(
