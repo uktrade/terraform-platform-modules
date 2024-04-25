@@ -25,12 +25,31 @@ resource "aws_codepipeline" "environment_pipeline" {
       owner            = "AWS"
       provider         = "CodeStarSourceConnection"
       version          = "1"
-      output_artifacts = ["source_output"]
+      output_artifacts = ["project_deployment_source"]
 
       configuration = {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
         FullRepositoryId = var.repository
-        BranchName       = "main"
+        BranchName       = var.branch
+      }
+    }
+  }
+
+  stage {
+    name = "Module Source"
+
+    action {
+      name             = "GitCheckout"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["module_source"]
+
+      configuration = {
+        ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
+        FullRepositoryId = "uktrade/terraform-platform-modules"
+        BranchName       = var.module_branch
       }
     }
   }
@@ -45,7 +64,7 @@ resource "aws_codepipeline" "environment_pipeline" {
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
-      input_artifacts  = ["source_output"]
+      input_artifacts  = ["project_deployment_source", "module_source"]
       output_artifacts = ["build_output"]
       version          = "1"
 

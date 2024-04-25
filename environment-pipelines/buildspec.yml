@@ -37,6 +37,9 @@ phases:
     commands:
       - echo "Terraform Plan Phase"
       - echo "Working on environment ${ENVIRONMENT}"
+      - cd terraform/${ENVIRONMENT}
+      - terraform init
+      - terraform plan
   post_build:
     commands:
       - echo "Post Build Phase"

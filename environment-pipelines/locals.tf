@@ -24,6 +24,4 @@ locals {
 #      approval = false
 #    },
   ]
-
-
 }
