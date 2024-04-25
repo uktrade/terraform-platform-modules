@@ -14,7 +14,7 @@ resource "aws_codebuild_project" "environment_pipeline" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
+    compute_type                = "BUILD_GENERAL1_SMALL"
     image                       = "amazonlinux:2023"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
