@@ -15,10 +15,6 @@ data "aws_subnets" "private-subnets" {
 
 data "aws_caller_identity" "current" {}
 
-module "fakemodule"
-{
-}
-
 resource "aws_elasticache_replication_group" "redis" {
   replication_group_id       = "${var.name}-${var.environment}"
   description                = "${var.name}-${var.environment}-redis-cluster"
