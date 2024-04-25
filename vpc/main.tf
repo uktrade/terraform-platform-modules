@@ -3,7 +3,7 @@ resource "aws_vpc" "vpc" {
   cidr_block           = "${var.arg_config.cidr}${local.vpc_cidr_mask}"
   enable_dns_hostnames = true
   tags = merge(
-    local.FAKE,
+    local.tags,
     {
       Name = var.arg_name
     }
