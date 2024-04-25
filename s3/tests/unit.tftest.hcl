@@ -197,7 +197,7 @@ run "aws_s3_bucket_object_lock_configuration_compliance_unit_test" {
   }
 
   assert {
-    condition     = [for el in aws_s3_bucket_object_lock_configuration.object-lock-config[0].rule : true if el.default_retention[0].years == 1][0] == true
+    condition     = [for el in aws_s3_bucket_object_lock_configuration.object-lock-config1[0].rule : true if el.default_retention[0].years == 1][0] == true
     error_message = "Invalid s3 bucket object lock configuration"
   }
 }
