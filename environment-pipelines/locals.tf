@@ -7,6 +7,23 @@ locals {
 
   stage_config = yamldecode(file("${path.module}/stage_config.yml"))
 
+#  environment = [
+#    {
+#      name = dev
+#    },
+#    {
+#      name = prod
+#      requires_approval = true
+#    }
+#  ]
+#
+#  [{plan stuff in here}, {approval: true} , []]
+#
+#
+#[[{plan stuff in here}, [], []], [{plan stuff in here}, [], []]]
+#        flatten(^^)
+
+
   stages = [
     {
       type = "plan"
@@ -14,7 +31,7 @@ locals {
       approval = false
     },
 #    {
-#      type = "plan"
+#      type = "approve"
 #      env = "prod",
 #      approval = false
 #    },

@@ -5,8 +5,7 @@ env:
 phases:
   install:
     commands:
-      - pwd
-      - ls -l ..
+      #- env | grep AWS_
       - VERSION_OUTPUT=""
       - |
         if [ ! -f .copilot-version ]; then
