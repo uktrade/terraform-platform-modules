@@ -70,6 +70,10 @@ resource "aws_codepipeline" "environment_pipeline" {
           PrimarySource = "project_deployment_source"
           EnvironmentVariables = jsonencode([
             {
+              name  = "AWS_ACCOUNT_ID"
+              value = "852676506468"
+            },
+            {
               name  = "ENVIRONMENT"
               value = stage.value.env
             }
