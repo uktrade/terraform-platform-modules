@@ -5,11 +5,8 @@ env:
 phases:
   install:
     commands:
-<<<<<<< HEAD
       - pwd
       - ls -l ..
-=======
->>>>>>> main
       - VERSION_OUTPUT=""
       - |
         if [ ! -f .copilot-version ]; then
