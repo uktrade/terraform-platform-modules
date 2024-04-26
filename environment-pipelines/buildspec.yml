@@ -1,0 +1,43 @@
+version: 0.2
+env:
+  variables:
+    TERRAFORM_VERSION: 1.8.1
+phases:
+  install:
+    commands:
+      - VERSION_OUTPUT=""
+      - |
+        if [ ! -f .copilot-version ]; then
+          echo "Cannot find .copilot-version file"
+          exit 1
+        fi
+      - |
+        if [ ! -f .platform-helper-version ]; then
+          echo "Cannot find .platform-helper-version file"
+          exit 1
+        fi
+      - COPILOT_VERSION=`cat .copilot-version`
+      - PLATFORM_HELPER_VERSION=`cat .platform-helper-version`
+      - echo "Install Phase"
+      - yum -y install zip wget which python-pip
+      - curl -s -qL -o terraform_install.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+      - unzip terraform_install.zip -d /usr/bin/
+      - chmod +x /usr/bin/terraform
+      - VERSION_OUTPUT+=$(terraform version | head -n1)
+      - wget -q https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION} -O /usr/bin/copilot
+      - chmod +x /usr/bin/copilot
+      - pip install dbt-platform-helper==$PLATFORM_HELPER_VERSION
+      - VERSION_OUTPUT+="\n$(platform-helper --version)"
+      - VERSION_OUTPUT+="\n$(copilot --version)"
+      - VERSION_OUTPUT+="\n$(python3 --version)"
+      - VERSION_OUTPUT+="\n$(pip --version)"
+      - echo -e "=============\nTool Versions\n-------------\n$VERSION_OUTPUT"
+
+  build:
+    commands:
+      - echo "Build Phase"
+  post_build:
+    commands:
+      - echo "Post Build Phase"
+artifacts:
+  files: []

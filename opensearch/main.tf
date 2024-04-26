@@ -188,7 +188,7 @@ CONFIG
   tags = local.tags
 }
 
-resource "aws_ssm_parameter" "this-master-user" {
+resource "aws_ssm_parameter" "opensearch_endpoint" {
   name        = local.ssm_parameter_name
   description = "opensearch_password"
   type        = "SecureString"
