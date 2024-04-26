@@ -33,18 +33,14 @@ resource "aws_codepipeline" "environment_pipeline" {
         BranchName       = var.branch
       }
     }
-  }
-
-  stage {
-    name = "Module Source"
 
     action {
-      name             = "GitCheckout"
+      name             = "ModuleCheckout"
       category         = "Source"
       owner            = "AWS"
       provider         = "CodeStarSourceConnection"
       version          = "1"
-      output_artifacts = ["module_source"]
+      output_artifacts = ["modules_source"]
 
       configuration = {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
@@ -53,6 +49,7 @@ resource "aws_codepipeline" "environment_pipeline" {
       }
     }
   }
+
 
   dynamic "stage" {
     for_each = local.stages
@@ -64,12 +61,13 @@ resource "aws_codepipeline" "environment_pipeline" {
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
-      input_artifacts  = ["project_deployment_source", "module_source"]
+      input_artifacts  = ["project_deployment_source", "modules_source"]
       output_artifacts = ["build_output"]
       version          = "1"
 
         configuration = {
           ProjectName = "${var.application}-environment-pipeline"
+          PrimarySource = "project_deployment_source"
           EnvironmentVariables = jsonencode([
             {
               name  = "ENVIRONMENT"
