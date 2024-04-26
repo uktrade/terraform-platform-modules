@@ -1,4 +1,10 @@
-# Terraform platform modules
+# Terraform platform modules### Getting started
+
+## Setup
+
+```shell
+   pip install poetry && poetry install && poetry run pre-commit install
+```
 
 ## Testing
 
