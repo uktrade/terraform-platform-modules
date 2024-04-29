@@ -120,7 +120,7 @@ resource "aws_route53_record" "validation-record-san" {
 data "aws_route53_zone" "domain-alb" {
   provider = aws.domain
 
-  name = "${var.application}.${local.domain_suffix}"
+  name = "${var.application}.${var.environment}.${local.domain_suffix}"
 }
 
 resource "aws_route53_record" "alb-record" {
