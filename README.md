@@ -1,4 +1,4 @@
-# Terraform platform modules### Getting started
+# Terraform Platform Modules
 
 ## Setup
 
