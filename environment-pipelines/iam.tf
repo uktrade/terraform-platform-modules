@@ -144,11 +144,23 @@ data "aws_iam_policy_document" "vpc_and_subnet_read_access" {
       actions = [
         "ec2:DescribeVpcs",
         "ec2:DescribeSubnets",
-        "ec2:DescribeVpcAttribute"
+        "ec2:DescribeVpcAttribute",
+        "ec2:DescribeSecurityGroups"
         ]
       resources = [
         "*"
       ]
+  }
+}
+
+data "aws_iam_policy_document" "ssm_read_access" {
+  statement {
+    actions = [
+      "ssm:GetParameter",
+    ]
+    resources = [
+      "*"
+    ]
   }
 }
 
@@ -206,4 +218,10 @@ resource "aws_iam_role_policy" "vpc_and_subnet_read_access" {
   name   = "${var.application}-vpc-and-subnet-read-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.vpc_and_subnet_read_access.json
+}
+
+resource "aws_iam_role_policy" "ssm_read_access" {
+  name   = "${var.application}-ssm-read-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.ssm_read_access.json
 }
