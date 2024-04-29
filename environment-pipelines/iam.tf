@@ -139,7 +139,7 @@ data "aws_iam_policy_document" "state_dynamo_db_access" {
 }
 
 # VPC and Subnet Read perms
-data "aws_iam_policy_document" "vpc_and_subnet_read_access" {
+data "aws_iam_policy_document" "ec2_read_access" {
 	statement {
       actions = [
         "ec2:DescribeVpcs",
@@ -153,13 +153,29 @@ data "aws_iam_policy_document" "vpc_and_subnet_read_access" {
   }
 }
 
+data "aws_ssm_parameter" "central_log_group_parameter" {
+  name = "/copilot/tools/central_log_groups"
+}
+
 data "aws_iam_policy_document" "ssm_read_access" {
   statement {
     actions = [
       "ssm:GetParameter",
     ]
     resources = [
-      "*"
+      data.aws_ssm_parameter.central_log_group_parameter.arn
+    ]
+  }
+}
+
+# Assume DNS account role
+data "aws_iam_policy_document" "dns_account_assume_role" {
+  statement {
+    actions = [
+      "sts:AssumeRole",
+    ]
+    resources = [
+      "arn:aws:iam::${var.dns_account_id}:role/sandbox-codebuild-assume-role"
     ]
   }
 }
@@ -214,14 +230,21 @@ resource "aws_iam_role_policy" "state_dynamo_db_access_for_environment_codebuild
 }
 
 # VPC and Subnets
-resource "aws_iam_role_policy" "vpc_and_subnet_read_access" {
-  name   = "${var.application}-vpc-and-subnet-read-access-for-environment-codebuild"
+resource "aws_iam_role_policy" "ec2_read_access" {
+  name   = "${var.application}-ec2-read-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.vpc_and_subnet_read_access.json
+  policy = data.aws_iam_policy_document.ec2_read_access.json
 }
 
 resource "aws_iam_role_policy" "ssm_read_access" {
   name   = "${var.application}-ssm-read-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.ssm_read_access.json
+}
+
+# Assume DNS account role
+resource "aws_iam_role_policy" "dns_account_assume_role" {
+  name   = "${var.application}-dns-account-assume-role-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.dns_account_assume_role.json
 }

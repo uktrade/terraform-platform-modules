@@ -30,3 +30,7 @@ variable "module_branch" {
 variable "aws_account_name" {
   type = string
 }
+
+variable "dns_account_id" {
+  type = number
+}
