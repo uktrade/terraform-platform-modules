@@ -146,7 +146,9 @@ data "aws_iam_policy_document" "vpc_and_subnet_read_access" {
         "ec2:DescribeSubnets",
         "ec2:DescribeVpcAttribute"
         ]
-      resources = "*"
+      resources = [
+        "*"
+      ]
   }
 }
 
@@ -197,4 +199,11 @@ resource "aws_iam_role_policy" "state_dynamo_db_access_for_environment_codebuild
   name   = "${var.application}-dynamo-db-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.state_dynamo_db_access.json
+}
+
+# VPC and Subnets
+resource "aws_iam_role_policy" "vpc_and_subnet_read_access" {
+  name   = "${var.application}-vpc-and-subnet-read-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.vpc_and_subnet_read_access.json
 }
