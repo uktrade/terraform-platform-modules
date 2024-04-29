@@ -1,0 +1,362 @@
+{
+    "failed_checks": [
+        {
+            "file": "/application-load-balancer/main.tf",
+            "findings": [
+                {
+                    "resource": "module.extensions-staging.module.alb.aws_lb.this",
+                    "check_ids": [
+                        "CKV2_AWS_20",
+                        "CKV2_AWS_28",
+                        "CKV_AWS_131",
+                        "CKV_AWS_150"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.alb.aws_lb_listener.alb-listener[\"http\"]",
+                    "check_ids": [
+                        "CKV_AWS_103",
+                        "CKV_AWS_2"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.alb.aws_lb_listener.alb-listener[\"https\"]",
+                    "check_ids": [
+                        "CKV_AWS_103"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.alb.aws_lb_target_group.http-target-group",
+                    "check_ids": [
+                        "CKV_AWS_261"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.alb.aws_security_group.alb-security-group[\"http\"]",
+                    "check_ids": [
+                        "CKV2_AWS_5",
+                        "CKV_AWS_23",
+                        "CKV_AWS_260"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.alb.aws_security_group.alb-security-group[\"https\"]",
+                    "check_ids": [
+                        "CKV2_AWS_5",
+                        "CKV_AWS_23"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/domain/main.tf",
+            "findings": [
+                {
+                    "resource": "aws_route53_zone.new-zone",
+                    "check_ids": [
+                        "CKV2_AWS_38",
+                        "CKV2_AWS_39"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/elasticache-redis/e2e-tests/setup/main.tf",
+            "findings": [
+                {
+                    "resource": "aws_security_group.vpc-core-sg",
+                    "check_ids": [
+                        "CKV2_AWS_5"
+                    ]
+                },
+                {
+                    "resource": "aws_vpc.main",
+                    "check_ids": [
+                        "CKV2_AWS_11",
+                        "CKV2_AWS_12"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/elasticache-redis/main.tf",
+            "findings": [
+                {
+                    "resource": "module.extensions-staging.module.elasticache-redis.aws_cloudwatch_log_group.redis-engine-log-group",
+                    "check_ids": [
+                        "CKV_AWS_158",
+                        "CKV_AWS_338"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.elasticache-redis.aws_cloudwatch_log_group.redis-slow-log-group",
+                    "check_ids": [
+                        "CKV_AWS_158",
+                        "CKV_AWS_338"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.elasticache-redis.aws_elasticache_replication_group.redis",
+                    "check_ids": [
+                        "CKV_AWS_191",
+                        "CKV_AWS_31"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.elasticache-redis.aws_security_group.redis",
+                    "check_ids": [
+                        "CKV_AWS_23"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.elasticache-redis.aws_ssm_parameter.endpoint",
+                    "check_ids": [
+                        "CKV_AWS_337"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/environment-pipelines/codebuild.tf",
+            "findings": [
+                {
+                    "resource": "aws_cloudwatch_log_group.environment_pipeline_codebuild",
+                    "check_ids": [
+                        "CKV_AWS_158"
+                    ]
+                },
+                {
+                    "resource": "aws_codebuild_project.environment_pipeline",
+                    "check_ids": [
+                        "CKV_AWS_147"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/environment-pipelines/iam.tf",
+            "findings": [
+                {
+                    "resource": "aws_iam_policy_document.access_artifact_store",
+                    "check_ids": [
+                        "CKV_AWS_111",
+                        "CKV_AWS_356"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/extensions/main.tf",
+            "findings": [
+                {
+                    "resource": "module.extensions-staging.aws_ssm_parameter.addons",
+                    "check_ids": [
+                        "CKV2_AWS_34",
+                        "CKV_AWS_337"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/opensearch/e2e-tests/setup/main.tf",
+            "findings": [
+                {
+                    "resource": "aws_vpc.main",
+                    "check_ids": [
+                        "CKV2_AWS_11",
+                        "CKV2_AWS_12"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/opensearch/main.tf",
+            "findings": [
+                {
+                    "resource": "module.extensions-staging.module.opensearch.aws_cloudwatch_log_group.opensearch_log_group_audit_logs",
+                    "check_ids": [
+                        "CKV_AWS_158"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.opensearch.aws_cloudwatch_log_group.opensearch_log_group_es_application_logs",
+                    "check_ids": [
+                        "CKV_AWS_158"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.opensearch.aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs",
+                    "check_ids": [
+                        "CKV_AWS_158"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.opensearch.aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs",
+                    "check_ids": [
+                        "CKV_AWS_158"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.opensearch.aws_opensearch_domain.this",
+                    "check_ids": [
+                        "CKV2_AWS_59",
+                        "CKV_AWS_247",
+                        "CKV_AWS_317",
+                        "CKV_AWS_318"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.opensearch.aws_security_group.opensearch-security-group",
+                    "check_ids": [
+                        "CKV2_AWS_5"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.opensearch.aws_ssm_parameter.opensearch_endpoint",
+                    "check_ids": [
+                        "CKV_AWS_337"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/postgres/lambda.tf",
+            "findings": [
+                {
+                    "resource": "module.extensions-staging.module.postgres.aws_iam_policy_document.lambda-execution-policy",
+                    "check_ids": [
+                        "CKV_AWS_108",
+                        "CKV_AWS_111",
+                        "CKV_AWS_356"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.postgres.aws_lambda_function.lambda",
+                    "check_ids": [
+                        "CKV_AWS_115",
+                        "CKV_AWS_116",
+                        "CKV_AWS_272",
+                        "CKV_AWS_50"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/postgres/rds.tf",
+            "findings": [
+                {
+                    "resource": "module.extensions-staging.module.postgres.aws_db_instance.default",
+                    "check_ids": [
+                        "CKV_AWS_161",
+                        "CKV_AWS_293",
+                        "CKV_AWS_354"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.postgres.aws_kms_key.default",
+                    "check_ids": [
+                        "CKV2_AWS_64",
+                        "CKV_AWS_7"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/postgres/secrets.tf",
+            "findings": [
+                {
+                    "resource": "module.extensions-staging.module.postgres.aws_ssm_parameter.master-secret-arn",
+                    "check_ids": [
+                        "CKV_AWS_337"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/s3/main.tf",
+            "findings": [
+                {
+                    "resource": "module.artifact_store.aws_kms_key.kms-key",
+                    "check_ids": [
+                        "CKV2_AWS_64",
+                        "CKV_AWS_7"
+                    ]
+                },
+                {
+                    "resource": "module.artifact_store.aws_s3_bucket.this",
+                    "check_ids": [
+                        "CKV2_AWS_6",
+                        "CKV2_AWS_61",
+                        "CKV2_AWS_62",
+                        "CKV_AWS_144",
+                        "CKV_AWS_18"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.s3.aws_kms_key.kms-key",
+                    "check_ids": [
+                        "CKV2_AWS_64",
+                        "CKV_AWS_7"
+                    ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.s3.aws_s3_bucket.this",
+                    "check_ids": [
+                        "CKV2_AWS_6",
+                        "CKV2_AWS_61",
+                        "CKV2_AWS_62",
+                        "CKV_AWS_144",
+                        "CKV_AWS_18"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/statefile-backend/main.tf",
+            "findings": [
+                {
+                    "resource": "aws_dynamodb_table.terraform-state",
+                    "check_ids": [
+                        "CKV2_AWS_16",
+                        "CKV_AWS_119",
+                        "CKV_AWS_28"
+                    ]
+                },
+                {
+                    "resource": "aws_kms_key.terraform-bucket-key",
+                    "check_ids": [
+                        "CKV2_AWS_64",
+                        "CKV_AWS_7"
+                    ]
+                },
+                {
+                    "resource": "aws_s3_bucket.terraform-state",
+                    "check_ids": [
+                        "CKV2_AWS_61",
+                        "CKV2_AWS_62",
+                        "CKV_AWS_144",
+                        "CKV_AWS_18"
+                    ]
+                },
+                {
+                    "resource": "aws_s3_bucket_ownership_controls.terraform-state-ownership",
+                    "check_ids": [
+                        "CKV2_AWS_65"
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "/vpc/main.tf",
+            "findings": [
+                {
+                    "resource": "aws_vpc.vpc",
+                    "check_ids": [
+                        "CKV2_AWS_11",
+                        "CKV2_AWS_12"
+                    ]
+                }
+            ]
+        }
+    ]
+}
