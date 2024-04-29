@@ -352,7 +352,8 @@
                 {
                     "resource": "aws_vpc.vpc",
                     "check_ids": [
-                        "CKV2_AWS_11"                        
+                        "CKV2_AWS_11",
+                        "CKV2_AWS_12"                        
                     ]
                 }
             ]
