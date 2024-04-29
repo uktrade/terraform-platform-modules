@@ -1,3 +1,6 @@
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 data "aws_iam_policy_document" "assume_codepipeline_role" {
   statement {
     effect = "Allow"
@@ -87,46 +90,53 @@ data "aws_iam_policy_document" "write_environment_pipeline_codebuild_logs" {
   }
 }
 
+data "aws_s3_bucket" "state_bucket" {
+  bucket = "terraform-platform-state-${var.aws_account_name}"
+}
+
 data "aws_iam_policy_document" "state_bucket_access" {
   statement {
-    effect = "Allow"
     actions = [
-      "s3:*"
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:PutObject"
     ]
     resources = [
-      "*"
-    ]
-  }
-  statement {
-    effect = "Allow"
-    actions = [
-      "s3:*"
-    ]
-    resources = [
-      "arn:aws:s3:::terraform-platform-state-sandbox"
+      data.aws_s3_bucket.state_bucket.arn,
+      "${data.aws_s3_bucket.state_bucket.arn}/*"
     ]
   }
 }
 
-#{
-#"Version": "2012-10-17",
-#"Statement": [
-#{
-#"Sid": "VisualEditor0",
-#"Effect": "Allow",
-#"Action": [
-#"s3:*"
-#],
-#"Resource": "*"
-#},
-#{
-#"Sid": "VisualEditor1",
-#"Effect": "Allow",
-#"Action": "s3:*",
-#"Resource": "arn:aws:s3:::terraform-platform-state-sandbox"
-#}
-#]
-#}
+data "aws_kms_key" "state_kms_key" {
+  key_id = "alias/terraform-platform-state-s3-key-${var.aws_account_name}"
+}
+
+data "aws_iam_policy_document" "kms_key_access" {
+  statement {
+    actions = [
+      "kms:ListKeys",
+      "kms:Decrypt"
+    ]
+    resources = [
+      data.aws_kms_key.state_kms_key.arn
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "dynamo_db_access" {
+  statement {
+    actions = [
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:DeleteItem"
+    ]
+    resources = [
+      "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/terraform-platform-lockdb-${var.aws_account_name}"
+    ]
+  }
+}
 
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
   name               = "${var.application}-environment-pipeline-codepipeline"
@@ -164,3 +174,14 @@ resource "aws_iam_role_policy" "state_bucket_access_for_environment_codebuild" {
   policy = data.aws_iam_policy_document.state_bucket_access.json
 }
 
+resource "aws_iam_role_policy" "kms_key_access_for_environment_codebuild" {
+  name   = "${var.application}-kms-key-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.kms_key_access.json
+}
+
+resource "aws_iam_role_policy" "dynamo_db_access_for_environment_codebuild" {
+  name   = "${var.application}-dynamo-db-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.dynamo_db_access.json
+}

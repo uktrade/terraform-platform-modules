@@ -26,3 +26,7 @@ variable "module_branch" {
   type = string
   default = "main"
 }
+
+variable "aws_account_name" {
+  type = string
+}
