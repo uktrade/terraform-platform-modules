@@ -112,7 +112,7 @@ data "aws_kms_key" "state_kms_key" {
   key_id = "alias/terraform-platform-state-s3-key-${var.aws_account_name}"
 }
 
-data "aws_iam_policy_document" "kms_key_access" {
+data "aws_iam_policy_document" "state_kms_key_access" {
   statement {
     actions = [
       "kms:ListKeys",
@@ -124,7 +124,7 @@ data "aws_iam_policy_document" "kms_key_access" {
   }
 }
 
-data "aws_iam_policy_document" "dynamo_db_access" {
+data "aws_iam_policy_document" "state_dynamo_db_access" {
   statement {
     actions = [
         "dynamodb:DescribeTable",
@@ -168,20 +168,21 @@ resource "aws_iam_role_policy" "log_access_for_environment_codebuild" {
   policy = data.aws_iam_policy_document.write_environment_pipeline_codebuild_logs.json
 }
 
+# Terraform State bucket access
 resource "aws_iam_role_policy" "state_bucket_access_for_environment_codebuild" {
   name   = "${var.application}-state-bucket-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.state_bucket_access.json
 }
 
-resource "aws_iam_role_policy" "kms_key_access_for_environment_codebuild" {
+resource "aws_iam_role_policy" "state_kms_key_access_for_environment_codebuild" {
   name   = "${var.application}-kms-key-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.kms_key_access.json
+  policy = data.aws_iam_policy_document.state_kms_key_access.json
 }
 
-resource "aws_iam_role_policy" "dynamo_db_access_for_environment_codebuild" {
+resource "aws_iam_role_policy" "state_dynamo_db_access_for_environment_codebuild" {
   name   = "${var.application}-dynamo-db-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.dynamo_db_access.json
+  policy = data.aws_iam_policy_document.state_dynamo_db_access.json
 }
