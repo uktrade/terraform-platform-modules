@@ -37,7 +37,7 @@ module "elasticache-redis" {
   config = each.value
 }
 
-module "opensearch" {
+module "opensearch_test" {
   source = "../opensearch"
 
   for_each = local.opensearch
