@@ -138,6 +138,18 @@ data "aws_iam_policy_document" "state_dynamo_db_access" {
   }
 }
 
+# VPC and Subnet Read perms
+data "aws_iam_policy_document" "vpc_and_subnet_read_access" {
+	statement {
+      actions = [
+        "ec2:DescribeVpcs",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcAttribute"
+        ]
+      resources = "*"
+  }
+}
+
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
   name               = "${var.application}-environment-pipeline-codepipeline"
   assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
