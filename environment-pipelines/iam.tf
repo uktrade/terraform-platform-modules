@@ -87,6 +87,47 @@ data "aws_iam_policy_document" "write_environment_pipeline_codebuild_logs" {
   }
 }
 
+data "aws_iam_policy_document" "state_bucket_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:*"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:*"
+    ]
+    resources = [
+      "arn:aws:s3:::terraform-platform-state-sandbox"
+    ]
+  }
+}
+
+#{
+#"Version": "2012-10-17",
+#"Statement": [
+#{
+#"Sid": "VisualEditor0",
+#"Effect": "Allow",
+#"Action": [
+#"s3:*"
+#],
+#"Resource": "*"
+#},
+#{
+#"Sid": "VisualEditor1",
+#"Effect": "Allow",
+#"Action": "s3:*",
+#"Resource": "arn:aws:s3:::terraform-platform-state-sandbox"
+#}
+#]
+#}
+
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
   name               = "${var.application}-environment-pipeline-codepipeline"
   assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
@@ -115,5 +156,11 @@ resource "aws_iam_role_policy" "log_access_for_environment_codebuild" {
   name   = "${var.application}-log-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.write_environment_pipeline_codebuild_logs.json
+}
+
+resource "aws_iam_role_policy" "state_bucket_access_for_environment_codebuild" {
+  name   = "${var.application}-state-bucket-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.state_bucket_access.json
 }
 
