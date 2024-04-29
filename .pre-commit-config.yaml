@@ -6,11 +6,10 @@ repos:
         entry: terraform fmt -recursive
         language: system
         pass_filenames: false
-  # Todo: Address the results of `tflint --recursive` before enabling this...
-  # - repo: local
-  #   hooks:
-  #     - id: tflint
-  #       name: Lint Terraform code
-  #       entry: tflint --recursive --fix
-  #       language: system
-  #       pass_filenames: false
+  - repo: local
+    hooks:
+      - id: tflint
+        name: Lint Terraform code
+        entry: tflint --recursive --fix
+        language: system
+        pass_filenames: false
