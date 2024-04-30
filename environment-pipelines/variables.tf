@@ -11,6 +11,17 @@ variable "environments" {
     object(
       {
         name = string,
+        accounts = object(
+          {
+            deploy = object({
+              name = string
+              id = string
+            }),
+            dns = object({
+              name = string
+              id = string
+            })
+          })
         requires_approval = optional(bool)
       }
     )
@@ -20,12 +31,4 @@ variable "environments" {
 variable "branch" {
   type = string
   default = "main"
-}
-
-variable "aws_account_name" {
-  type = string
-}
-
-variable "dns_account_id" {
-  type = string
 }

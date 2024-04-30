@@ -91,7 +91,7 @@ data "aws_iam_policy_document" "write_environment_pipeline_codebuild_logs" {
 }
 
 data "aws_s3_bucket" "state_bucket" {
-  bucket = "terraform-platform-state-${var.aws_account_name}"
+  bucket = "terraform-platform-state-${local.stages.accounts[0].deploy.name}"
 }
 
 data "aws_iam_policy_document" "state_bucket_access" {
@@ -109,7 +109,7 @@ data "aws_iam_policy_document" "state_bucket_access" {
 }
 
 data "aws_kms_key" "state_kms_key" {
-  key_id = "alias/terraform-platform-state-s3-key-${var.aws_account_name}"
+  key_id = "alias/terraform-platform-state-s3-key-${local.stages.accounts[0].deploy.name}"
 }
 
 data "aws_iam_policy_document" "state_kms_key_access" {
@@ -133,7 +133,7 @@ data "aws_iam_policy_document" "state_dynamo_db_access" {
         "dynamodb:DeleteItem"
     ]
     resources = [
-      "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/terraform-platform-lockdb-${var.aws_account_name}"
+      "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/terraform-platform-lockdb-${local.stages.accounts[0].deploy.name}"
     ]
   }
 }
@@ -174,9 +174,7 @@ data "aws_iam_policy_document" "dns_account_assume_role" {
     actions = [
       "sts:AssumeRole",
     ]
-    resources = [
-      "arn:aws:iam::${var.dns_account_id}:role/sandbox-codebuild-assume-role"
-    ]
+    resources = tolist(toset([for env in local.stages : "arn:aws:iam::${env.accounts.dns.id}:role/sandbox-codebuild-assume-role"]))
   }
 }
 

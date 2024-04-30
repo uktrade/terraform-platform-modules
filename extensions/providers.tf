@@ -1,7 +1,7 @@
 provider "aws" {
   alias   = "domain"
   assume_role {
-    role_arn = "arn:aws:iam::${var.dns_account_id}:role/sandbox-codebuild-assume-role"
+    role_arn = "arn:aws:iam::${var.args.dns_account_id}:role/sandbox-codebuild-assume-role"
   }
 }
 
@@ -17,5 +17,3 @@ terraform {
     }
   }
 }
-
-

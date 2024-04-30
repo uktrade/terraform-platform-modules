@@ -24,21 +24,35 @@ locals {
 #        flatten(^^)
 
 
-  stages = [
-    {
-      type = "plan"
-      env = "dev",
-      approval = false
-    },
+  stages = [for env in var.environments : { type: "plan", env: env.name, approval: env.requires_approval, accounts: env.accounts }]
+
+
+#  stages = [
 #    {
-#      type = "approve"
-#      env = "prod",
-#      approval = false
+#      type = "plan"
+#      env = "dev",
+#      approval = false,
+#      accounts = {
+#        deploy = {
+#          name = "sandbox",
+#          id = "852676506468"
+#        },
+#        dns = {
+#          name = "dev",
+#          id = "011755346992"
+#        }
+#      }
 #    },
-#    {
-#      type = "approve"
-#      env = "prod",
-#      approval = false
-#    },
-  ]
+##    {
+##      type = "approve"
+##      env = "prod",
+##      approval = false
+##    },
+##    {
+##      type = "approve"
+##      env = "prod",
+##      approval = false
+##    },
+#  ]
+
 }

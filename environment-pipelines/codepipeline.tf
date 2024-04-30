@@ -58,10 +58,6 @@ resource "aws_codepipeline" "environment_pipeline" {
             {
               name  = "ENVIRONMENT"
               value = stage.value.env
-            },
-            {
-              name  = "TF_VAR_DNS_ACCOUNT_ID"
-              value = var.dns_account_id
             }
           ])
         }
