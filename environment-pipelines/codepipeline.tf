@@ -34,21 +34,6 @@ resource "aws_codepipeline" "environment_pipeline" {
         BranchName       = var.branch
       }
     }
-
-    action {
-      name             = "ModuleCheckout"
-      category         = "Source"
-      owner            = "AWS"
-      provider         = "CodeStarSourceConnection"
-      version          = "1"
-      output_artifacts = ["modules_source"]
-
-      configuration = {
-        ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
-        FullRepositoryId = "uktrade/terraform-platform-modules"
-        BranchName       = var.module_branch
-      }
-    }
   }
 
 
@@ -62,7 +47,7 @@ resource "aws_codepipeline" "environment_pipeline" {
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
-      input_artifacts  = ["project_deployment_source", "modules_source"]
+      input_artifacts  = ["project_deployment_source"]
       output_artifacts = ["build_output"]
       version          = "1"
 
@@ -71,12 +56,12 @@ resource "aws_codepipeline" "environment_pipeline" {
           PrimarySource = "project_deployment_source"
           EnvironmentVariables = jsonencode([
             {
-              name  = "AWS_ACCOUNT_ID"
-              value = "852676506468"
-            },
-            {
               name  = "ENVIRONMENT"
               value = stage.value.env
+            },
+            {
+              name  = "TF_VAR_DNS_ACCOUNT_ID"
+              value = var.dns_account_id
             }
           ])
         }

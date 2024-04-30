@@ -12,3 +12,7 @@ variable "environment" {
 variable "vpc_name" {
   type = string
 }
+
+variable "dns_account_id" {
+  type = string
+}
