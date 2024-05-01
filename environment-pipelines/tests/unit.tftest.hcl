@@ -71,11 +71,11 @@ variables {
       accounts = {
         deploy = {
           name = "sandbox"
-          id = "000123456789"
+          id   = "000123456789"
         }
         dns = {
           name = "dev"
-          id = "000987654321"
+          id   = "000987654321"
         }
       }
     },
@@ -84,11 +84,11 @@ variables {
       accounts = {
         deploy = {
           name = "prod"
-          id = "000123456789"
+          id   = "000123456789"
         }
         dns = {
           name = "live"
-          id = "000987654321"
+          id   = "000987654321"
         }
       }
       requires_approval = true
@@ -199,8 +199,8 @@ run "test_code_pipeline" {
     error_message = "Should be: project_deployment_source"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.EnvironmentVariables == jsonencode([{name: "ENVIRONMENT", value: "dev"}])
-    error_message = "Should be: ${jsonencode([{name: "ENVIRONMENT", value: "dev"}])}"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.EnvironmentVariables == jsonencode([{ name : "ENVIRONMENT", value : "dev" }])
+    error_message = "Should be: ${jsonencode([{ name : "ENVIRONMENT", value : "dev" }])}"
   }
   # Tags
   assert {
