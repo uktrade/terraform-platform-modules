@@ -21,7 +21,7 @@ phases:
       - echo "Install Phase"
       - yum -y install zip wget which python-pip
       - curl -s -qL -o terraform_install.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-      - VERSION_OUTPUT+=$(TERRAFORM_VERSION)
+      - VERSION_OUTPUT+="${TERRAFORM_VERSION}"
       - wget -q https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION} -O /usr/bin/copilot
       - chmod +x /usr/bin/copilot # TODO - Download these tools here but install in the plan/apply pipeline stage buildspec
       - pip install dbt-platform-helper==$PLATFORM_HELPER_VERSION
