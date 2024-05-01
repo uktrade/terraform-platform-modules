@@ -11,17 +11,16 @@ variable "environments" {
     object(
       {
         name = string,
-        accounts = object(
-          {
-            deploy = object({
-              name = string
-              id = string
-            }),
-            dns = object({
-              name = string
-              id = string
-            })
+        accounts = object({
+          deploy = object({
+            name = string
+            id = string
+          }),
+          dns = object({
+            name = string
+            id = string
           })
+        })
         requires_approval = optional(bool)
       }
     )
