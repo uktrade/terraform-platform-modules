@@ -194,6 +194,14 @@ run "test_code_pipeline" {
     condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-environment-pipeline"
     error_message = "Should be: my-app-environment-pipeline"
   }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.PrimarySource == "project_deployment_source"
+    error_message = "Should be: project_deployment_source"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.EnvironmentVariables == jsonencode([{name: "ENVIRONMENT", value: "dev"}])
+    error_message = "Should be: ${jsonencode([{name: "ENVIRONMENT", value: "dev"}])}"
+  }
   # Tags
   assert {
     condition     = jsonencode(aws_codepipeline.environment_pipeline.tags) == jsonencode(var.expected_tags)
