@@ -143,11 +143,19 @@ data "aws_iam_policy_document" "ec2_read_access" {
     actions = [
       "ec2:DescribeVpcs",
       "ec2:DescribeSubnets",
-      "ec2:DescribeVpcAttribute",
       "ec2:DescribeSecurityGroups"
     ]
     resources = [
       "*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "ec2:DescribeVpcAttribute"
+    ]
+    resources = [
+      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vpc/*"
     ]
   }
 }
