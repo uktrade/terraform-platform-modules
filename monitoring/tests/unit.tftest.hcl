@@ -7,6 +7,13 @@ variables {
   config = {
     enable_ops_center = true
   }
+  expected_tags = {
+    application         = "test-application"
+    environment         = "test-environment"
+    managed-by          = "DBT Platform - Terraform"
+    copilot-application = "test-application"
+    copilot-environment = "test-environment"
+  }
 }
 
 # Compute dashboard
@@ -88,6 +95,11 @@ run "test_application_insights_resource_group_is_created" {
     )
     error_message = "Environment TagFilter is incorrect"
   }
+
+  assert {
+    condition     = jsonencode(aws_resourcegroups_group.application-insights-resources.tags) == jsonencode(var.expected_tags)
+    error_message = "Expected: ${jsonencode(var.expected_tags)}\nActual:   ${jsonencode(aws_resourcegroups_group.application-insights-resources.tags)}"
+  }
 }
 
 run "test_application_insights_application_is_created" {
@@ -106,6 +118,11 @@ run "test_application_insights_application_is_created" {
   assert {
     condition     = aws_applicationinsights_application.application-insights.ops_center_enabled == true
     error_message = "Should be: true"
+  }
+
+  assert {
+    condition     = jsonencode(aws_applicationinsights_application.application-insights.tags) == jsonencode(var.expected_tags)
+    error_message = "Expected: ${jsonencode(var.expected_tags)}\nActual:   ${jsonencode(aws_applicationinsights_application.application-insights.tags)}"
   }
 }
 

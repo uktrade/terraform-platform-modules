@@ -6,11 +6,14 @@ variable "environment" {
   type = string
 }
 
+# Todo: DBTP-947 Do something better than having the dummy unused variable
+# tflint-ignore: terraform_unused_declarations
 variable "name" {
-  type = string
+  type    = string
+  default = "not-used"
 }
 
-# Todo: Do something better than having the dummy unused variable
+# Todo: DBTP-947 Do something better than having the dummy unused variable
 # tflint-ignore: terraform_unused_declarations
 variable "vpc_name" {
   type    = string
