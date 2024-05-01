@@ -14,6 +14,48 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.ec2_read_access
+  values = {
+    json = "{\"Sid\": \"EC2ReadAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.state_bucket_access
+  values = {
+    json = "{\"Sid\": \"StateBucketAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.state_kms_key_access
+  values = {
+    json = "{\"Sid\": \"StateKMSKeyAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.state_dynamo_db_access
+  values = {
+    json = "{\"Sid\": \"StateDynamoDBAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.ssm_read_access
+  values = {
+    json = "{\"Sid\": \"SSMReadAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.dns_account_assume_role
+  values = {
+    json = "{\"Sid\": \"DNSAccountAssumeRole\"}"
+  }
+}
+
 variables {
   application = "my-app"
   repository  = "my-repository"
@@ -25,10 +67,30 @@ variables {
 
   environments = [
     {
-      name = "dev"
+      name = "dev",
+      accounts = {
+        deploy = {
+          name = "sandbox"
+          id = "000123456789"
+        }
+        dns = {
+          name = "dev"
+          id = "000987654321"
+        }
+      }
     },
     {
-      name = "prod"
+      name = "prod",
+      accounts = {
+        deploy = {
+          name = "prod"
+          id = "000123456789"
+        }
+        dns = {
+          name = "live"
+          id = "000987654321"
+        }
+      }
       requires_approval = true
     }
   ]
@@ -82,7 +144,7 @@ run "test_code_pipeline" {
     error_message = "Should be: 1"
   }
   assert {
-    condition     = one(aws_codepipeline.environment_pipeline.stage[0].action[0].output_artifacts) == "source_output"
+    condition     = one(aws_codepipeline.environment_pipeline.stage[0].action[0].output_artifacts) == "project_deployment_source"
     error_message = "Should be: source_output"
   }
   # aws_codepipeline.environment_pipeline.stage[0].action[0].configuration.ConnectionArn cannot be tested on a plan
@@ -121,8 +183,8 @@ run "test_code_pipeline" {
     error_message = "Should be: 1"
   }
   assert {
-    condition     = one(aws_codepipeline.environment_pipeline.stage[1].action[0].input_artifacts) == "source_output"
-    error_message = "Should be: source_output"
+    condition     = one(aws_codepipeline.environment_pipeline.stage[1].action[0].input_artifacts) == "project_deployment_source"
+    error_message = "Should be: project_deployment_source"
   }
   assert {
     condition     = one(aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts) == "build_output"
@@ -172,8 +234,8 @@ run "test_codebuild" {
   }
   assert {
 
-    condition     = one(aws_codebuild_project.environment_pipeline.environment).image == "amazonlinux:2023"
-    error_message = "Should be: 'amazonlinux:2023'"
+    condition     = one(aws_codebuild_project.environment_pipeline.environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    error_message = "Should be: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0'"
   }
   assert {
     condition     = one(aws_codebuild_project.environment_pipeline.environment).type == "LINUX_CONTAINER"
