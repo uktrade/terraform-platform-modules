@@ -5,7 +5,6 @@ env:
 phases:
   install:
     commands:
-      #- env | grep AWS_
       - VERSION_OUTPUT=""
       - |
         if [ ! -f .copilot-version ]; then
@@ -22,11 +21,9 @@ phases:
       - echo "Install Phase"
       - yum -y install zip wget which python-pip
       - curl -s -qL -o terraform_install.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-      - unzip terraform_install.zip -d /usr/bin/
-      - chmod +x /usr/bin/terraform
-      - VERSION_OUTPUT+=$(terraform version | head -n1)
+      - VERSION_OUTPUT+=$(TERRAFORM_VERSION)
       - wget -q https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION} -O /usr/bin/copilot
-      - chmod +x /usr/bin/copilot
+      - chmod +x /usr/bin/copilot # TODO - Download these tools here but install in the plan/apply pipeline stage buildspec
       - pip install dbt-platform-helper==$PLATFORM_HELPER_VERSION
       - VERSION_OUTPUT+="\n$(platform-helper --version)"
       - VERSION_OUTPUT+="\n$(copilot --version)"
@@ -34,15 +31,17 @@ phases:
       - VERSION_OUTPUT+="\n$(pip --version)"
       - echo -e "=============\nTool Versions\n-------------\n$VERSION_OUTPUT"
 
-  build:
-    commands:
-      - echo "Terraform Plan Phase"
-      - echo "Working on environment ${ENVIRONMENT}"
-      - cd terraform/${ENVIRONMENT}
-      - terraform init
-      - terraform plan
+#  build:
+#    commands:
+#      - echo "Terraform Plan Phase"
+#      - echo "Working on environment ${ENVIRONMENT}"
+#      - cd terraform/${ENVIRONMENT}
+#      - terraform init
+#      - terraform plan
   post_build:
     commands:
       - echo "Post Build Phase"
+      - ls
 artifacts:
-  files: []
+  files:
+    - "**/*"

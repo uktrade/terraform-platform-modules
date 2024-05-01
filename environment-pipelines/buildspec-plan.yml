@@ -1,0 +1,15 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - unzip terraform_install.zip -d /usr/bin/
+      - chmod +x /usr/bin/terraform
+  build:
+    commands:
+      - echo "Terraform Plan Phase"
+      - echo "Working on environment ${ENVIRONMENT}"
+      - cd terraform/${ENVIRONMENT}
+      - terraform init
+      - terraform plan
+artifacts:
+  files: []
