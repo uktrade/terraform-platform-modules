@@ -351,7 +351,61 @@ run "test_iam" {
     condition     = aws_iam_role_policy.log_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
     error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
   }
-  # aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.policy cannot be tested on a plan
+  # aws_iam_role_policy.log_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.state_bucket_access_for_environment_codebuild.name == "my-app-state-bucket-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-state-bucket-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.state_bucket_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.state_bucket_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.name == "my-app-state-kms-key-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-state-kms-key-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.name == "my-app-state-dynamo-db-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-state-dynamo-db-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.ec2_read_access_for_environment_codebuild.name == "my-app-ec2-read-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-ec2-read-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ec2_read_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.ec2_read_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.ssm_read_access_for_environment_codebuild.name == "my-app-ssm-read-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-ssm-read-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ssm_read_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.ssm_read_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.name == "my-app-dns-account-assume-role-for-environment-codebuild"
+    error_message = "Should be: 'my-app-dns-account-assume-role-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.policy cannot be tested on a plan
 }
 
 run "test_artifact_store" {

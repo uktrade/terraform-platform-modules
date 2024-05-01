@@ -216,32 +216,32 @@ resource "aws_iam_role_policy" "state_bucket_access_for_environment_codebuild" {
 }
 
 resource "aws_iam_role_policy" "state_kms_key_access_for_environment_codebuild" {
-  name   = "${var.application}-kms-key-access-for-environment-codebuild"
+  name   = "${var.application}-state-kms-key-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.state_kms_key_access.json
 }
 
 resource "aws_iam_role_policy" "state_dynamo_db_access_for_environment_codebuild" {
-  name   = "${var.application}-dynamo-db-access-for-environment-codebuild"
+  name   = "${var.application}-state-dynamo-db-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.state_dynamo_db_access.json
 }
 
 # VPC and Subnets
-resource "aws_iam_role_policy" "ec2_read_access" {
+resource "aws_iam_role_policy" "ec2_read_access_for_environment_codebuild" {
   name   = "${var.application}-ec2-read-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.ec2_read_access.json
 }
 
-resource "aws_iam_role_policy" "ssm_read_access" {
+resource "aws_iam_role_policy" "ssm_read_access_for_environment_codebuild" {
   name   = "${var.application}-ssm-read-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.ssm_read_access.json
 }
 
 # Assume DNS account role
-resource "aws_iam_role_policy" "dns_account_assume_role" {
+resource "aws_iam_role_policy" "dns_account_assume_role_for_environment_codebuild" {
   name   = "${var.application}-dns-account-assume-role-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.dns_account_assume_role.json
