@@ -56,10 +56,10 @@ resource "aws_codepipeline" "environment_pipeline" {
   }
 
   stage {
-    name = "DeployTo-dev"
+    name = "tf-plan-dev"
 
     action {
-      name             = "DeployTo-dev"
+      name             = "tf-plan-dev"
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
@@ -68,7 +68,7 @@ resource "aws_codepipeline" "environment_pipeline" {
       version          = "1"
 
         configuration = {
-          ProjectName = "${var.application}-environment-pipeline-plan"
+          ProjectName = "${var.application}-environment-pipeline-tf-plan"
           PrimarySource = "build_output"
           EnvironmentVariables = jsonencode([
             {
