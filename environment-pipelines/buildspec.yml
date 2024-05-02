@@ -35,9 +35,14 @@ phases:
 
   build:
     commands:
-      - echo "Build Phase"
+      - echo "Terraform Plan Phase"
+      - echo "Working on environment ${ENVIRONMENT}"
+      - cd terraform/${ENVIRONMENT}
+      - terraform init
+      - terraform plan -out=plan.tfplan
   post_build:
     commands:
       - echo "Post Build Phase"
 artifacts:
-  files: []
+  files:
+    - terraform/${ENVIRONMENT}/plan.tfplan

@@ -1,3 +1,6 @@
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 data "aws_iam_policy_document" "assume_codepipeline_role" {
   statement {
     effect = "Allow"
@@ -87,6 +90,100 @@ data "aws_iam_policy_document" "write_environment_pipeline_codebuild_logs" {
   }
 }
 
+data "aws_s3_bucket" "state_bucket" {
+  bucket = "terraform-platform-state-${local.stages[0].accounts.deploy.name}"
+}
+
+data "aws_iam_policy_document" "state_bucket_access" {
+  statement {
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:PutObject"
+    ]
+    resources = [
+      data.aws_s3_bucket.state_bucket.arn,
+      "${data.aws_s3_bucket.state_bucket.arn}/*"
+    ]
+  }
+}
+
+data "aws_kms_key" "state_kms_key" {
+  key_id = "alias/terraform-platform-state-s3-key-${local.stages[0].accounts.deploy.name}"
+}
+
+data "aws_iam_policy_document" "state_kms_key_access" {
+  statement {
+    actions = [
+      "kms:ListKeys",
+      "kms:Decrypt"
+    ]
+    resources = [
+      data.aws_kms_key.state_kms_key.arn
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "state_dynamo_db_access" {
+  statement {
+    actions = [
+      "dynamodb:DescribeTable",
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem"
+    ]
+    resources = [
+      "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/terraform-platform-lockdb-${local.stages[0].accounts.deploy.name}"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "ec2_read_access" {
+  statement {
+    actions = [
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "ec2:DescribeVpcAttribute"
+    ]
+    resources = [
+      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vpc/*"
+    ]
+  }
+}
+
+data "aws_ssm_parameter" "central_log_group_parameter" {
+  name = "/copilot/tools/central_log_groups"
+}
+
+data "aws_iam_policy_document" "ssm_read_access" {
+  statement {
+    actions = [
+      "ssm:GetParameter",
+    ]
+    resources = [
+      data.aws_ssm_parameter.central_log_group_parameter.arn
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "dns_account_assume_role" {
+  statement {
+    actions = [
+      "sts:AssumeRole",
+    ]
+    resources = tolist(toset([for stage in local.stages : "arn:aws:iam::${stage.accounts.dns.id}:role/sandbox-codebuild-assume-role"]))
+  }
+}
+
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
   name               = "${var.application}-environment-pipeline-codepipeline"
   assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
@@ -117,3 +214,41 @@ resource "aws_iam_role_policy" "log_access_for_environment_codebuild" {
   policy = data.aws_iam_policy_document.write_environment_pipeline_codebuild_logs.json
 }
 
+# Terraform state access
+resource "aws_iam_role_policy" "state_bucket_access_for_environment_codebuild" {
+  name   = "${var.application}-state-bucket-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.state_bucket_access.json
+}
+
+resource "aws_iam_role_policy" "state_kms_key_access_for_environment_codebuild" {
+  name   = "${var.application}-state-kms-key-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.state_kms_key_access.json
+}
+
+resource "aws_iam_role_policy" "state_dynamo_db_access_for_environment_codebuild" {
+  name   = "${var.application}-state-dynamo-db-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.state_dynamo_db_access.json
+}
+
+# VPC and Subnets
+resource "aws_iam_role_policy" "ec2_read_access_for_environment_codebuild" {
+  name   = "${var.application}-ec2-read-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.ec2_read_access.json
+}
+
+resource "aws_iam_role_policy" "ssm_read_access_for_environment_codebuild" {
+  name   = "${var.application}-ssm-read-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.ssm_read_access.json
+}
+
+# Assume DNS account role
+resource "aws_iam_role_policy" "dns_account_assume_role_for_environment_codebuild" {
+  name   = "${var.application}-dns-account-assume-role-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.dns_account_assume_role.json
+}

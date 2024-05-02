@@ -14,6 +14,48 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.ec2_read_access
+  values = {
+    json = "{\"Sid\": \"EC2ReadAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.state_bucket_access
+  values = {
+    json = "{\"Sid\": \"StateBucketAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.state_kms_key_access
+  values = {
+    json = "{\"Sid\": \"StateKMSKeyAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.state_dynamo_db_access
+  values = {
+    json = "{\"Sid\": \"StateDynamoDBAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.ssm_read_access
+  values = {
+    json = "{\"Sid\": \"SSMReadAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.dns_account_assume_role
+  values = {
+    json = "{\"Sid\": \"DNSAccountAssumeRole\"}"
+  }
+}
+
 variables {
   application = "my-app"
   repository  = "my-repository"
@@ -22,6 +64,36 @@ variables {
     copilot-application = "my-app"
     managed-by          = "DBT Platform - Terraform"
   }
+
+  environments = [
+    {
+      name = "dev",
+      accounts = {
+        deploy = {
+          name = "sandbox"
+          id   = "000123456789"
+        }
+        dns = {
+          name = "dev"
+          id   = "000987654321"
+        }
+      }
+    },
+    {
+      name = "prod",
+      accounts = {
+        deploy = {
+          name = "prod"
+          id   = "000123456789"
+        }
+        dns = {
+          name = "live"
+          id   = "000987654321"
+        }
+      }
+      requires_approval = true
+    }
+  ]
 }
 
 run "test_code_pipeline" {
@@ -72,7 +144,7 @@ run "test_code_pipeline" {
     error_message = "Should be: 1"
   }
   assert {
-    condition     = one(aws_codepipeline.environment_pipeline.stage[0].action[0].output_artifacts) == "source_output"
+    condition     = one(aws_codepipeline.environment_pipeline.stage[0].action[0].output_artifacts) == "project_deployment_source"
     error_message = "Should be: source_output"
   }
   # aws_codepipeline.environment_pipeline.stage[0].action[0].configuration.ConnectionArn cannot be tested on a plan
@@ -111,16 +183,24 @@ run "test_code_pipeline" {
     error_message = "Should be: 1"
   }
   assert {
-    condition     = one(aws_codepipeline.environment_pipeline.stage[1].action[0].input_artifacts) == "source_output"
-    error_message = "Should be: source_output"
+    condition     = one(aws_codepipeline.environment_pipeline.stage[1].action[0].input_artifacts) == "project_deployment_source"
+    error_message = "Should be: project_deployment_source"
   }
   assert {
-    condition     = one(aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts) == "build_output"
-    error_message = "Should be: build_output"
+    condition     = one(aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts) == "terraform_plan"
+    error_message = "Should be: terraform_plan"
   }
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-environment-pipeline"
     error_message = "Should be: my-app-environment-pipeline"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.PrimarySource == "project_deployment_source"
+    error_message = "Should be: project_deployment_source"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.EnvironmentVariables == jsonencode([{ name : "ENVIRONMENT", value : "dev" }])
+    error_message = "Should be: ${jsonencode([{ name : "ENVIRONMENT", value : "dev" }])}"
   }
   # Tags
   assert {
@@ -162,8 +242,8 @@ run "test_codebuild" {
   }
   assert {
 
-    condition     = one(aws_codebuild_project.environment_pipeline.environment).image == "amazonlinux:2023"
-    error_message = "Should be: 'amazonlinux:2023'"
+    condition     = one(aws_codebuild_project.environment_pipeline.environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    error_message = "Should be: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0'"
   }
   assert {
     condition     = one(aws_codebuild_project.environment_pipeline.environment).type == "LINUX_CONTAINER"
@@ -271,7 +351,61 @@ run "test_iam" {
     condition     = aws_iam_role_policy.log_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
     error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
   }
-  # aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.policy cannot be tested on a plan
+  # aws_iam_role_policy.log_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.state_bucket_access_for_environment_codebuild.name == "my-app-state-bucket-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-state-bucket-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.state_bucket_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.state_bucket_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.name == "my-app-state-kms-key-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-state-kms-key-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.name == "my-app-state-dynamo-db-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-state-dynamo-db-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.ec2_read_access_for_environment_codebuild.name == "my-app-ec2-read-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-ec2-read-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ec2_read_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.ec2_read_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.ssm_read_access_for_environment_codebuild.name == "my-app-ssm-read-access-for-environment-codebuild"
+    error_message = "Should be: 'my-app-ssm-read-access-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ssm_read_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.ssm_read_access_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.name == "my-app-dns-account-assume-role-for-environment-codebuild"
+    error_message = "Should be: 'my-app-dns-account-assume-role-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.policy cannot be tested on a plan
 }
 
 run "test_artifact_store" {
