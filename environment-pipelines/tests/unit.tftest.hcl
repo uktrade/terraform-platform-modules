@@ -187,8 +187,8 @@ run "test_code_pipeline" {
     error_message = "Should be: project_deployment_source"
   }
   assert {
-    condition     = one(aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts) == "terraform_plan"
-    error_message = "Should be: terraform_plan"
+    condition     = one(aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts) == "build_output"
+    error_message = "Should be: build_output"
   }
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-environment-pipeline"

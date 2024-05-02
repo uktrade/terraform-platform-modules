@@ -10,6 +10,7 @@ phases:
       - echo "Working on environment ${ENVIRONMENT}"
       - cd terraform/${ENVIRONMENT}
       - terraform init
-      - terraform plan
+      - terraform plan -out=plan.tfplan
 artifacts:
-  files: []
+  files:
+    - terraform/${ENVIRONMENT}/plan.tfplan
