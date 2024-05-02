@@ -71,6 +71,7 @@ resource "aws_cloudwatch_dashboard" "compute" {
       }
     ]
   })
+  # Tags are not supported: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_dashboard#argument-reference
 }
 
 resource "aws_resourcegroups_group" "application-insights-resources" {
@@ -91,10 +92,12 @@ resource "aws_resourcegroups_group" "application-insights-resources" {
       ]
     })
   }
+  tags = local.tags
 }
 
 resource "aws_applicationinsights_application" "application-insights" {
   resource_group_name = aws_resourcegroups_group.application-insights-resources.name
   auto_config_enabled = true
   ops_center_enabled  = var.config.enable_ops_center
+  tags                = local.tags
 }

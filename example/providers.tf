@@ -7,7 +7,3 @@ terraform {
     }
   }
 }
-
-provider "aws" {
-  alias = "domain"
-}

@@ -14,11 +14,11 @@ variable "environments" {
         accounts = object({
           deploy = object({
             name = string
-            id = string
+            id   = string
           }),
           dns = object({
             name = string
-            id = string
+            id   = string
           })
         })
         requires_approval = optional(bool)
@@ -28,6 +28,6 @@ variable "environments" {
 }
 
 variable "branch" {
-  type = string
+  type    = string
   default = "main"
 }

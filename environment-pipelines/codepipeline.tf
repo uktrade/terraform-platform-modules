@@ -3,8 +3,8 @@ data "aws_codestarconnections_connection" "github_codestar_connection" {
 }
 
 resource "aws_codepipeline" "environment_pipeline" {
-  name     = "${var.application}-environment-pipeline"
-  role_arn = aws_iam_role.environment_pipeline_codepipeline.arn
+  name       = "${var.application}-environment-pipeline"
+  role_arn   = aws_iam_role.environment_pipeline_codepipeline.arn
   depends_on = [aws_iam_role_policy.artifact_store_access_for_environment_codebuild]
 
   artifact_store {
@@ -39,17 +39,17 @@ resource "aws_codepipeline" "environment_pipeline" {
   stage {
     name = "Build"
 
-    action {
-      name             = "InstallTools"
-      category         = "Build"
-      owner            = "AWS"
-      provider         = "CodeBuild"
-      input_artifacts  = ["project_deployment_source"]
-      output_artifacts = ["build_output"]
-      version          = "1"
+      action {
+        name             = "InstallTools"
+        category         = "Build"
+        owner            = "AWS"
+        provider         = "CodeBuild"
+        input_artifacts  = ["project_deployment_source"]
+        output_artifacts = ["build_output"]
+        version          = "1"
 
         configuration = {
-          ProjectName = "${var.application}-environment-pipeline"
+          ProjectName   = "${var.application}-environment-pipeline"
           PrimarySource = "project_deployment_source"
         }
     }

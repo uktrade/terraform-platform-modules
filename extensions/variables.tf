@@ -1,7 +1,7 @@
 variable "args" {
   type = object({
-    application = string,
-    services    = any,
+    application    = string,
+    services       = any,
     dns_account_id = string
   })
 }
