@@ -48,7 +48,7 @@ resource "aws_codepipeline" "environment_pipeline" {
         owner            = "AWS"
         provider         = "CodeBuild"
         input_artifacts  = ["project_deployment_source"]
-        output_artifacts = ["build_output"]
+        output_artifacts = ["terraform_plan"]
         version          = "1"
 
         configuration = {
