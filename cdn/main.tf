@@ -48,6 +48,8 @@ resource "aws_cloudfront_distribution" "standard" {
   enabled         = true
   is_ipv6_enabled = true
   web_acl_id      = data.aws_wafv2_web_acl.waf-default.arn
+  aliases = [each.key]
+
   origin {
     domain_name = local.domain_name
     origin_id   = local.domain_name
@@ -58,8 +60,7 @@ resource "aws_cloudfront_distribution" "standard" {
       origin_ssl_protocols   = local.cdn_defaults.origin.custom_origin_config.origin_ssl_protocols
     }
   }
-
-  aliases = [each.key]
+  
   default_cache_behavior {
     allowed_methods  = local.cdn_defaults.allowed_methods
     cached_methods   = local.cdn_defaults.cached_methods
@@ -77,16 +78,38 @@ resource "aws_cloudfront_distribution" "standard" {
     default_ttl            = 86400
     max_ttl                = 31536000
   }
+
   viewer_certificate {
     cloudfront_default_certificate = false
     acm_certificate_arn            = aws_acm_certificate.certificate[each.key].arn
     minimum_protocol_version       = local.cdn_defaults.viewer_certificate.minimum_protocol_version
     ssl_support_method             = local.cdn_defaults.viewer_certificate.ssl_support_method
   }
+  
   restrictions {
     geo_restriction {
       restriction_type = local.cdn_defaults.geo_restriction.restriction_type
       locations        = local.cdn_defaults.geo_restriction.locations
+    }
+  }
+
+   dynamic "logging_config" {
+    for_each = can( var.config.logging_config ) ? var.config.logging_config : local.cdn_defaults.logging_config
+    content {
+      bucket = try(
+        logging_config.value.bucket,
+        local.defaults.logging_config[0].bucket
+      )
+      include_cookies = try(
+        logging_config.value.include_cookies,
+        local.defaults.logging_config[0].include_cookies,
+        false
+      )
+      prefix = try(
+        logging_config.value.prefix,
+        local.defaults.logging_config[0].prefix,
+        null
+      )
     }
   }
 
