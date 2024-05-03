@@ -422,47 +422,59 @@ run "test_stages" {
   command = plan
 
   assert {
-    condition = length(aws_codepipeline.environment_pipeline.stage) == 6
+    condition     = length(aws_codepipeline.environment_pipeline.stage) == 6
     error_message = "Should be: 6"
   }
   assert {
-    condition = aws_codepipeline.environment_pipeline.stage[0].name == "Source"
+    condition     = aws_codepipeline.environment_pipeline.stage[0].name == "Source"
     error_message = "Should be: Source"
   }
+
+  # Stage 1: dev plan
   assert {
-    condition = aws_codepipeline.environment_pipeline.stage[1].name == "Plan-dev"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Plan-dev"
     error_message = "Should be: Plan-dev"
   }
   assert {
-    condition = aws_codepipeline.environment_pipeline.stage[1].action[0].name == "Plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].name == "Plan"
     error_message = "Action name incorrect"
   }
   assert {
-    condition = aws_codepipeline.environment_pipeline.stage[1].action[0].category == "Build"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].category == "Build"
     error_message = "Action category incorrect"
   }
   assert {
-    condition = aws_codepipeline.environment_pipeline.stage[1].action[0].owner == "AWS"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].owner == "AWS"
     error_message = "Action owner incorrect"
   }
   assert {
-    condition = aws_codepipeline.environment_pipeline.stage[1].action[0].provider == "CodeBuild"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].provider == "CodeBuild"
     error_message = "Action provider incorrect"
   }
   assert {
-    condition = aws_codepipeline.environment_pipeline.stage[2].name == "Apply-dev"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].input_artifacts == ["project_deployment_source"]
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts == ["build_output"]
+    error_message = "Output artifacts incorrect"
+  }
+
+  # Stage 2: dev apply
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].name == "Apply-dev"
     error_message = "Should be: Apply-dev"
   }
   assert {
-    condition = aws_codepipeline.environment_pipeline.stage[3].name == "Plan-prod"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].name == "Plan-prod"
     error_message = "Should be: Plan-prod"
   }
   assert {
-    condition = aws_codepipeline.environment_pipeline.stage[4].name == "Approve-prod"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].name == "Approve-prod"
     error_message = "Should be: Approve-prod"
   }
   assert {
-    condition = aws_codepipeline.environment_pipeline.stage[5].name == "Apply-prod"
+    condition     = aws_codepipeline.environment_pipeline.stage[5].name == "Apply-prod"
     error_message = "Should be: Apply-prod"
   }
 }

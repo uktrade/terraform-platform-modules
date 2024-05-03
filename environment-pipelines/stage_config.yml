@@ -4,7 +4,7 @@ plan:
   category: "Build"
   owner: "AWS"
   provider: "CodeBuild"
-  input_artifacts: ["source_output"]
+  input_artifacts: ["project_deployment_source"]
   output_artifacts: ["build_output"]
   version: "1"
 
@@ -22,6 +22,6 @@ apply:
   category: "Build"
   owner: "AWS"
   provider: "CodeBuild"
-  input_artifacts: ["source_output"]
+  input_artifacts: ["project_deployment_source"]
   output_artifacts: ["build_output"]
   version: "1"

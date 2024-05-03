@@ -46,8 +46,8 @@ resource "aws_codepipeline" "environment_pipeline" {
         category         = stage.value.category
         owner            = stage.value.owner
         provider         = stage.value.provider
-        input_artifacts  = ["project_deployment_source"]
-        output_artifacts = ["build_output"]
+        input_artifacts  = stage.value.input_artifacts
+        output_artifacts = stage.value.output_artifacts
         version          = "1"
 
         configuration = {
@@ -64,30 +64,30 @@ resource "aws_codepipeline" "environment_pipeline" {
     }
   }
 
-#  stage {
-#    name = "DeployTo-dev"
-#
-#    action {
-#      name             = "DeployTo-dev"
-#      category         = "Build"
-#      owner            = "AWS"
-#      provider         = "CodeBuild"
-#      input_artifacts  = ["build_output"]
-#      output_artifacts = ["deploy_output"]
-#      version          = "1"
-#
-#        configuration = {
-#          ProjectName = "${var.application}-environment-pipeline-plan"
-#          PrimarySource = "build_output"
-#          EnvironmentVariables = jsonencode([
-#            {
-#              name  = "ENVIRONMENT"
-#              value = "dev"
-#            }
-#          ])
-#        }
-#    }
-#  }
+  #  stage {
+  #    name = "DeployTo-dev"
+  #
+  #    action {
+  #      name             = "DeployTo-dev"
+  #      category         = "Build"
+  #      owner            = "AWS"
+  #      provider         = "CodeBuild"
+  #      input_artifacts  = ["build_output"]
+  #      output_artifacts = ["deploy_output"]
+  #      version          = "1"
+  #
+  #        configuration = {
+  #          ProjectName = "${var.application}-environment-pipeline-plan"
+  #          PrimarySource = "build_output"
+  #          EnvironmentVariables = jsonencode([
+  #            {
+  #              name  = "ENVIRONMENT"
+  #              value = "dev"
+  #            }
+  #          ])
+  #        }
+  #    }
+  #  }
 
   tags = local.tags
 }
