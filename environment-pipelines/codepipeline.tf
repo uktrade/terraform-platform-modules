@@ -49,8 +49,7 @@ resource "aws_codepipeline" "environment_pipeline" {
         input_artifacts  = stage.value.input_artifacts
         output_artifacts = stage.value.output_artifacts
         version          = "1"
-
-        configuration = stage.value.configuration
+        configuration    = stage.value.configuration
       }
     }
   }

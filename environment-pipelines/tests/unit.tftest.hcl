@@ -490,16 +490,198 @@ run "test_stages" {
     error_message = "Should be: Apply-dev"
   }
   assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].name == "Apply"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].category == "Build"
+    error_message = "Action category incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].owner == "AWS"
+    error_message = "Action owner incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].provider == "CodeBuild"
+    error_message = "Action provider incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[2].action[0].input_artifacts) == 1
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].input_artifacts[0] == "project_deployment_source"
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[2].action[0].output_artifacts) == 1
+    error_message = "Output artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].output_artifacts[0] == "build_output"
+    error_message = "Output artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].version == "1"
+    error_message = "Action Version incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.ProjectName == "my-app-environment-pipeline"
+    error_message = "Configuration ProjectName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.PrimarySource == "project_deployment_source"
+    error_message = "Configuration PrimarySource incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"}]"
+    error_message = "Configuration Env Vars incorrect"
+  }
+
+  # Stage 3: prod Plan
+  assert {
     condition     = aws_codepipeline.environment_pipeline.stage[3].name == "Plan-prod"
     error_message = "Should be: Plan-prod"
   }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].name == "Plan"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].category == "Build"
+    error_message = "Action category incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].owner == "AWS"
+    error_message = "Action owner incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].provider == "CodeBuild"
+    error_message = "Action provider incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts) == 1
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[0] == "project_deployment_source"
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].output_artifacts) == 1
+    error_message = "Output artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].output_artifacts[0] == "build_output"
+    error_message = "Output artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].version == "1"
+    error_message = "Action Version incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.ProjectName == "my-app-environment-pipeline"
+    error_message = "Configuration ProjectName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.PrimarySource == "project_deployment_source"
+    error_message = "Configuration PrimarySource incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"}]"
+    error_message = "Configuration Env Vars incorrect"
+  }
+
+  # Stage: prod approval
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[4].name == "Approve-prod"
     error_message = "Should be: Approve-prod"
   }
   assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].name == "Approval"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].category == "Approval"
+    error_message = "Action category incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].owner == "AWS"
+    error_message = "Action owner incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].provider == "Manual"
+    error_message = "Action provider incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[4].action[0].input_artifacts) == 0
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[4].action[0].output_artifacts) == 0
+    error_message = "Output artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].version == "1"
+    error_message = "Action Version incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration == null
+    error_message = "Configuration ProjectName incorrect"
+  }
+
+  # Stage: prod apply
+  assert {
     condition     = aws_codepipeline.environment_pipeline.stage[5].name == "Apply-prod"
     error_message = "Should be: Apply-prod"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].name == "Apply"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].category == "Build"
+    error_message = "Action category incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].owner == "AWS"
+    error_message = "Action owner incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].provider == "CodeBuild"
+    error_message = "Action provider incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[5].action[0].input_artifacts) == 1
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].input_artifacts[0] == "project_deployment_source"
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[5].action[0].output_artifacts) == 1
+    error_message = "Output artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].output_artifacts[0] == "build_output"
+    error_message = "Output artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].version == "1"
+    error_message = "Action Version incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.ProjectName == "my-app-environment-pipeline"
+    error_message = "Configuration ProjectName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.PrimarySource == "project_deployment_source"
+    error_message = "Configuration PrimarySource incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"}]"
+    error_message = "Configuration Env Vars incorrect"
   }
 }
 
