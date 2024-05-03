@@ -159,11 +159,11 @@ run "test_code_pipeline" {
 
   # Build stage
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Build"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Plan-dev"
     error_message = "Should be: Build"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].name == "InstallTools"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].name == "Plan"
     error_message = "Should be: InstallTools"
   }
   assert {
@@ -415,6 +415,55 @@ run "test_artifact_store" {
   assert {
     condition     = module.artifact_store.bucket_name == "my-app-environment-pipeline-artifact-store"
     error_message = "Should be: my-app-environment-pipeline-artifact-store"
+  }
+}
+
+run "test_stages" {
+  command = plan
+
+  assert {
+    condition = length(aws_codepipeline.environment_pipeline.stage) == 6
+    error_message = "Should be: 6"
+  }
+  assert {
+    condition = aws_codepipeline.environment_pipeline.stage[0].name == "Source"
+    error_message = "Should be: Source"
+  }
+  assert {
+    condition = aws_codepipeline.environment_pipeline.stage[1].name == "Plan-dev"
+    error_message = "Should be: Plan-dev"
+  }
+  assert {
+    condition = aws_codepipeline.environment_pipeline.stage[1].action[0].name == "Plan"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition = aws_codepipeline.environment_pipeline.stage[1].action[0].category == "Build"
+    error_message = "Action category incorrect"
+  }
+  assert {
+    condition = aws_codepipeline.environment_pipeline.stage[1].action[0].owner == "AWS"
+    error_message = "Action owner incorrect"
+  }
+  assert {
+    condition = aws_codepipeline.environment_pipeline.stage[1].action[0].provider == "CodeBuild"
+    error_message = "Action provider incorrect"
+  }
+  assert {
+    condition = aws_codepipeline.environment_pipeline.stage[2].name == "Apply-dev"
+    error_message = "Should be: Apply-dev"
+  }
+  assert {
+    condition = aws_codepipeline.environment_pipeline.stage[3].name == "Plan-prod"
+    error_message = "Should be: Plan-prod"
+  }
+  assert {
+    condition = aws_codepipeline.environment_pipeline.stage[4].name == "Approve-prod"
+    error_message = "Should be: Approve-prod"
+  }
+  assert {
+    condition = aws_codepipeline.environment_pipeline.stage[5].name == "Apply-prod"
+    error_message = "Should be: Apply-prod"
   }
 }
 

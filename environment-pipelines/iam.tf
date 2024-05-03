@@ -180,7 +180,7 @@ data "aws_iam_policy_document" "dns_account_assume_role" {
     actions = [
       "sts:AssumeRole",
     ]
-    resources = tolist(toset([for stage in local.stages : "arn:aws:iam::${stage.accounts.dns.id}:role/sandbox-codebuild-assume-role"]))
+    resources = local.dns_entries
   }
 }
 
