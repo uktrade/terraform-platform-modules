@@ -150,7 +150,7 @@ postgres:
     volume_size: 100
     multi_az: true
     instance: db.t3.small
-    storage_type: io1
+    storage_type: io2
     iops: 40000
 
   # 2v CPU, 8GB RAM, 100GB Storage
@@ -170,7 +170,7 @@ postgres:
     volume_size: 100
     multi_az: true
     instance: db.m5.large
-    storage_type: io1
+    storage_type: io2
     iops: 40000
 
   # 8v CPU, 32GB RAM, 564GB Storage
@@ -190,7 +190,7 @@ postgres:
     volume_size: 564
     multi_az: true
     instance: db.m5.2xlarge
-    storage_type: io1
+    storage_type: io2
     iops: 40000
 
   # 16v CPU, 64GB RAM, 2000GB Storage
@@ -210,7 +210,7 @@ postgres:
     volume_size: 2000
     multi_az: true
     instance: db.m5.4xlarge
-    storage_type: io1
+    storage_type: io2
     iops: 40000
 
 s3: {}
