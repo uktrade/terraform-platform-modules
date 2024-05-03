@@ -467,6 +467,22 @@ run "test_stages" {
     condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts[0] == "build_output"
     error_message = "Output artifacts incorrect"
   }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].version == "1"
+    error_message = "Action Version incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-environment-pipeline"
+    error_message = "Configuration ProjectName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.PrimarySource == "project_deployment_source"
+    error_message = "Configuration PrimarySource incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"}]"
+    error_message = "Configuration Env Vars incorrect"
+  }
 
   # Stage 2: dev apply
   assert {

@@ -50,16 +50,7 @@ resource "aws_codepipeline" "environment_pipeline" {
         output_artifacts = stage.value.output_artifacts
         version          = "1"
 
-        configuration = {
-          ProjectName   = "${var.application}-environment-pipeline"
-          PrimarySource = "project_deployment_source"
-          EnvironmentVariables = jsonencode([
-            {
-              name  = "ENVIRONMENT"
-              value = "dev"
-            }
-          ])
-        }
+        configuration = stage.value.configuration
       }
     }
   }

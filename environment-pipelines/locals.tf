@@ -12,14 +12,31 @@ locals {
       {
         type : "plan",
         stage_name : "Plan-${env.name}",
-        env : env.name, accounts : env.accounts
+        env : env.name,
+        accounts : env.accounts,
+        configuration : {
+          ProjectName : "${var.application}-environment-pipeline"
+          PrimarySource : "project_deployment_source"
+          EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }])
+        }
       },
-      coalesce(env.requires_approval, false) ? [{ type : "approve", stage_name : "Approve-${env.name}", env : "" }] : [],
+      coalesce(env.requires_approval, false) ? [{
+        type : "approve",
+        stage_name : "Approve-${env.name}",
+        env : ""
+        configuration : null
+      }] : [],
       {
         type : "apply",
         env : env.name,
         stage_name : "Apply-${env.name}",
-      accounts : env.accounts }
+        accounts : env.accounts,
+        configuration : {
+          ProjectName : "${var.application}-environment-pipeline"
+          PrimarySource : "project_deployment_source"
+          EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }])
+        }
+      }
       ]
   ])
 
