@@ -25,7 +25,7 @@ locals {
   volume_size               = coalesce(var.config.volume_size, 20)
 
   instance_class = coalesce(var.config.instance, "db.t3.micro")
-  # Todo: This needs automated test adding and a realworld sanity check test
+  # Todo: This needs automated test adding and a real world sanity check test
   storage_type = coalesce(var.config.storage_type, "gp3")
 
   secret_prefix                = upper(replace(var.name, "-", "_"))
