@@ -4,8 +4,8 @@ plan:
   category: "Build"
   owner: "AWS"
   provider: "CodeBuild"
-  input_artifacts: ["project_deployment_source"]
-  output_artifacts: ["build_output"]
+  input_artifacts: ["build_output"]
+  output_artifacts: ["terraform_plan"]
   version: "1"
 
 approve:
@@ -14,7 +14,7 @@ approve:
   owner: "AWS"
   provider: "Manual"
   version: "1"
-  input_artifacts: []
+  input_artifacts: ["terraform_plan"]
   output_artifacts: []
 
 apply:
@@ -22,6 +22,6 @@ apply:
   category: "Build"
   owner: "AWS"
   provider: "CodeBuild"
-  input_artifacts: ["project_deployment_source"]
-  output_artifacts: ["build_output"]
+  input_artifacts: ["build_output", "terraform_plan"]
+  output_artifacts: []
   version: "1"

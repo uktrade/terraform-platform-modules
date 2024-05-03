@@ -15,8 +15,8 @@ locals {
         env : env.name,
         accounts : env.accounts,
         configuration : {
-          ProjectName : "${var.application}-environment-pipeline"
-          PrimarySource : "project_deployment_source"
+          ProjectName : "${var.application}-environment-pipeline-tf-plan"
+          PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }])
         }
       },
@@ -32,8 +32,8 @@ locals {
         stage_name : "Apply-${env.name}",
         accounts : env.accounts,
         configuration : {
-          ProjectName : "${var.application}-environment-pipeline"
-          PrimarySource : "project_deployment_source"
+          ProjectName : "${var.application}-environment-pipeline-tf-apply"
+          PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }])
         }
       }
