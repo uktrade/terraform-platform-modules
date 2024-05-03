@@ -2,8 +2,10 @@ version: 0.2
 phases:
   install:
     commands:
-      - unzip terraform_install.zip -d /usr/bin/
-      - chmod +x /usr/bin/terraform
+      - export PATH="$CODEBUILD_SRC_DIR/build-tools:$PATH"
+      - platform_helper.py --version
+      - terraform --version
+      - copilot --version
   build:
     commands:
       - echo "Terraform Plan Phase"
