@@ -88,34 +88,6 @@ resource "aws_codepipeline" "environment_pipeline" {
 #        }
 #    }
 #  }
-#
-#   dynamic "stage" {
-#     for_each = local.stages
-#     content {
-#       name = "Build"
-#
-#       action {
-#         name             = "InstallTools"
-#         category         = "Build"
-#         owner            = "AWS"
-#         provider         = "CodeBuild"
-#         input_artifacts  = ["project_deployment_source"]
-#         output_artifacts = ["build_output"]
-#         version          = "1"
-#
-#           configuration = {
-#             ProjectName = "${var.application}-environment-pipeline"
-#             PrimarySource = "project_deployment_source"
-#             EnvironmentVariables = jsonencode([
-#               {
-#                 name  = "ENVIRONMENT"
-#                 value = stage.value.env
-#               }
-#             ])
-#           }
-#         }
-#     }
-#   }
 
   tags = local.tags
 }
