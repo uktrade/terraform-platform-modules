@@ -55,58 +55,23 @@ resource "aws_codepipeline" "environment_pipeline" {
     }
   }
 
-  stage {
-    name = "tf-plan-dev"
+  dynamic "stage" {
+    for_each = local.stages
+    content {
+      name = stage.value.stage_name
 
-    action {
-      name             = "tf-plan-dev"
-      category         = "Build"
-      owner            = "AWS"
-      provider         = "CodeBuild"
-      input_artifacts  = ["build_output"]
-      output_artifacts = ["terraform_plan"]
-      version          = "1"
-
-        configuration = {
-          ProjectName = "${var.application}-environment-pipeline-tf-plan"
-          PrimarySource = "build_output"
-          EnvironmentVariables = jsonencode([
-            {
-              name  = "ENVIRONMENT"
-              value = "dev"
-            }
-          ])
-        }
+      action {
+        name             = stage.value.name
+        category         = stage.value.category
+        owner            = stage.value.owner
+        provider         = stage.value.provider
+        input_artifacts  = stage.value.input_artifacts
+        output_artifacts = stage.value.output_artifacts
+        version          = "1"
+        configuration    = stage.value.configuration
+      }
     }
   }
-
-#   dynamic "stage" {
-#     for_each = local.stages
-#     content {
-#       name = "Build"
-#
-#       action {
-#         name             = "InstallTools"
-#         category         = "Build"
-#         owner            = "AWS"
-#         provider         = "CodeBuild"
-#         input_artifacts  = ["project_deployment_source"]
-#         output_artifacts = ["build_output"]
-#         version          = "1"
-#
-#           configuration = {
-#             ProjectName = "${var.application}-environment-pipeline"
-#             PrimarySource = "project_deployment_source"
-#             EnvironmentVariables = jsonencode([
-#               {
-#                 name  = "ENVIRONMENT"
-#                 value = stage.value.env
-#               }
-#             ])
-#           }
-#         }
-#     }
-#   }
 
   tags = local.tags
 }

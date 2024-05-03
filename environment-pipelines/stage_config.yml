@@ -4,12 +4,12 @@ plan:
   category: "Build"
   owner: "AWS"
   provider: "CodeBuild"
-  input_artifacts: ["source_output"]
+  input_artifacts: ["project_deployment_source"]
   output_artifacts: ["build_output"]
   version: "1"
+
 approve:
-  run_order: 1
-  name: "AWS-Admin-Approval"
+  name: "Approval"
   category: "Approval"
   owner: "AWS"
   provider: "Manual"
@@ -18,3 +18,10 @@ approve:
   output_artifacts: []
 
 apply:
+  name: "Apply"
+  category: "Build"
+  owner: "AWS"
+  provider: "CodeBuild"
+  input_artifacts: ["project_deployment_source"]
+  output_artifacts: ["build_output"]
+  version: "1"
