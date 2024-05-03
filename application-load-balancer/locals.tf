@@ -24,9 +24,10 @@ locals {
   domain_prefix = coalesce(var.config.domain_prefix, "internal")
   domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "prod.uktrade.digital") : coalesce(var.config.env_root, "uktrade.digital")
   domain_name   = var.environment == "prod" ? "${local.domain_prefix}.${var.application}.${local.domain_suffix}" : "${local.domain_prefix}.${var.environment}.${var.application}.${local.domain_suffix}"
+  additional_address_domain = try(var.environment == "prod" ? "${var.application}.${local.domain_suffix}" : "${var.environment}.${var.application}.${local.domain_suffix}")
 
   # Create map of all items in address list with its base domain. eg { x.y.base.com: base.com }
-  additional_address_fqdn = try({ for k in var.config.additional_address_list : "${k}.${var.environment}.${var.application}.${local.domain_suffix}" => "${var.application}.${local.domain_suffix}" }, {})
+  additional_address_fqdn = try({ for k in var.config.additional_address_list : "${k}.${local.additional_address_domain}" => "${var.application}.${local.domain_suffix}" }, {})
 
   # A List of domains that can be used in the Subject Alternative Name (SAN) part of the certificate.
   san_list = merge(local.additional_address_fqdn, var.config.cdn_domains_list)
