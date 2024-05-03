@@ -452,11 +452,19 @@ run "test_stages" {
     error_message = "Action provider incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].input_artifacts == ["project_deployment_source"]
+    condition     = length(aws_codepipeline.environment_pipeline.stage[1].action[0].input_artifacts) == 1
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts == ["build_output"]
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].input_artifacts[0] == "project_deployment_source"
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts) == 1
+    error_message = "Output artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts[0] == "build_output"
     error_message = "Output artifacts incorrect"
   }
 

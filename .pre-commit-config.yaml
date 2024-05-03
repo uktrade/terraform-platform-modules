@@ -13,10 +13,3 @@ repos:
         entry: tflint --recursive --fix
         language: system
         pass_filenames: false
-  # - repo: local
-    # hooks:
-      # - id: trufflehog
-        # name: TruffleHog Secret Scan
-        # entry: trufflehog filesystem --only-verified --fail --exclude-paths .trufflehog.exclude
-        # language: system
-        # pass_filenames: true
