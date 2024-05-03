@@ -126,7 +126,9 @@ opensearch:
     instance: m6g.2xlarge.search
 
 # RDS/Postgres Instances
-# Todo: align these with the instance types from https://aws.amazon.com/rds/instance-types/ WILL BE BACKWARDS BREAKING
+# Todo: align these with the instance types from https://aws.amazon.com/rds/instance-types/
+  # WILL BE BACKWARDS BREAKING
+  # ALL THE EXISTING PLANS MUST STILL EXIST EVEN IF UNDER DIFFERENT NAMES, OTHERWISE WE RISK DATABASES BEING RE-PROVISIONED
 postgres:
   # 2v CPU, 1GB RAM, 20GB Storage
   tiny:
