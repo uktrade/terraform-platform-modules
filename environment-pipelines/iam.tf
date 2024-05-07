@@ -116,7 +116,8 @@ data "aws_iam_policy_document" "state_kms_key_access" {
   statement {
     actions = [
       "kms:ListKeys",
-      "kms:Decrypt"
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
     ]
     resources = [
       data.aws_kms_key.state_kms_key.arn
@@ -152,7 +153,8 @@ data "aws_iam_policy_document" "ec2_read_access" {
 
   statement {
     actions = [
-      "ec2:DescribeVpcAttribute"
+      "ec2:DescribeVpcAttribute",
+      "ec2:CreateSecurityGroup"
     ]
     resources = [
       "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vpc/*"
@@ -167,7 +169,7 @@ data "aws_ssm_parameter" "central_log_group_parameter" {
 data "aws_iam_policy_document" "ssm_read_access" {
   statement {
     actions = [
-      "ssm:GetParameter",
+      "ssm:GetParameter"
     ]
     resources = [
       data.aws_ssm_parameter.central_log_group_parameter.arn
@@ -178,9 +180,216 @@ data "aws_iam_policy_document" "ssm_read_access" {
 data "aws_iam_policy_document" "dns_account_assume_role" {
   statement {
     actions = [
-      "sts:AssumeRole",
+      "sts:AssumeRole"
     ]
     resources = local.dns_entries
+  }
+}
+
+data "aws_iam_policy_document" "load_balancer" {
+  statement {
+    actions = [
+      "elasticloadbalancing:DescribeTargetGroups"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "elasticloadbalancing:CreateTargetGroup",
+        "elasticloadbalancing:AddTags"
+      ]
+      resources = [
+        "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:targetgroup/${var.application}-${statement.value.name}-http/*"
+      ]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "certificate" {
+  statement {
+    actions = [
+      "acm:RequestCertificate",
+      "acm:AddTagsToCertificate"
+    ]
+    resources = [
+      "arn:aws:acm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "security_group" {
+    statement {
+    actions = [
+      "ec2:CreateSecurityGroup"
+    ]
+    resources = [
+      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "ssm_parameter" {
+  statement {
+    actions = [
+      "ssm:PutParameter",
+      "ssm:AddTagsToResource"
+    ]
+    resources = [
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "cloudwatch" {
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "cloudwatch:PutDashboard"
+      ]
+      resources = [
+        "arn:aws:cloudwatch::${data.aws_caller_identity.current.account_id}:dashboard/${var.application}-${statement.value.name}-compute"
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "resource-groups:CreateGroup",
+        "resource-groups:Tag"
+      ]
+      resources = [
+        "arn:aws:resource-groups:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:group/${var.application}-${statement.value.name}-application-insights-resources"
+      ]
+    }
+  }
+
+  statement {
+    actions = [
+      "logs:DescribeResourcePolicies",
+      "logs:PutResourcePolicy"
+    ]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "redis" {
+  statement {
+    actions = [
+      "logs:CreateLogGroup"
+    ]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "elasticache:CreateCacheSubnetGroup",
+      "elasticache:AddTagsToResource"
+    ]
+    resources = [
+      "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnetgroup:*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "postgres" {
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "iam:CreateRole"
+      ]
+      resources = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-lambda-role"
+      ]
+    }
+  }
+
+  statement {
+    actions = [
+      "iam:CreateRole"
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/rds-enhanced-monitoring-*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "rds:CreateDBParameterGroup",
+      "rds:AddTagsToResource"
+    ]
+    resources = [
+      "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:pg:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "rds:CreateDBSubnetGroup",
+      "rds:AddTagsToResource"
+    ]
+    resources = [
+      "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subgrp:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "kms:CreateKey",
+      "kms:DescribeKey",
+      "kms:GetKeyPolicy",
+      "kms:GetKeyRotationStatus",
+      "kms:ScheduleKeyDeletion",
+      "kms:TagResource",
+      "kms:ListResourceTags"
+    ]
+    resources = [
+      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "s3" {
+  statement {
+    actions = [
+      "s3:*"
+    ]
+    resources = [
+      "arn:aws:s3:::*" # TODO replace wildcard with addon name
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "opensearch" {
+  statement {
+    actions = [
+      "logs:PutRetentionPolicy",
+      "logs:ListTagsLogGroup"
+    ]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "logs:DescribeLogGroups"
+    ]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
+    ]
   }
 }
 
@@ -251,4 +460,58 @@ resource "aws_iam_role_policy" "dns_account_assume_role_for_environment_codebuil
   name   = "${var.application}-dns-account-assume-role-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.dns_account_assume_role.json
+}
+
+resource "aws_iam_role_policy" "load_balancer_for_environment_codebuild" {
+  name   = "${var.application}-load_balancer-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.load_balancer.json
+}
+
+resource "aws_iam_role_policy" "certificate_for_environment_codebuild" {
+  name   = "${var.application}-certificate-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.certificate.json
+}
+
+resource "aws_iam_role_policy" "security_group_for_environment_codebuild" {
+  name   = "${var.application}-security_group-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.security_group.json
+}
+
+resource "aws_iam_role_policy" "ssm_parameter_for_environment_codebuild" {
+  name   = "${var.application}-ssm_parameter-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.ssm_parameter.json
+}
+
+resource "aws_iam_role_policy" "cloudwatch_for_environment_codebuild" {
+  name   = "${var.application}-cloudwatch-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.cloudwatch.json
+}
+
+resource "aws_iam_role_policy" "redis_for_environment_codebuild" {
+  name   = "${var.application}-elasticache-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.redis.json
+}
+
+resource "aws_iam_role_policy" "postgres_for_environment_codebuild" {
+  name   = "${var.application}-postgres-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.postgres.json
+}
+
+resource "aws_iam_role_policy" "s3_for_environment_codebuild" {
+  name   = "${var.application}-s3-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.s3.json
+}
+
+resource "aws_iam_role_policy" "opensearch_for_environment_codebuild" {
+  name   = "${var.application}-opensearch-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.opensearch.json
 }
