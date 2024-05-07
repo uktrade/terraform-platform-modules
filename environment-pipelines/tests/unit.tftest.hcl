@@ -100,8 +100,8 @@ run "test_code_pipeline" {
   command = plan
 
   assert {
-    condition     = aws_codepipeline.environment_pipeline.name == "my-app-environment-pipeline"
-    error_message = "Should be: my-app-environment-pipeline"
+    condition     = aws_codepipeline.environment_pipeline.name == "my-app-environment-pipeline-build"
+    error_message = "Should be: my-app-environment-pipeline-build"
   }
   # aws_codepipeline.environment_pipeline.role_arn cannot be tested on a plan
   assert {
@@ -159,11 +159,11 @@ run "test_code_pipeline" {
 
   # Build stage
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Plan-dev"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Build"
     error_message = "Should be: Build"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].name == "Plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].name == "InstallTools"
     error_message = "Should be: InstallTools"
   }
   assert {
@@ -191,17 +191,14 @@ run "test_code_pipeline" {
     error_message = "Should be: build_output"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-environment-pipeline"
-    error_message = "Should be: my-app-environment-pipeline"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-environment-pipeline-build"
+    error_message = "Should be: my-app-environment-pipeline-build"
   }
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.PrimarySource == "project_deployment_source"
     error_message = "Should be: project_deployment_source"
   }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.EnvironmentVariables == jsonencode([{ name : "ENVIRONMENT", value : "dev" }])
-    error_message = "Should be: ${jsonencode([{ name : "ENVIRONMENT", value : "dev" }])}"
-  }
+
   # Tags
   assert {
     condition     = jsonencode(aws_codepipeline.environment_pipeline.tags) == jsonencode(var.expected_tags)
@@ -213,64 +210,64 @@ run "test_codebuild" {
   command = plan
 
   assert {
-    condition     = aws_codebuild_project.environment_pipeline.name == "my-app-environment-pipeline"
-    error_message = "Should be: my-app-environment-pipeline"
+    condition     = aws_codebuild_project.environment_pipeline_build.name == "my-app-environment-pipeline-build"
+    error_message = "Should be: my-app-environment-pipeline-build"
   }
   assert {
-    condition     = aws_codebuild_project.environment_pipeline.description == "Provisions the my-app application's extensions."
+    condition     = aws_codebuild_project.environment_pipeline_build.description == "Provisions the my-app application's extensions."
     error_message = "Should be: 'Provisions the my-app application's extensions.'"
   }
   assert {
-    condition     = aws_codebuild_project.environment_pipeline.build_timeout == 5
+    condition     = aws_codebuild_project.environment_pipeline_build.build_timeout == 5
     error_message = "Should be: 5"
   }
   assert {
-    condition     = one(aws_codebuild_project.environment_pipeline.artifacts).type == "CODEPIPELINE"
+    condition     = one(aws_codebuild_project.environment_pipeline_build.artifacts).type == "CODEPIPELINE"
     error_message = "Should be: 'CODEPIPELINE'"
   }
   assert {
-    condition     = one(aws_codebuild_project.environment_pipeline.cache).type == "S3"
+    condition     = one(aws_codebuild_project.environment_pipeline_build.cache).type == "S3"
     error_message = "Should be: 'S3'"
   }
   assert {
-    condition     = one(aws_codebuild_project.environment_pipeline.cache).location == "my-app-environment-pipeline-artifact-store"
+    condition     = one(aws_codebuild_project.environment_pipeline_build.cache).location == "my-app-environment-pipeline-artifact-store"
     error_message = "Should be: 'my-app-environment-pipeline-artifact-store'"
   }
   assert {
-    condition     = one(aws_codebuild_project.environment_pipeline.environment).compute_type == "BUILD_GENERAL1_SMALL"
+    condition     = one(aws_codebuild_project.environment_pipeline_build.environment).compute_type == "BUILD_GENERAL1_SMALL"
     error_message = "Should be: 'BUILD_GENERAL1_SMALL'"
   }
   assert {
 
-    condition     = one(aws_codebuild_project.environment_pipeline.environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    condition     = one(aws_codebuild_project.environment_pipeline_build.environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
     error_message = "Should be: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0'"
   }
   assert {
-    condition     = one(aws_codebuild_project.environment_pipeline.environment).type == "LINUX_CONTAINER"
+    condition     = one(aws_codebuild_project.environment_pipeline_build.environment).type == "LINUX_CONTAINER"
     error_message = "Should be: 'LINUX_CONTAINER'"
   }
   assert {
-    condition     = one(aws_codebuild_project.environment_pipeline.environment).image_pull_credentials_type == "CODEBUILD"
+    condition     = one(aws_codebuild_project.environment_pipeline_build.environment).image_pull_credentials_type == "CODEBUILD"
     error_message = "Should be: 'CODEBUILD'"
   }
   assert {
-    condition     = aws_codebuild_project.environment_pipeline.logs_config[0].cloudwatch_logs[0].group_name == "codebuild/my-app-environment-terraform/log-group"
+    condition     = aws_codebuild_project.environment_pipeline_build.logs_config[0].cloudwatch_logs[0].group_name == "codebuild/my-app-environment-terraform/log-group"
     error_message = "Should be: 'codebuild/my-app-environment-terraform/log-group'"
   }
   assert {
-    condition     = aws_codebuild_project.environment_pipeline.logs_config[0].cloudwatch_logs[0].stream_name == "codebuild/my-app-environment-terraform/log-stream"
+    condition     = aws_codebuild_project.environment_pipeline_build.logs_config[0].cloudwatch_logs[0].stream_name == "codebuild/my-app-environment-terraform/log-stream"
     error_message = "Should be: 'codebuild/my-app-environment-terraform/log-group'"
   }
   assert {
-    condition     = one(aws_codebuild_project.environment_pipeline.source).type == "CODEPIPELINE"
+    condition     = one(aws_codebuild_project.environment_pipeline_build.source).type == "CODEPIPELINE"
     error_message = "Should be: 'CODEPIPELINE'"
   }
   assert {
-    condition     = length(regexall(".*echo \"Install Phase\".*", aws_codebuild_project.environment_pipeline.source[0].buildspec)) > 0
+    condition     = length(regexall(".*echo \"Install Phase\".*", aws_codebuild_project.environment_pipeline_build.source[0].buildspec)) > 0
     error_message = "Should contain: 'echo \"Install Phase\"'"
   }
   assert {
-    condition     = jsonencode(aws_codebuild_project.environment_pipeline.tags) == jsonencode(var.expected_tags)
+    condition     = jsonencode(aws_codebuild_project.environment_pipeline_build.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 
@@ -422,75 +419,25 @@ run "test_stages" {
   command = plan
 
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage) == 6
-    error_message = "Should be: 6"
+    condition     = length(aws_codepipeline.environment_pipeline.stage) == 7
+    error_message = "Should be: 7"
   }
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[0].name == "Source"
     error_message = "Should be: Source"
   }
-
-  # Stage 1: dev plan
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Plan-dev"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Build"
+    error_message = "Should be: Build"
+  }
+
+  # Stage: dev plan
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].name == "Plan-dev"
     error_message = "Should be: Plan-dev"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].name == "Plan"
-    error_message = "Action name incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].category == "Build"
-    error_message = "Action category incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].owner == "AWS"
-    error_message = "Action owner incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].provider == "CodeBuild"
-    error_message = "Action provider incorrect"
-  }
-  assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[1].action[0].input_artifacts) == 1
-    error_message = "Input artifacts incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].input_artifacts[0] == "project_deployment_source"
-    error_message = "Input artifacts incorrect"
-  }
-  assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts) == 1
-    error_message = "Output artifacts incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].output_artifacts[0] == "build_output"
-    error_message = "Output artifacts incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].version == "1"
-    error_message = "Action Version incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-environment-pipeline"
-    error_message = "Configuration ProjectName incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.PrimarySource == "project_deployment_source"
-    error_message = "Configuration PrimarySource incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"}]"
-    error_message = "Configuration Env Vars incorrect"
-  }
-
-  # Stage 2: dev apply
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].name == "Apply-dev"
-    error_message = "Should be: Apply-dev"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].name == "Apply"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].name == "Plan"
     error_message = "Action name incorrect"
   }
   assert {
@@ -510,7 +457,7 @@ run "test_stages" {
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].input_artifacts[0] == "project_deployment_source"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].input_artifacts[0] == "build_output"
     error_message = "Input artifacts incorrect"
   }
   assert {
@@ -518,7 +465,7 @@ run "test_stages" {
     error_message = "Output artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].output_artifacts[0] == "build_output"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].output_artifacts[0] == "terraform_plan"
     error_message = "Output artifacts incorrect"
   }
   assert {
@@ -526,11 +473,11 @@ run "test_stages" {
     error_message = "Action Version incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.ProjectName == "my-app-environment-pipeline"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.ProjectName == "my-app-environment-pipeline-plan"
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.PrimarySource == "project_deployment_source"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.PrimarySource == "build_output"
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
@@ -538,13 +485,13 @@ run "test_stages" {
     error_message = "Configuration Env Vars incorrect"
   }
 
-  # Stage 3: prod Plan
+  # Stage: dev apply
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].name == "Plan-prod"
-    error_message = "Should be: Plan-prod"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].name == "Apply-dev"
+    error_message = "Should be: Apply-dev"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].name == "Plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].name == "Apply"
     error_message = "Action name incorrect"
   }
   assert {
@@ -560,19 +507,19 @@ run "test_stages" {
     error_message = "Action provider incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts) == 1
+    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts) == 2
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[0] == "project_deployment_source"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[0] == "build_output"
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].output_artifacts) == 1
-    error_message = "Output artifacts incorrect"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[1] == "terraform_plan"
+    error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].output_artifacts[0] == "build_output"
+    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].output_artifacts) == 0
     error_message = "Output artifacts incorrect"
   }
   assert {
@@ -580,29 +527,29 @@ run "test_stages" {
     error_message = "Action Version incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.ProjectName == "my-app-environment-pipeline"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.ProjectName == "my-app-environment-pipeline-apply"
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.PrimarySource == "project_deployment_source"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.PrimarySource == "build_output"
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
-  # Stage: prod approval
+  # Stage: prod Plan
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].name == "Approve-prod"
-    error_message = "Should be: Approve-prod"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].name == "Plan-prod"
+    error_message = "Should be: Plan-prod"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].name == "Approval"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].name == "Plan"
     error_message = "Action name incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].category == "Approval"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].category == "Build"
     error_message = "Action category incorrect"
   }
   assert {
@@ -610,15 +557,23 @@ run "test_stages" {
     error_message = "Action owner incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].provider == "Manual"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].provider == "CodeBuild"
     error_message = "Action provider incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[4].action[0].input_artifacts) == 0
+    condition     = length(aws_codepipeline.environment_pipeline.stage[4].action[0].input_artifacts) == 1
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[4].action[0].output_artifacts) == 0
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].input_artifacts[0] == "build_output"
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[4].action[0].output_artifacts) == 1
+    error_message = "Output artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].output_artifacts[0] == "terraform_plan"
     error_message = "Output artifacts incorrect"
   }
   assert {
@@ -626,21 +581,29 @@ run "test_stages" {
     error_message = "Action Version incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration == null
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.ProjectName == "my-app-environment-pipeline-plan"
     error_message = "Configuration ProjectName incorrect"
   }
-
-  # Stage: prod apply
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[5].name == "Apply-prod"
-    error_message = "Should be: Apply-prod"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.PrimarySource == "build_output"
+    error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].name == "Apply"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"}]"
+    error_message = "Configuration Env Vars incorrect"
+  }
+
+  # Stage: prod approval
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].name == "Approve-prod"
+    error_message = "Should be: Approve-prod"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].name == "Approval"
     error_message = "Action name incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].category == "Build"
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].category == "Approval"
     error_message = "Action category incorrect"
   }
   assert {
@@ -648,23 +611,15 @@ run "test_stages" {
     error_message = "Action owner incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].provider == "CodeBuild"
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].provider == "Manual"
     error_message = "Action provider incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[5].action[0].input_artifacts) == 1
+    condition     = length(aws_codepipeline.environment_pipeline.stage[5].action[0].input_artifacts) == 0
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].input_artifacts[0] == "project_deployment_source"
-    error_message = "Input artifacts incorrect"
-  }
-  assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[5].action[0].output_artifacts) == 1
-    error_message = "Output artifacts incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].output_artifacts[0] == "build_output"
+    condition     = length(aws_codepipeline.environment_pipeline.stage[5].action[0].output_artifacts) == 0
     error_message = "Output artifacts incorrect"
   }
   assert {
@@ -672,15 +627,61 @@ run "test_stages" {
     error_message = "Action Version incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.ProjectName == "my-app-environment-pipeline"
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.CustomData == "Review Terraform Plan"
+    error_message = "Configuration CustomData incorrect"
+  }
+
+  # Stage: prod apply
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[6].name == "Apply-prod"
+    error_message = "Should be: Apply-prod"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].name == "Apply"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].category == "Build"
+    error_message = "Action category incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].owner == "AWS"
+    error_message = "Action owner incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].provider == "CodeBuild"
+    error_message = "Action provider incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts) == 2
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[0] == "build_output"
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[1] == "terraform_plan"
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[6].action[0].output_artifacts) == 0
+    error_message = "Output artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].version == "1"
+    error_message = "Action Version incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.ProjectName == "my-app-environment-pipeline-apply"
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.PrimarySource == "project_deployment_source"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.PrimarySource == "build_output"
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 }
