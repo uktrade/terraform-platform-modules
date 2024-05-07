@@ -15,7 +15,7 @@ locals {
         env : env.name,
         accounts : env.accounts,
         configuration : {
-          ProjectName : "${var.application}-environment-pipeline-tf-plan"
+          ProjectName : "${var.application}-environment-pipeline-plan"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }])
         }
@@ -24,7 +24,11 @@ locals {
         type : "approve",
         stage_name : "Approve-${env.name}",
         env : ""
-        configuration : null
+        configuration : {
+          CustomData: "Review Terraform Plan"
+          ExternalEntityLink: "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/${var.application}-environment-pipeline-tf-plan/build/#{tf-plan.BUILD_ID}"
+        },
+        namespace: null
       }] : [],
       {
         type : "apply",
@@ -32,10 +36,11 @@ locals {
         stage_name : "Apply-${env.name}",
         accounts : env.accounts,
         configuration : {
-          ProjectName : "${var.application}-environment-pipeline-tf-apply"
+          ProjectName : "${var.application}-environment-pipeline-apply"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }])
-        }
+        },
+        namespace: null
       }
       ]
   ])

@@ -3,7 +3,7 @@ data "aws_codestarconnections_connection" "github_codestar_connection" {
 }
 
 resource "aws_codepipeline" "environment_pipeline" {
-  name       = "${var.application}-environment-pipeline"
+  name       = "${var.application}-environment-pipeline-build"
   role_arn   = aws_iam_role.environment_pipeline_codepipeline.arn
   depends_on = [aws_iam_role_policy.artifact_store_access_for_environment_codebuild]
 
@@ -49,7 +49,7 @@ resource "aws_codepipeline" "environment_pipeline" {
         version          = "1"
 
         configuration = {
-          ProjectName   = "${var.application}-environment-pipeline"
+          ProjectName   = "${var.application}-environment-pipeline-build"
           PrimarySource = "project_deployment_source"
         }
     }
@@ -69,6 +69,7 @@ resource "aws_codepipeline" "environment_pipeline" {
         output_artifacts = stage.value.output_artifacts
         version          = "1"
         configuration    = stage.value.configuration
+        namespace        = stage.value.namespace
       }
     }
   }

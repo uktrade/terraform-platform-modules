@@ -1,4 +1,9 @@
 version: 0.2
+
+env:
+  exported-variables:
+    - BUILD_ID
+
 phases:
   install:
     commands:
@@ -10,6 +15,9 @@ phases:
       - cd terraform/${ENVIRONMENT}
       - terraform init
       - terraform plan -out=plan.tfplan
+  post_build:
+    commands:
+      - export BUILD_ID="$CODEBUILD_BUILD_ID"
 artifacts:
   files:
     - terraform/${ENVIRONMENT}/plan.tfplan

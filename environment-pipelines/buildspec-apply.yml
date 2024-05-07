@@ -9,7 +9,7 @@ phases:
       - echo "Terraform Apply Phase"
       - echo "Working on environment ${ENVIRONMENT}"
       - cd terraform/${ENVIRONMENT}
-      - ls
-#      - terraform apply plan.tfplan
+      - terraform init
+      - terraform apply plan.tfplan
 artifacts:
   files: []
