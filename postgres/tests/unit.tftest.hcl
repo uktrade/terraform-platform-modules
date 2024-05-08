@@ -261,6 +261,16 @@ run "aws_db_instance_unit_test" {
     error_message = "Should be: mon:00:00-mon:03:00"
   }
 
+  assert {
+    condition     = aws_db_instance.default.storage_type == "gp3"
+    error_message = "Should be: gp3"
+  }
+
+  assert {
+    condition     = aws_db_instance.default.iops == 40000
+    error_message = "Should be: 40000"
+  }
+
 }
 
 run "aws_iam_role_unit_test" {
