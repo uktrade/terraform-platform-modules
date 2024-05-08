@@ -156,6 +156,26 @@ postgres:
     storage_type: io2
     iops: 40000
 
+  # # 2v CPU, 4GB RAM, 100GB Storage
+  sub-medium:
+    volume_size: 100
+    multi_az: false
+    instance: db.t3.medium
+
+  # # 2v CPU, 4GB RAM, 100GB Storage, multi AZ
+  sub-medium-ha:
+    volume_size: 100
+    multi_az: true
+    instance: db.t3.medium
+
+  # 2v CPU, 4GB RAM, 100GB Storage, multi AZ
+  sub-medium-high-io:
+    volume_size: 100
+    multi_az: true
+    instance: db.t3.medium
+    storage_type: io2
+    iops: 40000
+
   # 2v CPU, 8GB RAM, 100GB Storage
   medium:
     volume_size: 100

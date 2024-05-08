@@ -26,10 +26,13 @@ locals {
 
   instance_class = coalesce(var.config.instance, "db.t3.micro")
   # Todo: This needs automated test adding and a real world sanity check test
+  iops         = coalesce(var.config.iops, 40000)
   storage_type = coalesce(var.config.storage_type, "gp3")
+
 
   secret_prefix                = upper(replace(var.name, "-", "_"))
   rds_master_secret_name       = "${local.secret_prefix}_RDS_MASTER_ARN"
   read_only_secret_name        = "${local.secret_prefix}_READ_ONLY_USER"
   application_user_secret_name = "${local.secret_prefix}_APPLICATION_USER"
+
 }

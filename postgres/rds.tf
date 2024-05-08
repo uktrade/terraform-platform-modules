@@ -60,6 +60,7 @@ resource "aws_db_instance" "default" {
   storage_encrypted = true
   kms_key_id        = aws_kms_key.default.arn
   storage_type      = local.storage_type
+  iops              = local.iops
 
   parameter_group_name = aws_db_parameter_group.default.name
   db_subnet_group_name = aws_db_subnet_group.default.name
