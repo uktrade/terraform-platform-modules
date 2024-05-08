@@ -158,8 +158,6 @@ postgres:
     volume_size: 100
     multi_az: false
     instance: db.t3.medium
-    storage_type: io2
-    iops: 40000
 
   # # 2v CPU, 4GB RAM, 100GB Storage, multi AZ
   sub-medium-ha:
