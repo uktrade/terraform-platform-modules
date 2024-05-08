@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/uktrade/terraform-platform-modules/compare/1.2.0...1.2.1) (2024-05-07)
+
+
+### Bug Fixes
+
+* DBTP 951 fix prod prod cert bug ([#113](https://github.com/uktrade/terraform-platform-modules/issues/113)) ([38cb5e0](https://github.com/uktrade/terraform-platform-modules/commit/38cb5e0ebd6856de4626f1804479000668ac51a0))
+
 ## [1.2.0](https://github.com/uktrade/terraform-platform-modules/compare/1.1.0...1.2.0) (2024-05-03)
 
 
