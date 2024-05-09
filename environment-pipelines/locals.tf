@@ -49,4 +49,6 @@ locals {
   dns_entries = [for id in local.dns_ids : "arn:aws:iam::${id}:role/sandbox-codebuild-assume-role"]
 
   stages = [for stage in local.initial_stages : merge(stage, local.stage_config[stage["type"]])]
+
+  central_log_destination_arn = "arn:aws:logs:eu-west-2:812359060647:destination:cwl_log_destination"
 }
