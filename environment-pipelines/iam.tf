@@ -144,7 +144,8 @@ data "aws_iam_policy_document" "ec2_read_access" {
     actions = [
       "ec2:DescribeVpcs",
       "ec2:DescribeSubnets",
-      "ec2:DescribeSecurityGroups"
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeNetworkInterfaces"
     ]
     resources = [
       "*"
@@ -189,7 +190,15 @@ data "aws_iam_policy_document" "dns_account_assume_role" {
 data "aws_iam_policy_document" "load_balancer" {
   statement {
     actions = [
-      "elasticloadbalancing:DescribeTargetGroups"
+      "elasticloadbalancing:DescribeTargetGroups",
+      "elasticloadbalancing:DescribeTargetGroupAttributes",
+      "elasticloadbalancing:DescribeTags",
+      "elasticloadbalancing:DescribeLoadBalancers",
+      "elasticloadbalancing:DescribeLoadBalancerAttributes",
+      "elasticloadbalancing:DescribeSSLPolicies",
+      "elasticloadbalancing:DescribeListeners",
+      "elasticloadbalancing:DescribeTargetHealth",
+      "elasticloadbalancing:DescribeRules"
     ]
     resources = [
       "*"
@@ -201,10 +210,40 @@ data "aws_iam_policy_document" "load_balancer" {
     content {
       actions = [
         "elasticloadbalancing:CreateTargetGroup",
-        "elasticloadbalancing:AddTags"
+        "elasticloadbalancing:AddTags",
+        "elasticloadbalancing:ModifyTargetGroupAttributes",
+        "elasticloadbalancing:DeleteTargetGroup"
       ]
       resources = [
         "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:targetgroup/${var.application}-${statement.value.name}-http/*"
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "elasticloadbalancing:CreateLoadBalancer",
+        "elasticloadbalancing:AddTags",
+        "elasticloadbalancing:ModifyLoadBalancerAttributes",
+        "elasticloadbalancing:DeleteLoadBalancer",
+        "elasticloadbalancing:CreateListener"
+      ]
+      resources = [
+        "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:loadbalancer/app/${var.application}-${statement.value.name}/*"
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "elasticloadbalancing:AddTags"
+      ]
+      resources = [
+        "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:listener/app/${var.application}-${statement.value.name}/*"
       ]
     }
   }
@@ -214,7 +253,10 @@ data "aws_iam_policy_document" "certificate" {
   statement {
     actions = [
       "acm:RequestCertificate",
-      "acm:AddTagsToCertificate"
+      "acm:AddTagsToCertificate",
+      "acm:DescribeCertificate",
+      "acm:ListTagsForCertificate",
+      "acm:DeleteCertificate"
     ]
     resources = [
       "arn:aws:acm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate/*"
@@ -223,9 +265,14 @@ data "aws_iam_policy_document" "certificate" {
 }
 
 data "aws_iam_policy_document" "security_group" {
-    statement {
+  statement {
     actions = [
-      "ec2:CreateSecurityGroup"
+      "ec2:CreateSecurityGroup",
+      "ec2:CreateTags",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:DeleteSecurityGroup",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:AuthorizeSecurityGroupEgress"
     ]
     resources = [
       "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/*"
@@ -236,12 +283,45 @@ data "aws_iam_policy_document" "security_group" {
 data "aws_iam_policy_document" "ssm_parameter" {
   statement {
     actions = [
+      "ssm:GetParameter",
       "ssm:PutParameter",
-      "ssm:AddTagsToResource"
+      "ssm:AddTagsToResource",
+      "ssm:ListTagsForResource",
+      "ssm:GetParameters",
+      "ssm:DeleteParameter",
+      "ssm:PutParameter"
     ]
     resources = [
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/*"
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/*",
+
     ]
+  }
+
+  statement {
+    actions = [
+      "ssm:DescribeParameters"
+    ]
+    resources = [
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+    ]
+  }
+
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "ssm:PutParameter",
+        "ssm:AddTagsToResource",
+        "ssm:GetParameter",
+        "ssm:ListTagsForResource",
+        "ssm:GetParameters",
+        "ssm:DeleteParameter",
+        "ssm:PutParameter"
+      ]
+      resources = [
+        "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/${var.application}/${statement.value.name}/secrets/*"
+      ]
+    }
   }
 }
 
@@ -250,7 +330,9 @@ data "aws_iam_policy_document" "cloudwatch" {
     for_each = var.environments
     content {
       actions = [
-        "cloudwatch:PutDashboard"
+        "cloudwatch:GetDashboard",
+        "cloudwatch:PutDashboard",
+        "cloudwatch:DeleteDashboards"
       ]
       resources = [
         "arn:aws:cloudwatch::${data.aws_caller_identity.current.account_id}:dashboard/${var.application}-${statement.value.name}-compute"
@@ -262,8 +344,13 @@ data "aws_iam_policy_document" "cloudwatch" {
     for_each = var.environments
     content {
       actions = [
+        "resource-groups:GetGroup",
         "resource-groups:CreateGroup",
-        "resource-groups:Tag"
+        "resource-groups:Tag",
+        "resource-groups:GetGroupQuery",
+        "resource-groups:GetGroupConfiguration",
+        "resource-groups:GetTags",
+        "resource-groups:DeleteGroup"
       ]
       resources = [
         "arn:aws:resource-groups:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:group/${var.application}-${statement.value.name}-application-insights-resources"
@@ -274,18 +361,94 @@ data "aws_iam_policy_document" "cloudwatch" {
   statement {
     actions = [
       "logs:DescribeResourcePolicies",
-      "logs:PutResourcePolicy"
+      "logs:PutResourcePolicy",
+      "logs:DeleteResourcePolicy",
+      "logs:DescribeLogGroups"
     ]
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
     ]
+  }
+
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "applicationinsights:CreateApplication",
+        "applicationinsights:TagResource",
+        "applicationinsights:DescribeApplication",
+        "applicationinsights:ListTagsForResource",
+        "applicationinsights:DeleteApplication"
+      ]
+      resources = [
+        "arn:aws:applicationinsights:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:application/resource-group/${var.application}-${statement.value.name}-application-insights-resources"
+      ]
+    }
+  }
+
+  statement {
+    actions = [
+      "logs:PutSubscriptionFilter",
+    ]
+    resources = [
+      local.central_log_destination_arn
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "kms_key" {
+  statement {
+    actions = [
+      "kms:CreateKey",
+      "kms:ListAliases"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "kms:DescribeKey",
+      "kms:GetKeyPolicy",
+      "kms:GetKeyRotationStatus",
+      "kms:ScheduleKeyDeletion",
+      "kms:TagResource",
+      "kms:ListResourceTags",
+      "kms:GenerateDataKey",
+      "kms:CreateAlias",
+      "kms:DeleteAlias"
+    ]
+    resources = [
+      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+    ]
+  }
+
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "kms:CreateAlias",
+        "kms:DeleteAlias"
+      ]
+      resources = [
+        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-${statement.value.name}-key"
+
+      ]
+    }
   }
 }
 
 data "aws_iam_policy_document" "redis" {
   statement {
     actions = [
-      "logs:CreateLogGroup"
+      "logs:CreateLogGroup",
+      "logs:TagResource",
+      "logs:PutRetentionPolicy",
+      "logs:ListTagsLogGroup",
+      "logs:DeleteLogGroup",
+      "logs:PutSubscriptionFilter",
+      "logs:DescribeSubscriptionFilters"
     ]
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*"
@@ -295,10 +458,37 @@ data "aws_iam_policy_document" "redis" {
   statement {
     actions = [
       "elasticache:CreateCacheSubnetGroup",
-      "elasticache:AddTagsToResource"
+      "elasticache:AddTagsToResource",
+      "elasticache:DescribeCacheSubnetGroups",
+      "elasticache:ListTagsForResource",
+      "elasticache:DeleteCacheSubnetGroup",
+      "elasticache:CreateReplicationGroup"
     ]
     resources = [
       "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnetgroup:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "elasticache:CreateReplicationGroup",
+      "elasticache:AddTagsToResource",
+      "elasticache:DescribeReplicationGroups",
+      "elasticache:ListTagsForResource",
+      "elasticache:DeleteReplicationGroup"
+    ]
+    resources = [
+      "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:replicationgroup:*",
+      "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parametergroup:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "elasticache:DescribeCacheClusters"
+    ]
+    resources = [
+      "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:*"
     ]
   }
 }
@@ -308,17 +498,31 @@ data "aws_iam_policy_document" "postgres" {
     for_each = var.environments
     content {
       actions = [
-        "iam:CreateRole"
+        "iam:CreateRole",
+        "iam:GetRole",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfilesForRole",
+        "iam:DeleteRole",
+        "iam:AttachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:GetRolePolicy"
       ]
       resources = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-lambda-role"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-*"
       ]
     }
   }
 
   statement {
     actions = [
-      "iam:CreateRole"
+      "iam:CreateRole",
+      "iam:GetRole",
+      "iam:ListRolePolicies",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListInstanceProfilesForRole",
+      "iam:DeleteRole",
+      "iam:AttachRolePolicy"
     ]
     resources = [
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/rds-enhanced-monitoring-*"
@@ -328,7 +532,11 @@ data "aws_iam_policy_document" "postgres" {
   statement {
     actions = [
       "rds:CreateDBParameterGroup",
-      "rds:AddTagsToResource"
+      "rds:AddTagsToResource",
+      "rds:ModifyDBParameterGroup",
+      "rds:DescribeDBParameterGroups",
+      "rds:DescribeDBParameters",
+      "rds:ListTagsForResource"
     ]
     resources = [
       "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:pg:*"
@@ -338,7 +546,10 @@ data "aws_iam_policy_document" "postgres" {
   statement {
     actions = [
       "rds:CreateDBSubnetGroup",
-      "rds:AddTagsToResource"
+      "rds:AddTagsToResource",
+      "rds:DescribeDBSubnetGroups",
+      "rds:ListTagsForResource",
+      "rds:DeleteDBSubnetGroup"
     ]
     resources = [
       "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subgrp:*"
@@ -347,17 +558,51 @@ data "aws_iam_policy_document" "postgres" {
 
   statement {
     actions = [
-      "kms:CreateKey",
-      "kms:DescribeKey",
-      "kms:GetKeyPolicy",
-      "kms:GetKeyRotationStatus",
-      "kms:ScheduleKeyDeletion",
-      "kms:TagResource",
-      "kms:ListResourceTags"
+      "rds:DescribeDBInstances"
     ]
     resources = [
-      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
     ]
+  }
+
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "rds:CreateDBInstance"
+      ]
+      resources = [
+        "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${var.application}-${statement.value.name}-*"
+      ]
+    }
+  }
+
+  statement {
+    actions = [
+      "logs:PutRetentionPolicy",
+      "logs:ListTagsLogGroup",
+      "logs:DeleteLogGroup",
+      "logs:CreateLogGroup",
+      "logs:PutSubscriptionFilter",
+      "logs:DescribeSubscriptionFilters",
+      "logs:DeleteSubscriptionFilter"
+    ]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/rds/*"
+    ]
+  }
+
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "lambda:GetFunction",
+        "lambda:ListVersionsByFunction"
+      ]
+      resources = [
+        "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${statement.value.name}-*"
+      ]
+    }
   }
 }
 
@@ -376,7 +621,12 @@ data "aws_iam_policy_document" "opensearch" {
   statement {
     actions = [
       "logs:PutRetentionPolicy",
-      "logs:ListTagsLogGroup"
+      "logs:ListTagsLogGroup",
+      "logs:DeleteLogGroup",
+      "logs:CreateLogGroup",
+      "logs:PutSubscriptionFilter",
+      "logs:DescribeSubscriptionFilters",
+      "logs:DeleteSubscriptionFilter"
     ]
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*"
@@ -385,10 +635,16 @@ data "aws_iam_policy_document" "opensearch" {
 
   statement {
     actions = [
-      "logs:DescribeLogGroups"
+      "es:CreateElasticsearchDomain",
+      "es:AddTags",
+      "es:DescribeDomain",
+      "es:DescribeDomainConfig",
+      "es:ListTags",
+      "es:DeleteDomain",
+      "es:UpdateDomainConfig"
     ]
     resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
+      "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/*"
     ]
   }
 }
@@ -463,7 +719,7 @@ resource "aws_iam_role_policy" "dns_account_assume_role_for_environment_codebuil
 }
 
 resource "aws_iam_role_policy" "load_balancer_for_environment_codebuild" {
-  name   = "${var.application}-load_balancer-for-environment-codebuild"
+  name   = "${var.application}-load-balancer-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.load_balancer.json
 }
@@ -475,13 +731,13 @@ resource "aws_iam_role_policy" "certificate_for_environment_codebuild" {
 }
 
 resource "aws_iam_role_policy" "security_group_for_environment_codebuild" {
-  name   = "${var.application}-security_group-for-environment-codebuild"
+  name   = "${var.application}-security-group-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.security_group.json
 }
 
 resource "aws_iam_role_policy" "ssm_parameter_for_environment_codebuild" {
-  name   = "${var.application}-ssm_parameter-for-environment-codebuild"
+  name   = "${var.application}-ssm-parameter-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.ssm_parameter.json
 }
@@ -490,6 +746,12 @@ resource "aws_iam_role_policy" "cloudwatch_for_environment_codebuild" {
   name   = "${var.application}-cloudwatch-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.cloudwatch.json
+}
+
+resource "aws_iam_role_policy" "kms_key_for_environment_codebuild" {
+  name   = "${var.application}-kms-key-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.kms_key.json
 }
 
 resource "aws_iam_role_policy" "redis_for_environment_codebuild" {
