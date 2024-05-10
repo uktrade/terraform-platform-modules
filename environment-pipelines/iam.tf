@@ -496,7 +496,8 @@ data "aws_iam_policy_document" "postgres" {
         "iam:DeleteRole",
         "iam:AttachRolePolicy",
         "iam:PutRolePolicy",
-        "iam:GetRolePolicy"
+        "iam:GetRolePolicy",
+        "iam:PassRole"
       ]
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-*",
@@ -519,31 +520,39 @@ data "aws_iam_policy_document" "postgres" {
     }
   }
 
-  statement {
-    actions = [
-      "rds:CreateDBParameterGroup",
-      "rds:AddTagsToResource",
-      "rds:ModifyDBParameterGroup",
-      "rds:DescribeDBParameterGroups",
-      "rds:DescribeDBParameters",
-      "rds:ListTagsForResource"
-    ]
-    resources = [
-      "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:pg:*"
-    ]
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "rds:CreateDBParameterGroup",
+        "rds:AddTagsToResource",
+        "rds:ModifyDBParameterGroup",
+        "rds:DescribeDBParameterGroups",
+        "rds:DescribeDBParameters",
+        "rds:ListTagsForResource",
+        "rds:CreateDBInstance"
+      ]
+      resources = [
+        "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:pg:${var.application}-${statement.value.name}-*"
+      ]
+    }
   }
 
-  statement {
-    actions = [
-      "rds:CreateDBSubnetGroup",
-      "rds:AddTagsToResource",
-      "rds:DescribeDBSubnetGroups",
-      "rds:ListTagsForResource",
-      "rds:DeleteDBSubnetGroup"
-    ]
-    resources = [
-      "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subgrp:*"
-    ]
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "rds:CreateDBSubnetGroup",
+        "rds:AddTagsToResource",
+        "rds:DescribeDBSubnetGroups",
+        "rds:ListTagsForResource",
+        "rds:DeleteDBSubnetGroup",
+        "rds:CreateDBInstance"
+      ]
+      resources = [
+        "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subgrp:${var.application}-${statement.value.name}-*"
+      ]
+    }
   }
 
   statement {
@@ -559,7 +568,8 @@ data "aws_iam_policy_document" "postgres" {
     for_each = var.environments
     content {
       actions = [
-        "rds:CreateDBInstance"
+        "rds:CreateDBInstance",
+        "rds:AddTagsToResource"
       ]
       resources = [
         "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${var.application}-${statement.value.name}-*"
@@ -574,7 +584,7 @@ data "aws_iam_policy_document" "s3" {
       "s3:*"
     ]
     resources = [
-      "arn:aws:s3:::*" # TODO replace wildcard with addon name
+      "arn:aws:s3:::*"
     ]
   }
 }
