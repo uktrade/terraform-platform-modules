@@ -283,22 +283,6 @@ data "aws_iam_policy_document" "security_group" {
 data "aws_iam_policy_document" "ssm_parameter" {
   statement {
     actions = [
-      "ssm:GetParameter",
-      "ssm:PutParameter",
-      "ssm:AddTagsToResource",
-      "ssm:ListTagsForResource",
-      "ssm:GetParameters",
-      "ssm:DeleteParameter",
-      "ssm:PutParameter"
-    ]
-    resources = [
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/*",
-
-    ]
-  }
-
-  statement {
-    actions = [
       "ssm:DescribeParameters"
     ]
     resources = [
@@ -311,15 +295,15 @@ data "aws_iam_policy_document" "ssm_parameter" {
     content {
       actions = [
         "ssm:PutParameter",
-        "ssm:AddTagsToResource",
         "ssm:GetParameter",
-        "ssm:ListTagsForResource",
         "ssm:GetParameters",
         "ssm:DeleteParameter",
-        "ssm:PutParameter"
+        "ssm:AddTagsToResource",
+        "ssm:ListTagsForResource"
       ]
       resources = [
-        "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/${var.application}/${statement.value.name}/secrets/*"
+        "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/${var.application}/${statement.value.name}/secrets/*",
+        "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/environments/${statement.value.name}/*"
       ]
     }
   }
@@ -358,18 +342,6 @@ data "aws_iam_policy_document" "cloudwatch" {
     }
   }
 
-  statement {
-    actions = [
-      "logs:DescribeResourcePolicies",
-      "logs:PutResourcePolicy",
-      "logs:DeleteResourcePolicy",
-      "logs:DescribeLogGroups"
-    ]
-    resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
-    ]
-  }
-
   dynamic "statement" {
     for_each = var.environments
     content {
@@ -385,6 +357,20 @@ data "aws_iam_policy_document" "cloudwatch" {
       ]
     }
   }
+}
+
+data "aws_iam_policy_document" "logs" {
+  statement {
+    actions = [
+      "logs:DescribeResourcePolicies",
+      "logs:PutResourcePolicy",
+      "logs:DeleteResourcePolicy",
+      "logs:DescribeLogGroups"
+    ]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
+    ]
+  }
 
   statement {
     actions = [
@@ -392,6 +378,24 @@ data "aws_iam_policy_document" "cloudwatch" {
     ]
     resources = [
       local.central_log_destination_arn
+    ]
+  }
+
+  statement {
+    actions = [
+      "logs:PutRetentionPolicy",
+      "logs:ListTagsLogGroup",
+      "logs:DeleteLogGroup",
+      "logs:CreateLogGroup",
+      "logs:PutSubscriptionFilter",
+      "logs:DescribeSubscriptionFilters",
+      "logs:DeleteSubscriptionFilter",
+      "logs:TagResource"
+    ]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/rds/*",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*"
     ]
   }
 }
@@ -433,28 +437,14 @@ data "aws_iam_policy_document" "kms_key" {
       ]
       resources = [
         "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-${statement.value.name}-key"
-
       ]
     }
   }
 }
 
-data "aws_iam_policy_document" "redis" {
-  statement {
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:TagResource",
-      "logs:PutRetentionPolicy",
-      "logs:ListTagsLogGroup",
-      "logs:DeleteLogGroup",
-      "logs:PutSubscriptionFilter",
-      "logs:DescribeSubscriptionFilters"
-    ]
-    resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*"
-    ]
-  }
 
+
+data "aws_iam_policy_document" "redis" {
   statement {
     actions = [
       "elasticache:CreateCacheSubnetGroup",
@@ -509,24 +499,24 @@ data "aws_iam_policy_document" "postgres" {
         "iam:GetRolePolicy"
       ]
       resources = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-*"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-*",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/rds-enhanced-monitoring-*"
       ]
     }
   }
 
-  statement {
-    actions = [
-      "iam:CreateRole",
-      "iam:GetRole",
-      "iam:ListRolePolicies",
-      "iam:ListAttachedRolePolicies",
-      "iam:ListInstanceProfilesForRole",
-      "iam:DeleteRole",
-      "iam:AttachRolePolicy"
-    ]
-    resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/rds-enhanced-monitoring-*"
-    ]
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "lambda:GetFunction",
+        "lambda:ListVersionsByFunction",
+        "lambda:GetFunctionCodeSigningConfig"
+      ]
+      resources = [
+        "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${statement.value.name}-*"
+      ]
+    }
   }
 
   statement {
@@ -558,7 +548,7 @@ data "aws_iam_policy_document" "postgres" {
 
   statement {
     actions = [
-      "rds:DescribeDBInstances"
+      "rds:DescribeDBInstances",
     ]
     resources = [
       "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
@@ -576,34 +566,6 @@ data "aws_iam_policy_document" "postgres" {
       ]
     }
   }
-
-  statement {
-    actions = [
-      "logs:PutRetentionPolicy",
-      "logs:ListTagsLogGroup",
-      "logs:DeleteLogGroup",
-      "logs:CreateLogGroup",
-      "logs:PutSubscriptionFilter",
-      "logs:DescribeSubscriptionFilters",
-      "logs:DeleteSubscriptionFilter"
-    ]
-    resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/rds/*"
-    ]
-  }
-
-  dynamic "statement" {
-    for_each = var.environments
-    content {
-      actions = [
-        "lambda:GetFunction",
-        "lambda:ListVersionsByFunction"
-      ]
-      resources = [
-        "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${statement.value.name}-*"
-      ]
-    }
-  }
 }
 
 data "aws_iam_policy_document" "s3" {
@@ -618,21 +580,6 @@ data "aws_iam_policy_document" "s3" {
 }
 
 data "aws_iam_policy_document" "opensearch" {
-  statement {
-    actions = [
-      "logs:PutRetentionPolicy",
-      "logs:ListTagsLogGroup",
-      "logs:DeleteLogGroup",
-      "logs:CreateLogGroup",
-      "logs:PutSubscriptionFilter",
-      "logs:DescribeSubscriptionFilters",
-      "logs:DeleteSubscriptionFilter"
-    ]
-    resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*"
-    ]
-  }
-
   statement {
     actions = [
       "es:CreateElasticsearchDomain",
@@ -746,6 +693,12 @@ resource "aws_iam_role_policy" "cloudwatch_for_environment_codebuild" {
   name   = "${var.application}-cloudwatch-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.cloudwatch.json
+}
+
+resource "aws_iam_role_policy" "logs_for_environment_codebuild" {
+  name   = "${var.application}-logs-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.logs.json
 }
 
 resource "aws_iam_role_policy" "kms_key_for_environment_codebuild" {
