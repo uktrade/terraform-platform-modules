@@ -39,19 +39,19 @@ resource "aws_codepipeline" "environment_pipeline" {
   stage {
     name = "Build"
 
-      action {
-        name             = "InstallTools"
-        category         = "Build"
-        owner            = "AWS"
-        provider         = "CodeBuild"
-        input_artifacts  = ["project_deployment_source"]
-        output_artifacts = ["build_output"]
-        version          = "1"
+    action {
+      name             = "InstallTools"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      input_artifacts  = ["project_deployment_source"]
+      output_artifacts = ["build_output"]
+      version          = "1"
 
-        configuration = {
-          ProjectName   = "${var.application}-environment-pipeline-build"
-          PrimarySource = "project_deployment_source"
-        }
+      configuration = {
+        ProjectName   = "${var.application}-environment-pipeline-build"
+        PrimarySource = "project_deployment_source"
+      }
     }
   }
 

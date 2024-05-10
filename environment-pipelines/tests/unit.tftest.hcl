@@ -56,6 +56,83 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.load_balancer
+  values = {
+    json = "{\"Sid\": \"LoadBalancer\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.certificate
+  values = {
+    json = "{\"Sid\": \"Certificate\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.security_group
+  values = {
+    json = "{\"Sid\": \"SecurityGroup\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.ssm_parameter
+  values = {
+    json = "{\"Sid\": \"SSMParameter\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.cloudwatch
+  values = {
+    json = "{\"Sid\": \"Cloudwatch\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.logs
+  values = {
+    json = "{\"Sid\": \"Logs\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.kms_key
+  values = {
+    json = "{\"Sid\": \"KMSKey\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.redis
+  values = {
+    json = "{\"Sid\": \"Redis\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.postgres
+  values = {
+    json = "{\"Sid\": \"Postgres\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.s3
+  values = {
+    json = "{\"Sid\": \"S3\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.opensearch
+  values = {
+    json = "{\"Sid\": \"OpenSearch\"}"
+  }
+}
+
 variables {
   application = "my-app"
   repository  = "my-repository"
@@ -403,6 +480,106 @@ run "test_iam" {
     error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.load_balancer_for_environment_codebuild.name == "my-app-load-balancer-for-environment-codebuild"
+    error_message = "Should be: 'my-app-load-balancer-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.load_balancer_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.load_balancer_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.certificate_for_environment_codebuild.name == "my-app-certificate-for-environment-codebuild"
+    error_message = "Should be: 'my-app-certificate-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.certificate_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.certificate_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.security_group_for_environment_codebuild.name == "my-app-security-group-for-environment-codebuild"
+    error_message = "Should be: 'my-app-security-group-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.security_group_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.security_group_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.ssm_parameter_for_environment_codebuild.name == "my-app-ssm-parameter-for-environment-codebuild"
+    error_message = "Should be: 'my-app-ssm-parameter-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ssm_parameter_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.ssm_parameter_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.cloudwatch_for_environment_codebuild.name == "my-app-cloudwatch-for-environment-codebuild"
+    error_message = "Should be: 'my-app-cloudwatch-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.cloudwatch_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.cloudwatch_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.logs_for_environment_codebuild.name == "my-app-logs-for-environment-codebuild"
+    error_message = "Should be: 'my-app-logs-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.logs_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.logs_for_environment_codebuild.policy cannot be tested on a plan
+
+  assert {
+    condition     = aws_iam_role_policy.kms_key_for_environment_codebuild.name == "my-app-kms-key-for-environment-codebuild"
+    error_message = "Should be: 'my-app-kms-key-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.kms_key_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.kms_key_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.redis_for_environment_codebuild.name == "my-app-redis-for-environment-codebuild"
+    error_message = "Should be: 'my-app-redis-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.redis_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.redis_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.postgres_for_environment_codebuild.name == "my-app-postgres-for-environment-codebuild"
+    error_message = "Should be: 'my-app-postgres-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.postgres_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.postgres_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.s3_for_environment_codebuild.name == "my-app-s3-for-environment-codebuild"
+    error_message = "Should be: 'my-app-s3-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.s3_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.s3_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_role_policy.opensearch_for_environment_codebuild.name == "my-app-opensearch-for-environment-codebuild"
+    error_message = "Should be: 'my-app-opensearch-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.opensearch_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.opensearch_for_environment_codebuild.policy cannot be tested on a plan
 }
 
 run "test_artifact_store" {

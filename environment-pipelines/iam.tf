@@ -708,7 +708,7 @@ resource "aws_iam_role_policy" "kms_key_for_environment_codebuild" {
 }
 
 resource "aws_iam_role_policy" "redis_for_environment_codebuild" {
-  name   = "${var.application}-elasticache-for-environment-codebuild"
+  name   = "${var.application}-redis-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.redis.json
 }
