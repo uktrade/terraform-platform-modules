@@ -3,7 +3,7 @@ data "aws_codestarconnections_connection" "github_codestar_connection" {
 }
 
 resource "aws_codepipeline" "environment_pipeline" {
-  name       = "${var.application}-environment-pipeline-build"
+  name       = "${var.application}-environment-pipeline"
   role_arn   = aws_iam_role.environment_pipeline_codepipeline.arn
   depends_on = [aws_iam_role_policy.artifact_store_access_for_environment_codebuild]
 

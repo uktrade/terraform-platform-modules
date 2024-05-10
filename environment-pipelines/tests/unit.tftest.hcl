@@ -100,8 +100,8 @@ run "test_code_pipeline" {
   command = plan
 
   assert {
-    condition     = aws_codepipeline.environment_pipeline.name == "my-app-environment-pipeline-build"
-    error_message = "Should be: my-app-environment-pipeline-build"
+    condition     = aws_codepipeline.environment_pipeline.name == "my-app-environment-pipeline"
+    error_message = "Should be: my-app-environment-pipeline"
   }
   # aws_codepipeline.environment_pipeline.role_arn cannot be tested on a plan
   assert {
