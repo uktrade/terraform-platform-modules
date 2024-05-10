@@ -26,8 +26,8 @@ locals {
 
   instance_class = coalesce(var.config.instance, "db.t3.micro")
   # Todo: This needs automated test adding and a real world sanity check test
-  iops         = coalesce(var.config.iops, 3000)
   storage_type = coalesce(var.config.storage_type, "gp3")
+  iops         = var.config.iops != null && local.storage_type != "gp3" ? var.config.iops : null
 
 
   secret_prefix                = upper(replace(var.name, "-", "_"))
