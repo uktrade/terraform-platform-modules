@@ -26,7 +26,7 @@ locals {
 
   instance_class = coalesce(var.config.instance, "db.t3.micro")
   # Todo: This needs automated test adding and a real world sanity check test
-  iops         = coalesce(var.config.iops, 40000)
+  iops         = coalesce(var.config.iops, 3000)
   storage_type = coalesce(var.config.storage_type, "gp3")
 
 
