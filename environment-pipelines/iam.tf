@@ -374,7 +374,7 @@ data "aws_iam_policy_document" "logs" {
 
   statement {
     actions = [
-      "logs:PutSubscriptionFilter",
+      "logs:PutSubscriptionFilter"
     ]
     resources = [
       local.central_log_destination_arn
@@ -413,15 +413,7 @@ data "aws_iam_policy_document" "kms_key" {
 
   statement {
     actions = [
-      "kms:DescribeKey",
-      "kms:GetKeyPolicy",
-      "kms:GetKeyRotationStatus",
-      "kms:ScheduleKeyDeletion",
-      "kms:TagResource",
-      "kms:ListResourceTags",
-      "kms:GenerateDataKey",
-      "kms:CreateAlias",
-      "kms:DeleteAlias"
+      "kms:*"
     ]
     resources = [
       "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
@@ -557,7 +549,7 @@ data "aws_iam_policy_document" "postgres" {
 
   statement {
     actions = [
-      "rds:DescribeDBInstances",
+      "rds:DescribeDBInstances"
     ]
     resources = [
       "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
@@ -575,6 +567,16 @@ data "aws_iam_policy_document" "postgres" {
         "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${var.application}-${statement.value.name}-*"
       ]
     }
+  }
+
+  statement {
+    actions = [
+      "secretsmanager:*",
+      "kms:*"
+    ]
+    resources = [
+      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:rds*"
+    ]
   }
 }
 

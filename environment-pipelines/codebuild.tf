@@ -3,6 +3,7 @@ resource "aws_codebuild_project" "environment_pipeline_build" {
   description   = "Provisions the ${var.application} application's extensions."
   build_timeout = 5
   service_role  = aws_iam_role.environment_pipeline_codebuild.arn
+  encryption_key = module.artifact_store.kms_key_arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -52,6 +53,7 @@ resource "aws_codebuild_project" "environment_pipeline_plan" {
   description   = "Provisions the ${var.application} application's extensions."
   build_timeout = 5
   service_role  = aws_iam_role.environment_pipeline_codebuild.arn
+  encryption_key = module.artifact_store.kms_key_arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -90,6 +92,7 @@ resource "aws_codebuild_project" "environment_pipeline_apply" {
   description   = "Provisions the ${var.application} application's extensions."
   build_timeout = 60
   service_role  = aws_iam_role.environment_pipeline_codebuild.arn
+  encryption_key = module.artifact_store.kms_key_arn
 
   artifacts {
     type = "CODEPIPELINE"
