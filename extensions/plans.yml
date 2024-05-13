@@ -157,19 +157,19 @@ postgres:
     iops: 40000
 
   # # 2v CPU, 4GB RAM, 100GB Storage
-  sub-medium:
+  medium:
     volume_size: 100
     multi_az: false
     instance: db.t3.medium
 
   # # 2v CPU, 4GB RAM, 100GB Storage, multi AZ
-  sub-medium-ha:
+  medium-ha:
     volume_size: 100
     multi_az: true
     instance: db.t3.medium
 
   # 2v CPU, 4GB RAM, 100GB Storage, multi AZ
-  sub-medium-high-io:
+  medium-high-io:
     volume_size: 100
     multi_az: true
     instance: db.t3.medium
@@ -177,19 +177,19 @@ postgres:
     iops: 40000
 
   # 2v CPU, 8GB RAM, 100GB Storage
-  medium:
+  large:
     volume_size: 100
     multi_az: false
     instance: db.m5.large
 
   # 2v CPU, 8GB RAM, 100GB Storage, multi AZ
-  medium-ha:
+  large-ha:
     volume_size: 100
     multi_az: true
     instance: db.m5.large
 
   # 2v CPU, 8GB RAM, 100GB Storage, multi AZ
-  medium-high-io:
+  large-high-io:
     volume_size: 100
     multi_az: true
     instance: db.m5.large
@@ -197,19 +197,19 @@ postgres:
     iops: 40000
 
   # 8v CPU, 32GB RAM, 564GB Storage
-  large:
+  2x-large:
     volume_size: 564
     multi_az: false
     instance: db.m5.2xlarge
 
   # 8v CPU, 32GB RAM, 564GB Storage, multi AZ
-  large-ha:
+  2x-large-ha:
     volume_size: 564
     multi_az: true
     instance: db.m5.2xlarge
 
   # 8v CPU, 32GB RAM, 564GB Storage, multi AZ
-  large-high-io:
+  2x-large-high-io:
     volume_size: 564
     multi_az: true
     instance: db.m5.2xlarge
@@ -217,19 +217,19 @@ postgres:
     iops: 40000
 
   # 16v CPU, 64GB RAM, 2000GB Storage
-  x-large:
+  4x-large:
     volume_size: 2000
     multi_az: false
     instance: db.m5.4xlarge
 
   # 16v CPU, 64GB RAM, 2000GB Storage, multi AZ
-  x-large-ha:
+  4x-large-ha:
     volume_size: 2000
     multi_az: true
     instance: db.m5.4xlarge
 
   # 16v CPU, 64GB RAM, 2000GB Storage, multi AZ
-  x-large-high-io:
+  4x-large-high-io:
     volume_size: 2000
     multi_az: true
     instance: db.m5.4xlarge
