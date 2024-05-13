@@ -266,6 +266,7 @@ run "aws_db_instance_unit_test" {
     error_message = "Should be: gp3"
   }
 
+  # aws_db_instance.default.iops cannot be tested on a plan
 }
 
 run "aws_iam_role_unit_test" {
