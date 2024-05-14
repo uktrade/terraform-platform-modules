@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/uktrade/terraform-platform-modules/compare/1.2.1...1.2.2) (2024-05-14)
+
+
+### Bug Fixes
+
+* dbtp-971 add rollback option for HA OS ([#117](https://github.com/uktrade/terraform-platform-modules/issues/117)) ([d742850](https://github.com/uktrade/terraform-platform-modules/commit/d742850813e6d66f992f78dd2a98695e5cea60c2))
+
 ## [1.2.1](https://github.com/uktrade/terraform-platform-modules/compare/1.2.0...1.2.1) (2024-05-07)
 
 

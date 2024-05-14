@@ -59,6 +59,7 @@ resource "aws_kms_alias" "s3-bucket" {
 
 // require server side encryption
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
+  # checkov:skip=CKV2_AWS_67:We are not currently rotating the keys
   bucket = aws_s3_bucket.this.id
 
   rule {
