@@ -22,5 +22,6 @@ locals {
   zone_count             = local.zone_awareness_enabled ? local.instances : null
   subnets                = slice(tolist(data.aws_subnets.private-subnets.ids), 0, local.instances)
 
-  auto_tune_desired_state = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DISABLED" : "ENABLED"
+  auto_tune_desired_state       = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DISABLED" : "ENABLED"
+  auto_tune_rollback_on_disable = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DEFAULT_ROLLBACK" : "NO_ROLLBACK"
 }
