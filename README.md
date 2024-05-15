@@ -160,3 +160,4 @@ Note: We are currently treating the `terraform-deployment` branch as our `main` 
       - `copilot svc init --name celery-beat`
       - `IMAGE_TAG=tag-latest copilot svc deploy --name celery-beat --env <environment>`
     - Test the web service loads OK, including Celery checks
+
