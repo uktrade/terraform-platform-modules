@@ -58,6 +58,9 @@ data "archive_file" "lambda" {
   type        = "zip"
   source_file = "${path.module}/manage_users.py"
   output_path = "${path.module}/manage_users.zip"
+  depends_on = [
+    aws_iam_role.lambda-execution-role
+  ]
 }
 
 resource "aws_lambda_function" "lambda" {
