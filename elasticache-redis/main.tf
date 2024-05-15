@@ -24,7 +24,7 @@ resource "aws_elasticache_replication_group" "redis" {
   node_type                  = coalesce(var.config.instance, "cache.t4g.micro")
   num_node_groups            = 1
   replicas_per_node_group    = coalesce(var.config.replicas, 1)
-  parameter_group_name       = "default.${lookup(local.redis_engine_version_map, var.config.engine)}"
+  parameter_group_name       = "default.${local.redis_engine_version_map[var.config.engine]}"
   port                       = 6379
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true

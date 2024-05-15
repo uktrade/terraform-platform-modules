@@ -1,3 +1,10 @@
+provider "aws" {
+  alias = "domain"
+  assume_role {
+    role_arn = "arn:aws:iam::${var.args.dns_account_id}:role/sandbox-codebuild-assume-role"
+  }
+}
+
 terraform {
   required_version = "~> 1.7"
   required_providers {
@@ -11,5 +18,3 @@ terraform {
     }
   }
 }
-
-

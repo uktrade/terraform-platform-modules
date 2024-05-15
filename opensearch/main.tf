@@ -139,7 +139,7 @@ resource "aws_opensearch_domain" "this" {
 
   auto_tune_options {
     desired_state       = local.auto_tune_desired_state
-    rollback_on_disable = "DEFAULT_ROLLBACK"
+    rollback_on_disable = local.auto_tune_rollback_on_disable
   }
 
   log_publishing_options {
@@ -188,7 +188,7 @@ CONFIG
   tags = local.tags
 }
 
-resource "aws_ssm_parameter" "this-master-user" {
+resource "aws_ssm_parameter" "opensearch_endpoint" {
   name        = local.ssm_parameter_name
   description = "opensearch_password"
   type        = "SecureString"

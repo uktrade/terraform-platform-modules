@@ -53,6 +53,7 @@ resource "aws_kms_alias" "key-alias" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "terraform-state-sse" {
+  # checkov:skip=CKV2_AWS_67:We are not currently rotating the keys
   bucket = aws_s3_bucket.terraform-state.id
 
   rule {
