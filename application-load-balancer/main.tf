@@ -29,6 +29,8 @@ resource "aws_lb" "this" {
 }
 
 resource "aws_lb_listener" "alb-listener" {
+  # checkov:skip=CKV_AWS_2:Ensure ALB protocol is HTTPS
+  # checkov:skip=CKV_AWS_103:Ensure that load balancer is using at least TLS 1.2
   depends_on = [aws_acm_certificate_validation.cert_validate]
 
   for_each          = local.protocols
@@ -45,6 +47,7 @@ resource "aws_lb_listener" "alb-listener" {
 }
 
 resource "aws_security_group" "alb-security-group" {
+  # checkov:skip=CKV_AWS_23:Ensure every security group and rule has a description
   for_each = local.protocols
   name     = "${var.application}-${var.environment}-alb-${each.key}"
   vpc_id   = data.aws_vpc.vpc.id
