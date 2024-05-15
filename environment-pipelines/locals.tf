@@ -7,8 +7,10 @@ locals {
 
   stage_config = yamldecode(file("${path.module}/stage_config.yml"))
 
+  # We flatten a list of lists for each env:
   initial_stages = flatten(
     [for env in var.environments : [
+      # The first element of the inner list for an env is the Plan stage.
       {
         type : "plan",
         stage_name : "Plan-${env.name}",
@@ -20,6 +22,7 @@ locals {
           EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }])
         }
       },
+      # The second element of the inner list for an env is the Approval stage if required, or the empty list otherwise.
       coalesce(env.requires_approval, false) ? [{
         type : "approve",
         stage_name : "Approve-${env.name}",
@@ -30,6 +33,7 @@ locals {
         },
         namespace : null
       }] : [],
+      # The third element of the inner list for an env is the Apply stage.
       {
         type : "apply",
         env : env.name,
@@ -48,6 +52,7 @@ locals {
   dns_ids     = tolist(toset(flatten([for stage in local.initial_stages : lookup(stage, "accounts", null) != null ? [stage.accounts.dns.id] : []])))
   dns_entries = [for id in local.dns_ids : "arn:aws:iam::${id}:role/sandbox-codebuild-assume-role"]
 
+  # Merge in the stage specific config from the stage_config.yml file:
   stages = [for stage in local.initial_stages : merge(stage, local.stage_config[stage["type"]])]
 
   central_log_destination_arn = "arn:aws:logs:eu-west-2:812359060647:destination:cwl_log_destination"
