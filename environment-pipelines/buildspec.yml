@@ -19,30 +19,22 @@ phases:
       - COPILOT_VERSION=`cat .copilot-version`
       - PLATFORM_HELPER_VERSION=`cat .platform-helper-version`
       - echo "Install Phase"
-      - yum -y install zip wget which python-pip
+      - yum -y install python-pip
+      - mkdir ./build-tools
+      - cd ./build-tools
       - curl -s -qL -o terraform_install.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-      - unzip terraform_install.zip -d /usr/bin/
-      - chmod +x /usr/bin/terraform
-      - VERSION_OUTPUT+=$(terraform version | head -n1)
-      - wget -q https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION} -O /usr/bin/copilot
-      - chmod +x /usr/bin/copilot
-      - pip install dbt-platform-helper==$PLATFORM_HELPER_VERSION
-      - VERSION_OUTPUT+="\n$(platform-helper --version)"
-      - VERSION_OUTPUT+="\n$(copilot --version)"
+      - unzip terraform_install.zip
+      - chmod +x terraform
+      - rm terraform_install.zip
+      - curl -s -qL -o copilot https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION}
+      - chmod +x copilot
+      - pip install --quiet --target . dbt-platform-helper==$PLATFORM_HELPER_VERSION
+      - VERSION_OUTPUT+="\n$(./terraform --version)"
+      - VERSION_OUTPUT+="\n$(./platform_helper.py --version)"
+      - VERSION_OUTPUT+="\n$(./copilot --version)"
       - VERSION_OUTPUT+="\n$(python3 --version)"
       - VERSION_OUTPUT+="\n$(pip --version)"
       - echo -e "=============\nTool Versions\n-------------\n$VERSION_OUTPUT"
-
-  build:
-    commands:
-      - echo "Terraform Plan Phase"
-      - echo "Working on environment ${ENVIRONMENT}"
-      - cd terraform/${ENVIRONMENT}
-      - terraform init
-      - terraform plan -out=plan.tfplan
-  post_build:
-    commands:
-      - echo "Post Build Phase"
 artifacts:
   files:
-    - terraform/${ENVIRONMENT}/plan.tfplan
+    - "**/*"

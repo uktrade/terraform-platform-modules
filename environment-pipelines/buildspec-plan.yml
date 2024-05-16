@@ -1,0 +1,23 @@
+version: 0.2
+
+env:
+  exported-variables:
+    - BUILD_ID
+
+phases:
+  install:
+    commands:
+      - export PATH="$CODEBUILD_SRC_DIR/build-tools:$PATH"
+  build:
+    commands:
+      - echo "Terraform Plan Phase"
+      - echo "Working on environment ${ENVIRONMENT}"
+      - cd terraform/${ENVIRONMENT}
+      - terraform init
+      - terraform plan -out=plan.tfplan
+  post_build:
+    commands:
+      - export BUILD_ID="$CODEBUILD_BUILD_ID"
+artifacts:
+  files:
+    - terraform/${ENVIRONMENT}/plan.tfplan

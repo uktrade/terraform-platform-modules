@@ -6,23 +6,16 @@
                 {
                     "resource": "module.extensions-staging.module.alb.aws_lb.this",
                     "check_ids": [
-                        "CKV2_AWS_20",
                         "CKV2_AWS_28",
                         "CKV_AWS_131",
                         "CKV_AWS_150"
                     ]
                 },
                 {
-                    "resource": "module.extensions-staging.module.alb.aws_lb_listener.alb-listener[\"http\"]",
+                    "resource": "module.extensions-staging.module.alb.aws_lb_listener.alb-listener",
                     "check_ids": [
                         "CKV_AWS_103",
                         "CKV_AWS_2"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.alb.aws_lb_listener.alb-listener[\"https\"]",
-                    "check_ids": [
-                        "CKV_AWS_103"
                     ]
                 },
                 {
@@ -32,17 +25,8 @@
                     ]
                 },
                 {
-                    "resource": "module.extensions-staging.module.alb.aws_security_group.alb-security-group[\"http\"]",
+                    "resource": "module.extensions-staging.module.alb.aws_security_group.alb-security-group",
                     "check_ids": [
-                        "CKV2_AWS_5",
-                        "CKV_AWS_23",
-                        "CKV_AWS_260"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.alb.aws_security_group.alb-security-group[\"https\"]",
-                    "check_ids": [
-                        "CKV2_AWS_5",
                         "CKV_AWS_23"
                     ]
                 }
@@ -123,12 +107,6 @@
                     "resource": "aws_cloudwatch_log_group.environment_pipeline_codebuild",
                     "check_ids": [
                         "CKV_AWS_158"
-                    ]
-                },
-                {
-                    "resource": "aws_codebuild_project.environment_pipeline",
-                    "check_ids": [
-                        "CKV_AWS_147"
                     ]
                 }
             ]
@@ -353,7 +331,7 @@
                     "resource": "aws_vpc.vpc",
                     "check_ids": [
                         "CKV2_AWS_11",
-                        "CKV2_AWS_12"                        
+                        "CKV2_AWS_12"
                     ]
                 }
             ]
