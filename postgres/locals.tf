@@ -22,7 +22,7 @@ locals {
   skip_final_snapshot       = coalesce(var.config.skip_final_snapshot, false)
   final_snapshot_identifier = !local.skip_final_snapshot ? "${local.name}-${random_string.suffix.result}" : null
   snapshot_id               = var.config.snapshot_id
-  volume_size               = coalesce(var.config.volume_size, 20)
+  volume_size               = coalesce(var.config.volume_size, 100)
 
   instance_class = coalesce(var.config.instance, "db.t3.micro")
   storage_type   = coalesce(var.config.storage_type, "gp3")
