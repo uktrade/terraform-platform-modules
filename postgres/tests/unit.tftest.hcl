@@ -210,8 +210,8 @@ run "aws_db_instance_unit_test" {
   }
 
   assert {
-    condition     = aws_db_instance.default.allocated_storage == 20
-    error_message = "Should be: 20"
+    condition     = aws_db_instance.default.allocated_storage == 100
+    error_message = "Should be: 100"
   }
 
   assert {
