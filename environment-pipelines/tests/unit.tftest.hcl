@@ -866,7 +866,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 }
