@@ -133,6 +133,14 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.cloudformation
+  values = {
+    json = "{\"Sid\": \"CloudFormation\"}"
+  }
+}
+
+
 variables {
   application = "my-app"
   repository  = "my-repository"
@@ -658,7 +666,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
@@ -712,7 +720,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
@@ -766,7 +774,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
@@ -858,7 +866,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 }
