@@ -11,5 +11,8 @@ phases:
       - cd terraform/${ENVIRONMENT}
       - terraform init
       - terraform apply plan.tfplan
+  post_build:
+    commands:
+      - copilot env deploy --name ${ENVIRONMENT}
 artifacts:
   files: []

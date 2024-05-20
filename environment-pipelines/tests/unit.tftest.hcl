@@ -140,6 +140,12 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.copilot_assume_role
+  values = {
+    json = "{\"Sid\": \"Copilot\"}"
+  }
+}
 
 variables {
   application = "my-app"
@@ -605,6 +611,15 @@ run "test_iam" {
     condition     = aws_iam_policy.cloudformation.policy == "{\"Sid\": \"CloudFormation\"}"
     error_message = "Unexpected policy"
   }
+  assert {
+    condition     = aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.name == "my-app-copilot-assume-role-for-environment-codebuild"
+    error_message = "Should be: 'my-app-copilot-assume-role-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.policy cannot be tested on a plan
 }
 
 run "test_artifact_store" {

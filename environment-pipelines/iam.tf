@@ -569,7 +569,8 @@ data "aws_iam_policy_document" "postgres" {
     content {
       actions = [
         "rds:CreateDBInstance",
-        "rds:AddTagsToResource"
+        "rds:AddTagsToResource",
+        "rds:ModifyDBInstance"
       ]
       resources = [
         "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${var.application}-${statement.value.name}-*"
@@ -589,7 +590,6 @@ data "aws_iam_policy_document" "postgres" {
 }
 
 data "aws_iam_policy_document" "s3" {
-
   statement {
     actions = [
       "iam:ListAccountAliases"
@@ -627,6 +627,20 @@ data "aws_iam_policy_document" "opensearch" {
 }
 
 # Policies for Copilot
+data "aws_iam_policy_document" "copilot_assume_role" {
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "sts:AssumeRole"
+      ]
+      resources = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
+      ]
+    }
+  }
+}
+
 data "aws_iam_policy_document" "cloudformation" {
   statement {
     actions = [
@@ -790,4 +804,10 @@ resource "aws_iam_role_policy" "opensearch_for_environment_codebuild" {
   name   = "${var.application}-opensearch-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.opensearch.json
+}
+
+resource "aws_iam_role_policy" "copilot_assume_role_for_environment_codebuild" {
+  name   = "${var.application}-copilot-assume-role-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.copilot_assume_role.json
 }
