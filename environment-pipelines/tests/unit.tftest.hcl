@@ -401,6 +401,7 @@ run "test_iam" {
     condition     = aws_iam_role.environment_pipeline_codebuild.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
     error_message = "Should be: {\"Sid\": \"AssumeCodebuildRole\"}"
   }
+  # Can't test managed_policy_arns of the environment_pipeline_codebuild role at plan time.
   assert {
     condition     = jsonencode(aws_iam_role.environment_pipeline_codebuild.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
@@ -588,6 +589,22 @@ run "test_iam" {
     error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.opensearch_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_policy.cloudformation.name == "cloudformation-access"
+    error_message = "Unexpected name"
+  }
+  assert {
+    condition     = aws_iam_policy.cloudformation.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
+  }
+  assert {
+    condition     = aws_iam_policy.cloudformation.description == "Allow my-app codebuild job to access cloudformation resources"
+    error_message = "Unexpected description"
+  }
+  assert {
+    condition     = aws_iam_policy.cloudformation.policy == "{\"Sid\": \"CloudFormation\"}"
+    error_message = "Unexpected policy"
+  }
 }
 
 run "test_artifact_store" {
