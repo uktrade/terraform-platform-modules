@@ -23,7 +23,8 @@ variables {
           }
         }
       }
-    }
+    },
+    dns_account_id = "123456"
   }
   application = "test-application"
   environment = "test-environment"
@@ -165,7 +166,8 @@ run "opensearch_plan_medium_ha_service_test" {
             }
           }
         }
-      }
+      },
+      dns_account_id = "123456"
     }
     environment = "test-environment"
     vpc_name    = "test-vpc"
