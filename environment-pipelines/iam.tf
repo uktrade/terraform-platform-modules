@@ -428,7 +428,7 @@ data "aws_iam_policy_document" "kms_key" {
         "kms:DeleteAlias"
       ]
       resources = [
-        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-${statement.value.name}-key"
+        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-${statement.value.name}-*-key"
       ]
     }
   }
