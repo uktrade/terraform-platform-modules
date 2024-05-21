@@ -224,6 +224,11 @@ run "aws_db_instance_unit_test" {
     error_message = "Should be: true"
   }
 
+  assert {
+    condition     = aws_db_instance.default.deletion_protection == true
+    error_message = "Should be: true"
+  }
+
   # Test aws_db_instance.default resource monitoring
   assert {
     condition     = aws_db_instance.default.performance_insights_enabled == true

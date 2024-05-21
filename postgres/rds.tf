@@ -67,6 +67,7 @@ resource "aws_db_instance" "default" {
 
   backup_retention_period = 7
   backup_window           = "07:00-09:00"
+  deletion_protection     = local.deletion_protection
 
   vpc_security_group_ids              = [aws_security_group.default.id]
   publicly_accessible                 = false
