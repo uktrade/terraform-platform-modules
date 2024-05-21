@@ -170,7 +170,8 @@ data "aws_ssm_parameter" "central_log_group_parameter" {
 data "aws_iam_policy_document" "ssm_read_access" {
   statement {
     actions = [
-      "ssm:GetParameter"
+      "ssm:GetParameter",
+      "ssm:GetParameters"
     ]
     resources = [
       data.aws_ssm_parameter.central_log_group_parameter.arn
@@ -290,22 +291,21 @@ data "aws_iam_policy_document" "ssm_parameter" {
     ]
   }
 
-  dynamic "statement" {
-    for_each = var.environments
-    content {
-      actions = [
-        "ssm:PutParameter",
-        "ssm:GetParameter",
-        "ssm:GetParameters",
-        "ssm:DeleteParameter",
-        "ssm:AddTagsToResource",
-        "ssm:ListTagsForResource"
-      ]
-      resources = [
-        "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/${var.application}/${statement.value.name}/secrets/*",
-        "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/environments/${statement.value.name}/*"
-      ]
-    }
+  statement {
+    actions = [
+      "ssm:PutParameter",
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:GetParametersByPath",
+      "ssm:DeleteParameter",
+      "ssm:AddTagsToResource",
+      "ssm:ListTagsForResource"
+    ]
+    resources = [
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/${var.application}/*/secrets/*",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/*"
+    ]
   }
 }
 
@@ -476,6 +476,14 @@ data "aws_iam_policy_document" "redis" {
 }
 
 data "aws_iam_policy_document" "postgres" {
+  statement {
+    actions = [
+      "iam:PassRole"
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-adminrole"
+    ]
+  }
   dynamic "statement" {
     for_each = var.environments
     content {
@@ -581,6 +589,16 @@ data "aws_iam_policy_document" "postgres" {
 }
 
 data "aws_iam_policy_document" "s3" {
+
+  statement {
+    actions = [
+      "iam:ListAccountAliases"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+
   statement {
     actions = [
       "s3:*"
@@ -608,6 +626,33 @@ data "aws_iam_policy_document" "opensearch" {
   }
 }
 
+# Policies for Copilot
+data "aws_iam_policy_document" "cloudformation" {
+  statement {
+    actions = [
+      "cloudformation:GetTemplateSummary",
+      "cloudformation:DescribeStackSet",
+      "cloudformation:UpdateStackSet",
+      "cloudformation:DescribeStackSetOperation",
+      "cloudformation:ListStackInstances",
+      "cloudformation:DescribeStacks",
+    ]
+    resources = [
+      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.application}-*",
+      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/StackSet-${var.application}-infrastructure-*",
+      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stackset/${var.application}-infrastructure:*",
+    ]
+  }
+}
+
+resource "aws_iam_policy" "cloudformation" {
+  name        = "cloudformation-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access cloudformation resources"
+  policy      = data.aws_iam_policy_document.cloudformation.json
+}
+
+# Roles
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
   name               = "${var.application}-environment-pipeline-codepipeline"
   assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
@@ -617,9 +662,13 @@ resource "aws_iam_role" "environment_pipeline_codepipeline" {
 resource "aws_iam_role" "environment_pipeline_codebuild" {
   name               = "${var.application}-environment-pipeline-codebuild"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
-  tags               = local.tags
+  managed_policy_arns = [
+    aws_iam_policy.cloudformation.arn
+  ]
+  tags = local.tags
 }
 
+# Inline policies
 resource "aws_iam_role_policy" "artifact_store_access_for_environment_codepipeline" {
   name   = "${var.application}-artifact-store-access-for-environment-codepipeline"
   role   = aws_iam_role.environment_pipeline_codepipeline.name

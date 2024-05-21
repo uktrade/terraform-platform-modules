@@ -19,7 +19,7 @@ locals {
         configuration : {
           ProjectName : "${var.application}-environment-pipeline-plan"
           PrimarySource : "build_output"
-          EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }])
+          EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }, { name : "COPILOT_PROFILE", value : env.accounts.deploy.name }])
         }
       },
       # The second element of the inner list for an env is the Approval stage if required, or the empty list otherwise.
