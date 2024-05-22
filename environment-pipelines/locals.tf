@@ -49,8 +49,8 @@ locals {
       ]
   ])
 
-  dns_ids     = tolist(toset(flatten([for stage in local.initial_stages : lookup(stage, "accounts", null) != null ? [stage.accounts.dns.id] : []])))
-  dns_entries = [for id in local.dns_ids : "arn:aws:iam::${id}:role/sandbox-codebuild-assume-role"]
+  dns_ids                   = tolist(toset(flatten([for stage in local.initial_stages : lookup(stage, "accounts", null) != null ? [stage.accounts.dns.id] : []])))
+  dns_account_assumed_roles = [for id in local.dns_ids : "arn:aws:iam::${id}:role/environment-pipeline-assumed-role"]
 
   # Merge in the stage specific config from the stage_config.yml file:
   stages = [for stage in local.initial_stages : merge(stage, local.stage_config[stage["type"]])]
