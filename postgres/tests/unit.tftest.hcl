@@ -274,6 +274,61 @@ run "aws_db_instance_unit_test" {
   # aws_db_instance.default.iops cannot be tested on a plan
 }
 
+run "aws_db_instance_unit_test_set_to_non_defaults" {
+  command = plan
+
+  variables {
+    config = {
+      version             = 14,
+      deletion_protection = false,
+      multi_az            = true,
+      skip_final_snapshot = true,
+      volume_size         = 20,
+      iops                = 3000,
+      instance            = "db.t3.small",
+      storage_type        = "io2"
+
+    }
+  }
+
+  # Test aws_db_instance.default resource version
+  assert {
+    condition     = aws_db_instance.default.deletion_protection == false
+    error_message = "Should be: false"
+  }
+
+  assert {
+    condition     = aws_db_instance.default.multi_az == true
+    error_message = "Should be: true"
+  }
+
+  assert {
+    condition     = aws_db_instance.default.skip_final_snapshot == true
+    error_message = "Should be: true"
+  }
+
+  assert {
+    condition     = aws_db_instance.default.allocated_storage == 20
+    error_message = "Should be: 20"
+  }
+
+  assert {
+    condition     = aws_db_instance.default.iops == 3000
+    error_message = "Should be: 20"
+  }
+
+  assert {
+    condition     = aws_db_instance.default.instance_class == "db.t3.small"
+    error_message = "Should be: db.t3.small"
+  }
+
+  assert {
+    condition     = aws_db_instance.default.storage_type == "io2"
+    error_message = "Should be: io2"
+  }
+
+}
+
 run "aws_iam_role_unit_test" {
   command = plan
 
