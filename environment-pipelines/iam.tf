@@ -626,7 +626,7 @@ data "aws_iam_policy_document" "opensearch" {
   }
 }
 
-# Policies for Copilot
+# Policies for AWS Copilot
 data "aws_iam_policy_document" "copilot_assume_role" {
   dynamic "statement" {
     for_each = var.environments
