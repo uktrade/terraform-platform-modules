@@ -1,12 +1,7 @@
 # Changelog
 
-## [2.0.0](https://github.com/uktrade/terraform-platform-modules/compare/1.2.2...2.0.0) (2024-05-23)
+## [1.3.0](https://github.com/uktrade/terraform-platform-modules/compare/1.2.2...1.3.0) (2024-05-23)
 
-
-### ⚠ BREAKING CHANGES
-
-* "DBTP-958 Straighten up Postgres plans ([#112](https://github.com/uktrade/terraform-platform-modules/issues/112))" (#132)
-* DBTP-958 Straighten up Postgres plans ([#112](https://github.com/uktrade/terraform-platform-modules/issues/112))
 
 ### Features
 
@@ -22,10 +17,6 @@
 * Dbtp 1016 update kms key alias name ([#131](https://github.com/uktrade/terraform-platform-modules/issues/131)) ([485792f](https://github.com/uktrade/terraform-platform-modules/commit/485792f1bfea2a0eb1a21be06a7f4f098f7a7b99))
 * DBTP-958 Straighten up Postgres plans ([#112](https://github.com/uktrade/terraform-platform-modules/issues/112)) ([e15e12d](https://github.com/uktrade/terraform-platform-modules/commit/e15e12de752d560a03d68e77d70a5fd826e96a07))
 
-
-### Reverts
-
-* "DBTP-958 Straighten up Postgres plans ([#112](https://github.com/uktrade/terraform-platform-modules/issues/112))" ([#132](https://github.com/uktrade/terraform-platform-modules/issues/132)) ([3df7ab9](https://github.com/uktrade/terraform-platform-modules/commit/3df7ab972473fd35b1754b0b0c1fb32e9c184a2c))
 
 ## [1.2.2](https://github.com/uktrade/terraform-platform-modules/compare/1.2.1...1.2.2) (2024-05-14)
 
