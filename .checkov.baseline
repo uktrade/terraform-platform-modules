@@ -97,7 +97,14 @@
                     "check_ids": [
                         "CKV_AWS_337"
                     ]
+                },
+                {
+                    "resource": "module.extensions-staging.module.elasticache-redis.aws_ssm_parameter.endpoint_ssl",
+                    "check_ids": [
+                        "CKV_AWS_337"
+                    ]
                 }
+                
             ]
         },
         {
