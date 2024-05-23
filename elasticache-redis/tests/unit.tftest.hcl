@@ -191,6 +191,21 @@ run "aws_ssm_parameter_unit_test" {
   }
 }
 
+run "aws_ssm_parameter_ssl_unit_test" {
+  command = plan
+
+  ### Test aws_ssm_parameter ssl resource ###
+  assert {
+    condition     = aws_ssm_parameter.endpoint_ssl.name == "/copilot/redis-test-application/redis-test-environment/secrets/REDIS_TEST_NAME_URL"
+    error_message = "Invalid config for aws_ssm_parameter ssl name"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint_ssl.type == "SecureString"
+    error_message = "Invalid config for aws_ssm_parameter type"
+  }
+}
+
 run "aws_cloudwatch_log_group_unit_test" {
   command = plan
 
