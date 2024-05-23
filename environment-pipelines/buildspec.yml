@@ -29,8 +29,9 @@ phases:
       - curl -s -qL -o copilot https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION}
       - chmod +x copilot
       - pip install --quiet --target . dbt-platform-helper==$PLATFORM_HELPER_VERSION
+      - mv bin/platform-helper .
       - VERSION_OUTPUT+="\n$(./terraform --version)"
-      - VERSION_OUTPUT+="\n$(./platform_helper.py --version)"
+      - VERSION_OUTPUT+="\n$(./platform-helper --version)"
       - VERSION_OUTPUT+="\n$(./copilot --version)"
       - VERSION_OUTPUT+="\n$(python3 --version)"
       - VERSION_OUTPUT+="\n$(pip --version)"

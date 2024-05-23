@@ -3,13 +3,16 @@ phases:
   install:
     commands:
       - export PATH="$CODEBUILD_SRC_DIR/build-tools:$PATH"
-      - mv $CODEBUILD_SRC_DIR_terraform_plan/terraform/${ENVIRONMENT}/plan.tfplan $CODEBUILD_SRC_DIR/terraform/${ENVIRONMENT}/
+      - mv $CODEBUILD_SRC_DIR_terraform_plan/terraform/environments/${ENVIRONMENT}/plan.tfplan $CODEBUILD_SRC_DIR/terraform/environments/${ENVIRONMENT}/
   build:
     commands:
       - echo "Terraform Apply Phase"
       - echo "Working on environment ${ENVIRONMENT}"
-      - cd terraform/${ENVIRONMENT}
+      - cd terraform/environments/${ENVIRONMENT}
       - terraform init
       - terraform apply plan.tfplan
+  post_build:
+    commands:
+      - copilot env deploy --name ${ENVIRONMENT}
 artifacts:
   files: []
