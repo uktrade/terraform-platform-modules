@@ -1,10 +1,16 @@
 version: 0.2
+
 env:
+  parameter-store:
+    SLACK_CHANNEL_ID: /codebuild/slack_pipeline_notifications_test_oauth_channel
+    SLACK_TOKEN: /codebuild/slack_oauth_token
   variables:
     TERRAFORM_VERSION: 1.8.1
+
 phases:
   install:
     commands:
+      - echo "Deploying ${APPLICATION} environments"
       - VERSION_OUTPUT=""
       - |
         if [ ! -f .copilot-version ]; then
@@ -18,7 +24,7 @@ phases:
         fi
       - COPILOT_VERSION=`cat .copilot-version`
       - PLATFORM_HELPER_VERSION=`cat .platform-helper-version`
-      - echo "Install Phase"
+      - echo "Installing build tools"
       - yum -y install python-pip
       - mkdir ./build-tools
       - cd ./build-tools

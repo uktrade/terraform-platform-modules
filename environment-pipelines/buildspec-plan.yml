@@ -1,6 +1,9 @@
 version: 0.2
 
 env:
+  parameter-store:
+    SLACK_CHANNEL_ID: /codebuild/slack_pipeline_notifications_test_oauth_channel
+    SLACK_TOKEN: /codebuild/slack_oauth_token
   exported-variables:
     - BUILD_ID
 

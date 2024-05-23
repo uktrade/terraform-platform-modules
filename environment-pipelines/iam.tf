@@ -174,7 +174,8 @@ data "aws_iam_policy_document" "ssm_read_access" {
       "ssm:GetParameters"
     ]
     resources = [
-      data.aws_ssm_parameter.central_log_group_parameter.arn
+      data.aws_ssm_parameter.central_log_group_parameter.arn,
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/codebuild/slack_*"
     ]
   }
 }
