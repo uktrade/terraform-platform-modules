@@ -89,13 +89,13 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
         "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
-      "Resource": "arn:aws:kms:${data.aws_region.current}:${data.aws_caller_identity.current.account_id}:key/${aws_kms_key.ssm_redis_endpoint_ssl.key_id}"
+      "Resource": "*"
     },
     {
       "Sid": "Allow SSM Use of the Key",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ssm.${data.aws_region.current}.amazonaws.com"
+        "Service": "ssm.${data.aws_region.current.name}.amazonaws.com"
       },
       "Action": [
         "kms:Encrypt",
@@ -104,7 +104,7 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
         "kms:GenerateDataKey*",
         "kms:DescribeKey"
       ],
-      "Resource": "arn:aws:kms:${data.aws_region.current}:${data.aws_caller_identity.current.account_id}:key/${aws_kms_key.ssm_redis_endpoint_ssl.key_id}"
+      "Resource": "*"
     }
   ]
 }
@@ -140,13 +140,12 @@ resource "aws_kms_key" "ssm_redis_endpoint_ssl" {
       },
       "Action": "kms:*",
       "Resource": "*"
-      "Resource": "arn:aws:kms:${data.aws_region.current}:${data.aws_caller_identity.current.account_id}:key/${aws_kms_key.ssm_redis_endpoint_ssl.key_id}"
     },
     {
       "Sid": "Allow SSM Use of the Key",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ssm.${data.aws_region.current}.amazonaws.com"
+        "Service": "ssm.${data.aws_region.current.name}.amazonaws.com"
       },
       "Action": [
         "kms:Encrypt",
@@ -155,7 +154,7 @@ resource "aws_kms_key" "ssm_redis_endpoint_ssl" {
         "kms:GenerateDataKey*",
         "kms:DescribeKey"
       ],
-      "Resource": "arn:aws:kms:${data.aws_region.current}:${data.aws_caller_identity.current.account_id}:key/${aws_kms_key.ssm_redis_endpoint_ssl.key_id}"
+      "Resource": "*"
     }
   ]
 }
