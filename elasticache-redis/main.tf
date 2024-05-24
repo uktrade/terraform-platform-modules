@@ -71,6 +71,12 @@ resource "aws_security_group" "redis" {
   tags = local.tags
 }
 
+resource "aws_kms_key" "ssm_redis_endpoint" {
+  description             = "KMS key for SSM parameters"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+}
+
 resource "aws_ssm_parameter" "endpoint" {
   name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}_ENDPOINT", "-", "_"))}"
   description = "Redis endpoint"
@@ -78,6 +84,14 @@ resource "aws_ssm_parameter" "endpoint" {
   value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
 
   tags = local.tags
+
+  key_id = aws_kms_key.ssm_redis_endpoint.arn
+}
+
+resource "aws_kms_key" "ssm_redis_endpoint_ssl" {
+  description             = "KMS key for SSM parameters"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_ssm_parameter" "endpoint_ssl" {
@@ -87,6 +101,8 @@ resource "aws_ssm_parameter" "endpoint_ssl" {
   value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379?ssl_cert_reqs=CERT_REQUIRED"
 
   tags = local.tags
+
+  key_id = aws_kms_key.ssm_redis_endpoint_ssl.arn
 }
 
 resource "aws_elasticache_subnet_group" "es-subnet-group" {
