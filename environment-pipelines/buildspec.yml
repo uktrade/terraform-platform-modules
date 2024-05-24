@@ -6,11 +6,16 @@ env:
     SLACK_TOKEN: /codebuild/slack_oauth_token
   variables:
     TERRAFORM_VERSION: 1.8.1
+  exported-variables:
+    - SLACK_REF
 
 phases:
   install:
     commands:
       - echo "Deploying ${APPLICATION} environments"
+      - pip install -r requirements.txt
+      - export SLACK_REF=$(python ./platform_notify.py post_environment_progress)
+      - python ./platform_notify.py post_job_comment --slack-ref $SLACK_REF --title "Install" --message "Starting install phase"
       - VERSION_OUTPUT=""
       - |
         if [ ! -f .copilot-version ]; then
@@ -42,6 +47,7 @@ phases:
       - VERSION_OUTPUT+="\n$(python3 --version)"
       - VERSION_OUTPUT+="\n$(pip --version)"
       - echo -e "=============\nTool Versions\n-------------\n$VERSION_OUTPUT"
+      - python ../platform_notify.py post_job_comment --slack-ref $SLACK_REF --title "Install" --message "Install phase complete"
 artifacts:
   files:
     - "**/*"

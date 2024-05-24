@@ -14,6 +14,8 @@ phases:
   build:
     commands:
       - echo "Terraform Plan Phase"
+      - pip install -r requirements.txt
+      - python ./platform_notify.py post_job_comment --slack-ref $SLACK_REF --title "Plan" --message "Starting terraform plan phase"
       - echo "Working on environment ${ENVIRONMENT}"
       - echo "Generating manifests"
       - copilot env init --name ${ENVIRONMENT} --profile ${COPILOT_PROFILE} --default-config
@@ -24,6 +26,7 @@ phases:
   post_build:
     commands:
       - export BUILD_ID="$CODEBUILD_BUILD_ID"
+      - python ./platform_notify.py post_job_comment --slack-ref $SLACK_REF --title "Plan" --message "Terraform plan phase complete"
 artifacts:
   files:
     - terraform/environments/${ENVIRONMENT}/plan.tfplan

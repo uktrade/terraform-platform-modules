@@ -47,6 +47,7 @@ resource "aws_codepipeline" "environment_pipeline" {
       input_artifacts  = ["project_deployment_source"]
       output_artifacts = ["build_output"]
       version          = "1"
+      namespace        = "slack"
 
       configuration = {
         ProjectName   = "${var.application}-environment-pipeline-build"
