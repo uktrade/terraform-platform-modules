@@ -14,6 +14,7 @@ data "aws_subnets" "private-subnets" {
 }
 
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 
 resource "aws_elasticache_replication_group" "redis" {
@@ -88,7 +89,22 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
         "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
-      "Resource": "*"
+      "Resource": "arn:aws:kms:${data.aws_region.current}:${data.aws_caller_identity.current.account_id}:key/${aws_kms_key.ssm_redis_endpoint_ssl.key_id}"
+    },
+    {
+      "Sid": "Allow SSM Use of the Key",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.${data.aws_region.current}.amazonaws.com"
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ],
+      "Resource": "arn:aws:kms:${data.aws_region.current}:${data.aws_caller_identity.current.account_id}:key/${aws_kms_key.ssm_redis_endpoint_ssl.key_id}"
     }
   ]
 }
@@ -124,6 +140,22 @@ resource "aws_kms_key" "ssm_redis_endpoint_ssl" {
       },
       "Action": "kms:*",
       "Resource": "*"
+      "Resource": "arn:aws:kms:${data.aws_region.current}:${data.aws_caller_identity.current.account_id}:key/${aws_kms_key.ssm_redis_endpoint_ssl.key_id}"
+    },
+    {
+      "Sid": "Allow SSM Use of the Key",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ssm.${data.aws_region.current}.amazonaws.com"
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ],
+      "Resource": "arn:aws:kms:${data.aws_region.current}:${data.aws_caller_identity.current.account_id}:key/${aws_kms_key.ssm_redis_endpoint_ssl.key_id}"
     }
   ]
 }
