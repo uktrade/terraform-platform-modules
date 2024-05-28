@@ -496,14 +496,21 @@ run "test_iam" {
   }
   # aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.load_balancer_for_environment_codebuild.name == "my-app-load-balancer-for-environment-codebuild"
-    error_message = "Should be: 'my-app-load-balancer-for-environment-codebuild'"
+    condition     = aws_iam_policy.load_balancer.name == "load-balancer-access"
+    error_message = "Unexpected name"
   }
   assert {
-    condition     = aws_iam_role_policy.load_balancer_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_policy.load_balancer.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
   }
-  # aws_iam_role_policy.load_balancer_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_policy.load_balancer.description == "Allow my-app codebuild job to access load-balancer resources"
+    error_message = "Unexpected description"
+  }
+  assert {
+    condition     = aws_iam_policy.load_balancer.policy == "{\"Sid\": \"LoadBalancer\"}"
+    error_message = "Unexpected policy"
+  }
   assert {
     condition     = aws_iam_role_policy.certificate_for_environment_codebuild.name == "my-app-certificate-for-environment-codebuild"
     error_message = "Should be: 'my-app-certificate-for-environment-codebuild'"
@@ -560,41 +567,69 @@ run "test_iam" {
   }
   # aws_iam_role_policy.kms_key_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.redis_for_environment_codebuild.name == "my-app-redis-for-environment-codebuild"
-    error_message = "Should be: 'my-app-redis-for-environment-codebuild'"
+    condition     = aws_iam_policy.redis.name == "redis-access"
+    error_message = "Unexpected name"
   }
   assert {
-    condition     = aws_iam_role_policy.redis_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
-  }
-  # aws_iam_role_policy.redis_for_environment_codebuild.policy cannot be tested on a plan
-  assert {
-    condition     = aws_iam_role_policy.postgres_for_environment_codebuild.name == "my-app-postgres-for-environment-codebuild"
-    error_message = "Should be: 'my-app-postgres-for-environment-codebuild'"
+    condition     = aws_iam_policy.redis.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
   }
   assert {
-    condition     = aws_iam_role_policy.postgres_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
-  }
-  # aws_iam_role_policy.postgres_for_environment_codebuild.policy cannot be tested on a plan
-  assert {
-    condition     = aws_iam_role_policy.s3_for_environment_codebuild.name == "my-app-s3-for-environment-codebuild"
-    error_message = "Should be: 'my-app-s3-for-environment-codebuild'"
+    condition     = aws_iam_policy.redis.description == "Allow my-app codebuild job to access redis resources"
+    error_message = "Unexpected description"
   }
   assert {
-    condition     = aws_iam_role_policy.s3_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
-  }
-  # aws_iam_role_policy.s3_for_environment_codebuild.policy cannot be tested on a plan
-  assert {
-    condition     = aws_iam_role_policy.opensearch_for_environment_codebuild.name == "my-app-opensearch-for-environment-codebuild"
-    error_message = "Should be: 'my-app-opensearch-for-environment-codebuild'"
+    condition     = aws_iam_policy.redis.policy == "{\"Sid\": \"Redis\"}"
+    error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_role_policy.opensearch_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_policy.postgres.name == "postgres-access"
+    error_message = "Unexpected name"
   }
-  # aws_iam_role_policy.opensearch_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_policy.postgres.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
+  }
+  assert {
+    condition     = aws_iam_policy.postgres.description == "Allow my-app codebuild job to access postgres resources"
+    error_message = "Unexpected description"
+  }
+  assert {
+    condition     = aws_iam_policy.postgres.policy == "{\"Sid\": \"Postgres\"}"
+    error_message = "Unexpected policy"
+  }
+  assert {
+    condition     = aws_iam_policy.s3.name == "s3-access"
+    error_message = "Unexpected name"
+  }
+  assert {
+    condition     = aws_iam_policy.s3.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
+  }
+  assert {
+    condition     = aws_iam_policy.s3.description == "Allow my-app codebuild job to access s3 resources"
+    error_message = "Unexpected description"
+  }
+  assert {
+    condition     = aws_iam_policy.s3.policy == "{\"Sid\": \"S3\"}"
+    error_message = "Unexpected policy"
+  }
+  assert {
+    condition     = aws_iam_policy.opensearch.name == "opensearch-access"
+    error_message = "Unexpected name"
+  }
+  assert {
+    condition     = aws_iam_policy.opensearch.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
+  }
+  assert {
+    condition     = aws_iam_policy.opensearch.description == "Allow my-app codebuild job to access opensearch resources"
+    error_message = "Unexpected description"
+  }
+  assert {
+    condition     = aws_iam_policy.opensearch.policy == "{\"Sid\": \"OpenSearch\"}"
+    error_message = "Unexpected policy"
+  }
   assert {
     condition     = aws_iam_policy.cloudformation.name == "cloudformation-access"
     error_message = "Unexpected name"
