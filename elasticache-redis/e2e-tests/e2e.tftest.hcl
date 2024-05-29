@@ -105,4 +105,16 @@ run "e2e_test" {
     condition     = aws_elasticache_replication_group.redis.auto_minor_version_upgrade == "true"
     error_message = "Invalid config for aws_elasticache_replication_group auto_minor_version_upgrade"
   }
+
+  ### Test aws_ssm_parameter endpoint_ssl resource ###
+  assert {
+    condition     = aws_ssm_parameter.endpoint_ssl.value == "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379?ssl_cert_reqs=CERT_REQUIRED"
+    error_message = "Invalid config for value attribute in aws_ssm_parameter endpoint_ssl resource"
+  }
+
+  ### Test aws_ssm_parameter endpoint resource ###
+  assert {
+    condition     = aws_ssm_parameter.endpoint.value == "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
+    error_message = "Invalid config for value attribute in aws_ssm_parameter endpoint resource"
+  }
 }
