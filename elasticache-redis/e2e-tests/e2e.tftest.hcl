@@ -22,7 +22,7 @@ run "e2e_test" {
 
   ### Test aws_elasticache_replication_group resource ###
   assert {
-    condition     = aws_elasticache_replication_group.redis.replication_group_id == "redis-test-nameredis-test-environment"
+    condition     = aws_elasticache_replication_group.redis.replication_group_id == "redis-test-name-redis-test-environment"
     error_message = "Invalid config for aws_elasticache_replication_group replication_group_id"
   }
 
