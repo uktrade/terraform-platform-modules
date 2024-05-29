@@ -63,6 +63,11 @@ run "aws_ssm_parameter_unit_test" {
   }
 
   assert {
+    condition     = aws_ssm_parameter.addons.tier == "Intelligent-Tiering"
+    error_message = "Intelligent-Tiering not enabled, parameters > 4096 characters will be rejected"
+  }
+
+  assert {
     condition     = aws_ssm_parameter.addons.type == "String"
     error_message = "Invalid config for aws_ssm_parameter type"
   }
