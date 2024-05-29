@@ -50,19 +50,19 @@ module "opensearch" {
   config = each.value
 }
 
-# module "alb" {
-#   source = "../application-load-balancer"
+module "alb" {
+  source = "../application-load-balancer"
 
-#   for_each = local.alb
-#   providers = {
-#     aws.domain = aws.domain
-#   }
-#   application = var.args.application
-#   environment = var.environment
-#   vpc_name    = var.vpc_name
+  for_each = local.alb
+  providers = {
+    aws.domain = aws.domain
+  }
+  application = var.args.application
+  environment = var.environment
+  vpc_name    = var.vpc_name
 
-#   config = each.value
-# }
+  config = each.value
+}
 
 module "cdn" {
   source = "../cdn"
@@ -78,28 +78,28 @@ module "cdn" {
   config = each.value
 }
 
-# module "monitoring" {
-#   source = "../monitoring"
+module "monitoring" {
+  source = "../monitoring"
 
-#   for_each = local.monitoring
+  for_each = local.monitoring
 
-#   application = var.args.application
-#   environment = var.environment
-#   vpc_name    = var.vpc_name
+  application = var.args.application
+  environment = var.environment
+  vpc_name    = var.vpc_name
 
-#   config = each.value
-# }
+  config = each.value
+}
 
-# resource "aws_ssm_parameter" "addons" {
-#   name  = "/copilot/applications/${var.args.application}/environments/${var.environment}/addons"
-#   type  = "String"
-#   value = jsonencode(var.args.services)
-#   tags  = local.tags
-# }
+resource "aws_ssm_parameter" "addons" {
+  name  = "/copilot/applications/${var.args.application}/environments/${var.environment}/addons"
+  type  = "String"
+  value = jsonencode(var.args.services)
+  tags  = local.tags
+}
 
-# module "logs" {
-#   source = "../logs"
+module "logs" {
+  source = "../logs"
 
-#   application = var.args.application
-#   environment = var.environment
-# }
+  application = var.args.application
+  environment = var.environment
+}
