@@ -137,3 +137,29 @@ resource "aws_lambda_invocation" "create-readonly-user" {
     aws_db_instance.default,
   ]
 }
+
+resource "aws_lambda_invocation" "create-readonly-user-take-two" {
+  function_name = aws_lambda_function.lambda.function_name
+
+  input = jsonencode({
+    CopilotApplication  = var.application
+    CopilotEnvironment  = var.environment
+    MasterUserSecretArn = aws_db_instance.default.master_user_secret[0].secret_arn
+    SecretDescription   = "RDS readonly user secret take two for ${local.name}"
+    SecretName          = "/copilot/${var.application}/${var.environment}/secrets/${local.read_only_secret_take_two_name}"
+    Username            = "readonly_user"
+    Permissions = [
+      "SELECT"
+    ],
+    DbHost               = aws_db_instance.default.address,
+    DbPort               = aws_db_instance.default.port,
+    DbEngine             = aws_db_instance.default.engine,
+    DbName               = aws_db_instance.default.db_name,
+    dbInstanceIdentifier = aws_db_instance.default.resource_id,
+  })
+
+  depends_on = [
+    aws_lambda_function.lambda,
+    aws_db_instance.default,
+  ]
+}

@@ -32,5 +32,6 @@ locals {
   secret_prefix                = upper(replace(var.name, "-", "_"))
   rds_master_secret_name       = "${local.secret_prefix}_RDS_MASTER_ARN"
   read_only_secret_name        = "${local.secret_prefix}_READ_ONLY_USER"
+  read_only_secret_take_two_name = "${local.secret_prefix}_READ_ONLY_TAKE_TWO_USER"
   application_user_secret_name = "${local.secret_prefix}_APPLICATION_USER"
 }
