@@ -50,19 +50,19 @@ module "opensearch" {
   config = each.value
 }
 
-module "alb" {
-  source = "../application-load-balancer"
+# module "alb" {
+#   source = "../application-load-balancer"
 
-  for_each = local.alb
-  providers = {
-    aws.domain = aws.domain
-  }
-  application = var.args.application
-  environment = var.environment
-  vpc_name    = var.vpc_name
+#   for_each = local.alb
+#   providers = {
+#     aws.domain = aws.domain
+#   }
+#   application = var.args.application
+#   environment = var.environment
+#   vpc_name    = var.vpc_name
 
-  config = each.value
-}
+#   config = each.value
+# }
 
 module "cdn" {
   source = "../cdn"

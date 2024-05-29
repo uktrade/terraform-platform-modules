@@ -8,9 +8,16 @@ locals {
   }
 
   # The primary domain for every application follows these naming standard.  See README.md 
-  domain_prefix = coalesce(var.config.domain_prefix, "internal")
-  domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "prod.uktrade.digital") : coalesce(var.config.env_root, "uktrade.digital")
-  domain_name   = var.environment == "prod" ? "${local.domain_prefix}.${var.application}.${local.domain_suffix}" : "${local.domain_prefix}.${var.environment}.${var.application}.${local.domain_suffix}"
+  domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "${var.application}.prod.uktrade.digital") : coalesce(var.config.env_root, "${var.environment}.${var.application}.uktrade.digital")
+
+  cdn_domains_list = coalesce(var.config.cdn_domains_list, {})
+
+  # To avoid overwrites in prod we do not want to update R53 records by default.
+  enable_cdn_record = coalesce(var.config.enable_cdn_record, var.environment == "prod" ? false : true)
+  cdn_records       = local.enable_cdn_record ? local.cdn_domains_list : {}
+
+  # CDN logging buckets
+  logging_bucket = var.environment == "prod" ? "dbt-cloudfront-logs-prod.s3-eu-west-2.amazonaws.com" : "dbt-cloudfront-logs.s3-eu-west-2.amazonaws.com"
 
   # Default configuration for CDN.
   cdn_defaults = {
@@ -42,11 +49,9 @@ locals {
       locations        = coalesce(var.config.cdn_geo_locations, [])
     }
 
-    logging_config = coalesce({
-      include_cookies = false
-      bucket          = var.config.cdn_logging_bucket
-      prefix          = var.config.cdn_logging_bucket_prefix
-    }, {})
+    # By default logging is off on all distros.
+    logging_config = coalesce(var.config.enable_logging, false) ? { bucket = local.logging_bucket } : {}
+
     default_waf = var.environment == "prod" ? coalesce(var.config.default_waf, "waf_sentinel_684092750218_default") : coalesce(var.config.default_waf, "waf_sentinel_011755346992_default")
   }
 }

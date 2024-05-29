@@ -6,7 +6,7 @@ data "aws_wafv2_web_acl" "waf-default" {
 
 resource "aws_acm_certificate" "certificate" {
   provider = aws.domain-cdn
-  for_each = var.config.cdn_domains_list
+  for_each = local.cdn_domains_list
 
   domain_name       = each.key
   validation_method = "DNS"
@@ -19,20 +19,20 @@ resource "aws_acm_certificate" "certificate" {
 
 resource "aws_acm_certificate_validation" "cert-validate" {
   provider                = aws.domain-cdn
-  for_each                = var.config.cdn_domains_list
+  for_each                = local.cdn_domains_list
   certificate_arn         = aws_acm_certificate.certificate[each.key].arn
   validation_record_fqdns = [for record in aws_route53_record.validation-record : record.fqdn]
 }
 
 data "aws_route53_zone" "domain-root" {
   provider = aws.domain-cdn
-  for_each = var.config.cdn_domains_list
-  name     = each.value
+  for_each = local.cdn_domains_list
+  name     = each.value[1]
 }
 
 resource "aws_route53_record" "validation-record" {
   provider = aws.domain-cdn
-  for_each = var.config.cdn_domains_list
+  for_each = local.cdn_domains_list
   zone_id  = data.aws_route53_zone.domain-root[each.key].zone_id
   name     = tolist(aws_acm_certificate.certificate[each.key].domain_validation_options)[0].resource_record_name
   type     = tolist(aws_acm_certificate.certificate[each.key].domain_validation_options)[0].resource_record_type
@@ -44,15 +44,15 @@ resource "aws_cloudfront_distribution" "standard" {
   depends_on = [aws_acm_certificate_validation.cert-validate]
 
   provider        = aws.domain-cdn
-  for_each        = var.config.cdn_domains_list
+  for_each        = local.cdn_domains_list
   enabled         = true
   is_ipv6_enabled = true
   web_acl_id      = data.aws_wafv2_web_acl.waf-default.arn
-  aliases = [each.key]
+  aliases         = [each.key]
 
   origin {
-    domain_name = local.domain_name
-    origin_id   = local.domain_name
+    domain_name = "${each.value[0]}.${local.domain_suffix}"
+    origin_id   = "${each.value[0]}.${local.domain_suffix}"
     custom_origin_config {
       http_port              = 80
       https_port             = 443
@@ -60,11 +60,11 @@ resource "aws_cloudfront_distribution" "standard" {
       origin_ssl_protocols   = local.cdn_defaults.origin.custom_origin_config.origin_ssl_protocols
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods  = local.cdn_defaults.allowed_methods
     cached_methods   = local.cdn_defaults.cached_methods
-    target_origin_id = local.domain_name
+    target_origin_id = "${each.value[0]}.${local.domain_suffix}"
     forwarded_values {
       query_string = local.cdn_defaults.forwarded_values.query_string
       headers      = local.cdn_defaults.forwarded_values.headers
@@ -85,7 +85,7 @@ resource "aws_cloudfront_distribution" "standard" {
     minimum_protocol_version       = local.cdn_defaults.viewer_certificate.minimum_protocol_version
     ssl_support_method             = local.cdn_defaults.viewer_certificate.ssl_support_method
   }
-  
+
   restrictions {
     geo_restriction {
       restriction_type = local.cdn_defaults.geo_restriction.restriction_type
@@ -93,26 +93,31 @@ resource "aws_cloudfront_distribution" "standard" {
     }
   }
 
-   dynamic "logging_config" {
-    for_each = can( var.config.logging_config ) ? var.config.logging_config : local.cdn_defaults.logging_config
+  dynamic "logging_config" {
+    for_each = local.cdn_defaults.logging_config
     content {
-      bucket = try(
-        logging_config.value.bucket,
-        local.defaults.logging_config[0].bucket
-      )
-      include_cookies = try(
-        logging_config.value.include_cookies,
-        local.defaults.logging_config[0].include_cookies,
-        false
-      )
-      prefix = try(
-        logging_config.value.prefix,
-        local.defaults.logging_config[0].prefix,
-        null
-      )
+      bucket          = local.cdn_defaults.logging_config.bucket
+      include_cookies = false
+      prefix          = each.key
     }
   }
 
   tags = local.tags
 }
 
+# This is only run if enable_cdn_record is set to true.
+# Production default is false.
+# Non prod this is true.
+resource "aws_route53_record" "cdn-address" {
+  provider = aws.domain-cdn
+
+  for_each = local.cdn_records
+  zone_id  = data.aws_route53_zone.domain-root[each.key].zone_id
+  name     = each.key
+  type     = "A"
+  alias {
+    name                   = aws_cloudfront_distribution.standard[each.key].domain_name
+    zone_id                = aws_cloudfront_distribution.standard[each.key].hosted_zone_id
+    evaluate_target_health = false
+  }
+}
