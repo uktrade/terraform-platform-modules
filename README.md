@@ -80,7 +80,7 @@ For non-production: `internal.<application_name>.uktrade.digital`
 
 For production: `internal.<application_name>.prod.uktrade.digital`
 
-Additional domains (`cdn_domains_list`) are the domain names that will be configured in CloudFront. In the map the key is the fully qualified domain name and the value is the application's base domain (the application's Route 53 zone).  
+
 
 If there are multiple web services on the application, you can add the additional domain to your certificate by adding the prefix name (eg. `internal.static`) to the variable `additional_address_list` see extension.yml example below.  `Note: this is just the prefix, no need to add env.uktrade.digital`
 
@@ -97,13 +97,46 @@ my-application-alb:
   type: alb
   environments:
     dev: 
-      cdn_domains_list:
-        dev.my-application.uktrade.digital: my-application.uktrade.digital
       additional_address_list:
         - internal.my-web-service-2
-    prod:
-      domain: {my-application.great.gov.uk: "great.gov.uk"} 
 ```
+
+## CDN
+
+This module will create the CloudFront (CDN) endpoints for the application if enabled.
+
+Additional domains (`cdn_domains_list`) are the domain names that will be configured in CloudFront. In the map the key is the fully qualified domain name and the value is the application's base domain (the application's Route 53 zone).  
+
+example `extensions.yml` config.
+
+```yaml
+my-application-alb:
+  type: alb
+  environments:
+    dev: 
+      cdn_domains_list:
+        - dev.my-application.uktrade.digital: [ "internal", "my-application.uktrade.digital" ] 
+        - dev.my-web-service-2.my-application.uktrade.digital: [ "internal.my-web-service-2", "my-application.uktrade.digital" ]
+      additional_address_list:
+        - internal.my-web-service-2
+      enable_cdn_record: false
+      enable_logging: true
+    prod:
+      cdn_domains_list: {my-application.great.gov.uk: "great.gov.uk"} 
+```
+
+Each item in the `cdn_domain_list` must include:
+- Key: The endpoint name <myapp.mysite.com>
+- Values: application internal prefix and base domain <"internal", "mysite.com">
+
+### Optional settings:
+
+To create a R53 record pointing to the CloudFront endpoint set this to true.  If not set, in non production this is set to true by default and set to false in production.
+- enable_cdn_record: true
+
+To turn on CloudFront logging to a S3 bucket set this to true.
+- enable_logging: true
+
 
 ## Monitoring
 
