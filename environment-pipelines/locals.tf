@@ -16,8 +16,8 @@ locals {
         stage_name : "Plan-${env.name}",
         env : env.name,
         accounts : env.accounts,
-        input_artifacts: ["build_output"],
-        output_artifacts: ["${env.name}_terraform_plan"],
+        input_artifacts : ["build_output"],
+        output_artifacts : ["${env.name}_terraform_plan"],
         configuration : {
           ProjectName : "${var.application}-environment-pipeline-plan"
           PrimarySource : "build_output"
@@ -30,8 +30,8 @@ locals {
         type : "approve",
         stage_name : "Approve-${env.name}",
         env : "",
-        input_artifacts: [],
-        output_artifacts: [],
+        input_artifacts : [],
+        output_artifacts : [],
         configuration : {
           CustomData : "Review Terraform Plan"
           ExternalEntityLink : "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/${var.application}-environment-pipeline-tf-plan/build/#{${env.name}-tf-plan.BUILD_ID}"
@@ -44,8 +44,8 @@ locals {
         env : env.name,
         stage_name : "Apply-${env.name}",
         accounts : env.accounts,
-        input_artifacts: ["build_output", "${env.name}_terraform_plan"],
-        output_artifacts: [],
+        input_artifacts : ["build_output", "${env.name}_terraform_plan"],
+        output_artifacts : [],
         configuration : {
           ProjectName : "${var.application}-environment-pipeline-apply"
           PrimarySource : "build_output"
