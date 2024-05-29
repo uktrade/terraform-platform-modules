@@ -123,7 +123,7 @@ resource "aws_lambda_invocation" "create-readonly-user" {
     SecretName          = "/copilot/${var.application}/${var.environment}/secrets/${local.read_only_secret_name}"
     Username            = "readonly_user"
     Permissions = [
-      "SELECT"
+      "SELECT",
     ],
     DbHost               = aws_db_instance.default.address,
     DbPort               = aws_db_instance.default.port,
