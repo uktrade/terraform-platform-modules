@@ -14,7 +14,6 @@ data "aws_subnets" "private-subnets" {
 }
 
 data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
 
 resource "aws_elasticache_replication_group" "redis" {
@@ -95,7 +94,7 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
       "Sid": "Allow SSM Use of the Key",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ssm.${data.aws_region.current.name}.amazonaws.com"
+        "Service": "ssm.amazonaws.com"
       },
       "Action": [
         "kms:Encrypt",
@@ -145,7 +144,7 @@ resource "aws_kms_key" "ssm_redis_endpoint_ssl" {
       "Sid": "Allow SSM Use of the Key",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ssm.${data.aws_region.current.name}.amazonaws.com"
+        "Service": "ssm.amazonaws.com"
       },
       "Action": [
         "kms:Encrypt",
