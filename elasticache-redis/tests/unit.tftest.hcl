@@ -189,6 +189,23 @@ run "aws_ssm_parameter_unit_test" {
     condition     = aws_ssm_parameter.endpoint.type == "SecureString"
     error_message = "Invalid config for aws_ssm_parameter type"
   }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint.tags["copilot-application"] == "redis-test-application"
+    error_message = "Should be: redis-test-application"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint.tags["copilot-environment"] == "redis-test-environment"
+    error_message = "Should be: redis-test-environment"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint.tags["managed-by"] == "Terraform"
+    error_message = "Should be: Terraform"
+  }
+
+  ### test for aws_ssm_parameter.endpoint.value can only be run as part of a terraform apply
 }
 
 run "aws_ssm_parameter_ssl_unit_test" {
@@ -204,6 +221,23 @@ run "aws_ssm_parameter_ssl_unit_test" {
     condition     = aws_ssm_parameter.endpoint_ssl.type == "SecureString"
     error_message = "Invalid config for aws_ssm_parameter type"
   }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint_ssl.tags["copilot-application"] == "redis-test-application"
+    error_message = "Should be: redis-test-application"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint_ssl.tags["copilot-environment"] == "redis-test-environment"
+    error_message = "Should be: redis-test-environment"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint_ssl.tags["managed-by"] == "Terraform"
+    error_message = "Should be: Terraform"
+  }
+
+  ### test for aws_ssm_parameter.endpoint_ssl.value can only be run as part of a terraform apply
 }
 
 run "aws_cloudwatch_log_group_unit_test" {
