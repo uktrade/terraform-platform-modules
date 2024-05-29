@@ -250,6 +250,13 @@ data "aws_iam_policy_document" "load_balancer" {
   }
 }
 
+resource "aws_iam_policy" "load_balancer" {
+  name        = "load-balancer-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access load-balancer resources"
+  policy      = data.aws_iam_policy_document.load_balancer.json
+}
+
 data "aws_iam_policy_document" "certificate" {
   statement {
     actions = [
@@ -428,13 +435,11 @@ data "aws_iam_policy_document" "kms_key" {
         "kms:DeleteAlias"
       ]
       resources = [
-        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-${statement.value.name}-key"
+        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-${statement.value.name}-*-key"
       ]
     }
   }
 }
-
-
 
 data "aws_iam_policy_document" "redis" {
   statement {
@@ -473,6 +478,13 @@ data "aws_iam_policy_document" "redis" {
       "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:*"
     ]
   }
+}
+
+resource "aws_iam_policy" "redis" {
+  name        = "redis-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access redis resources"
+  policy      = data.aws_iam_policy_document.redis.json
 }
 
 data "aws_iam_policy_document" "postgres" {
@@ -569,7 +581,8 @@ data "aws_iam_policy_document" "postgres" {
     content {
       actions = [
         "rds:CreateDBInstance",
-        "rds:AddTagsToResource"
+        "rds:AddTagsToResource",
+        "rds:ModifyDBInstance"
       ]
       resources = [
         "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${var.application}-${statement.value.name}-*"
@@ -588,8 +601,14 @@ data "aws_iam_policy_document" "postgres" {
   }
 }
 
-data "aws_iam_policy_document" "s3" {
+resource "aws_iam_policy" "postgres" {
+  name        = "postgres-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access postgres resources"
+  policy      = data.aws_iam_policy_document.postgres.json
+}
 
+data "aws_iam_policy_document" "s3" {
   statement {
     actions = [
       "iam:ListAccountAliases"
@@ -609,6 +628,13 @@ data "aws_iam_policy_document" "s3" {
   }
 }
 
+resource "aws_iam_policy" "s3" {
+  name        = "s3-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access s3 resources"
+  policy      = data.aws_iam_policy_document.s3.json
+}
+
 data "aws_iam_policy_document" "opensearch" {
   statement {
     actions = [
@@ -626,7 +652,28 @@ data "aws_iam_policy_document" "opensearch" {
   }
 }
 
-# Policies for Copilot
+resource "aws_iam_policy" "opensearch" {
+  name        = "opensearch-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access opensearch resources"
+  policy      = data.aws_iam_policy_document.opensearch.json
+}
+
+# Policies for AWS Copilot
+data "aws_iam_policy_document" "copilot_assume_role" {
+  dynamic "statement" {
+    for_each = var.environments
+    content {
+      actions = [
+        "sts:AssumeRole"
+      ]
+      resources = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
+      ]
+    }
+  }
+}
+
 data "aws_iam_policy_document" "cloudformation" {
   statement {
     actions = [
@@ -663,7 +710,12 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
   name               = "${var.application}-environment-pipeline-codebuild"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
   managed_policy_arns = [
-    aws_iam_policy.cloudformation.arn
+    aws_iam_policy.cloudformation.arn,
+    aws_iam_policy.redis.arn,
+    aws_iam_policy.postgres.arn,
+    aws_iam_policy.opensearch.arn,
+    aws_iam_policy.load_balancer.arn,
+    aws_iam_policy.s3.arn
   ]
   tags = local.tags
 }
@@ -726,12 +778,6 @@ resource "aws_iam_role_policy" "dns_account_assume_role_for_environment_codebuil
   policy = data.aws_iam_policy_document.dns_account_assume_role.json
 }
 
-resource "aws_iam_role_policy" "load_balancer_for_environment_codebuild" {
-  name   = "${var.application}-load-balancer-for-environment-codebuild"
-  role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.load_balancer.json
-}
-
 resource "aws_iam_role_policy" "certificate_for_environment_codebuild" {
   name   = "${var.application}-certificate-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
@@ -768,26 +814,8 @@ resource "aws_iam_role_policy" "kms_key_for_environment_codebuild" {
   policy = data.aws_iam_policy_document.kms_key.json
 }
 
-resource "aws_iam_role_policy" "redis_for_environment_codebuild" {
-  name   = "${var.application}-redis-for-environment-codebuild"
+resource "aws_iam_role_policy" "copilot_assume_role_for_environment_codebuild" {
+  name   = "${var.application}-copilot-assume-role-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.redis.json
-}
-
-resource "aws_iam_role_policy" "postgres_for_environment_codebuild" {
-  name   = "${var.application}-postgres-for-environment-codebuild"
-  role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.postgres.json
-}
-
-resource "aws_iam_role_policy" "s3_for_environment_codebuild" {
-  name   = "${var.application}-s3-for-environment-codebuild"
-  role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.s3.json
-}
-
-resource "aws_iam_role_policy" "opensearch_for_environment_codebuild" {
-  name   = "${var.application}-opensearch-for-environment-codebuild"
-  role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.opensearch.json
+  policy = data.aws_iam_policy_document.copilot_assume_role.json
 }

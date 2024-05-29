@@ -4,9 +4,6 @@ plan:
   category: "Build"
   owner: "AWS"
   provider: "CodeBuild"
-  input_artifacts: ["build_output"]
-  output_artifacts: ["terraform_plan"]
-  namespace: "tf-plan"
   version: "1"
 
 approve:
@@ -15,14 +12,10 @@ approve:
   owner: "AWS"
   provider: "Manual"
   version: "1"
-  input_artifacts: []
-  output_artifacts: []
 
 apply:
   name: "Apply"
   category: "Build"
   owner: "AWS"
   provider: "CodeBuild"
-  input_artifacts: ["build_output", "terraform_plan"]
-  output_artifacts: []
   version: "1"

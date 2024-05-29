@@ -140,6 +140,12 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.copilot_assume_role
+  values = {
+    json = "{\"Sid\": \"Copilot\"}"
+  }
+}
 
 variables {
   application = "my-app"
@@ -490,14 +496,21 @@ run "test_iam" {
   }
   # aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.load_balancer_for_environment_codebuild.name == "my-app-load-balancer-for-environment-codebuild"
-    error_message = "Should be: 'my-app-load-balancer-for-environment-codebuild'"
+    condition     = aws_iam_policy.load_balancer.name == "load-balancer-access"
+    error_message = "Unexpected name"
   }
   assert {
-    condition     = aws_iam_role_policy.load_balancer_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_policy.load_balancer.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
   }
-  # aws_iam_role_policy.load_balancer_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_policy.load_balancer.description == "Allow my-app codebuild job to access load-balancer resources"
+    error_message = "Unexpected description"
+  }
+  assert {
+    condition     = aws_iam_policy.load_balancer.policy == "{\"Sid\": \"LoadBalancer\"}"
+    error_message = "Unexpected policy"
+  }
   assert {
     condition     = aws_iam_role_policy.certificate_for_environment_codebuild.name == "my-app-certificate-for-environment-codebuild"
     error_message = "Should be: 'my-app-certificate-for-environment-codebuild'"
@@ -554,41 +567,69 @@ run "test_iam" {
   }
   # aws_iam_role_policy.kms_key_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.redis_for_environment_codebuild.name == "my-app-redis-for-environment-codebuild"
-    error_message = "Should be: 'my-app-redis-for-environment-codebuild'"
+    condition     = aws_iam_policy.redis.name == "redis-access"
+    error_message = "Unexpected name"
   }
   assert {
-    condition     = aws_iam_role_policy.redis_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
-  }
-  # aws_iam_role_policy.redis_for_environment_codebuild.policy cannot be tested on a plan
-  assert {
-    condition     = aws_iam_role_policy.postgres_for_environment_codebuild.name == "my-app-postgres-for-environment-codebuild"
-    error_message = "Should be: 'my-app-postgres-for-environment-codebuild'"
+    condition     = aws_iam_policy.redis.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
   }
   assert {
-    condition     = aws_iam_role_policy.postgres_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
-  }
-  # aws_iam_role_policy.postgres_for_environment_codebuild.policy cannot be tested on a plan
-  assert {
-    condition     = aws_iam_role_policy.s3_for_environment_codebuild.name == "my-app-s3-for-environment-codebuild"
-    error_message = "Should be: 'my-app-s3-for-environment-codebuild'"
+    condition     = aws_iam_policy.redis.description == "Allow my-app codebuild job to access redis resources"
+    error_message = "Unexpected description"
   }
   assert {
-    condition     = aws_iam_role_policy.s3_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
-  }
-  # aws_iam_role_policy.s3_for_environment_codebuild.policy cannot be tested on a plan
-  assert {
-    condition     = aws_iam_role_policy.opensearch_for_environment_codebuild.name == "my-app-opensearch-for-environment-codebuild"
-    error_message = "Should be: 'my-app-opensearch-for-environment-codebuild'"
+    condition     = aws_iam_policy.redis.policy == "{\"Sid\": \"Redis\"}"
+    error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_role_policy.opensearch_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_policy.postgres.name == "postgres-access"
+    error_message = "Unexpected name"
   }
-  # aws_iam_role_policy.opensearch_for_environment_codebuild.policy cannot be tested on a plan
+  assert {
+    condition     = aws_iam_policy.postgres.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
+  }
+  assert {
+    condition     = aws_iam_policy.postgres.description == "Allow my-app codebuild job to access postgres resources"
+    error_message = "Unexpected description"
+  }
+  assert {
+    condition     = aws_iam_policy.postgres.policy == "{\"Sid\": \"Postgres\"}"
+    error_message = "Unexpected policy"
+  }
+  assert {
+    condition     = aws_iam_policy.s3.name == "s3-access"
+    error_message = "Unexpected name"
+  }
+  assert {
+    condition     = aws_iam_policy.s3.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
+  }
+  assert {
+    condition     = aws_iam_policy.s3.description == "Allow my-app codebuild job to access s3 resources"
+    error_message = "Unexpected description"
+  }
+  assert {
+    condition     = aws_iam_policy.s3.policy == "{\"Sid\": \"S3\"}"
+    error_message = "Unexpected policy"
+  }
+  assert {
+    condition     = aws_iam_policy.opensearch.name == "opensearch-access"
+    error_message = "Unexpected name"
+  }
+  assert {
+    condition     = aws_iam_policy.opensearch.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
+  }
+  assert {
+    condition     = aws_iam_policy.opensearch.description == "Allow my-app codebuild job to access opensearch resources"
+    error_message = "Unexpected description"
+  }
+  assert {
+    condition     = aws_iam_policy.opensearch.policy == "{\"Sid\": \"OpenSearch\"}"
+    error_message = "Unexpected policy"
+  }
   assert {
     condition     = aws_iam_policy.cloudformation.name == "cloudformation-access"
     error_message = "Unexpected name"
@@ -605,6 +646,15 @@ run "test_iam" {
     condition     = aws_iam_policy.cloudformation.policy == "{\"Sid\": \"CloudFormation\"}"
     error_message = "Unexpected policy"
   }
+  assert {
+    condition     = aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.name == "my-app-copilot-assume-role-for-environment-codebuild"
+    error_message = "Should be: 'my-app-copilot-assume-role-for-environment-codebuild'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+  }
+  # aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.policy cannot be tested on a plan
 }
 
 run "test_artifact_store" {
@@ -667,7 +717,7 @@ run "test_stages" {
     error_message = "Output artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].output_artifacts[0] == "terraform_plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].output_artifacts[0] == "dev_terraform_plan"
     error_message = "Output artifacts incorrect"
   }
   assert {
@@ -685,6 +735,10 @@ run "test_stages" {
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"}]"
     error_message = "Configuration Env Vars incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].namespace == "dev-tf-plan"
+    error_message = "Input artifacts incorrect"
   }
 
   # Stage: dev apply
@@ -717,7 +771,7 @@ run "test_stages" {
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[1] == "terraform_plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[1] == "dev_terraform_plan"
     error_message = "Input artifacts incorrect"
   }
   assert {
@@ -737,7 +791,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
@@ -775,7 +829,7 @@ run "test_stages" {
     error_message = "Output artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].output_artifacts[0] == "terraform_plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].output_artifacts[0] == "prod_terraform_plan"
     error_message = "Output artifacts incorrect"
   }
   assert {
@@ -793,6 +847,10 @@ run "test_stages" {
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"}]"
     error_message = "Configuration Env Vars incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].namespace == "prod-tf-plan"
+    error_message = "Namespace incorrect"
   }
 
   # Stage: prod approval
@@ -832,6 +890,10 @@ run "test_stages" {
     condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.CustomData == "Review Terraform Plan"
     error_message = "Configuration CustomData incorrect"
   }
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.ExternalEntityLink == "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/my-app-environment-pipeline-tf-plan/build/#{prod-tf-plan.BUILD_ID}"
+    error_message = "Configuration ExternalEntityLink incorrect"
+  }
 
   # Stage: prod apply
   assert {
@@ -863,7 +925,7 @@ run "test_stages" {
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[1] == "terraform_plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[1] == "prod_terraform_plan"
     error_message = "Input artifacts incorrect"
   }
   assert {
