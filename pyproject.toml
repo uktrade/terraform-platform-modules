@@ -1,8 +1,5 @@
 [tool.poetry]
-name = "terraform-platform-modules"
-version = "0.0.0"
-description = "Terraform modules for DBT Platform"
-authors = ["Department for Business and Trade Platform Team <sre-team@digital.trade.gov.uk>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.9"

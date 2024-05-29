@@ -140,7 +140,7 @@ resource "aws_route53_record" "additional-address" {
 
   count   = var.config.additional_address_list == null ? 0 : length(var.config.additional_address_list)
   zone_id = data.aws_route53_zone.domain-alb.zone_id
-  name    = "${var.config.additional_address_list[count.index]}.${var.environment}.${var.application}.${local.domain_suffix}"
+  name    = "${var.config.additional_address_list[count.index]}.${local.additional_address_domain}"
   type    = "CNAME"
   records = [aws_lb.this.dns_name]
   ttl     = 300
