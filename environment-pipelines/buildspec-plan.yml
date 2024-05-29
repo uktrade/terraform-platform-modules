@@ -1,0 +1,26 @@
+version: 0.2
+
+env:
+  exported-variables:
+    - BUILD_ID
+
+phases:
+  install:
+    commands:
+      - export PATH="$CODEBUILD_SRC_DIR/build-tools:$PATH"
+  build:
+    commands:
+      - echo "Terraform Plan Phase"
+      - echo "Working on environment ${ENVIRONMENT}"
+      - echo "Generating manifests"
+      - copilot env init --name ${ENVIRONMENT} --profile ${COPILOT_PROFILE} --default-config
+      - platform-helper copilot make-addons
+      - cd terraform/environments/${ENVIRONMENT}
+      - terraform init
+      - terraform plan -out=plan.tfplan
+  post_build:
+    commands:
+      - export BUILD_ID="$CODEBUILD_BUILD_ID"
+artifacts:
+  files:
+    - terraform/environments/${ENVIRONMENT}/plan.tfplan

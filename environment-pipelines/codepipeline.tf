@@ -36,31 +36,40 @@ resource "aws_codepipeline" "environment_pipeline" {
     }
   }
 
+  stage {
+    name = "Build"
+
+    action {
+      name             = "InstallTools"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      input_artifacts  = ["project_deployment_source"]
+      output_artifacts = ["build_output"]
+      version          = "1"
+
+      configuration = {
+        ProjectName   = "${var.application}-environment-pipeline-build"
+        PrimarySource = "project_deployment_source"
+      }
+    }
+  }
 
   dynamic "stage" {
     for_each = local.stages
     content {
-      name = "Build"
+      name = stage.value.stage_name
 
       action {
-        name             = "InstallTools"
-        category         = "Build"
-        owner            = "AWS"
-        provider         = "CodeBuild"
-        input_artifacts  = ["project_deployment_source"]
-        output_artifacts = ["terraform_plan"]
+        name             = stage.value.name
+        category         = stage.value.category
+        owner            = stage.value.owner
+        provider         = stage.value.provider
+        input_artifacts  = stage.value.input_artifacts
+        output_artifacts = stage.value.output_artifacts
         version          = "1"
-
-        configuration = {
-          ProjectName   = "${var.application}-environment-pipeline"
-          PrimarySource = "project_deployment_source"
-          EnvironmentVariables = jsonencode([
-            {
-              name  = "ENVIRONMENT"
-              value = stage.value.env
-            }
-          ])
-        }
+        configuration    = stage.value.configuration
+        namespace        = stage.value.namespace
       }
     }
   }

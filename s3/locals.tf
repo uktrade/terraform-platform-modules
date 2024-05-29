@@ -7,5 +7,6 @@ locals {
     copilot-environment = var.environment
   }
 
-  kms_alias_name = "${var.config.bucket_name}-key"
+  kms_alias_name = "${var.application}-${var.environment}-${var.config.bucket_name}-key"
+
 }

@@ -4,12 +4,13 @@ plan:
   category: "Build"
   owner: "AWS"
   provider: "CodeBuild"
-  input_artifacts: ["source_output"]
-  output_artifacts: ["build_output"]
+  input_artifacts: ["build_output"]
+  output_artifacts: ["terraform_plan"]
+  namespace: "tf-plan"
   version: "1"
+
 approve:
-  run_order: 1
-  name: "AWS-Admin-Approval"
+  name: "Approval"
   category: "Approval"
   owner: "AWS"
   provider: "Manual"
@@ -18,3 +19,10 @@ approve:
   output_artifacts: []
 
 apply:
+  name: "Apply"
+  category: "Build"
+  owner: "AWS"
+  provider: "CodeBuild"
+  input_artifacts: ["build_output", "terraform_plan"]
+  output_artifacts: []
+  version: "1"
