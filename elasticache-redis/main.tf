@@ -80,7 +80,7 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Id": "key-default-1",
+  "Id": "kms-key-ssm-redis-endpoint",
   "Statement": [
     {
       "Sid": "Enable IAM User Permissions",
@@ -130,7 +130,7 @@ resource "aws_kms_key" "ssm_redis_endpoint_ssl" {
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Id": "key-default-1",
+  "Id": "kms-key-ssm-redis-endpoint-ssl",
   "Statement": [
     {
       "Sid": "Enable IAM User Permissions",
