@@ -20,7 +20,7 @@ variables {
   vpc_name    = "vpc-name"
   config = {
     domain_prefix    = "dom-prefix",
-    cdn_domains_list = { "dev.my-application.uktrade.digital" : "my-application.uktrade.digital" },
+    cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
   }
 }
 
@@ -54,26 +54,3 @@ run "aws_cloudfront_distribution_unit_test" {
   }
 
 }
-
-
-// run "aws_route53_record_unit_test_no_cdn_record" {
-//     command = plan
-
-//     variables  {
-//         application = "app"
-//         environment = "env"
-//         vpc_name    = "vpc-name"
-//         config = {
-//             domain_prefix    = "dom-prefix",
-//             cdn_domains_list = { "dev.my-application.uktrade.digital" : "my-application.uktrade.digital" },
-//             enable_cdn_record = false
-//         }
-//     }
-
-//     // assert {
-//     //     condition     = aws_route53_record.cdn-address["dev.my-application.uktrade.digital"].name == "dev.my-application.uktrade.digital"
-//     //     error_message = "Should be: dev.my-application.uktrade.digital"
-//     // }
-//     expect_failures = [aws_route53_record.cdn-address["dev.my-application.uktrade.digital"].name]
-
-// }

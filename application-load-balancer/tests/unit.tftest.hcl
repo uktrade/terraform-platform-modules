@@ -41,7 +41,7 @@ variables {
   vpc_name    = "vpc-name"
   config = {
     domain_prefix    = "dom-prefix",
-    cdn_domains_list = { "dev.my-application.uktrade.digital" : "my-application.uktrade.digital" },
+    cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
   }
 }
 
