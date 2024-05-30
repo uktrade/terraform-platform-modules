@@ -8,7 +8,11 @@
 
 ## Testing
 
-The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
+Todo
+
+### Running locally
+
+The faster, but less comprehensive, tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
 
 ```shell
 terraform test
