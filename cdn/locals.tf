@@ -7,7 +7,7 @@ locals {
     copilot-environment = var.environment
   }
 
-  # The primary domain for every application follows these naming standard.  See README.md 
+  # The primary domain for every application follows the naming standard documented under https://github.com/uktrade/terraform-platform-modules/blob/main/README.md#application-load-balancer-module
   domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "${var.application}.prod.uktrade.digital") : coalesce(var.config.env_root, "${var.environment}.${var.application}.uktrade.digital")
 
   cdn_domains_list = coalesce(var.config.cdn_domains_list, {})

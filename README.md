@@ -105,7 +105,9 @@ my-application-alb:
 
 This module will create the CloudFront (CDN) endpoints for the application if enabled.
 
-Additional domains (`cdn_domains_list`) are the domain names that will be configured in CloudFront. In the map the key is the fully qualified domain name and the value is the application's base domain (the application's Route 53 zone).  
+`cdn_domains_list` is a map of the domain names that will be configured in CloudFront.
+* the key is the fully qualified domain name
+* the value is an array containing the internal prefix and the base domain (the application's Route 53 zone).  
 
 example `extensions.yml` config.
 
@@ -125,16 +127,13 @@ my-application-alb:
       cdn_domains_list: {my-application.great.gov.uk: "great.gov.uk"} 
 ```
 
-Each item in the `cdn_domain_list` must include:
-- Key: The endpoint name <myapp.mysite.com>
-- Values: application internal prefix and base domain <"internal", "mysite.com">
 
 ### Optional settings:
 
-To create a R53 record pointing to the CloudFront endpoint set this to true.  If not set, in non production this is set to true by default and set to false in production.
+To create a R53 record pointing to the CloudFront endpoint, set this to true.  If not set, in non production this is set to true by default and set to false in production.
 - enable_cdn_record: true
 
-To turn on CloudFront logging to a S3 bucket set this to true.
+To turn on CloudFront logging to a S3 bucket, set this to true.
 - enable_logging: true
 
 
