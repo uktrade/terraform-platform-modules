@@ -92,6 +92,7 @@ module "monitoring" {
 
 resource "aws_ssm_parameter" "addons" {
   name  = "/copilot/applications/${var.args.application}/environments/${var.environment}/addons"
+  tier  = "Intelligent-Tiering"
   type  = "String"
   value = jsonencode(var.args.services)
   tags  = local.tags
