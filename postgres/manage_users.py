@@ -16,9 +16,13 @@ def create_db_user(conn, cursor, username, password, permissions):
     drop_user(cursor, username)
 
     cursor.execute(f"CREATE USER {username} WITH ENCRYPTED PASSWORD '%s'" % password)
+    print(f"CREATE USER {username} WITH ENCRYPTED PASSWORD '%s'" % password)
     cursor.execute(f"GRANT {username} to postgres;")
+    print(f"GRANT {username} to postgres;")
     cursor.execute(f"GRANT {', '.join(permissions)} ON ALL TABLES IN SCHEMA public TO {username};")
+    print(f"GRANT {', '.join(permissions)} ON ALL TABLES IN SCHEMA public TO {username};")
     cursor.execute(f"ALTER DEFAULT PRIVILEGES FOR USER {username} IN SCHEMA public GRANT {', '.join(permissions)} ON TABLES TO {username};")
+    print(f"ALTER DEFAULT PRIVILEGES FOR USER {username} IN SCHEMA public GRANT {', '.join(permissions)} ON TABLES TO {username};")
 
     if 'INSERT' in permissions:
         cursor.execute(f"GRANT CREATE ON SCHEMA public TO {username};")
