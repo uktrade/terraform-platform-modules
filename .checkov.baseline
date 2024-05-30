@@ -1,6 +1,20 @@
 {
     "failed_checks": [
         {
+            "file": "/cdn/main.tf",
+            "findings": [
+                {
+                    "resource": "module.extensions-staging.module.cdn.aws_cloudfront_distribution.standard",
+                    "check_ids": [
+                        "CKV_AWS_305",
+                        "CKV_AWS_310",
+                        "CKV2_AWS_32",
+                        "CKV2_AWS_47"
+                    ]
+                }
+            ]
+        },
+        {
             "file": "/application-load-balancer/main.tf",
             "findings": [
                 {
@@ -27,7 +41,8 @@
                 {
                     "resource": "module.extensions-staging.module.alb.aws_security_group.alb-security-group",
                     "check_ids": [
-                        "CKV_AWS_23"
+                        "CKV_AWS_23",
+                        "CKV2_AWS_5"
                     ]
                 }
             ]
