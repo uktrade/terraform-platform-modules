@@ -135,6 +135,5 @@ resource "aws_lambda_invocation" "create-readonly-user" {
   depends_on = [
     aws_lambda_function.lambda,
     aws_db_instance.default,
-    aws_lambda_invocation.create-application-user,
   ]
 }
