@@ -45,6 +45,7 @@ resource "aws_lb_listener" "alb-listener" {
 }
 
 resource "aws_security_group" "alb-security-group" {
+  # checkov:skip=CKV2_AWS_5:Appears to be false positive, SG is attached to ALB resource
   for_each = local.protocols
   name     = "${var.application}-${var.environment}-alb-${each.key}"
   vpc_id   = data.aws_vpc.vpc.id
