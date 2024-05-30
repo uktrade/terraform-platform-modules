@@ -4,4 +4,6 @@ fake_access_key2 = 'ABIA3FTL7QCFLMRPSHWS'
 fake_access_key3 = 'ACCA3FTL7QCFLMRPSHWS'
 fake_access_key4 = 'AKIASP2TPHJSQH3FJRUX'
 
+test_key = '123'
+
 # Example AWS Secret Access Key:
