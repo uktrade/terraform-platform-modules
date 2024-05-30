@@ -6,11 +6,18 @@
    pip install poetry && poetry install && poetry run pre-commit install
 ```
 
-## Testing
+## Testing / quality checks
 
-Todo
+Various quality checks are run in AWS Codebuild in the `platform-tools` account for any push to a pull request branch:
 
-### Running locally
+* [Checkov](https://www.checkov.io/)
+* [terraform fmt](https://developer.hashicorp.com/terraform/cli/commands/fmt)
+* [terraform validate](https://developer.hashicorp.com/terraform/cli/commands/validate)
+* [tflint](https://github.com/terraform-linters/tflint])
+* [terraform test](https://developer.hashicorp.com/terraform/cli/commands/test) - plan style
+* Todo: [terraform test](https://developer.hashicorp.com/terraform/cli/commands/test) - end to end style
+
+### Running the terraform unit tests locally
 
 The faster, but less comprehensive, tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
 
