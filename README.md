@@ -109,6 +109,14 @@ This module will create the CloudFront (CDN) endpoints for the application if en
 * the key is the fully qualified domain name
 * the value is an array containing the internal prefix and the base domain (the application's Route 53 zone).  
 
+### Optional settings:
+
+To create a R53 record pointing to the CloudFront endpoint, set this to true.  If not set, in non production this is set to true by default and set to false in production.
+- enable_cdn_record: true
+
+To turn on CloudFront logging to a S3 bucket, set this to true.
+- enable_logging: true
+
 example `extensions.yml` config.
 
 ```yaml
@@ -126,16 +134,6 @@ my-application-alb:
     prod:
       cdn_domains_list: {my-application.great.gov.uk: "great.gov.uk"} 
 ```
-
-
-### Optional settings:
-
-To create a R53 record pointing to the CloudFront endpoint, set this to true.  If not set, in non production this is set to true by default and set to false in production.
-- enable_cdn_record: true
-
-To turn on CloudFront logging to a S3 bucket, set this to true.
-- enable_logging: true
-
 
 ## Monitoring
 
