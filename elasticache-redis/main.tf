@@ -71,13 +71,21 @@ resource "aws_security_group" "redis" {
   tags = local.tags
 }
 
-resource "aws_ssm_parameter" "endpoint" {
+resource "aws_ssm_parameter" "endpoint_short" {
   name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}"
   description = "Redis endpoint"
   type        = "SecureString"
   value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
 
   tags = local.tags
+}
+
+resource "aws_ssm_parameter" "endpoint" {
+  name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}_ENDPOINT", "-", "_"))}"
+  description = "Redis endpoint"
+  type        = "SecureString"
+  value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
+  tags        = local.tags
 }
 
 resource "aws_elasticache_subnet_group" "es-subnet-group" {
