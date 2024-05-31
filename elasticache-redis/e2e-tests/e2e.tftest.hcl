@@ -120,4 +120,19 @@ run "e2e_test" {
     condition     = aws_ssm_parameter.redis_url.value == "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379?ssl_cert_reqs=CERT_REQUIRED"
     error_message = "Invalid config for value attribute in aws_ssm_parameter redis_url resource"
   }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint.key_id == aws_kms_key.ssm_redis_endpoint.arn
+    error_message = "Should be: arn for aws_kms_key.ssm_redis_endpoint resource"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint_short.key_id == aws_kms_key.ssm_redis_endpoint.arn
+    error_message = "Should be: arn for aws_kms_key.ssm_redis_endpoint resource"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.redis_url.key_id == aws_kms_key.ssm_redis_endpoint.arn
+    error_message = "Should be: arn for aws_kms_key.ssm_redis_endpoint resource"
+  }
 }
