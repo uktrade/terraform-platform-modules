@@ -101,6 +101,17 @@ resource "aws_ssm_parameter" "endpoint" {
   key_id = aws_kms_key.ssm_redis_endpoint.arn
 }
 
+resource "aws_ssm_parameter" "redis_url" {
+  name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}_URL", "-", "_"))}"
+  description = "Redis endpoint with SSL configuration"
+  type        = "SecureString"
+  value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379?ssl_cert_reqs=CERT_REQUIRED"
+
+  tags = local.tags
+
+  key_id = aws_kms_key.ssm_redis_endpoint.arn
+}
+
 resource "aws_elasticache_subnet_group" "es-subnet-group" {
   name       = "${var.name}-${var.environment}-cache-subnet"
   subnet_ids = tolist(data.aws_subnets.private-subnets.ids)
