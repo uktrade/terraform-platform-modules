@@ -44,7 +44,7 @@ resource "aws_cloudfront_distribution" "standard" {
   # checkov:skip=CKV_AWS_305:This is managed in the application.
   # checkov:skip=CKV_AWS_310:No fail-over origin required.
   # checkov:skip=CKV2_AWS_32:Response headers policy not required.
-  # checkov:skip=CKV2_AWS_47:WAFv2 WebACL rules not set here.
+  # checkov:skip=CKV2_AWS_47:WAFv2 WebACL rules are set in https://gitlab.ci.uktrade.digital/webops/terraform-waf
   depends_on = [aws_acm_certificate_validation.cert-validate]
 
   provider        = aws.domain-cdn
