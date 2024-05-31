@@ -201,6 +201,35 @@ run "aws_ssm_parameter_unit_test" {
   }
 }
 
+run "aws_kms_key_unit_test" {
+  command = plan
+
+  assert {
+    condition     = aws_kms_key.ssm_redis_endpoint.tags.application == "redis-test-application"
+    error_message = "application tag was not as expected"
+  }
+
+  assert {
+    condition     = aws_kms_key.ssm_redis_endpoint.tags.environment == "redis-test-environment"
+    error_message = "environment tag was not as expected"
+  }
+
+  assert {
+    condition     = aws_kms_key.ssm_redis_endpoint.tags.managed-by == "DBT Platform - Terraform"
+    error_message = "managed-by tag was not as expected"
+  }
+
+  assert {
+    condition     = aws_kms_key.ssm_redis_endpoint.tags.copilot-application == "redis-test-application"
+    error_message = "copilot-application tag was not as expected"
+  }
+
+  assert {
+    condition     = aws_kms_key.ssm_redis_endpoint.tags.copilot-environment == "redis-test-environment"
+    error_message = "copilot-environment tag was not as expected"
+  }
+}
+
 run "aws_cloudwatch_log_group_unit_test" {
   command = plan
 

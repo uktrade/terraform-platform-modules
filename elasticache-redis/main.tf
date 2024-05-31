@@ -76,10 +76,12 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
   deletion_window_in_days = 10
   enable_key_rotation     = true
 
+  tags = local.tags
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Id": "kms-key-ssm-redis-endpoint-ssl",
+  "Id": "kms-key-ssm-redis-endpoint",
   "Statement": [
     {
       "Sid": "Enable IAM User Permissions",
