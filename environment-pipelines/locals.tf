@@ -25,7 +25,7 @@ locals {
             { name : "ENVIRONMENT", value : env.name },
             { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
-            { name : "NEEDS_APPROVAL", value : env.requires_approval ? "true" : "" }
+            { name : "NEEDS_APPROVAL", value : coalesce(env.requires_approval, false) ? "yes" : "no" }
           ])
         }
         namespace : "${env.name}-tf-plan"
