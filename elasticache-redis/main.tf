@@ -112,7 +112,7 @@ EOF
 
 resource "aws_ssm_parameter" "endpoint_short" {
   name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}"
-  description = "Redis endpoint"
+  description = "Redis endpoint (Deprecated in favour of endpoint_ssl which has the ssl_cert_reqs parameter baked in)"
   type        = "SecureString"
   value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
 
@@ -123,7 +123,7 @@ resource "aws_ssm_parameter" "endpoint_short" {
 
 resource "aws_ssm_parameter" "endpoint" {
   name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}_ENDPOINT", "-", "_"))}"
-  description = "Redis endpoint"
+  description = "Redis endpoint (Deprecated in favour of endpoint_ssl which has the ssl_cert_reqs parameter baked in)"
   type        = "SecureString"
   value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
 
