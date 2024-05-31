@@ -72,44 +72,11 @@ resource "aws_security_group" "redis" {
 }
 
 resource "aws_kms_key" "ssm_redis_endpoint" {
-  description             = "KMS key for SSM parameters"
+  description             = "KMS key for ${var.name}-${var.application}-${var.environment}-redis-cluster SSM parameters"
   deletion_window_in_days = 10
   enable_key_rotation     = true
 
   tags = local.tags
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Id": "kms-key-ssm-redis-endpoint",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    },
-    {
-      "Sid": "Allow SSM Use of the Key",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ssm.amazonaws.com"
-      },
-      "Action": [
-        "kms:Encrypt",
-        "kms:Decrypt",
-        "kms:ReEncrypt*",
-        "kms:GenerateDataKey*",
-        "kms:DescribeKey"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
 }
 
 resource "aws_ssm_parameter" "endpoint_short" {

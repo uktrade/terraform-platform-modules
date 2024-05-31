@@ -1,11 +1,18 @@
 variables {
   vpc_name    = "sandbox-elasticache-redis"
-  application = "redis-test-application"
-  environment = "redis-test-environment"
+  application = "test-application"
+  environment = "test-environment"
   name        = "redis-test-name"
   config = {
     "engine" = "6.2",
     "plan"   = "small",
+  }
+  expected_tags = {
+    application         = "test-application"
+    environment         = "test-environment"
+    managed-by          = "DBT Platform - Terraform"
+    copilot-application = "test-application"
+    copilot-environment = "test-environment"
   }
 }
 
@@ -29,12 +36,12 @@ run "aws_elasticache_replication_group_unit_test" {
 
   ### Test aws_elasticache_replication_group resource ###
   assert {
-    condition     = aws_elasticache_replication_group.redis.replication_group_id == "redis-test-name-redis-test-environment"
+    condition     = aws_elasticache_replication_group.redis.replication_group_id == "redis-test-name-test-environment"
     error_message = "Invalid config for aws_elasticache_replication_group replication_group_id"
   }
 
   assert {
-    condition     = aws_elasticache_replication_group.redis.subnet_group_name == "redis-test-name-redis-test-environment-cache-subnet"
+    condition     = aws_elasticache_replication_group.redis.subnet_group_name == "redis-test-name-test-environment-cache-subnet"
     error_message = "Invalid config for aws_elasticache_replication_group subnet_group_name"
   }
 
@@ -89,13 +96,18 @@ run "aws_elasticache_replication_group_unit_test" {
   }
 
   assert {
-    condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "engine-log"][0] == "/aws/elasticache/redis-test-name/redis-test-environment/redis-test-nameRedis/engine"
+    condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "engine-log"][0] == "/aws/elasticache/redis-test-name/test-environment/redis-test-nameRedis/engine"
     error_message = "Invalid config for aws_elasticache_replication_group log_delivery_configuration"
   }
 
   assert {
-    condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "slow-log"][0] == "/aws/elasticache/redis-test-name/redis-test-environment/redis-test-nameRedis/slow"
+    condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "slow-log"][0] == "/aws/elasticache/redis-test-name/test-environment/redis-test-nameRedis/slow"
     error_message = "Invalid config for aws_elasticache_replication_group log_delivery_configuration"
+  }
+
+  assert {
+    condition     = jsonencode(aws_elasticache_replication_group.redis.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 }
 
@@ -166,13 +178,18 @@ run "aws_security_group_unit_test" {
 
   ### Test aws_security_group resource ###
   assert {
-    condition     = aws_security_group.redis.name == "redis-test-name-redis-test-environment-redis-security-group"
+    condition     = aws_security_group.redis.name == "redis-test-name-test-environment-redis-security-group"
     error_message = "Invalid config for aws_security_group name"
   }
 
   assert {
     condition     = aws_security_group.redis.revoke_rules_on_delete == false
     error_message = "Invalid config for aws_security_group revoke_rules_on_delete"
+  }
+
+  assert {
+    condition     = jsonencode(aws_security_group.redis.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 }
 
@@ -181,7 +198,7 @@ run "aws_ssm_parameter_unit_test" {
 
   ### Test aws_ssm_parameter resource ###
   assert {
-    condition     = aws_ssm_parameter.endpoint.name == "/copilot/redis-test-application/redis-test-environment/secrets/REDIS_TEST_NAME_ENDPOINT"
+    condition     = aws_ssm_parameter.endpoint.name == "/copilot/test-application/test-environment/secrets/REDIS_TEST_NAME_ENDPOINT"
     error_message = "Invalid config for aws_ssm_parameter name"
   }
 
@@ -191,7 +208,7 @@ run "aws_ssm_parameter_unit_test" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.endpoint_short.name == "/copilot/redis-test-application/redis-test-environment/secrets/REDIS_TEST_NAME"
+    condition     = aws_ssm_parameter.endpoint_short.name == "/copilot/test-application/test-environment/secrets/REDIS_TEST_NAME"
     error_message = "Invalid config for aws_ssm_parameter name"
   }
 
@@ -199,34 +216,34 @@ run "aws_ssm_parameter_unit_test" {
     condition     = aws_ssm_parameter.endpoint_short.type == "SecureString"
     error_message = "Invalid config for aws_ssm_parameter type"
   }
+
+  assert {
+    condition     = jsonencode(aws_ssm_parameter.endpoint_short.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
 }
 
 run "aws_kms_key_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_kms_key.ssm_redis_endpoint.tags.application == "redis-test-application"
-    error_message = "application tag was not as expected"
+    condition     = aws_kms_key.ssm_redis_endpoint.description == "KMS key for redis-test-name-test-application-test-environment-redis-cluster SSM parameters"
+    error_message = "Should be"
   }
 
   assert {
-    condition     = aws_kms_key.ssm_redis_endpoint.tags.environment == "redis-test-environment"
-    error_message = "environment tag was not as expected"
+    condition     = aws_kms_key.ssm_redis_endpoint.deletion_window_in_days == 10
+    error_message = "Should be: 10"
   }
 
   assert {
-    condition     = aws_kms_key.ssm_redis_endpoint.tags.managed-by == "DBT Platform - Terraform"
-    error_message = "managed-by tag was not as expected"
+    condition     = aws_kms_key.ssm_redis_endpoint.enable_key_rotation == true
+    error_message = "Should be: true"
   }
 
   assert {
-    condition     = aws_kms_key.ssm_redis_endpoint.tags.copilot-application == "redis-test-application"
-    error_message = "copilot-application tag was not as expected"
-  }
-
-  assert {
-    condition     = aws_kms_key.ssm_redis_endpoint.tags.copilot-environment == "redis-test-environment"
-    error_message = "copilot-environment tag was not as expected"
+    condition     = jsonencode(aws_kms_key.ssm_redis_endpoint.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 }
 
@@ -235,7 +252,7 @@ run "aws_cloudwatch_log_group_unit_test" {
 
   ### Test aws_cloudwatch_log_group slow resource ###
   assert {
-    condition     = aws_cloudwatch_log_group.redis-slow-log-group.name == "/aws/elasticache/redis-test-name/redis-test-environment/redis-test-nameRedis/slow"
+    condition     = aws_cloudwatch_log_group.redis-slow-log-group.name == "/aws/elasticache/redis-test-name/test-environment/redis-test-nameRedis/slow"
     error_message = "Invalid config for aws_cloudwatch_log_group name"
   }
 
@@ -251,7 +268,7 @@ run "aws_cloudwatch_log_group_unit_test" {
 
   ### Test aws_cloudwatch_log_group engine resource ###
   assert {
-    condition     = aws_cloudwatch_log_group.redis-engine-log-group.name == "/aws/elasticache/redis-test-name/redis-test-environment/redis-test-nameRedis/engine"
+    condition     = aws_cloudwatch_log_group.redis-engine-log-group.name == "/aws/elasticache/redis-test-name/test-environment/redis-test-nameRedis/engine"
     error_message = "Invalid config for aws_cloudwatch_log_group name"
   }
 
@@ -264,6 +281,11 @@ run "aws_cloudwatch_log_group_unit_test" {
     condition     = aws_cloudwatch_log_group.redis-engine-log-group.skip_destroy == false
     error_message = "Invalid config for aws_cloudwatch_log_group skip_destroy"
   }
+
+  assert {
+    condition     = jsonencode(aws_cloudwatch_log_group.redis-engine-log-group.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
 }
 
 run "aws_cloudwatch_log_subscription_filter_unit_test" {
@@ -271,7 +293,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
 
   ### Test aws_cloudwatch_log_subscription_filter engine resource ###
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.name == "/aws/elasticache/redis-test-name/redis-test-environment/engine"
+    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.name == "/aws/elasticache/redis-test-name/test-environment/engine"
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter name"
   }
 
@@ -292,7 +314,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
 
   ### Test aws_cloudwatch_log_subscription_filter slow resource ###
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.name == "/aws/elasticache/redis-test-name/redis-test-environment/slow"
+    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.name == "/aws/elasticache/redis-test-name/test-environment/slow"
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter name"
   }
 
