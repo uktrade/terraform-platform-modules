@@ -96,7 +96,7 @@ resource "aws_acm_certificate_validation" "cert_validate" {
 ## End of Application Load Balancer section.
 
 
-## Start of section that updates AWS R53 records in either the Dev or Prod AWS account, dependant on the provider aws.domain.
+## Start of section that updates AWS R53 records in either the Dev or Prod AWS account, dependant on the provider aws.domain. 
 
 # This makes sure the correct root domain is selected for each of the certificate fqdn.
 data "aws_route53_zone" "domain-root" {
