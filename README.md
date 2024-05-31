@@ -132,7 +132,8 @@ my-application-alb:
       enable_cdn_record: false
       enable_logging: true
     prod:
-      cdn_domains_list: {my-application.great.gov.uk: "great.gov.uk"} 
+      cdn_domains_list: 
+        - my-application.prod.uktrade.digital: [ "internal", "my-application.prod.uktrade.digital" ]
 ```
 
 ## Monitoring
