@@ -13,11 +13,13 @@ phases:
   build:
     commands:
       - echo "Terraform Apply Phase"
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting terraform apply phase"
       - env
       - echo "Working on environment ${ENVIRONMENT}"
       - cd terraform/environments/${ENVIRONMENT}
       - terraform init
       - terraform apply plan.tfplan
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Terraform apply phase complete"
   post_build:
     commands:
       - copilot env deploy --name ${ENVIRONMENT}

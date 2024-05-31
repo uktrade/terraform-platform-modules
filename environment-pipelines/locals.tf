@@ -21,7 +21,12 @@ locals {
         configuration : {
           ProjectName : "${var.application}-environment-pipeline-plan"
           PrimarySource : "build_output"
-          EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }, { name : "COPILOT_PROFILE", value : env.accounts.deploy.name }, {name: "SLACK_REF", value: "#{slack.SLACK_REF}"}])
+          EnvironmentVariables : jsonencode([
+            { name : "ENVIRONMENT", value : env.name },
+            { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
+            { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
+            { name : "NEEDS_APPROVAL", value : env.requires_approval ? "true" : "" }
+          ])
         }
         namespace : "${env.name}-tf-plan"
       },

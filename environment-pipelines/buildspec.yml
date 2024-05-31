@@ -13,9 +13,6 @@ phases:
   install:
     commands:
       - echo "Deploying ${APPLICATION} environments"
-      - pip install -r requirements.txt
-      - export SLACK_REF=$(python ./platform_notify.py post_environment_progress)
-      - python ./platform_notify.py post_job_comment --slack-ref $SLACK_REF --title "Install" --message "Starting install phase"
       - VERSION_OUTPUT=""
       - |
         if [ ! -f .copilot-version ]; then
@@ -31,6 +28,15 @@ phases:
       - PLATFORM_HELPER_VERSION=`cat .platform-helper-version`
       - echo "Installing build tools"
       - yum -y install python-pip
+      - pip install --quiet --target . dbt-platform-helper==$PLATFORM_HELPER_VERSION
+      - | 
+          platform-helper notify environment-progress "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" \
+          "*Deploying ${APPLICATION} environments*" \
+          --build-arn "${CODEBUILD_BUILD_ARN}" \
+          --repository "${REPOSITORY}" \
+          --commit-sha "${CODEBUILD_RESOLVED_SOURCE_VERSION: -7}" \ # Get last 7 chars
+          | read SLACK_REF
+      - export SLACK_REF
       - mkdir ./build-tools
       - cd ./build-tools
       - curl -s -qL -o terraform_install.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
@@ -39,7 +45,7 @@ phases:
       - rm terraform_install.zip
       - curl -s -qL -o copilot https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION}
       - chmod +x copilot
-      - pip install --quiet --target . dbt-platform-helper==$PLATFORM_HELPER_VERSION
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting install phase"
       - mv bin/platform-helper .
       - VERSION_OUTPUT+="\n$(./terraform --version)"
       - VERSION_OUTPUT+="\n$(./platform-helper --version)"
@@ -47,7 +53,7 @@ phases:
       - VERSION_OUTPUT+="\n$(python3 --version)"
       - VERSION_OUTPUT+="\n$(pip --version)"
       - echo -e "=============\nTool Versions\n-------------\n$VERSION_OUTPUT"
-      - python ../platform_notify.py post_job_comment --slack-ref $SLACK_REF --title "Install" --message "Install phase complete"
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Install phase complete"
 artifacts:
   files:
     - "**/*"
