@@ -1,23 +1,15 @@
 # Changelog
 
-## [2.0.0](https://github.com/uktrade/terraform-platform-modules/compare/1.4.0...2.0.0) (2024-05-31)
+## [1.5.0](https://github.com/uktrade/terraform-platform-modules/compare/1.4.0...1.5.0) (2024-05-31)
 
+### Features
 
-### ⚠ BREAKING CHANGES
-
-* DBTP-944 remove "_ENDPOINT" from elasticache redis ssm parameter endpoint ([#134](https://github.com/uktrade/terraform-platform-modules/issues/134))
+* DBTP-434 Add Redis endpoint with ssl_cert_reqs parameter ([#147](https://github.com/uktrade/terraform-platform-modules/issues/147)) ([f7470e8](https://github.com/uktrade/terraform-platform-modules/commit/f7470e821c262de4ce50b0f1ebb30563ce145c88))
 
 ### Bug Fixes
 
 * DBTP-1010 Readonly postgres user doesn't have read perms ([#140](https://github.com/uktrade/terraform-platform-modules/issues/140)) ([1628440](https://github.com/uktrade/terraform-platform-modules/commit/1628440ab653a27ecc205cad4a32750cf7a22b62))
-* DBTP-944 Correct Redis tags & DBTP-434 Add Redis endpoint with ssl_cert_reqs parameter ([#147](https://github.com/uktrade/terraform-platform-modules/issues/147)) ([f7470e8](https://github.com/uktrade/terraform-platform-modules/commit/f7470e821c262de4ce50b0f1ebb30563ce145c88))
-* DBTP-944 remove "_ENDPOINT" from elasticache redis ssm parameter endpoint ([#134](https://github.com/uktrade/terraform-platform-modules/issues/134)) ([85d108a](https://github.com/uktrade/terraform-platform-modules/commit/85d108ac8a37af5691d3d149be3233b10ee49d72))
-* Replay DBTP-944 remove "_ENDPOINT" from elasticache redis ssm parameter endpoint ([#146](https://github.com/uktrade/terraform-platform-modules/issues/146)) ([2812e04](https://github.com/uktrade/terraform-platform-modules/commit/2812e04b84f409ce582dc39b75b7e9c4c035a035))
-
-
-### Reverts
-
-* "fix!: DBTP-944 remove "_ENDPOINT" from elasticache redis ssm parameter endpoint" ([#145](https://github.com/uktrade/terraform-platform-modules/issues/145)) ([d290034](https://github.com/uktrade/terraform-platform-modules/commit/d2900347393ea9b8138ca6a2e84884d2cfd8d0e1))
+* DBTP-944 Correct Redis tags ([#147](https://github.com/uktrade/terraform-platform-modules/issues/147)) ([f7470e8](https://github.com/uktrade/terraform-platform-modules/commit/f7470e821c262de4ce50b0f1ebb30563ce145c88))
 
 ## [1.4.0](https://github.com/uktrade/terraform-platform-modules/compare/1.3.0...1.4.0) (2024-05-30)
 
