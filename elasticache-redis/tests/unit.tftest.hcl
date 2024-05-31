@@ -210,6 +210,8 @@ run "aws_ssm_parameter_endpoint_unit_test" {
     condition     = jsonencode(aws_ssm_parameter.endpoint.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
+
+  ### test for aws_ssm_parameter.endpoint.key_id == aws_kms_key.ssm_redis_endpoint.arn can only be run as part of an terraform apply
 }
 
 run "aws_ssm_parameter_endpoint_short_unit_test" {
@@ -229,6 +231,8 @@ run "aws_ssm_parameter_endpoint_short_unit_test" {
     condition     = jsonencode(aws_ssm_parameter.endpoint_short.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
+
+  ### test for aws_ssm_parameter.endpoint_short.key_id == aws_kms_key.ssm_redis_endpoint.arn can only be run as part of an terraform apply
 }
 
 run "aws_ssm_parameter_redis_url_unit_test" {
@@ -248,6 +252,8 @@ run "aws_ssm_parameter_redis_url_unit_test" {
     condition     = jsonencode(aws_ssm_parameter.redis_url.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
+
+  ### test for aws_ssm_parameter.redis_url.key_id == aws_kms_key.ssm_redis_endpoint.arn can only be run as part of an terraform apply
 }
 
 run "aws_kms_key_unit_test" {
