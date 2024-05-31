@@ -19,9 +19,9 @@ phases:
       - cd terraform/environments/${ENVIRONMENT}
       - terraform init
       - terraform apply plan.tfplan
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Terraform apply phase complete"
   post_build:
     commands:
       - copilot env deploy --name ${ENVIRONMENT}
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Terraform apply phase complete"
 artifacts:
   files: []
