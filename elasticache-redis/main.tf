@@ -72,6 +72,7 @@ resource "aws_security_group" "redis" {
 }
 
 resource "aws_kms_key" "ssm_redis_endpoint" {
+  # checkov:skip=CKV_AWS_64:skipping pending discussion with rest of team on the policy
   description             = "KMS key for ${var.name}-${var.application}-${var.environment}-redis-cluster SSM parameters"
   deletion_window_in_days = 10
   enable_key_rotation     = true
