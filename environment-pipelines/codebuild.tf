@@ -37,13 +37,13 @@ resource "aws_codebuild_project" "environment_pipeline_build" {
 }
 
 resource "aws_cloudwatch_log_group" "environment_pipeline_codebuild" {
-  name = "codebuild/${var.application}-environment-terraform/log-group"
+  name = "codebuild/${var.application}-environment-terraform-TOOLSPR/log-group"
   # checkov:skip=CKV_AWS_338:Retains logs for 3 months instead of 1 year
   retention_in_days = 90
 }
 
 resource "aws_cloudwatch_log_stream" "environment_pipeline_codebuild" {
-  name           = "codebuild/${var.application}-environment-terraform/log-stream"
+  name           = "codebuild/${var.application}-environment-terraform-TOOLSPR/log-stream"
   log_group_name = aws_cloudwatch_log_group.environment_pipeline_codebuild.name
 }
 

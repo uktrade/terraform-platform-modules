@@ -251,7 +251,7 @@ data "aws_iam_policy_document" "load_balancer" {
 }
 
 resource "aws_iam_policy" "load_balancer" {
-  name        = "load-balancer-access"
+  name        = "load-balancer-access-TOOLSPR"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access load-balancer resources"
   policy      = data.aws_iam_policy_document.load_balancer.json
@@ -481,7 +481,7 @@ data "aws_iam_policy_document" "redis" {
 }
 
 resource "aws_iam_policy" "redis" {
-  name        = "redis-access"
+  name        = "redis-access-TOOLSPR"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access redis resources"
   policy      = data.aws_iam_policy_document.redis.json
@@ -602,7 +602,7 @@ data "aws_iam_policy_document" "postgres" {
 }
 
 resource "aws_iam_policy" "postgres" {
-  name        = "postgres-access"
+  name        = "postgres-access-TOOLSPR"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access postgres resources"
   policy      = data.aws_iam_policy_document.postgres.json
@@ -629,7 +629,7 @@ data "aws_iam_policy_document" "s3" {
 }
 
 resource "aws_iam_policy" "s3" {
-  name        = "s3-access"
+  name        = "s3-access-TOOLSPR"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access s3 resources"
   policy      = data.aws_iam_policy_document.s3.json
@@ -653,7 +653,7 @@ data "aws_iam_policy_document" "opensearch" {
 }
 
 resource "aws_iam_policy" "opensearch" {
-  name        = "opensearch-access"
+  name        = "opensearch-access-TOOLSPR"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access opensearch resources"
   policy      = data.aws_iam_policy_document.opensearch.json
@@ -693,7 +693,7 @@ data "aws_iam_policy_document" "cloudformation" {
 }
 
 resource "aws_iam_policy" "cloudformation" {
-  name        = "cloudformation-access"
+  name        = "cloudformation-access-TOOLSPR"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access cloudformation resources"
   policy      = data.aws_iam_policy_document.cloudformation.json
