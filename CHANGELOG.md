@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.5.0](https://github.com/uktrade/terraform-platform-modules/compare/1.4.0...1.5.0) (2024-05-31)
+
+### Features
+
+* DBTP-434 Add Redis endpoint with ssl_cert_reqs parameter ([#147](https://github.com/uktrade/terraform-platform-modules/issues/147)) ([f7470e8](https://github.com/uktrade/terraform-platform-modules/commit/f7470e821c262de4ce50b0f1ebb30563ce145c88))
+
+### Bug Fixes
+
+* DBTP-1010 Readonly postgres user doesn't have read perms ([#140](https://github.com/uktrade/terraform-platform-modules/issues/140)) ([1628440](https://github.com/uktrade/terraform-platform-modules/commit/1628440ab653a27ecc205cad4a32750cf7a22b62))
+* DBTP-944 Correct Redis tags ([#147](https://github.com/uktrade/terraform-platform-modules/issues/147)) ([f7470e8](https://github.com/uktrade/terraform-platform-modules/commit/f7470e821c262de4ce50b0f1ebb30563ce145c88))
+
+## [1.4.0](https://github.com/uktrade/terraform-platform-modules/compare/1.3.0...1.4.0) (2024-05-30)
+
+
+### Features
+
+* Enable Intelligent-Tiering to allow parameters with &gt; 4096 characters ([#139](https://github.com/uktrade/terraform-platform-modules/issues/139)) ([9be7595](https://github.com/uktrade/terraform-platform-modules/commit/9be7595e491a50fa65aebdc38e99494880b559a5))
+
+
+### Bug Fixes
+
+* DBTP-1010 Readonly postgres user doesn't have read perms ([#140](https://github.com/uktrade/terraform-platform-modules/issues/140)) ([1628440](https://github.com/uktrade/terraform-platform-modules/commit/1628440ab653a27ecc205cad4a32750cf7a22b62))
+* DBTP-998 - Move pipeline to platform-sandbox ([#137](https://github.com/uktrade/terraform-platform-modules/issues/137)) ([e97dcd4](https://github.com/uktrade/terraform-platform-modules/commit/e97dcd41c8face3e5dbbf1be1aa367b5c6861057))
+
 ## [1.3.0](https://github.com/uktrade/terraform-platform-modules/compare/1.2.2...1.3.0) (2024-05-23)
 
 
