@@ -133,40 +133,4 @@ demodjango-monitoring:
 
 ## Using our `demodjango` application for testing
 
-Note: We are currently treating the `terraform-deployment` branch as our `main` branch for this work.
-
-- Terraform
-  - Edit the `environment` and `vpc_name` under `module.extensions-tf` in `terraform/<environment>/main.tf`
-  - `cd terraform`
-  - `terraform apply`
-- AWS Copilot
-  - `cd ..`
-    - Make any required changes to have valid AWS Copilot configuration for your environment
-      - Copy the VPC IDs, Subnet IDs and certificate ARN from the AWS Console to your environment manifest
-      - Set the alias and copy the Application Load Balancer ARN from the AWS console to the `http` section for your environment in `copilot/web/manifest.yml`
-      ```
-      <environment>:
-        http:
-          alb: arn:aws:elasticloadbalancing:eu-west-2:852676506468:loadbalancer/app/demodjango-<environment>/bc968fa0a4fcd257
-          alias: internal.<environment>.demodjango.uktrade.digital
-      ```
-  - Add the `DJANGO_SECRET_KEY` secret for you environment `copilot secret init --name DJANGO_SECRET_KEY --values <environment>='<something_random>'`
-  - Deploy environment
-    - `copilot app init demodjango`
-    - `copilot env init --name <environment> --profile $AWS_PROFILE --default-config`
-    - `copilot env deploy --name <environment>`
-  - Deploy the web service with bootstrap image
-    - Set the `web` service to use the `copilot-bootstrap` image for now
-    - `copilot svc init --name web`
-    - `IMAGE_TAG=tag-latest copilot svc deploy --name web --env <environment>`
-    - Test it loads OK
-    - Swap to the proper image in the `web` manifest
-    - `IMAGE_TAG=tag-latest copilot svc deploy --name web --env <environment>`
-    - Test it loads OK, Celery checks will still fail for now
-  - Deploy Celery services
-    - `copilot svc init --name celery-worker`
-    - `IMAGE_TAG=tag-latest copilot svc deploy --name celery-worker --env <environment>`
-    - Skip next two, need to pull in the Celery Beat stuff from `main`...
-      - `copilot svc init --name celery-beat`
-      - `IMAGE_TAG=tag-latest copilot svc deploy --name celery-beat --env <environment>`
-    - Test the web service loads OK, including Celery checks
+See [instructions in the demodjango-deploy repository](https://github.com/uktrade/demodjango-deploy/tree/main#deploying-a-new-environment).
