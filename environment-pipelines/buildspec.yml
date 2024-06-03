@@ -12,6 +12,7 @@ env:
 phases:
   install:
     commands:
+      - set -e
       - echo "Deploying ${APPLICATION} environments"
       - VERSION_OUTPUT=""
       - |
@@ -28,18 +29,18 @@ phases:
       - PLATFORM_HELPER_VERSION=`cat .platform-helper-version`
       - echo "Installing build tools"
       - yum -y install python-pip
+      - mkdir ./build-tools
+      - cd ./build-tools
       - pip install --target . --quiet dbt-platform-helper==$PLATFORM_HELPER_VERSION
-      - mv bin/platform-helper .
-      - export "PATH=$(pwd):$PATH"
+      - export "PATH=$(pwd)/bin:$PATH"
+      - export PYTHONPATH=$(pwd)
       - | 
           export SLACK_REF=$(platform-helper notify environment-progress "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" \
           "*Deploying ${APPLICATION} environments*" \
           --build-arn "${CODEBUILD_BUILD_ARN}" \
           --repository "${REPOSITORY}" \
           --commit-sha "${CODEBUILD_RESOLVED_SOURCE_VERSION: -7}")
-      - echo "Slack Ref ${SLACK_REF}"
-      - mkdir ./build-tools
-      - cd ./build-tools
+      - cd bin
       - curl -s -qL -o terraform_install.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
       - unzip terraform_install.zip
       - chmod +x terraform
@@ -47,9 +48,9 @@ phases:
       - curl -s -qL -o copilot https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION}
       - chmod +x copilot
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting install phase"
-      - VERSION_OUTPUT+="\n$(./terraform --version)"
+      - VERSION_OUTPUT+="\n$(terraform --version)"
       - VERSION_OUTPUT+="\n$(platform-helper --version)"
-      - VERSION_OUTPUT+="\n$(./copilot --version)"
+      - VERSION_OUTPUT+="\n$(copilot --version)"
       - VERSION_OUTPUT+="\n$(python3 --version)"
       - VERSION_OUTPUT+="\n$(pip --version)"
       - echo -e "=============\nTool Versions\n-------------\n$VERSION_OUTPUT"

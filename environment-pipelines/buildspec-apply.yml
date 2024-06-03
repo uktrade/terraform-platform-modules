@@ -8,20 +8,29 @@ env:
 phases:
   install:
     commands:
-      - export PATH="$CODEBUILD_SRC_DIR/build-tools:$PATH"
-      - mv $CODEBUILD_SRC_DIR_terraform_plan/terraform/environments/${ENVIRONMENT}/plan.tfplan $CODEBUILD_SRC_DIR/terraform/environments/${ENVIRONMENT}/
+      - export PATH="${CODEBUILD_SRC_DIR}/build-tools/bin:$PATH"
+      - export PYTHONPATH="${CODEBUILD_SRC_DIR}/build-tools"
+      - echo CB - $CODEBUILD_SRC_DIR
+      - eval export PLAN_TF_DIR=\$CODEBUILD_SRC_DIR_${ENVIRONMENT}_terraform_plan
   build:
     commands:
+      - set -e
       - echo "Terraform Apply Phase"
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting terraform apply phase"
-      - env
       - echo "Working on environment ${ENVIRONMENT}"
       - cd terraform/environments/${ENVIRONMENT}
       - terraform init
-      - terraform apply plan.tfplan
+      - terraform apply $PLAN_TF_DIR/terraform/environments/${ENVIRONMENT}/plan.tfplan
+      - copilot env deploy --name ${ENVIRONMENT}
   post_build:
     commands:
-      - copilot env deploy --name ${ENVIRONMENT}
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Terraform apply phase complete"
+      - |
+        if [ "${CODEBUILD_BUILD_SUCCEEDING}" == "1" ]
+        then
+          MESSAGE="Terraform apply phase complete"
+        else
+          MESSAGE="Terraform apply phase FAILED"
+        fi
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
 artifacts:
   files: []

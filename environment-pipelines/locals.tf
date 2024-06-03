@@ -39,7 +39,8 @@ locals {
         output_artifacts : [],
         configuration : {
           CustomData : "Review Terraform Plan"
-          ExternalEntityLink : "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/${var.application}-environment-pipeline-tf-plan/build/#{${env.name}-tf-plan.BUILD_ID}"
+          ExternalEntityLink : "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/${var.application}-environment-pipeline-plan/build/#{${env.name}-tf-plan.BUILD_ID}"
+          #ExternalEntityLink : "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/${var.application}-environment-pipeline-plan/"
         },
         namespace : null
       }] : [],

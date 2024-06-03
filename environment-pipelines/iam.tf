@@ -81,11 +81,13 @@ data "aws_iam_policy_document" "write_environment_pipeline_codebuild_logs" {
     actions = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
-      "logs:PutLogEvents"
+      "logs:PutLogEvents",
+      "logs:TagLogGroup"
     ]
     resources = [
       aws_cloudwatch_log_group.environment_pipeline_codebuild.arn,
-      "${aws_cloudwatch_log_group.environment_pipeline_codebuild.arn}:*"
+      "${aws_cloudwatch_log_group.environment_pipeline_codebuild.arn}:*",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
     ]
   }
 }
@@ -524,6 +526,7 @@ data "aws_iam_policy_document" "postgres" {
     content {
       actions = [
         "lambda:GetFunction",
+        "lambda:InvokeFunction",
         "lambda:ListVersionsByFunction",
         "lambda:GetFunctionCodeSigningConfig"
       ]
