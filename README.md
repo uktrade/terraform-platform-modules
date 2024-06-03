@@ -19,7 +19,7 @@ Alternative installation methods [here](https://github.com/trufflesecurity/truff
 
 #### Running Trufflehog via Docker
 
-To run trufflehog in a Docker container there is a ```run-trufflehog.sh``` script which handles the Docker command and ensures your project directory is correctly mounted inside the container.
+To run trufflehog in a Docker container there is a ```run-trufflehog.sh``` script which handles the Docker command and ensures your project directory is correctly mounted inside the container. The working directory is set to the current working directory.
 
 Key Usage Note:
 
