@@ -6,6 +6,16 @@
    pip install poetry && poetry install && poetry run pre-commit install
 ```
 
+## Trufflehog pre-commit hook
+
+- Installation on Mac
+
+```shell
+brew install trufflehog
+```
+
+Alternative installation methods [here](https://github.com/trufflesecurity/trufflehog)
+
 ## Testing
 
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
