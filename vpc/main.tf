@@ -103,6 +103,20 @@ resource "aws_nat_gateway" "public" {
   )
 }
 
+resource "aws_ssm_parameter" "nat_gateway_eip" {
+  for_each = toset(var.arg_config.nat_gateways)
+  name     = "/copilot/${var.arg_name}/${var.arg_name}-nat-eip-${each.key}"
+  type     = "String"
+  value    = aws_eip.public[each.key].public_ip
+
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.arg_name}-nat-eip-${each.key}"
+    }
+  )
+}
+
 
 # Private Routing
 resource "aws_route_table" "private" {
