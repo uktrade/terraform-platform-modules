@@ -16,7 +16,7 @@ phases:
     commands:
       - set -e
       - echo "Terraform Apply Phase"
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting terraform apply phase"
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting terraform apply phase for the ${ENVIRONMENT} environment."
       - echo "Working on environment ${ENVIRONMENT}"
       - cd terraform/environments/${ENVIRONMENT}
       - terraform init
@@ -31,6 +31,6 @@ phases:
         else
           MESSAGE="Terraform apply phase FAILED"
         fi
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} for the ${ENVIRONMENT} environment."
 artifacts:
   files: []
