@@ -16,16 +16,6 @@ brew install trufflehog
 
 Alternative installation methods [here](https://github.com/trufflesecurity/trufflehog)
 
-
-#### Running Trufflehog via Docker
-
-To run trufflehog in a Docker container there is a ```run-trufflehog.sh``` script which handles the Docker command and ensures your project directory is correctly mounted inside the container. The working directory is set to the current working directory.
-
-Key Usage Note:
-
-For optimal hook efficiency, execute git add followed by git commit separately. This ensures TruffleHog analyzes all intended changes.
-Avoid using git commit -am, as it might bypass pre-commit hook execution for unstaged modifications.
-
 ## Testing
 
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
