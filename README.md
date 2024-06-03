@@ -14,25 +14,8 @@
 brew install trufflehog
 ```
 
-- Installation via Docker
+Alternative installation methods [here](https://github.com/trufflesecurity/trufflehog)
 
-Unix: 
-
-```shell
-docker run --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest github --repo https://github.com/trufflesecurity/test_keys
-```
-
-M1 & M2 Mac
-
-```shell
-docker run --platform linux/arm64 --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest github --repo https://github.com/trufflesecurity/test_keys
-```
-
-- Binary releases
-
-Download and unpack from https://github.com/trufflesecurity/trufflehog/releases
-
-- Once installed run ```poetry run pre-commit install``` to set up the git hook scripts 
 
 #### Running Trufflehog via Docker
 
