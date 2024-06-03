@@ -23,7 +23,7 @@ To run trufflehog in a Docker container there is a ```run-trufflehog.sh``` scrip
 
 Key Usage Note:
 
-For optimal hook efficacy, execute git add followed by git commit separately. This ensures TruffleHog analyzes all intended changes.
+For optimal hook efficiency, execute git add followed by git commit separately. This ensures TruffleHog analyzes all intended changes.
 Avoid using git commit -am, as it might bypass pre-commit hook execution for unstaged modifications.
 
 ## Testing
