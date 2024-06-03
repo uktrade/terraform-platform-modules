@@ -11,9 +11,11 @@ phases:
   build:
     commands:
       - echo "Terraform Plan Phase"
+      - platform-helper --version
       - echo "Working on environment ${ENVIRONMENT}"
       - echo "Generating manifests"
       - copilot env init --name ${ENVIRONMENT} --profile ${COPILOT_PROFILE} --default-config
+      - env
       - platform-helper copilot make-addons
       - cd terraform/environments/${ENVIRONMENT}
       - terraform init

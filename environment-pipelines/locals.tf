@@ -19,7 +19,7 @@ locals {
         input_artifacts : ["build_output"],
         output_artifacts : ["${env.name}_terraform_plan"],
         configuration : {
-          ProjectName : "${var.application}-environment-pipeline-plan"
+          ProjectName : "${var.application}-environment-pipeline-plan-TOOLSPR"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }, { name : "COPILOT_PROFILE", value : env.accounts.deploy.name }])
         },
@@ -47,7 +47,7 @@ locals {
         input_artifacts : ["build_output", "${env.name}_terraform_plan"],
         output_artifacts : [],
         configuration : {
-          ProjectName : "${var.application}-environment-pipeline-apply"
+          ProjectName : "${var.application}-environment-pipeline-apply-TOOLSPR"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }])
         },

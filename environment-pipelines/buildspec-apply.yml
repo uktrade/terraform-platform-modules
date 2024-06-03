@@ -3,7 +3,7 @@ phases:
   install:
     commands:
       - export PATH="$CODEBUILD_SRC_DIR/build-tools:$PATH"
-      - mv $CODEBUILD_SRC_DIR_terraform_plan/terraform/environments/${ENVIRONMENT}/plan.tfplan $CODEBUILD_SRC_DIR/terraform/environments/${ENVIRONMENT}/
+      - mv $CODEBUILD_SRC_DIR_toolspr_terraform_plan/terraform/environments/${ENVIRONMENT}/plan.tfplan $CODEBUILD_SRC_DIR/terraform/environments/${ENVIRONMENT}/
   build:
     commands:
       - echo "Terraform Apply Phase"

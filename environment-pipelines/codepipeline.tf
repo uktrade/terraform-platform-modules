@@ -82,9 +82,9 @@ module "artifact_store" {
 
   application = var.application
   environment = "not-applicable"
-  name        = "${var.application}-environment-pipeline-artifact-store-TOOLSPR"
+  name        = "${var.application}-environment-pipeline-artifact-store-toolspr"
 
   config = {
-    bucket_name = "${var.application}-environment-pipeline-artifact-store-TOOLSPR"
+    bucket_name = "${var.application}-environment-pipeline-artifact-store-toolspr"
   }
 }
