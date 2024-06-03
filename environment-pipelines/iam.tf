@@ -701,13 +701,13 @@ resource "aws_iam_policy" "cloudformation" {
 
 # Roles
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
-  name               = "${var.application}-environment-pipeline-codepipeline"
+  name               = "${var.application}-environment-pipeline-codepipeline-TOOLSPR"
   assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
   tags               = local.tags
 }
 
 resource "aws_iam_role" "environment_pipeline_codebuild" {
-  name               = "${var.application}-environment-pipeline-codebuild"
+  name               = "${var.application}-environment-pipeline-codebuild-TOOLSPR"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
   managed_policy_arns = [
     aws_iam_policy.cloudformation.arn,

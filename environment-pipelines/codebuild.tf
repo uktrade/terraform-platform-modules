@@ -1,5 +1,5 @@
 resource "aws_codebuild_project" "environment_pipeline_build" {
-  name           = "${var.application}-environment-pipeline-build"
+  name           = "${var.application}-environment-pipeline-build-TOOLSPR"
   description    = "Provisions the ${var.application} application's extensions."
   build_timeout  = 5
   service_role   = aws_iam_role.environment_pipeline_codebuild.arn
@@ -49,7 +49,7 @@ resource "aws_cloudwatch_log_stream" "environment_pipeline_codebuild" {
 
 # Terraform plan
 resource "aws_codebuild_project" "environment_pipeline_plan" {
-  name           = "${var.application}-environment-pipeline-plan"
+  name           = "${var.application}-environment-pipeline-plan-TOOLSPR"
   description    = "Provisions the ${var.application} application's extensions."
   build_timeout  = 5
   service_role   = aws_iam_role.environment_pipeline_codebuild.arn
@@ -88,7 +88,7 @@ resource "aws_codebuild_project" "environment_pipeline_plan" {
 
 # Terraform apply
 resource "aws_codebuild_project" "environment_pipeline_apply" {
-  name           = "${var.application}-environment-pipeline-apply"
+  name           = "${var.application}-environment-pipeline-apply-TOOLSPR"
   description    = "Provisions the ${var.application} application's extensions."
   build_timeout  = 60
   service_role   = aws_iam_role.environment_pipeline_codebuild.arn
