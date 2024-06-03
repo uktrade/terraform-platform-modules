@@ -5,3 +5,4 @@
 **/.terraform.lock.hcl
 *.envrc
 *.idea*
+*.DS_Store
