@@ -6,6 +6,43 @@
    pip install poetry && poetry install && poetry run pre-commit install
 ```
 
+## Trufflehog pre-commit hook
+
+- Installation on Mac
+
+```shell
+brew install trufflehog
+```
+
+- Installation via Docker
+
+Unix: 
+
+```shell
+docker run --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest github --repo https://github.com/trufflesecurity/test_keys
+```
+
+M1 & M2 Mac
+
+```shell
+docker run --platform linux/arm64 --rm -it -v "$PWD:/pwd" trufflesecurity/trufflehog:latest github --repo https://github.com/trufflesecurity/test_keys
+```
+
+- Binary releases
+
+Download and unpack from https://github.com/trufflesecurity/trufflehog/releases
+
+- Once installed run ```poetry run pre-commit install``` to set up the git hook scripts 
+
+#### Running Trufflehog via Docker
+
+To run trufflehog in a Docker container there is a ```run-trufflehog.sh``` script which handles the Docker command and ensures your project directory is correctly mounted inside the container.
+
+Key Usage Note:
+
+For optimal hook efficacy, execute git add followed by git commit separately. This ensures TruffleHog analyzes all intended changes.
+Avoid using git commit -am, as it might bypass pre-commit hook execution for unstaged modifications.
+
 ## Testing
 
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
