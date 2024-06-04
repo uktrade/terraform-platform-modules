@@ -39,6 +39,10 @@ mock_provider "aws" {
   alias = "domain"
 }
 
+mock_provider "aws" {
+  alias = "domain-cdn"
+}
+
 override_data {
   target = module.opensearch["test-opensearch"].data.aws_vpc.vpc
   values = {
