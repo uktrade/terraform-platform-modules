@@ -31,7 +31,7 @@ locals {
 
   # A List of domains that can be used in the Subject Alternative Name (SAN) part of the certificate.
   # Only select the domain from the value field of cdn_domain_list (drop "internal") 
-  culled_san_list = try({ for k, v in var.config.cdn_domains_list : "${k}" => "${v[1]}" }, {})
+  culled_san_list = try({ for k, v in var.config.cdn_domains_list : k => v[1] }, {})
   san_list        = merge(local.additional_address_fqdn, local.culled_san_list)
 
   # Create a complete domain list, primary domain plus all CDN/SAN domains.
