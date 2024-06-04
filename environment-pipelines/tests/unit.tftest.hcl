@@ -733,7 +733,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
@@ -791,7 +791,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
@@ -845,7 +845,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
@@ -945,7 +945,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 }

@@ -24,6 +24,7 @@ locals {
           EnvironmentVariables : jsonencode([
             { name : "ENVIRONMENT", value : env.name },
             { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
+            { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
             { name : "NEEDS_APPROVAL", value : coalesce(env.requires_approval, false) ? "yes" : "no" }
           ])
@@ -56,6 +57,7 @@ locals {
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([
             { name : "ENVIRONMENT", value : env.name },
+            { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
           ])
         },
