@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/uktrade/terraform-platform-modules/compare/2.0.0...2.1.0) (2024-06-04)
+
+
+### Features
+
+* Pipeline slack alerts ([#150](https://github.com/uktrade/terraform-platform-modules/issues/150)) ([ead58f3](https://github.com/uktrade/terraform-platform-modules/commit/ead58f39b6faecd8ffcd9fb18cc607416d20770b))
+
+
+### Bug Fixes
+
+* Fixed extensions module that was broken on the cdn declaration ([#152](https://github.com/uktrade/terraform-platform-modules/issues/152)) ([c76ac9f](https://github.com/uktrade/terraform-platform-modules/commit/c76ac9f2aedf06bdb35db6c7615b4770d6e7c2b0))
+
 ## [2.0.0](https://github.com/uktrade/terraform-platform-modules/compare/1.5.0...2.0.0) (2024-06-04)
 
 
