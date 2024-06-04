@@ -10,7 +10,6 @@ phases:
     commands:
       - export PATH="${CODEBUILD_SRC_DIR}/build-tools/bin:$PATH"
       - export PYTHONPATH="${CODEBUILD_SRC_DIR}/build-tools"
-      - echo CB - $CODEBUILD_SRC_DIR
       - eval export PLAN_TF_DIR=\$CODEBUILD_SRC_DIR_${ENVIRONMENT}_terraform_plan
   build:
     commands:
