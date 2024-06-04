@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/uktrade/terraform-platform-modules/compare/1.5.0...2.0.0) (2024-06-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* DBTP-928 Add CDN endpoint module ([#141](https://github.com/uktrade/terraform-platform-modules/issues/141))
+
+### Features
+
+* DBTP-928 Add CDN endpoint module ([#141](https://github.com/uktrade/terraform-platform-modules/issues/141)) ([20d6f5b](https://github.com/uktrade/terraform-platform-modules/commit/20d6f5b9d25c2a94bb02d38ad862a5fa5fb9f224))
+
 ## [1.5.0](https://github.com/uktrade/terraform-platform-modules/compare/1.4.0...1.5.0) (2024-05-31)
 
 ### Features
