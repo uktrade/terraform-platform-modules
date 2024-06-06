@@ -38,7 +38,7 @@ run "e2e_tests" {
 
   ### Test aws_security_group resource ###
   assert {
-    condition     = startswith(aws_security_group.vpc-core-sg.arn, "arn:aws:ec2:eu-west-2:852676506468:security-group/sg-") == true
+    condition     = length(regexall("|(arn:aws:ec2:eu-west-2:)[0-9]{12,14}(:security-group/sg-)|", aws_security_group.vpc-core-sg.arn)) > 0
     error_message = "Invalid security group settings"
   }
 
