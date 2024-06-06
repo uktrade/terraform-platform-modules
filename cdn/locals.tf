@@ -10,11 +10,11 @@ locals {
   # The primary domain for every application follows the naming standard documented under https://github.com/uktrade/terraform-platform-modules/blob/main/README.md#application-load-balancer-module
   domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "${var.application}.prod.uktrade.digital") : coalesce(var.config.env_root, "${var.environment}.${var.application}.uktrade.digital")
 
-  cdn_domains_list = coalesce(var.config.cdn_domains_list, {})
+  # Cull the domain from the cdn_domains_list if "disable_cdn" is set in the value list.
+  cdn_domains_list = try({ for k, v in var.config.cdn_domains_list : k => v if !contains(v, "disable_cdn") }, {})
 
-  # To avoid overwrites in prod we do not want to update R53 records by default.
-  enable_cdn_record = coalesce(var.config.enable_cdn_record, var.environment == "prod" ? false : true)
-  cdn_records       = local.enable_cdn_record ? local.cdn_domains_list : {}
+  # To avoid overwrites in prod we do not want to update R53 records by default, can be bypassed if "enable_record" is set in the value list.
+  cdn_records = { for k, v in local.cdn_domains_list : k => v if(var.environment != "prod" || contains(v, "enable_record")) }
 
   # CDN logging buckets
   logging_bucket = var.environment == "prod" ? "dbt-cloudfront-logs-prod.s3-eu-west-2.amazonaws.com" : "dbt-cloudfront-logs.s3-eu-west-2.amazonaws.com"

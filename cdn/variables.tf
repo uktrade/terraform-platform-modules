@@ -12,7 +12,6 @@ variable "config" {
     env_root                = optional(string)
     cdn_domains_list        = optional(map(list(string)))
     additional_address_list = optional(list(string))
-    enable_cdn_record       = optional(bool)
     enable_logging          = optional(bool)
 
     # CDN default overrides
