@@ -47,10 +47,16 @@ resource "aws_codepipeline" "environment_pipeline" {
       input_artifacts  = ["project_deployment_source"]
       output_artifacts = ["build_output"]
       version          = "1"
+      namespace        = "slack"
 
       configuration = {
         ProjectName   = "${var.application}-environment-pipeline-build"
         PrimarySource = "project_deployment_source"
+        EnvironmentVariables : jsonencode([
+          { name : "APPLICATION", value : var.application },
+          { name : "REPOSITORY", value : var.repository },
+          { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
+        ])
       }
     }
   }

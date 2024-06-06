@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.2.0](https://github.com/uktrade/terraform-platform-modules/compare/2.1.0...2.2.0) (2024-06-06)
+
+
+### Features
+
+* dbtp-928 option to disable cdn ([#155](https://github.com/uktrade/terraform-platform-modules/issues/155)) ([e86fd89](https://github.com/uktrade/terraform-platform-modules/commit/e86fd8900b7372c47d3859ce0b236c40eb04a285))
+
+## [2.1.0](https://github.com/uktrade/terraform-platform-modules/compare/2.0.0...2.1.0) (2024-06-04)
+
+
+### Features
+
+* Pipeline slack alerts ([#150](https://github.com/uktrade/terraform-platform-modules/issues/150)) ([ead58f3](https://github.com/uktrade/terraform-platform-modules/commit/ead58f39b6faecd8ffcd9fb18cc607416d20770b))
+
+
+### Bug Fixes
+
+* Fixed extensions module that was broken on the cdn declaration ([#152](https://github.com/uktrade/terraform-platform-modules/issues/152)) ([c76ac9f](https://github.com/uktrade/terraform-platform-modules/commit/c76ac9f2aedf06bdb35db6c7615b4770d6e7c2b0))
+
+## [2.0.0](https://github.com/uktrade/terraform-platform-modules/compare/1.5.0...2.0.0) (2024-06-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* DBTP-928 Add CDN endpoint module ([#141](https://github.com/uktrade/terraform-platform-modules/issues/141))
+
+### Features
+
+* DBTP-928 Add CDN endpoint module ([#141](https://github.com/uktrade/terraform-platform-modules/issues/141)) ([20d6f5b](https://github.com/uktrade/terraform-platform-modules/commit/20d6f5b9d25c2a94bb02d38ad862a5fa5fb9f224))
+
 ## [1.5.0](https://github.com/uktrade/terraform-platform-modules/compare/1.4.0...1.5.0) (2024-05-31)
 
 ### Features

@@ -31,3 +31,8 @@ variable "branch" {
   type    = string
   default = "main"
 }
+
+variable "slack_channel" {
+  type    = string
+  default = "/codebuild/slack_pipeline_notifications_channel"
+}
