@@ -109,12 +109,7 @@ resource "aws_ssm_parameter" "nat_gateway_eip" {
   type     = "String"
   value    = aws_eip.public[each.key].public_ip
 
-  tags = merge(
-    local.tags,
-    {
-      Name = "${var.arg_name}-nat-eip-${each.key}"
-    }
-  )
+  tags = local.tags
 }
 
 

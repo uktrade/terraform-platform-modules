@@ -30,6 +30,12 @@ run "e2e_tests" {
     error_message = "Invalid VPC tags"
   }
 
+  ### nat_gateway_eip aws_ssm_parameter ###
+  assert {
+    condition     = aws_ssm_parameter.nat_gateway_eip["a"].value == aws_eip.public["a"].public_ip
+    error_message = "Should be an IP address"
+  }
+
   ### Test aws_security_group resource ###
   assert {
     condition     = startswith(aws_security_group.vpc-core-sg.arn, "arn:aws:ec2:eu-west-2:852676506468:security-group/sg-") == true
