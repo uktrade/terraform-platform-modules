@@ -104,6 +104,8 @@ resource "aws_nat_gateway" "public" {
 }
 
 resource "aws_ssm_parameter" "nat_gateway_eip" {
+  # checkov:skip=CKV_AWS_337:Ensure SSM parameters are using KMS CMK. Related ticket: https://uktrade.atlassian.net/browse/DBTP-946
+  # checkov:skip=CKV2_AWS_34:AWS SSM Parameter should be Encrypted. Related ticket: https://uktrade.atlassian.net/browse/DBTP-946
   for_each = toset(var.arg_config.nat_gateways)
   name     = "/${var.arg_name}/${var.arg_name}-nat-eip-${each.key}"
   type     = "String"
