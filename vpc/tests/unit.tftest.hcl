@@ -47,7 +47,7 @@ run "aws_vpc_unit_test" {
 
   ### nat_gateway_eip aws_ssm_parameter ###
   assert {
-    condition     = aws_ssm_parameter.nat_gateway_eip["a"].name == "/vpc-test-name/vpc-test-name-nat-eip-a"
+    condition     = aws_ssm_parameter.nat_gateway_eip["a"].name == "/vpc-test-name/nat-eip-a/ADDITIONAL_IP_LIST"
     error_message = "Should be: /vpc-test-name/vpc-test-name-nat-eip-a"
   }
 
