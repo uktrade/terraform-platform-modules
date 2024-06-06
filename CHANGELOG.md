@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/uktrade/terraform-platform-modules/compare/2.1.0...2.2.0) (2024-06-06)
+
+
+### Features
+
+* dbtp-928 option to disable cdn ([#155](https://github.com/uktrade/terraform-platform-modules/issues/155)) ([e86fd89](https://github.com/uktrade/terraform-platform-modules/commit/e86fd8900b7372c47d3859ce0b236c40eb04a285))
+
 ## [2.1.0](https://github.com/uktrade/terraform-platform-modules/compare/2.0.0...2.1.0) (2024-06-04)
 
 
