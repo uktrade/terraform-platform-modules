@@ -27,7 +27,8 @@
                 {
                     "resource": "module.extensions-staging.module.alb.aws_security_group.alb-security-group",
                     "check_ids": [
-                        "CKV_AWS_23"
+                        "CKV_AWS_23",
+                        "CKV2_AWS_5"
                     ]
                 }
             ]

@@ -6,6 +6,16 @@
    pip install poetry && poetry install && poetry run pre-commit install
 ```
 
+## Trufflehog pre-commit hook
+
+- Installation on Mac
+
+```shell
+brew install trufflehog
+```
+
+Alternative installation methods [here](https://github.com/trufflesecurity/trufflehog)
+
 ## Testing
 
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
@@ -80,7 +90,7 @@ For non-production: `internal.<application_name>.uktrade.digital`
 
 For production: `internal.<application_name>.prod.uktrade.digital`
 
-Additional domains (`cdn_domains_list`) are the domain names that will be configured in CloudFront. In the map the key is the fully qualified domain name and the value is the application's base domain (the application's Route 53 zone).  
+
 
 If there are multiple web services on the application, you can add the additional domain to your certificate by adding the prefix name (eg. `internal.static`) to the variable `additional_address_list` see extension.yml example below.  `Note: this is just the prefix, no need to add env.uktrade.digital`
 
@@ -97,12 +107,43 @@ my-application-alb:
   type: alb
   environments:
     dev: 
-      cdn_domains_list:
-        dev.my-application.uktrade.digital: my-application.uktrade.digital
       additional_address_list:
         - internal.my-web-service-2
+```
+
+## CDN
+
+This module will create the CloudFront (CDN) endpoints for the application if enabled.
+
+`cdn_domains_list` is a map of the domain names that will be configured in CloudFront.
+* the key is the fully qualified domain name
+* the value is an array containing the internal prefix and the base domain (the application's Route 53 zone).  
+
+### Optional settings:
+
+To create a R53 record pointing to the CloudFront endpoint, set this to true.  If not set, in non production this is set to true by default and set to false in production.
+- enable_cdn_record: true
+
+To turn on CloudFront logging to a S3 bucket, set this to true.
+- enable_logging: true
+
+example `extensions.yml` config.
+
+```yaml
+my-application-alb:
+  type: alb
+  environments:
+    dev: 
+      cdn_domains_list:
+        - dev.my-application.uktrade.digital: [ "internal", "my-application.uktrade.digital" ] 
+        - dev.my-web-service-2.my-application.uktrade.digital: [ "internal.my-web-service-2", "my-application.uktrade.digital" ]
+      additional_address_list:
+        - internal.my-web-service-2
+      enable_cdn_record: false
+      enable_logging: true
     prod:
-      domain: {my-application.great.gov.uk: "great.gov.uk"} 
+      cdn_domains_list: 
+        - my-application.prod.uktrade.digital: [ "internal", "my-application.prod.uktrade.digital" ]
 ```
 
 ## Monitoring
@@ -123,40 +164,4 @@ demodjango-monitoring:
 
 ## Using our `demodjango` application for testing
 
-Note: We are currently treating the `terraform-deployment` branch as our `main` branch for this work.
-
-- Terraform
-  - Edit the `environment` and `vpc_name` under `module.extensions-tf` in `terraform/<environment>/main.tf`
-  - `cd terraform`
-  - `terraform apply`
-- AWS Copilot
-  - `cd ..`
-    - Make any required changes to have valid AWS Copilot configuration for your environment
-      - Copy the VPC IDs, Subnet IDs and certificate ARN from the AWS Console to your environment manifest
-      - Set the alias and copy the Application Load Balancer ARN from the AWS console to the `http` section for your environment in `copilot/web/manifest.yml`
-      ```
-      <environment>:
-        http:
-          alb: arn:aws:elasticloadbalancing:eu-west-2:852676506468:loadbalancer/app/demodjango-<environment>/bc968fa0a4fcd257
-          alias: internal.<environment>.demodjango.uktrade.digital
-      ```
-  - Add the `DJANGO_SECRET_KEY` secret for you environment `copilot secret init --name DJANGO_SECRET_KEY --values <environment>='<something_random>'`
-  - Deploy environment
-    - `copilot app init demodjango`
-    - `copilot env init --name <environment> --profile $AWS_PROFILE --default-config`
-    - `copilot env deploy --name <environment>`
-  - Deploy the web service with bootstrap image
-    - Set the `web` service to use the `copilot-bootstrap` image for now
-    - `copilot svc init --name web`
-    - `IMAGE_TAG=tag-latest copilot svc deploy --name web --env <environment>`
-    - Test it loads OK
-    - Swap to the proper image in the `web` manifest
-    - `IMAGE_TAG=tag-latest copilot svc deploy --name web --env <environment>`
-    - Test it loads OK, Celery checks will still fail for now
-  - Deploy Celery services
-    - `copilot svc init --name celery-worker`
-    - `IMAGE_TAG=tag-latest copilot svc deploy --name celery-worker --env <environment>`
-    - Skip next two, need to pull in the Celery Beat stuff from `main`...
-      - `copilot svc init --name celery-beat`
-      - `IMAGE_TAG=tag-latest copilot svc deploy --name celery-beat --env <environment>`
-    - Test the web service loads OK, including Celery checks
+See [instructions in the demodjango-deploy repository](https://github.com/uktrade/demodjango-deploy/tree/main#deploying-a-new-environment).

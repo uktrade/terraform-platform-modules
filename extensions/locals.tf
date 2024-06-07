@@ -22,6 +22,7 @@ locals {
   opensearch = { for k, v in local.services : k => v if v.type == "opensearch" }
   monitoring = { for k, v in local.services : k => v if v.type == "monitoring" }
   alb        = { for k, v in local.services : k => v if v.type == "alb" }
+  cdn        = { for k, v in local.services : k => v if v.type == "alb" }
 
   tags = {
     application         = var.args.application

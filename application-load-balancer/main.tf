@@ -45,6 +45,7 @@ resource "aws_lb_listener" "alb-listener" {
 }
 
 resource "aws_security_group" "alb-security-group" {
+  # checkov:skip=CKV2_AWS_5:Security group is used by VPC. Ticket to investigate: https://uktrade.atlassian.net/browse/DBTP-1039
   for_each = local.protocols
   name     = "${var.application}-${var.environment}-alb-${each.key}"
   vpc_id   = data.aws_vpc.vpc.id
@@ -95,7 +96,7 @@ resource "aws_acm_certificate_validation" "cert_validate" {
 ## End of Application Load Balancer section.
 
 
-## Start of section that updates AWS R53 records in either the Dev or Prod AWS account, dependant on the provider aws.domain. 
+## Start of section that updates AWS R53 records in either the Dev or Prod AWS account, dependant on the provider aws.domain.
 
 # This makes sure the correct root domain is selected for each of the certificate fqdn.
 data "aws_route53_zone" "domain-root" {

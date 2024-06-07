@@ -1,8 +1,8 @@
 variables {
   vpc_name    = "sandbox-elasticache-redis"
-  application = "redis-test-application"
-  environment = "redis-test-environment"
-  name        = "redis-test-name"
+  application = "test-application"
+  environment = "test-environment"
+  name        = "test-redis"
   config = {
     "engine" = "6.2",
     "plan"   = "small",
@@ -22,12 +22,12 @@ run "e2e_test" {
 
   ### Test aws_elasticache_replication_group resource ###
   assert {
-    condition     = aws_elasticache_replication_group.redis.replication_group_id == "redis-test-nameredis-test-environment"
+    condition     = aws_elasticache_replication_group.redis.replication_group_id == "test-redis-test-environment"
     error_message = "Invalid config for aws_elasticache_replication_group replication_group_id"
   }
 
   assert {
-    condition     = aws_elasticache_replication_group.redis.subnet_group_name == "redis-test-name-redis-test-environment-cache-subnet"
+    condition     = aws_elasticache_replication_group.redis.subnet_group_name == "test-redis-test-environment-cache-subnet"
     error_message = "Invalid config for aws_elasticache_replication_group subnet_group_name"
   }
 
@@ -82,12 +82,12 @@ run "e2e_test" {
   }
 
   assert {
-    condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "engine-log"][0] == "/aws/elasticache/redis-test-name/redis-test-environment/redis-test-nameRedis/engine"
+    condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "engine-log"][0] == "/aws/elasticache/test-redis/test-environment/test-redisRedis/engine"
     error_message = "Invalid config for aws_elasticache_replication_group log_delivery_configuration"
   }
 
   assert {
-    condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "slow-log"][0] == "/aws/elasticache/redis-test-name/redis-test-environment/redis-test-nameRedis/slow"
+    condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "slow-log"][0] == "/aws/elasticache/test-redis/test-environment/test-redisRedis/slow"
     error_message = "Invalid config for aws_elasticache_replication_group log_delivery_configuration"
   }
 
@@ -104,5 +104,35 @@ run "e2e_test" {
   assert {
     condition     = aws_elasticache_replication_group.redis.auto_minor_version_upgrade == "true"
     error_message = "Invalid config for aws_elasticache_replication_group auto_minor_version_upgrade"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint.value == "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
+    error_message = "Invalid config for value attribute in aws_ssm_parameter endpoint resource"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint_short.value == "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
+    error_message = "Invalid config for value attribute in aws_ssm_parameter endpoint_short resource"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.redis_url.value == "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379?ssl_cert_reqs=CERT_REQUIRED"
+    error_message = "Invalid config for value attribute in aws_ssm_parameter redis_url resource"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint.key_id == aws_kms_key.ssm_redis_endpoint.arn
+    error_message = "Should be: arn for aws_kms_key.ssm_redis_endpoint resource"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.endpoint_short.key_id == aws_kms_key.ssm_redis_endpoint.arn
+    error_message = "Should be: arn for aws_kms_key.ssm_redis_endpoint resource"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.redis_url.key_id == aws_kms_key.ssm_redis_endpoint.arn
+    error_message = "Should be: arn for aws_kms_key.ssm_redis_endpoint resource"
   }
 }
