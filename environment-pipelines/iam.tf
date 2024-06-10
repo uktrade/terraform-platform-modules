@@ -254,7 +254,7 @@ data "aws_iam_policy_document" "load_balancer" {
 }
 
 resource "aws_iam_policy" "load_balancer" {
-  name        = "load-balancer-access"
+  name        = "${var.application}-${var.pipeline_name}-load-balancer-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access load-balancer resources"
   policy      = data.aws_iam_policy_document.load_balancer.json
@@ -484,7 +484,7 @@ data "aws_iam_policy_document" "redis" {
 }
 
 resource "aws_iam_policy" "redis" {
-  name        = "redis-access"
+  name        = "${var.application}-${var.pipeline_name}-redis-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access redis resources"
   policy      = data.aws_iam_policy_document.redis.json
@@ -606,7 +606,7 @@ data "aws_iam_policy_document" "postgres" {
 }
 
 resource "aws_iam_policy" "postgres" {
-  name        = "postgres-access"
+  name        = "${var.application}-${var.pipeline_name}-postgres-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access postgres resources"
   policy      = data.aws_iam_policy_document.postgres.json
@@ -633,7 +633,7 @@ data "aws_iam_policy_document" "s3" {
 }
 
 resource "aws_iam_policy" "s3" {
-  name        = "s3-access"
+  name        = "${var.application}-${var.pipeline_name}-s3-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access s3 resources"
   policy      = data.aws_iam_policy_document.s3.json
@@ -657,7 +657,7 @@ data "aws_iam_policy_document" "opensearch" {
 }
 
 resource "aws_iam_policy" "opensearch" {
-  name        = "opensearch-access"
+  name        = "${var.application}-${var.pipeline_name}-opensearch-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access opensearch resources"
   policy      = data.aws_iam_policy_document.opensearch.json
@@ -681,12 +681,16 @@ data "aws_iam_policy_document" "copilot_assume_role" {
 data "aws_iam_policy_document" "cloudformation" {
   statement {
     actions = [
+      "cloudformation:GetTemplate",
       "cloudformation:GetTemplateSummary",
       "cloudformation:DescribeStackSet",
       "cloudformation:UpdateStackSet",
       "cloudformation:DescribeStackSetOperation",
       "cloudformation:ListStackInstances",
       "cloudformation:DescribeStacks",
+      "cloudformation:DescribeChangeSet",
+      "cloudformation:CreateChangeSet",
+      "cloudformation:ExecuteChangeSet",
     ]
     resources = [
       "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.application}-*",
@@ -697,7 +701,7 @@ data "aws_iam_policy_document" "cloudformation" {
 }
 
 resource "aws_iam_policy" "cloudformation" {
-  name        = "cloudformation-access"
+  name        = "${var.application}-${var.pipeline_name}-cloudformation-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access cloudformation resources"
   policy      = data.aws_iam_policy_document.cloudformation.json
@@ -705,13 +709,13 @@ resource "aws_iam_policy" "cloudformation" {
 
 # Roles
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
-  name               = "${var.application}-environment-pipeline-codepipeline"
+  name               = "${var.application}-${var.pipeline_name}-environment-pipeline-codepipeline"
   assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
   tags               = local.tags
 }
 
 resource "aws_iam_role" "environment_pipeline_codebuild" {
-  name               = "${var.application}-environment-pipeline-codebuild"
+  name               = "${var.application}-${var.pipeline_name}-environment-pipeline-codebuild"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
   managed_policy_arns = [
     aws_iam_policy.cloudformation.arn,
@@ -726,100 +730,100 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
 
 # Inline policies
 resource "aws_iam_role_policy" "artifact_store_access_for_environment_codepipeline" {
-  name   = "${var.application}-artifact-store-access-for-environment-codepipeline"
+  name   = "${var.application}-${var.pipeline_name}-artifact-store-access-for-environment-codepipeline"
   role   = aws_iam_role.environment_pipeline_codepipeline.name
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
 
 resource "aws_iam_role_policy" "artifact_store_access_for_environment_codebuild" {
-  name   = "${var.application}-artifact-store-access-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-artifact-store-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
 
 resource "aws_iam_role_policy" "log_access_for_environment_codebuild" {
-  name   = "${var.application}-log-access-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-log-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.write_environment_pipeline_codebuild_logs.json
 }
 
 # Terraform state access
 resource "aws_iam_role_policy" "state_bucket_access_for_environment_codebuild" {
-  name   = "${var.application}-state-bucket-access-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-state-bucket-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.state_bucket_access.json
 }
 
 resource "aws_iam_role_policy" "state_kms_key_access_for_environment_codebuild" {
-  name   = "${var.application}-state-kms-key-access-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-state-kms-key-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.state_kms_key_access.json
 }
 
 resource "aws_iam_role_policy" "state_dynamo_db_access_for_environment_codebuild" {
-  name   = "${var.application}-state-dynamo-db-access-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-state-dynamo-db-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.state_dynamo_db_access.json
 }
 
 # VPC and Subnets
 resource "aws_iam_role_policy" "ec2_read_access_for_environment_codebuild" {
-  name   = "${var.application}-ec2-read-access-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-ec2-read-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.ec2_read_access.json
 }
 
 resource "aws_iam_role_policy" "ssm_read_access_for_environment_codebuild" {
-  name   = "${var.application}-ssm-read-access-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-ssm-read-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.ssm_read_access.json
 }
 
 # Assume DNS account role
 resource "aws_iam_role_policy" "dns_account_assume_role_for_environment_codebuild" {
-  name   = "${var.application}-dns-account-assume-role-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-dns-account-assume-role-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.dns_account_assume_role.json
 }
 
 resource "aws_iam_role_policy" "certificate_for_environment_codebuild" {
-  name   = "${var.application}-certificate-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-certificate-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.certificate.json
 }
 
 resource "aws_iam_role_policy" "security_group_for_environment_codebuild" {
-  name   = "${var.application}-security-group-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-security-group-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.security_group.json
 }
 
 resource "aws_iam_role_policy" "ssm_parameter_for_environment_codebuild" {
-  name   = "${var.application}-ssm-parameter-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-ssm-parameter-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.ssm_parameter.json
 }
 
 resource "aws_iam_role_policy" "cloudwatch_for_environment_codebuild" {
-  name   = "${var.application}-cloudwatch-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-cloudwatch-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.cloudwatch.json
 }
 
 resource "aws_iam_role_policy" "logs_for_environment_codebuild" {
-  name   = "${var.application}-logs-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-logs-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.logs.json
 }
 
 resource "aws_iam_role_policy" "kms_key_for_environment_codebuild" {
-  name   = "${var.application}-kms-key-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-kms-key-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.kms_key.json
 }
 
 resource "aws_iam_role_policy" "copilot_assume_role_for_environment_codebuild" {
-  name   = "${var.application}-copilot-assume-role-for-environment-codebuild"
+  name   = "${var.application}-${var.pipeline_name}-copilot-assume-role-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.copilot_assume_role.json
 }

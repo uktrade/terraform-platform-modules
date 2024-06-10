@@ -19,7 +19,7 @@ locals {
         input_artifacts : ["build_output"],
         output_artifacts : ["${env.name}_terraform_plan"],
         configuration : {
-          ProjectName : "${var.application}-environment-pipeline-plan"
+          ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-plan"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([
             { name : "ENVIRONMENT", value : env.name },
@@ -40,7 +40,7 @@ locals {
         output_artifacts : [],
         configuration : {
           CustomData : "Review Terraform Plan"
-          ExternalEntityLink : "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/${var.application}-environment-pipeline-plan/build/#{${env.name}-plan.BUILD_ID}"
+          ExternalEntityLink : "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/${var.application}-${var.pipeline_name}-environment-pipeline-plan/build/#{${env.name}-plan.BUILD_ID}"
         },
         namespace : null
       }] : [],
@@ -53,12 +53,13 @@ locals {
         input_artifacts : ["build_output", "${env.name}_terraform_plan"],
         output_artifacts : [],
         configuration : {
-          ProjectName : "${var.application}-environment-pipeline-apply"
+          ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-apply"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([
             { name : "ENVIRONMENT", value : env.name },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
+            { name : "VPC_OPTION", value : coalesce(env.vpc, "no-vpc") == "no-vpc" ? "" : "--vpc-name ${env.vpc}" }
           ])
         },
         namespace : null

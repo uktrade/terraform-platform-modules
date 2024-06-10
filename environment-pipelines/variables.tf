@@ -6,11 +6,16 @@ variable "repository" {
   type = string
 }
 
+variable "pipeline_name" {
+  type = string
+}
+
 variable "environments" {
   type = list(
     object(
       {
         name = string,
+        vpc  = optional(string)
         accounts = object({
           deploy = object({
             name = string

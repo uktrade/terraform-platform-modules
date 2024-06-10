@@ -19,6 +19,10 @@ phases:
       - cd terraform/environments/${ENVIRONMENT}
       - terraform init
       - terraform apply $PLAN_TF_DIR/terraform/environments/${ENVIRONMENT}/plan.tfplan
+      - echo "Generating manifests"
+      - platform-helper environment generate --name ${ENVIRONMENT} ${VPC_OPTION}
+      - copilot env init --name ${ENVIRONMENT} --profile ${COPILOT_PROFILE} --default-config
+      - platform-helper copilot make-addons
       - copilot env deploy --name ${ENVIRONMENT}
   post_build:
     commands:
