@@ -16,14 +16,15 @@ phases:
       - echo "Terraform Apply Phase"
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting terraform apply phase for the ${ENVIRONMENT} environment."
       - echo "Working on environment ${ENVIRONMENT}"
-      - cd terraform/environments/${ENVIRONMENT}
+      - cd "terraform/environments/${ENVIRONMENT}"
       - terraform init
-      - terraform apply $PLAN_TF_DIR/terraform/environments/${ENVIRONMENT}/plan.tfplan
+      - terraform apply "${PLAN_TF_DIR}/terraform/environments/${ENVIRONMENT}/plan.tfplan"
       - echo "Generating manifests"
-      - platform-helper environment generate --name ${ENVIRONMENT} ${VPC_OPTION}
-      - copilot env init --name ${ENVIRONMENT} --profile ${COPILOT_PROFILE} --default-config
+      - cd "${CODEBUILD_SRC_DIR}"
+      - platform-helper environment generate --name "${ENVIRONMENT}" --vpc-name "${VPC}"
+      - copilot env init --name "${ENVIRONMENT}" --profile "${COPILOT_PROFILE}" --default-config
       - platform-helper copilot make-addons
-      - copilot env deploy --name ${ENVIRONMENT}
+      - copilot env deploy --name "${ENVIRONMENT}"
   post_build:
     commands:
       - |

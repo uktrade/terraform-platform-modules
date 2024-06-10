@@ -11,25 +11,18 @@ variable "pipeline_name" {
 }
 
 variable "environments" {
-  type = list(
+  type = map(
     object(
       {
-        name = string,
-        vpc  = optional(string)
-        accounts = object({
-          deploy = object({
-            name = string
-            id   = string
-          }),
-          dns = object({
-            name = string
-            id   = string
-          })
-        })
+        vpc               = optional(string)
         requires_approval = optional(bool)
       }
     )
   )
+}
+
+variable "environment_config" {
+  type = any
 }
 
 variable "branch" {

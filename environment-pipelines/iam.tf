@@ -210,7 +210,7 @@ data "aws_iam_policy_document" "load_balancer" {
   }
 
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "elasticloadbalancing:CreateTargetGroup",
@@ -225,7 +225,7 @@ data "aws_iam_policy_document" "load_balancer" {
   }
 
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "elasticloadbalancing:CreateLoadBalancer",
@@ -241,7 +241,7 @@ data "aws_iam_policy_document" "load_balancer" {
   }
 
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "elasticloadbalancing:AddTags"
@@ -321,7 +321,7 @@ data "aws_iam_policy_document" "ssm_parameter" {
 
 data "aws_iam_policy_document" "cloudwatch" {
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "cloudwatch:GetDashboard",
@@ -335,7 +335,7 @@ data "aws_iam_policy_document" "cloudwatch" {
   }
 
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "resource-groups:GetGroup",
@@ -353,7 +353,7 @@ data "aws_iam_policy_document" "cloudwatch" {
   }
 
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "applicationinsights:CreateApplication",
@@ -431,7 +431,7 @@ data "aws_iam_policy_document" "kms_key" {
   }
 
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "kms:CreateAlias",
@@ -500,7 +500,7 @@ data "aws_iam_policy_document" "postgres" {
     ]
   }
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "iam:CreateRole",
@@ -522,7 +522,7 @@ data "aws_iam_policy_document" "postgres" {
   }
 
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "lambda:GetFunction",
@@ -537,7 +537,7 @@ data "aws_iam_policy_document" "postgres" {
   }
 
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "rds:CreateDBParameterGroup",
@@ -555,7 +555,7 @@ data "aws_iam_policy_document" "postgres" {
   }
 
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "rds:CreateDBSubnetGroup",
@@ -581,7 +581,7 @@ data "aws_iam_policy_document" "postgres" {
   }
 
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "rds:CreateDBInstance",
@@ -666,7 +666,7 @@ resource "aws_iam_policy" "opensearch" {
 # Policies for AWS Copilot
 data "aws_iam_policy_document" "copilot_assume_role" {
   dynamic "statement" {
-    for_each = var.environments
+    for_each = local.enriched_envs
     content {
       actions = [
         "sts:AssumeRole"

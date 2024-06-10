@@ -7,9 +7,12 @@ locals {
 
   stage_config = yamldecode(file("${path.module}/stage_config.yml"))
 
+  env_config    = { for name, config in var.environment_config : name => merge(lookup(var.environment_config, "*", {}), config) }
+  enriched_envs = [for name, env in var.environments : merge(lookup(local.env_config, name, {}), env, { "name" = name })]
+
   # We flatten a list of lists for each env:
   initial_stages = flatten(
-    [for env in var.environments : [
+    [for env in local.enriched_envs : [
       # The first element of the inner list for an env is the Plan stage.
       {
         type : "plan",
@@ -26,7 +29,7 @@ locals {
             { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
-            { name : "NEEDS_APPROVAL", value : coalesce(env.requires_approval, false) ? "yes" : "no" }
+            { name : "NEEDS_APPROVAL", value : env.requires_approval ? "yes" : "no" }
           ])
         }
         namespace : "${env.name}-plan"
@@ -59,7 +62,7 @@ locals {
             { name : "ENVIRONMENT", value : env.name },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
-            { name : "VPC_OPTION", value : coalesce(env.vpc, "no-vpc") == "no-vpc" ? "" : "--vpc-name ${env.vpc}" }
+            { name : "VPC", value : local.env_config[env.name].vpc }
           ])
         },
         namespace : null
