@@ -20,7 +20,6 @@ phases:
       - cd terraform/environments/${ENVIRONMENT}
       - terraform init
       - terraform plan -out=plan.tfplan
-      - git diff HEAD~1
   post_build:
     commands:
       - export BUILD_ID="$CODEBUILD_BUILD_ID"

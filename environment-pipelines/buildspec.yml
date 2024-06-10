@@ -27,7 +27,7 @@ phases:
       - COPILOT_VERSION=`cat .copilot-version`
       - PLATFORM_HELPER_VERSION=`cat .platform-helper-version`
       - echo "Installing build tools"
-      - yum -y install python-pip git
+      - yum -y install python-pip
       - mkdir ./build-tools
       - cd ./build-tools
       - pip install --target . --quiet dbt-platform-helper==$PLATFORM_HELPER_VERSION
