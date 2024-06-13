@@ -395,6 +395,7 @@ data "aws_iam_policy_document" "logs" {
     actions = [
       "logs:PutRetentionPolicy",
       "logs:ListTagsLogGroup",
+      "logs:ListTagsForResource",
       "logs:DeleteLogGroup",
       "logs:CreateLogGroup",
       "logs:PutSubscriptionFilter",

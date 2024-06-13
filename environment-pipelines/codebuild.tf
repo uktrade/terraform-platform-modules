@@ -90,7 +90,7 @@ resource "aws_codebuild_project" "environment_pipeline_plan" {
 resource "aws_codebuild_project" "environment_pipeline_apply" {
   name           = "${var.application}-${var.pipeline_name}-environment-pipeline-apply"
   description    = "Provisions the ${var.application} application's extensions."
-  build_timeout  = 60
+  build_timeout  = 120
   service_role   = aws_iam_role.environment_pipeline_codebuild.arn
   encryption_key = module.artifact_store.kms_key_arn
 
