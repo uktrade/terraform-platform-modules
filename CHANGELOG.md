@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/uktrade/terraform-platform-modules/compare/2.2.0...2.2.1) (2024-06-14)
+
+
+### Bug Fixes
+
+* make readonly lambda invocation depend on app user invocation ([#160](https://github.com/uktrade/terraform-platform-modules/issues/160)) ([1e0fe0d](https://github.com/uktrade/terraform-platform-modules/commit/1e0fe0d19792049ceccd6f6326620e85e13480f1))
+
 ## [2.2.0](https://github.com/uktrade/terraform-platform-modules/compare/2.1.0...2.2.0) (2024-06-06)
 
 
