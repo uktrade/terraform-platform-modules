@@ -34,3 +34,8 @@ variable "slack_channel" {
   type    = string
   default = "/codebuild/slack_pipeline_notifications_channel"
 }
+
+variable "trigger_on_push" {
+  type    = bool
+  default = true
+}
