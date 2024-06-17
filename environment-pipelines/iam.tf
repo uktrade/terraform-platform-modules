@@ -254,7 +254,7 @@ data "aws_iam_policy_document" "load_balancer" {
 }
 
 resource "aws_iam_policy" "load_balancer" {
-  name        = "${var.application}-${var.pipeline_name}-load-balancer-access"
+  name        = "${var.application}-${var.pipeline_name}-pipeline-load-balancer-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access load-balancer resources"
   policy      = data.aws_iam_policy_document.load_balancer.json
@@ -485,7 +485,7 @@ data "aws_iam_policy_document" "redis" {
 }
 
 resource "aws_iam_policy" "redis" {
-  name        = "${var.application}-${var.pipeline_name}-redis-access"
+  name        = "${var.application}-${var.pipeline_name}-pipeline-redis-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access redis resources"
   policy      = data.aws_iam_policy_document.redis.json
@@ -607,7 +607,7 @@ data "aws_iam_policy_document" "postgres" {
 }
 
 resource "aws_iam_policy" "postgres" {
-  name        = "${var.application}-${var.pipeline_name}-postgres-access"
+  name        = "${var.application}-${var.pipeline_name}-pipeline-postgres-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access postgres resources"
   policy      = data.aws_iam_policy_document.postgres.json
@@ -634,7 +634,7 @@ data "aws_iam_policy_document" "s3" {
 }
 
 resource "aws_iam_policy" "s3" {
-  name        = "${var.application}-${var.pipeline_name}-s3-access"
+  name        = "${var.application}-${var.pipeline_name}-pipeline-s3-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access s3 resources"
   policy      = data.aws_iam_policy_document.s3.json
@@ -658,7 +658,7 @@ data "aws_iam_policy_document" "opensearch" {
 }
 
 resource "aws_iam_policy" "opensearch" {
-  name        = "${var.application}-${var.pipeline_name}-opensearch-access"
+  name        = "${var.application}-${var.pipeline_name}-pipeline-opensearch-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access opensearch resources"
   policy      = data.aws_iam_policy_document.opensearch.json
@@ -702,7 +702,7 @@ data "aws_iam_policy_document" "cloudformation" {
 }
 
 resource "aws_iam_policy" "cloudformation" {
-  name        = "${var.application}-${var.pipeline_name}-cloudformation-access"
+  name        = "${var.application}-${var.pipeline_name}-pipeline-cloudformation-access"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to access cloudformation resources"
   policy      = data.aws_iam_policy_document.cloudformation.json
@@ -710,7 +710,7 @@ resource "aws_iam_policy" "cloudformation" {
 
 # Roles
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
-  name               = "${var.application}-${var.pipeline_name}-environment-pipeline-codepipeline"
+  name               = "${var.application}-${var.pipeline_name}-pipeline-environment-pipeline-codepipeline"
   assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
   tags               = local.tags
 }
