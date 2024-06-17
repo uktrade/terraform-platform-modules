@@ -7,12 +7,13 @@ locals {
 
   stage_config = yamldecode(file("${path.module}/stage_config.yml"))
 
-  env_config    = { for name, config in var.environment_config : name => merge(lookup(var.environment_config, "*", {}), config) }
-  enriched_envs = [for name, env in var.environments : merge(lookup(local.env_config, name, {}), env, { "name" = name })]
+  base_env_config = { for name, config in var.environment_config : name => merge(lookup(var.environment_config, "*", {}), config) }
+  # Convert the env config into a list and add env name and vpc / requires_approval from the environments config.
+  environment_config = [for name, env in var.environments : merge(lookup(local.base_env_config, name, {}), env, { "name" = name })]
 
   # We flatten a list of lists for each env:
   initial_stages = flatten(
-    [for env in local.enriched_envs : [
+    [for env in local.environment_config : [
       # The first element of the inner list for an env is the Plan stage.
       {
         type : "plan",
@@ -62,7 +63,7 @@ locals {
             { name : "ENVIRONMENT", value : env.name },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
-            { name : "VPC", value : local.env_config[env.name].vpc }
+            { name : "VPC", value : local.base_env_config[env.name].vpc }
           ])
         },
         namespace : null
