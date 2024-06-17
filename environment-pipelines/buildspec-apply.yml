@@ -13,7 +13,7 @@ phases:
   build:
     commands:
       - set -e
-      - echo "Terraform Apply Phase"
+      - echo -e "\nTerraform Apply Phase"
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting terraform apply phase for the ${ENVIRONMENT} environment."
       - echo "Working on environment ${ENVIRONMENT}"
       - cd "terraform/environments/${ENVIRONMENT}"
