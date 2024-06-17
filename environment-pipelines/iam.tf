@@ -710,7 +710,7 @@ resource "aws_iam_policy" "cloudformation" {
 
 # Roles
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
-  name               = "${var.application}-${var.pipeline_name}-pipeline-environment-pipeline-codepipeline"
+  name               = "${var.application}-${var.pipeline_name}-environment-pipeline-codepipeline"
   assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
   tags               = local.tags
 }

@@ -504,7 +504,7 @@ run "test_iam" {
   }
   # aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_policy.load_balancer.name == "my-app-my-pipeline-load-balancer-access"
+    condition     = aws_iam_policy.load_balancer.name == "my-app-my-pipeline-pipeline-load-balancer-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -575,7 +575,7 @@ run "test_iam" {
   }
   # aws_iam_role_policy.kms_key_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_policy.redis.name == "my-app-my-pipeline-redis-access"
+    condition     = aws_iam_policy.redis.name == "my-app-my-pipeline-pipeline-redis-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -591,7 +591,7 @@ run "test_iam" {
     error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_policy.postgres.name == "my-app-my-pipeline-postgres-access"
+    condition     = aws_iam_policy.postgres.name == "my-app-my-pipeline-pipeline-postgres-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -607,7 +607,7 @@ run "test_iam" {
     error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_policy.s3.name == "my-app-my-pipeline-s3-access"
+    condition     = aws_iam_policy.s3.name == "my-app-my-pipeline-pipeline-s3-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -623,7 +623,7 @@ run "test_iam" {
     error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_policy.opensearch.name == "my-app-my-pipeline-opensearch-access"
+    condition     = aws_iam_policy.opensearch.name == "my-app-my-pipeline-pipeline-opensearch-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -639,7 +639,7 @@ run "test_iam" {
     error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_policy.cloudformation.name == "my-app-my-pipeline-cloudformation-access"
+    condition     = aws_iam_policy.cloudformation.name == "my-app-my-pipeline-pipeline-cloudformation-access"
     error_message = "Unexpected name"
   }
   assert {
