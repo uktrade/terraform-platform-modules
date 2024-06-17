@@ -19,7 +19,7 @@ phases:
       - cd "terraform/environments/${ENVIRONMENT}"
       - terraform init
       - terraform apply "${PLAN_TF_DIR}/terraform/environments/${ENVIRONMENT}/plan.tfplan"
-      - echo "Generating manifests"
+      - echo -e "\nGenerating manifests and deploying AWS Copilot environment resources"
       - cd "${CODEBUILD_SRC_DIR}"
       - platform-helper environment generate --name "${ENVIRONMENT}" --vpc-name "${VPC}"
       - copilot env init --name "${ENVIRONMENT}" --profile "${COPILOT_PROFILE}" --default-config
