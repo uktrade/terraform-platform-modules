@@ -71,13 +71,46 @@ resource "aws_security_group" "redis" {
   tags = local.tags
 }
 
-resource "aws_ssm_parameter" "endpoint" {
-  name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}_ENDPOINT", "-", "_"))}"
-  description = "Redis endpoint"
+resource "aws_kms_key" "ssm_redis_endpoint" {
+  # checkov:skip=CKV2_AWS_64:skipping pending discussion with rest of team on the policy
+  description             = "KMS key for ${var.name}-${var.application}-${var.environment}-redis-cluster SSM parameters"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+
+  tags = local.tags
+}
+
+resource "aws_ssm_parameter" "endpoint_short" {
+  name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}"
+  description = "Redis endpoint (Deprecated in favour of endpoint_ssl which has the ssl_cert_reqs parameter baked in)"
   type        = "SecureString"
   value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
 
   tags = local.tags
+
+  key_id = aws_kms_key.ssm_redis_endpoint.arn
+}
+
+resource "aws_ssm_parameter" "endpoint" {
+  name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}_ENDPOINT", "-", "_"))}"
+  description = "Redis endpoint (Deprecated in favour of endpoint_ssl which has the ssl_cert_reqs parameter baked in)"
+  type        = "SecureString"
+  value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
+
+  tags = local.tags
+
+  key_id = aws_kms_key.ssm_redis_endpoint.arn
+}
+
+resource "aws_ssm_parameter" "redis_url" {
+  name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace("${var.name}_URL", "-", "_"))}"
+  description = "Redis endpoint with SSL configuration"
+  type        = "SecureString"
+  value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379?ssl_cert_reqs=CERT_REQUIRED"
+
+  tags = local.tags
+
+  key_id = aws_kms_key.ssm_redis_endpoint.arn
 }
 
 resource "aws_elasticache_subnet_group" "es-subnet-group" {

@@ -1,5 +1,84 @@
 # Changelog
 
+## [2.2.1](https://github.com/uktrade/terraform-platform-modules/compare/2.2.0...2.2.1) (2024-06-14)
+
+
+### Bug Fixes
+
+* make readonly lambda invocation depend on app user invocation ([#160](https://github.com/uktrade/terraform-platform-modules/issues/160)) ([1e0fe0d](https://github.com/uktrade/terraform-platform-modules/commit/1e0fe0d19792049ceccd6f6326620e85e13480f1))
+
+## [2.2.0](https://github.com/uktrade/terraform-platform-modules/compare/2.1.0...2.2.0) (2024-06-06)
+
+
+### Features
+
+* dbtp-928 option to disable cdn ([#155](https://github.com/uktrade/terraform-platform-modules/issues/155)) ([e86fd89](https://github.com/uktrade/terraform-platform-modules/commit/e86fd8900b7372c47d3859ce0b236c40eb04a285))
+
+## [2.1.0](https://github.com/uktrade/terraform-platform-modules/compare/2.0.0...2.1.0) (2024-06-04)
+
+
+### Features
+
+* Pipeline slack alerts ([#150](https://github.com/uktrade/terraform-platform-modules/issues/150)) ([ead58f3](https://github.com/uktrade/terraform-platform-modules/commit/ead58f39b6faecd8ffcd9fb18cc607416d20770b))
+
+
+### Bug Fixes
+
+* Fixed extensions module that was broken on the cdn declaration ([#152](https://github.com/uktrade/terraform-platform-modules/issues/152)) ([c76ac9f](https://github.com/uktrade/terraform-platform-modules/commit/c76ac9f2aedf06bdb35db6c7615b4770d6e7c2b0))
+
+## [2.0.0](https://github.com/uktrade/terraform-platform-modules/compare/1.5.0...2.0.0) (2024-06-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* DBTP-928 Add CDN endpoint module ([#141](https://github.com/uktrade/terraform-platform-modules/issues/141))
+
+### Features
+
+* DBTP-928 Add CDN endpoint module ([#141](https://github.com/uktrade/terraform-platform-modules/issues/141)) ([20d6f5b](https://github.com/uktrade/terraform-platform-modules/commit/20d6f5b9d25c2a94bb02d38ad862a5fa5fb9f224))
+
+## [1.5.0](https://github.com/uktrade/terraform-platform-modules/compare/1.4.0...1.5.0) (2024-05-31)
+
+### Features
+
+* DBTP-434 Add Redis endpoint with ssl_cert_reqs parameter ([#147](https://github.com/uktrade/terraform-platform-modules/issues/147)) ([f7470e8](https://github.com/uktrade/terraform-platform-modules/commit/f7470e821c262de4ce50b0f1ebb30563ce145c88))
+
+### Bug Fixes
+
+* DBTP-1010 Readonly postgres user doesn't have read perms ([#140](https://github.com/uktrade/terraform-platform-modules/issues/140)) ([1628440](https://github.com/uktrade/terraform-platform-modules/commit/1628440ab653a27ecc205cad4a32750cf7a22b62))
+* DBTP-944 Correct Redis tags ([#147](https://github.com/uktrade/terraform-platform-modules/issues/147)) ([f7470e8](https://github.com/uktrade/terraform-platform-modules/commit/f7470e821c262de4ce50b0f1ebb30563ce145c88))
+
+## [1.4.0](https://github.com/uktrade/terraform-platform-modules/compare/1.3.0...1.4.0) (2024-05-30)
+
+
+### Features
+
+* Enable Intelligent-Tiering to allow parameters with &gt; 4096 characters ([#139](https://github.com/uktrade/terraform-platform-modules/issues/139)) ([9be7595](https://github.com/uktrade/terraform-platform-modules/commit/9be7595e491a50fa65aebdc38e99494880b559a5))
+
+
+### Bug Fixes
+
+* DBTP-1010 Readonly postgres user doesn't have read perms ([#140](https://github.com/uktrade/terraform-platform-modules/issues/140)) ([1628440](https://github.com/uktrade/terraform-platform-modules/commit/1628440ab653a27ecc205cad4a32750cf7a22b62))
+* DBTP-998 - Move pipeline to platform-sandbox ([#137](https://github.com/uktrade/terraform-platform-modules/issues/137)) ([e97dcd4](https://github.com/uktrade/terraform-platform-modules/commit/e97dcd41c8face3e5dbbf1be1aa367b5c6861057))
+
+## [1.3.0](https://github.com/uktrade/terraform-platform-modules/compare/1.2.2...1.3.0) (2024-05-23)
+
+
+### Features
+
+* Changed to new assume role name ([#128](https://github.com/uktrade/terraform-platform-modules/issues/128)) ([ca17b44](https://github.com/uktrade/terraform-platform-modules/commit/ca17b44a867245fc527d0a577823fde517a994a9))
+* DBTP-909 - Run `copilot env deploy` in pipeline ([#126](https://github.com/uktrade/terraform-platform-modules/issues/126)) ([15abc7b](https://github.com/uktrade/terraform-platform-modules/commit/15abc7b37d7c5a8eee70a38be7c8c076df2084df))
+* DBTP-914 - Environment pipeline terraform apply ([#116](https://github.com/uktrade/terraform-platform-modules/issues/116)) ([a7f701c](https://github.com/uktrade/terraform-platform-modules/commit/a7f701c6f0fbe94ec34a715fdcbcf173b5214391))
+* Make ``platform-helper copilot make-addons` run in the pipeline ([#125](https://github.com/uktrade/terraform-platform-modules/issues/125)) ([2da6d2e](https://github.com/uktrade/terraform-platform-modules/commit/2da6d2e1d5fe66c0ada7a97a2496ea72b10cef7d))
+
+
+### Bug Fixes
+
+* add default volume size for rds local variable ([#124](https://github.com/uktrade/terraform-platform-modules/issues/124)) ([92bdd32](https://github.com/uktrade/terraform-platform-modules/commit/92bdd32fc6fea68a7f67f82fd26ecd2972564f0b))
+* Dbtp 1016 update kms key alias name ([#131](https://github.com/uktrade/terraform-platform-modules/issues/131)) ([485792f](https://github.com/uktrade/terraform-platform-modules/commit/485792f1bfea2a0eb1a21be06a7f4f098f7a7b99))
+* DBTP-958 Straighten up Postgres plans ([#112](https://github.com/uktrade/terraform-platform-modules/issues/112)) ([e15e12d](https://github.com/uktrade/terraform-platform-modules/commit/e15e12de752d560a03d68e77d70a5fd826e96a07))
+
+
 ## [1.2.2](https://github.com/uktrade/terraform-platform-modules/compare/1.2.1...1.2.2) (2024-05-14)
 
 

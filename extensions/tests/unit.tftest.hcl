@@ -39,6 +39,10 @@ mock_provider "aws" {
   alias = "domain"
 }
 
+mock_provider "aws" {
+  alias = "domain-cdn"
+}
+
 override_data {
   target = module.opensearch["test-opensearch"].data.aws_vpc.vpc
   values = {
@@ -60,6 +64,11 @@ run "aws_ssm_parameter_unit_test" {
   assert {
     condition     = aws_ssm_parameter.addons.name == "/copilot/applications/test-application/environments/test-environment/addons"
     error_message = "Invalid config for aws_ssm_parameter name"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.addons.tier == "Intelligent-Tiering"
+    error_message = "Intelligent-Tiering not enabled, parameters > 4096 characters will be rejected"
   }
 
   assert {

@@ -261,3 +261,5 @@ s3-policy: {}
 monitoring: {}
 
 alb: {}
+
+cdn: {}
