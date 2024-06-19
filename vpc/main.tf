@@ -115,6 +115,21 @@ resource "aws_ssm_parameter" "nat_gateway_eip" {
 }
 
 
+locals {
+  nat_gateway_eips = [
+    for key, nat in aws_eip.public : nat.public_ip
+  ]
+}
+
+# SSM parameter with combined EIP values
+resource "aws_ssm_parameter" "combined_nat_gateway_eips" {
+  name  = "/${var.arg_name}/nat-eips"
+  type  = "String"
+  value = join(",", local.nat_gateway_eips)
+  tags  = local.tags
+}
+
+
 # Private Routing
 resource "aws_route_table" "private" {
   for_each = toset(var.arg_config.nat_gateways)
