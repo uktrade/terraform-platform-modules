@@ -123,7 +123,7 @@ locals {
 
 # SSM parameter with combined EIP values
 resource "aws_ssm_parameter" "combined_nat_gateway_eips" {
-  name  = "/${var.arg_name}/nat-eips"
+  name  = "/${var.arg_name}/nat-eips/ADDITIONAL_IP_LIST"
   type  = "String"
   value = join(",", local.nat_gateway_eips)
   tags  = local.tags
