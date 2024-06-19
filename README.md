@@ -18,6 +18,12 @@ Alternative installation methods [here](https://github.com/trufflesecurity/truff
 
 ## Testing
 
+Ensure that local variable `AWS_PROFILE` is set to `sandbox` and that you have run:
+
+```shell
+aws sso login
+```
+
 The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
 
 ```shell
