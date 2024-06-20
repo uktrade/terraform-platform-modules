@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "log-resource-policy" {
       "logs:PutLogEvents",
     ]
 
-    resources = ["arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/copilot/${var.application}-${var.environment}-*:log-stream:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/copilot/${var.application}-*-*:log-stream:*"]
 
     condition {
       test     = "StringEquals"
@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "log-resource-policy" {
       "logs:PutLogEvents",
     ]
 
-    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/${var.application}/${var.environment}/*"]
+    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/${var.application}/*/*"]
 
     condition {
       test     = "ArnLike"
@@ -62,7 +62,7 @@ data "aws_iam_policy_document" "log-resource-policy" {
       "logs:PutLogEvents",
     ]
 
-    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/${var.application}/${var.environment}/*"]
+    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/${var.application}/*/*"]
 
     condition {
       test     = "StringEquals"
@@ -79,5 +79,5 @@ data "aws_iam_policy_document" "log-resource-policy" {
 
 resource "aws_cloudwatch_log_resource_policy" "log-resource-policy" {
   policy_document = data.aws_iam_policy_document.log-resource-policy.json
-  policy_name     = "${var.application}-${var.environment}-LogResourcePolicy"
+  policy_name     = "${var.application}-LogResourcePolicy"
 }
