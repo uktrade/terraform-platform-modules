@@ -21,9 +21,15 @@ locals {
         configuration : {
           ProjectName : "${var.application}-environment-pipeline-plan"
           PrimarySource : "build_output"
-          EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }, { name : "COPILOT_PROFILE", value : env.accounts.deploy.name }])
-        },
-        namespace : "${env.name}-tf-plan"
+          EnvironmentVariables : jsonencode([
+            { name : "ENVIRONMENT", value : env.name },
+            { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
+            { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
+            { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
+            { name : "NEEDS_APPROVAL", value : coalesce(env.requires_approval, false) ? "yes" : "no" }
+          ])
+        }
+        namespace : "${env.name}-plan"
       },
       # The second element of the inner list for an env is the Approval stage if required, or the empty list otherwise.
       coalesce(env.requires_approval, false) ? [{
@@ -34,7 +40,7 @@ locals {
         output_artifacts : [],
         configuration : {
           CustomData : "Review Terraform Plan"
-          ExternalEntityLink : "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/${var.application}-environment-pipeline-tf-plan/build/#{${env.name}-tf-plan.BUILD_ID}"
+          ExternalEntityLink : "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/${var.application}-environment-pipeline-plan/build/#{${env.name}-plan.BUILD_ID}"
         },
         namespace : null
       }] : [],
@@ -49,7 +55,11 @@ locals {
         configuration : {
           ProjectName : "${var.application}-environment-pipeline-apply"
           PrimarySource : "build_output"
-          EnvironmentVariables : jsonencode([{ name : "ENVIRONMENT", value : env.name }])
+          EnvironmentVariables : jsonencode([
+            { name : "ENVIRONMENT", value : env.name },
+            { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
+            { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
+          ])
         },
         namespace : null
       }

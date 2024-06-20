@@ -64,6 +64,19 @@ module "alb" {
   config = each.value
 }
 
+module "cdn" {
+  source = "../cdn"
+
+  for_each = local.cdn
+  providers = {
+    aws.domain-cdn = aws.domain-cdn
+  }
+  application = var.args.application
+  environment = var.environment
+
+  config = each.value
+}
+
 module "monitoring" {
   source = "../monitoring"
 
