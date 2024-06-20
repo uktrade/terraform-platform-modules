@@ -15,7 +15,7 @@ Various quality checks are run in AWS Codebuild in the `platform-tools` account 
 * [terraform validate](https://developer.hashicorp.com/terraform/cli/commands/validate)
 * [tflint](https://github.com/terraform-linters/tflint])
 * [terraform test](https://developer.hashicorp.com/terraform/cli/commands/test) - plan style
-* Todo: [terraform test](https://developer.hashicorp.com/terraform/cli/commands/test) - end to end style
+* Todo: [terraform test](https://developer.hashicorp.com/terraform/cli/commands/test) - end to end tests which do an apply and actually provision infrastructure
 
 ### Running the terraform unit tests locally
 
