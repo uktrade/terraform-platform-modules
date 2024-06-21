@@ -55,6 +55,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
     for_each = var.config.lifecycle_configuration.rules
     content {
       id = "rule.value-[count.index]"
+      abort_incomplete_multipart_upload {
+        days_after_initiation = 7
+      }
       filter {
         prefix = rule.value.filter.prefix
       }
@@ -62,9 +65,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
         days = rule.value.expiration.days
       }
       status = coalesce(rule.value.enabled, false) ? "Enabled" : "Disabled"
-      abort_incomplete_multipart_upload {
-        days_after_initiation = 7
-      }
     }
   }
 }
