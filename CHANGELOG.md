@@ -5,12 +5,12 @@
 
 ### Features
 
-* Dbtp 946 vpc store nat egress ips in parameter store ([#157](https://github.com/uktrade/terraform-platform-modules/issues/157)) ([2a7b595](https://github.com/uktrade/terraform-platform-modules/commit/2a7b59512880bb555d8dc8fc9e5be9987ed6f6f4))
+* DBTP-946 vpc store nat egress ips in parameter store ([#157](https://github.com/uktrade/terraform-platform-modules/issues/157)) ([2a7b595](https://github.com/uktrade/terraform-platform-modules/commit/2a7b59512880bb555d8dc8fc9e5be9987ed6f6f4))
 
 
 ### Bug Fixes
 
-* add  prometheus-policy to plans.yml ([#163](https://github.com/uktrade/terraform-platform-modules/issues/163)) ([d98d468](https://github.com/uktrade/terraform-platform-modules/commit/d98d468aa50fd44e71796c02df00680e393da658))
+* add prometheus-policy to plans.yml ([#163](https://github.com/uktrade/terraform-platform-modules/issues/163)) ([d98d468](https://github.com/uktrade/terraform-platform-modules/commit/d98d468aa50fd44e71796c02df00680e393da658))
 
 ## [2.2.1](https://github.com/uktrade/terraform-platform-modules/compare/2.2.0...2.2.1) (2024-06-14)
 
