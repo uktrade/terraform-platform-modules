@@ -17,9 +17,7 @@ phases:
       - echo "Terraform Plan Phase"
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting terraform plan phase for the ${ENVIRONMENT} environment."
       - echo "Working on environment ${ENVIRONMENT}"
-      - echo "Generating manifests"
-      - copilot env init --name ${ENVIRONMENT} --profile ${COPILOT_PROFILE} --default-config
-      - platform-helper copilot make-addons
+      - platform-helper environment generate-terraform --name "${ENVIRONMENT}"
       - cd terraform/environments/${ENVIRONMENT}
       - terraform init
       - terraform plan -out=plan.tfplan
@@ -40,3 +38,4 @@ phases:
 artifacts:
   files:
     - terraform/environments/${ENVIRONMENT}/plan.tfplan
+    - copilot/environments/${ENVIRONMENT}/manifest.yml
