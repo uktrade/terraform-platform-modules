@@ -62,6 +62,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
         days = rule.value.expiration.days
       }
       status = coalesce(rule.value.enabled, false) ? "Enabled" : "Disabled"
+      abort_incomplete_multipart_upload {
+        days_after_initiation = 7
+      }
     }
   }
 }
