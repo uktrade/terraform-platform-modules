@@ -16,9 +16,20 @@ brew install trufflehog
 
 Alternative installation methods [here](https://github.com/trufflesecurity/trufflehog)
 
-## Testing
+## Testing / quality checks
 
-The short tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
+Various quality checks are run in AWS Codebuild in the `platform-tools` account for any push to a pull request branch:
+
+* [Checkov](https://www.checkov.io/)
+* [terraform fmt](https://developer.hashicorp.com/terraform/cli/commands/fmt)
+* [terraform validate](https://developer.hashicorp.com/terraform/cli/commands/validate)
+* [tflint](https://github.com/terraform-linters/tflint])
+* [terraform test](https://developer.hashicorp.com/terraform/cli/commands/test) - plan style
+* Todo: [terraform test](https://developer.hashicorp.com/terraform/cli/commands/test) - end to end tests which do an apply and actually provision infrastructure
+
+### Running the terraform unit tests locally
+
+The faster, but less comprehensive, tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
 
 ```shell
 terraform test
@@ -89,8 +100,6 @@ The primary domain will always follow the pattern:
 For non-production: `internal.<application_name>.uktrade.digital`
 
 For production: `internal.<application_name>.prod.uktrade.digital`
-
-
 
 If there are multiple web services on the application, you can add the additional domain to your certificate by adding the prefix name (eg. `internal.static`) to the variable `additional_address_list` see extension.yml example below.  `Note: this is just the prefix, no need to add env.uktrade.digital`
 

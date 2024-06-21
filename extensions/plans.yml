@@ -263,3 +263,5 @@ monitoring: {}
 alb: {}
 
 cdn: {}
+
+prometheus-policy: {}
