@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "log-resource-policy" {
       "logs:PutLogEvents",
     ]
 
-    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/${var.application}/*/*"]
+    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*/*/*"]
 
     condition {
       test     = "ArnLike"
@@ -62,7 +62,7 @@ data "aws_iam_policy_document" "log-resource-policy" {
       "logs:PutLogEvents",
     ]
 
-    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/${var.application}/*/*"]
+    resources = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*/*"]
 
     condition {
       test     = "StringEquals"

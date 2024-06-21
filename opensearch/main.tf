@@ -21,29 +21,6 @@ resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
   retention_in_days = coalesce(var.config.audit_log_retention_in_days, 7)
 }
 
-resource "aws_cloudwatch_log_resource_policy" "opensearch_log_group_policy" {
-  policy_name     = "opensearch_log_group_policy"
-  policy_document = <<CONFIG
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "es.amazonaws.com"
-      },
-      "Action": [
-        "logs:PutLogEvents",
-        "logs:PutLogEventsBatch",
-        "logs:CreateLogStream"
-      ],
-      "Resource": "arn:aws:logs:*"
-    }
-  ]
-}
-CONFIG
-}
-
 resource "aws_security_group" "opensearch-security-group" {
   name        = local.domain_name
   vpc_id      = data.aws_vpc.vpc.id
