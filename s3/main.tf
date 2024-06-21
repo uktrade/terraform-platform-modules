@@ -46,6 +46,26 @@ resource "aws_s3_bucket_versioning" "this-versioning" {
   }
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
+  count = var.config.lifecycle_configuration != null ? 1 : 0
+  
+  bucket = aws_s3_bucket.this.id
+  
+  dynamic "rule" {
+    for_each = var.config.lifecycle_configuration.rules
+    content {
+      id = "rule.value-[count.index]"
+      filter {
+        prefix = rule.value.filter.prefix
+      }
+      expiration {
+        days = rule.value.expiration.days
+      }
+      status = coalesce(rule.value.enabled, false) ? "Enabled" : "Disabled"
+    }
+  }
+}
+
 resource "aws_kms_key" "kms-key" {
   description = "KMS Key for S3 encryption"
   tags        = local.tags

@@ -54,6 +54,11 @@ run "aws_s3_bucket_unit_test" {
     error_message = "Invalid value for aws_s3_bucket tags parameter."
   }
 
+  assert {
+    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration == []
+    error_message = "Should be: []"
+  }
+
 }
 
 run "aws_iam_policy_document_unit_test" {
@@ -157,6 +162,25 @@ run "aws_s3_bucket_versioning_enabled_unit_test" {
   assert {
     condition     = aws_s3_bucket_versioning.this-versioning.versioning_configuration[0].status == "Enabled"
     error_message = "Should be: Enabled"
+  }
+}
+
+run "aws_s3_bucket_lifecycle_configuration_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-module",
+      "type"        = "string",
+      "lifecycle_configuration"  = {"rules"=[{"filter" = {"prefix" = "/foo"}, "expiration" = {"days" = 90}, "enabled" = true}]},
+      "objects"     = [],
+    }
+  }
+
+  ### Test aws_s3_bucket_lifecycle_configuration resource ###
+  assert {
+    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].filter[0].prefix == "/foo"
+    error_message = "Should be: /foo"
   }
 }
 
