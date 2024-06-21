@@ -30,13 +30,13 @@ locals {
             { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
-            { name : "NEEDS_APPROVAL", value : env.requires_approval ? "yes" : "no" }
+            { name : "NEEDS_APPROVAL", value : lookup(env, "requires_approval", false) ? "yes" : "no" }
           ])
         }
         namespace : "${env.name}-plan"
       },
       # The second element of the inner list for an env is the Approval stage if required, or the empty list otherwise.
-      coalesce(env.requires_approval, false) ? [{
+      lookup(env, "requires_approval", false) ? [{
         type : "approve",
         stage_name : "Approve-${env.name}",
         env : "",
