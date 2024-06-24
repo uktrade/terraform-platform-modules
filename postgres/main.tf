@@ -75,15 +75,6 @@ resource "aws_security_group" "default" {
     self = true
   }
 
-  egress {
-    description = "Egress for HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   tags = local.tags
 }
 
