@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/uktrade/terraform-platform-modules/compare/2.3.0...3.0.0) (2024-06-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* New config file and support for multiple pipelines ([#159](https://github.com/uktrade/terraform-platform-modules/issues/159))
+
+### Features
+
+* New config file and support for multiple pipelines ([#159](https://github.com/uktrade/terraform-platform-modules/issues/159)) ([4399fc9](https://github.com/uktrade/terraform-platform-modules/commit/4399fc9ae2b25612ef06ca4bd1ae2938dcfdc944))
+
 ## [2.3.0](https://github.com/uktrade/terraform-platform-modules/compare/2.2.1...2.3.0) (2024-06-20)
 
 
