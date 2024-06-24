@@ -170,10 +170,10 @@ run "aws_s3_bucket_lifecycle_configuration_unit_test" {
 
   variables {
     config = {
-      "bucket_name" = "dbt-terraform-test-s3-module",
-      "type"        = "string",
-      "lifecycle_configuration"  = {"rules"=[{"filter" = {"prefix" = "/foo"}, "expiration" = {"days" = 90}, "enabled" = true}]},
-      "objects"     = [],
+      "bucket_name"             = "dbt-terraform-test-s3-module",
+      "type"                    = "string",
+      "lifecycle_configuration" = { "rules" = [{ "filter" = { "prefix" = "/foo" }, "expiration" = { "days" = 90 }, "enabled" = true }] },
+      "objects"                 = [],
     }
   }
 
@@ -181,6 +181,11 @@ run "aws_s3_bucket_lifecycle_configuration_unit_test" {
   assert {
     condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].filter[0].prefix == "/foo"
     error_message = "Should be: /foo"
+  }
+
+  assert {
+    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].abort_incomplete_multipart_upload[0].days_after_initiation == 7
+    error_message = "Should be: 7"
   }
 }
 

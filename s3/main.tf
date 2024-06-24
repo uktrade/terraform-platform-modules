@@ -48,9 +48,9 @@ resource "aws_s3_bucket_versioning" "this-versioning" {
 
 resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
   count = var.config.lifecycle_configuration != null ? 1 : 0
-  
+
   bucket = aws_s3_bucket.this.id
-  
+
   dynamic "rule" {
     for_each = var.config.lifecycle_configuration.rules
     content {
