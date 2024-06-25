@@ -29,6 +29,7 @@ resource "aws_vpc_security_group_ingress_rule" "vpc_access" {
   ip_protocol       = "tcp"
   cidr_ipv4         = data.aws_vpc.vpc.cidr_block
   tags              = local.tags
+  depends_on        = [aws_security_group.default]
 }
 
 resource "aws_vpc_security_group_ingress_rule" "lambda_to_db" {
@@ -39,6 +40,7 @@ resource "aws_vpc_security_group_ingress_rule" "lambda_to_db" {
   to_port                      = 5432
   ip_protocol                  = "tcp"
   tags                         = local.tags
+  depends_on                   = [aws_security_group.default]
 }
 
 resource "aws_vpc_security_group_ingress_rule" "lambda_to_secrets" {
@@ -49,6 +51,7 @@ resource "aws_vpc_security_group_ingress_rule" "lambda_to_secrets" {
   to_port                      = 443
   ip_protocol                  = "tcp"
   tags                         = local.tags
+  depends_on                   = [aws_security_group.default]
 }
 
 resource "aws_vpc_security_group_egress_rule" "db_to_lambda" {
@@ -59,6 +62,7 @@ resource "aws_vpc_security_group_egress_rule" "db_to_lambda" {
   to_port                      = 5432
   ip_protocol                  = "tcp"
   tags                         = local.tags
+  depends_on                   = [aws_security_group.default]
 }
 
 resource "aws_vpc_security_group_egress_rule" "secrets_to_lambda" {
@@ -69,4 +73,5 @@ resource "aws_vpc_security_group_egress_rule" "secrets_to_lambda" {
   to_port                      = 443
   ip_protocol                  = "tcp"
   tags                         = local.tags
+  depends_on                   = [aws_security_group.default]
 }
