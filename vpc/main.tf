@@ -309,4 +309,5 @@ data "aws_subnets" "private-subnets" {
 
 module "logs" {
   source = "../logs"
+  name_prefix = var.arg_name
 }

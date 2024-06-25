@@ -1,3 +1,7 @@
+variables {
+  name_prefix = "test-name"
+}
+
 run "log_resource_policy_unit_test" {
   command = plan
 
