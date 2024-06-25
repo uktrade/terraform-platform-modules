@@ -16,55 +16,55 @@ resource "aws_security_group" "default" {
   name        = local.name
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow access from inside the VPC"
-  tags = local.tags
+  tags        = local.tags
 }
 
 resource "aws_vpc_security_group_ingress_rule" "vpc_access" {
-  description = "Local VPC access"
+  description       = "Local VPC access"
   security_group_id = aws_security_group.default.id
-  from_port   = 5432
-  to_port     = 5432
-  ip_protocol = "tcp"
-  cidr_ipv4   = data.aws_vpc.vpc.cidr_block
-  tags = local.tags
+  from_port         = 5432
+  to_port           = 5432
+  ip_protocol       = "tcp"
+  cidr_ipv4         = data.aws_vpc.vpc.cidr_block
+  tags              = local.tags
 }
 
 resource "aws_vpc_security_group_ingress_rule" "lambda_to_db" {
-  description = "Ingress from Lambda Functions to DB"
-  security_group_id = aws_security_group.default.id
+  description                  = "Ingress from Lambda Functions to DB"
+  security_group_id            = aws_security_group.default.id
   referenced_security_group_id = aws_security_group.default.id
-  from_port   = 5432
-  to_port     = 5432
-  ip_protocol    = "tcp"
-  tags = local.tags
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
+  tags                         = local.tags
 }
 
 resource "aws_vpc_security_group_ingress_rule" "lambda_to_secrets" {
-  description = "Ingress from Lambda Functions to Secrets Manager"
-  security_group_id = aws_security_group.default.id
+  description                  = "Ingress from Lambda Functions to Secrets Manager"
+  security_group_id            = aws_security_group.default.id
   referenced_security_group_id = aws_security_group.default.id
-  from_port   = 443
-  to_port     = 443
-  ip_protocol    = "tcp"
-  tags = local.tags
+  from_port                    = 443
+  to_port                      = 443
+  ip_protocol                  = "tcp"
+  tags                         = local.tags
 }
 
 resource "aws_vpc_security_group_egress_rule" "db_to_lambda" {
-  description = "Egress from DB to Lambda Functions"
-  security_group_id = aws_security_group.default.id
+  description                  = "Egress from DB to Lambda Functions"
+  security_group_id            = aws_security_group.default.id
   referenced_security_group_id = aws_security_group.default.id
-  from_port   = 5432
-  to_port     = 5432
-  ip_protocol    = "tcp"
-  tags = local.tags
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
+  tags                         = local.tags
 }
 
 resource "aws_vpc_security_group_egress_rule" "secrets_to_lambda" {
-  description = "Egress from Secrets Manager to Lambda Functions"
-  security_group_id = aws_security_group.default.id
+  description                  = "Egress from Secrets Manager to Lambda Functions"
+  security_group_id            = aws_security_group.default.id
   referenced_security_group_id = aws_security_group.default.id
-  from_port   = 443
-  to_port     = 443
-  ip_protocol    = "tcp"
-  tags = local.tags
+  from_port                    = 443
+  to_port                      = 443
+  ip_protocol                  = "tcp"
+  tags                         = local.tags
 }
