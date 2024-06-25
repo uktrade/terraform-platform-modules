@@ -309,7 +309,4 @@ data "aws_subnets" "private-subnets" {
 
 module "logs" {
   source = "../logs"
-
-  application = var.args.application
-  environment = var.environment
 }
