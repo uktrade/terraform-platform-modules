@@ -266,6 +266,12 @@ run "aws_db_instance_unit_test" {
     error_message = "Should be: mon:00:00-mon:03:00"
   }
 
+  assert {
+    condition     = aws_db_instance.default.storage_type == "gp3"
+    error_message = "Should be: gp3"
+  }
+
+  # aws_db_instance.default.iops cannot be tested on a plan
 }
 
 run "aws_db_instance_unit_test_set_to_non_defaults" {
@@ -307,8 +313,18 @@ run "aws_db_instance_unit_test_set_to_non_defaults" {
   }
 
   assert {
+    condition     = aws_db_instance.default.iops == 3000
+    error_message = "Should be: 20"
+  }
+
+  assert {
     condition     = aws_db_instance.default.instance_class == "db.t3.small"
     error_message = "Should be: db.t3.small"
+  }
+
+  assert {
+    condition     = aws_db_instance.default.storage_type == "io2"
+    error_message = "Should be: io2"
   }
 
 }

@@ -1,5 +1,28 @@
 # Changelog
 
+## [3.0.0](https://github.com/uktrade/terraform-platform-modules/compare/2.3.0...3.0.0) (2024-06-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* New config file and support for multiple pipelines ([#159](https://github.com/uktrade/terraform-platform-modules/issues/159))
+
+### Features
+
+* New config file and support for multiple pipelines ([#159](https://github.com/uktrade/terraform-platform-modules/issues/159)) ([4399fc9](https://github.com/uktrade/terraform-platform-modules/commit/4399fc9ae2b25612ef06ca4bd1ae2938dcfdc944))
+
+## [2.3.0](https://github.com/uktrade/terraform-platform-modules/compare/2.2.1...2.3.0) (2024-06-20)
+
+
+### Features
+
+* DBTP-946 vpc store nat egress ips in parameter store ([#157](https://github.com/uktrade/terraform-platform-modules/issues/157)) ([2a7b595](https://github.com/uktrade/terraform-platform-modules/commit/2a7b59512880bb555d8dc8fc9e5be9987ed6f6f4))
+
+
+### Bug Fixes
+
+* add prometheus-policy to plans.yml ([#163](https://github.com/uktrade/terraform-platform-modules/issues/163)) ([d98d468](https://github.com/uktrade/terraform-platform-modules/commit/d98d468aa50fd44e71796c02df00680e393da658))
+
 ## [2.2.1](https://github.com/uktrade/terraform-platform-modules/compare/2.2.0...2.2.1) (2024-06-14)
 
 
