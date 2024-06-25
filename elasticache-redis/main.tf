@@ -125,16 +125,25 @@ resource "aws_elasticache_subnet_group" "es-subnet-group" {
   )
 }
 
+resource "aws_kms_key" "redis-log-group-kms-key" {
+  description = "KMS Key for Redis Log encryption"
+  enable_key_rotation    = true
+  tags        = local.tags
+}
 resource "aws_cloudwatch_log_group" "redis-slow-log-group" {
   name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/slow"
   retention_in_days = 7
   tags              = local.tags
+
+  kms_key_id = aws_kms_key.redis-log-group-kms-key.arn
 }
 
 resource "aws_cloudwatch_log_group" "redis-engine-log-group" {
   name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/engine"
   retention_in_days = 7
   tags              = local.tags
+
+  kms_key_id = aws_kms_key.redis-log-group-kms-key.arn
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "redis-subscription-filter-engine" {

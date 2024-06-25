@@ -33,6 +33,7 @@ resource "aws_db_subnet_group" "default" {
 
 resource "aws_kms_key" "default" {
   description = "${local.name} KMS key"
+  enable_key_rotation    = true
 }
 
 resource "aws_db_instance" "default" {

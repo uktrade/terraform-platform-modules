@@ -69,14 +69,12 @@
                 {
                     "resource": "module.extensions-staging.module.elasticache-redis.aws_cloudwatch_log_group.redis-engine-log-group",
                     "check_ids": [
-                        "CKV_AWS_158",
                         "CKV_AWS_338"
                     ]
                 },
                 {
                     "resource": "module.extensions-staging.module.elasticache-redis.aws_cloudwatch_log_group.redis-slow-log-group",
                     "check_ids": [
-                        "CKV_AWS_158",
                         "CKV_AWS_338"
                     ]
                 },
@@ -91,23 +89,6 @@
                     "resource": "module.extensions-staging.module.elasticache-redis.aws_security_group.redis",
                     "check_ids": [
                         "CKV_AWS_23"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.elasticache-redis.aws_ssm_parameter.endpoint",
-                    "check_ids": [
-                        "CKV_AWS_337"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/environment-pipelines/codebuild.tf",
-            "findings": [
-                {
-                    "resource": "aws_cloudwatch_log_group.environment_pipeline_codebuild",
-                    "check_ids": [
-                        "CKV_AWS_158"
                     ]
                 }
             ]
@@ -151,30 +132,6 @@
         {
             "file": "/opensearch/main.tf",
             "findings": [
-                {
-                    "resource": "module.extensions-staging.module.opensearch.aws_cloudwatch_log_group.opensearch_log_group_audit_logs",
-                    "check_ids": [
-                        "CKV_AWS_158"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.opensearch.aws_cloudwatch_log_group.opensearch_log_group_es_application_logs",
-                    "check_ids": [
-                        "CKV_AWS_158"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.opensearch.aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs",
-                    "check_ids": [
-                        "CKV_AWS_158"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.opensearch.aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs",
-                    "check_ids": [
-                        "CKV_AWS_158"
-                    ]
-                },
                 {
                     "resource": "module.extensions-staging.module.opensearch.aws_opensearch_domain.this",
                     "check_ids": [
