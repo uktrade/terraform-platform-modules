@@ -191,3 +191,12 @@ run "aws_default_network_acl_unit_test" {
     error_message = "Invalid default network ACL"
   }
 }
+
+run "log_resource_policy_unit_test" {
+  command = plan
+
+  assert {
+    condition     = module.logs.log-resource-policy == "dev-LogResourcePolicy"
+    error_message = "Should be: dev-LogResourcePolicy"
+  }
+}
