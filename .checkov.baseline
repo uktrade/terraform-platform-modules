@@ -67,18 +67,6 @@
             "file": "/elasticache-redis/main.tf",
             "findings": [
                 {
-                    "resource": "module.extensions-staging.module.elasticache-redis.aws_cloudwatch_log_group.redis-engine-log-group",
-                    "check_ids": [
-                        "CKV_AWS_338"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.elasticache-redis.aws_cloudwatch_log_group.redis-slow-log-group",
-                    "check_ids": [
-                        "CKV_AWS_338"
-                    ]
-                },
-                {
                     "resource": "module.extensions-staging.module.elasticache-redis.aws_elasticache_replication_group.redis",
                     "check_ids": [
                         "CKV_AWS_191",

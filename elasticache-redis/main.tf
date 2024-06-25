@@ -132,6 +132,7 @@ resource "aws_kms_key" "redis-log-group-kms-key" {
 }
 resource "aws_cloudwatch_log_group" "redis-slow-log-group" {
   name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/slow"
+  # checkov:skip=CKV_AWS_338:Retains logs for 7 days instead of 1 year
   retention_in_days = 7
   tags              = local.tags
 
@@ -140,6 +141,7 @@ resource "aws_cloudwatch_log_group" "redis-slow-log-group" {
 
 resource "aws_cloudwatch_log_group" "redis-engine-log-group" {
   name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/engine"
+  # checkov:skip=CKV_AWS_338:Retains logs for 7 days instead of 1 year
   retention_in_days = 7
   tags              = local.tags
 
