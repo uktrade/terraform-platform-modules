@@ -3,9 +3,10 @@ data "aws_codestarconnections_connection" "github_codestar_connection" {
 }
 
 resource "aws_codepipeline" "environment_pipeline" {
-  name       = "${var.application}-environment-pipeline"
-  role_arn   = aws_iam_role.environment_pipeline_codepipeline.arn
-  depends_on = [aws_iam_role_policy.artifact_store_access_for_environment_codebuild]
+  name          = "${var.application}-${var.pipeline_name}-environment-pipeline"
+  role_arn      = aws_iam_role.environment_pipeline_codepipeline.arn
+  depends_on    = [aws_iam_role_policy.artifact_store_access_for_environment_codebuild]
+  pipeline_type = "V2"
 
   artifact_store {
     location = module.artifact_store.bucket_name
@@ -32,6 +33,7 @@ resource "aws_codepipeline" "environment_pipeline" {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
         FullRepositoryId = var.repository
         BranchName       = var.branch
+        DetectChanges    = var.trigger_on_push
       }
     }
   }
@@ -50,7 +52,7 @@ resource "aws_codepipeline" "environment_pipeline" {
       namespace        = "slack"
 
       configuration = {
-        ProjectName   = "${var.application}-environment-pipeline-build"
+        ProjectName   = "${var.application}-${var.pipeline_name}-environment-pipeline-build"
         PrimarySource = "project_deployment_source"
         EnvironmentVariables : jsonencode([
           { name : "APPLICATION", value : var.application },
@@ -88,9 +90,9 @@ module "artifact_store" {
 
   application = var.application
   environment = "not-applicable"
-  name        = "${var.application}-environment-pipeline-artifact-store"
+  name        = "${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store"
 
   config = {
-    bucket_name = "${var.application}-environment-pipeline-artifact-store"
+    bucket_name = "${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store"
   }
 }
