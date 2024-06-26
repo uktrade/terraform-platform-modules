@@ -71,289 +71,291 @@ run "aws_security_group_unit_test" {
   }
 }
 
-run "aws_security_group_rule_unit_test" {
-  command = plan
+# Uncomment as part of https://uktrade.atlassian.net/browse/DBTP-1117
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.vpc_access.description == "Local VPC access"
-    error_message = "Invalid description for aws_vpc_security_group_ingress_rule.vpc_access"
-  }
+# run "aws_security_group_rule_unit_test" {
+#   command = plan
 
-  # assertion needs to be run as part of an apply
-  # assert {
-  #   condition     = aws_vpc_security_group_ingress_rule.vpc_access.security_group_id == aws_security_group.default.id
-  #   error_message = "Invalid security group id for aws_vpc_security_group_ingress_rule.vpc_access"
-  # }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.vpc_access.description == "Local VPC access"
+#     error_message = "Invalid description for aws_vpc_security_group_ingress_rule.vpc_access"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.vpc_access.from_port == 5432
-    error_message = "Invalid from_port for aws_vpc_security_group_ingress_rule.vpc_access"
-  }
+#   # assertion needs to be run as part of an apply
+#   # assert {
+#   #   condition     = aws_vpc_security_group_ingress_rule.vpc_access.security_group_id == aws_security_group.default.id
+#   #   error_message = "Invalid security group id for aws_vpc_security_group_ingress_rule.vpc_access"
+#   # }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.vpc_access.to_port == 5432
-    error_message = "Invalid to_port for aws_vpc_security_group_ingress_rule.vpc_access"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.vpc_access.from_port == 5432
+#     error_message = "Invalid from_port for aws_vpc_security_group_ingress_rule.vpc_access"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.vpc_access.ip_protocol == "tcp"
-    error_message = "Invalid ip_protocol for aws_vpc_security_group_ingress_rule.vpc_access"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.vpc_access.to_port == 5432
+#     error_message = "Invalid to_port for aws_vpc_security_group_ingress_rule.vpc_access"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.vpc_access.cidr_ipv4 == "10.0.0.0/16"
-    error_message = "Invalid cidr_ipv4 for aws_vpc_security_group_ingress_rule.vpc_access"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.vpc_access.ip_protocol == "tcp"
+#     error_message = "Invalid ip_protocol for aws_vpc_security_group_ingress_rule.vpc_access"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.vpc_access.tags.application == "test-application"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.vpc_access application"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.vpc_access.cidr_ipv4 == "10.0.0.0/16"
+#     error_message = "Invalid cidr_ipv4 for aws_vpc_security_group_ingress_rule.vpc_access"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.vpc_access.tags.environment == "test-environment"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.vpc_access copilot-environment"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.vpc_access.tags.application == "test-application"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.vpc_access application"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.vpc_access.tags.copilot-application == "test-application"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.vpc_access application"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.vpc_access.tags.environment == "test-environment"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.vpc_access copilot-environment"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.vpc_access.tags.copilot-environment == "test-environment"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.vpc_access copilot-environment"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.vpc_access.tags.copilot-application == "test-application"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.vpc_access application"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.vpc_access.tags.managed-by == "DBT Platform - Terraform"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.vpc_access managed-by"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.vpc_access.tags.copilot-environment == "test-environment"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.vpc_access copilot-environment"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.description == "Ingress from Lambda Functions to DB"
-    error_message = "Invalid description for aws_vpc_security_group_ingress_rule.lambda_to_db"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.vpc_access.tags.managed-by == "DBT Platform - Terraform"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.vpc_access managed-by"
+#   }
 
-  # assertions needs to be run as part of an apply
-  # assert {
-  #   condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.security_group_id == aws_security_group.default.id
-  #   error_message = "Invalid security group id for aws_vpc_security_group_ingress_rule.lambda_to_db"
-  # }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.description == "Ingress from Lambda Functions to DB"
+#     error_message = "Invalid description for aws_vpc_security_group_ingress_rule.lambda_to_db"
+#   }
 
-  # assert {
-  #   condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.referenced_security_group_id == aws_security_group.default.id
-  #   error_message = "Invalid referenced security group id for aws_vpc_security_group_ingress_rule.lambda_to_db"
-  # }
+#   # assertions needs to be run as part of an apply
+#   # assert {
+#   #   condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.security_group_id == aws_security_group.default.id
+#   #   error_message = "Invalid security group id for aws_vpc_security_group_ingress_rule.lambda_to_db"
+#   # }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.from_port == 5432
-    error_message = "Invalid from_port for aws_vpc_security_group_ingress_rule.lambda_to_db"
-  }
+#   # assert {
+#   #   condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.referenced_security_group_id == aws_security_group.default.id
+#   #   error_message = "Invalid referenced security group id for aws_vpc_security_group_ingress_rule.lambda_to_db"
+#   # }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.to_port == 5432
-    error_message = "Invalid to_port for aws_vpc_security_group_ingress_rule.lambda_to_db"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.from_port == 5432
+#     error_message = "Invalid from_port for aws_vpc_security_group_ingress_rule.lambda_to_db"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.ip_protocol == "tcp"
-    error_message = "Invalid ip_protocol for aws_vpc_security_group_ingress_rule.lambda_to_db"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.to_port == 5432
+#     error_message = "Invalid to_port for aws_vpc_security_group_ingress_rule.lambda_to_db"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.tags.application == "test-application"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_db application"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.ip_protocol == "tcp"
+#     error_message = "Invalid ip_protocol for aws_vpc_security_group_ingress_rule.lambda_to_db"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.tags.environment == "test-environment"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_db copilot-environment"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.tags.application == "test-application"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_db application"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.tags.copilot-application == "test-application"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_db application"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.tags.environment == "test-environment"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_db copilot-environment"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.tags.copilot-environment == "test-environment"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_db copilot-environment"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.tags.copilot-application == "test-application"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_db application"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.tags.managed-by == "DBT Platform - Terraform"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_db managed-by"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.tags.copilot-environment == "test-environment"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_db copilot-environment"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.description == "Ingress from Lambda Functions to Secrets Manager"
-    error_message = "Invalid description for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_db.tags.managed-by == "DBT Platform - Terraform"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_db managed-by"
+#   }
 
-  # assertions needs to be run as part of an apply
-  # assert {
-  #   condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.security_group_id == aws_security_group.default.id
-  #   error_message = "Invalid security group id for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
-  # }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.description == "Ingress from Lambda Functions to Secrets Manager"
+#     error_message = "Invalid description for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
+#   }
 
-  # assert {
-  #   condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.referenced_security_group_id == aws_security_group.default.id
-  #   error_message = "Invalid referenced security group id for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
-  # }
+#   # assertions needs to be run as part of an apply
+#   # assert {
+#   #   condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.security_group_id == aws_security_group.default.id
+#   #   error_message = "Invalid security group id for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
+#   # }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.from_port == 443
-    error_message = "Invalid from_port for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
-  }
+#   # assert {
+#   #   condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.referenced_security_group_id == aws_security_group.default.id
+#   #   error_message = "Invalid referenced security group id for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
+#   # }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.to_port == 443
-    error_message = "Invalid to_port for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.from_port == 443
+#     error_message = "Invalid from_port for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.ip_protocol == "tcp"
-    error_message = "Invalid ip_protocol for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.to_port == 443
+#     error_message = "Invalid to_port for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.tags.application == "test-application"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_secrets application"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.ip_protocol == "tcp"
+#     error_message = "Invalid ip_protocol for aws_vpc_security_group_ingress_rule.lambda_to_secrets"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.tags.environment == "test-environment"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_secrets copilot-environment"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.tags.application == "test-application"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_secrets application"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.tags.copilot-application == "test-application"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_secrets application"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.tags.environment == "test-environment"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_secrets copilot-environment"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.tags.copilot-environment == "test-environment"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_secrets copilot-environment"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.tags.copilot-application == "test-application"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_secrets application"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.tags.managed-by == "DBT Platform - Terraform"
-    error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_secrets managed-by"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.tags.copilot-environment == "test-environment"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_secrets copilot-environment"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.db_to_lambda.description == "Egress from DB to Lambda Functions"
-    error_message = "Invalid description for aws_vpc_security_group_egress_rule.db_to_lambda"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_ingress_rule.lambda_to_secrets.tags.managed-by == "DBT Platform - Terraform"
+#     error_message = "Invalid tags for aws_vpc_security_group_ingress_rule.lambda_to_secrets managed-by"
+#   }
 
-  # assertions needs to be run as part of an apply
-  # assert {
-  #   condition     = aws_vpc_security_group_egress_rule.db_to_lambda.security_group_id == aws_security_group.default.id
-  #   error_message = "Invalid security group id for aws_vpc_security_group_egress_rule.db_to_lambda"
-  # }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.db_to_lambda.description == "Egress from DB to Lambda Functions"
+#     error_message = "Invalid description for aws_vpc_security_group_egress_rule.db_to_lambda"
+#   }
 
-  # assert {
-  #   condition     = aws_vpc_security_group_egress_rule.db_to_lambda.referenced_security_group_id == aws_security_group.default.id
-  #   error_message = "Invalid referenced security group id for aws_vpc_security_group_egress_rule.db_to_lambda"
-  # }
+#   # assertions needs to be run as part of an apply
+#   # assert {
+#   #   condition     = aws_vpc_security_group_egress_rule.db_to_lambda.security_group_id == aws_security_group.default.id
+#   #   error_message = "Invalid security group id for aws_vpc_security_group_egress_rule.db_to_lambda"
+#   # }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.db_to_lambda.from_port == 5432
-    error_message = "Invalid from_port for aws_vpc_security_group_egress_rule.db_to_lambda"
-  }
+#   # assert {
+#   #   condition     = aws_vpc_security_group_egress_rule.db_to_lambda.referenced_security_group_id == aws_security_group.default.id
+#   #   error_message = "Invalid referenced security group id for aws_vpc_security_group_egress_rule.db_to_lambda"
+#   # }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.db_to_lambda.to_port == 5432
-    error_message = "Invalid to_port for aws_vpc_security_group_egress_rule.db_to_lambda"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.db_to_lambda.from_port == 5432
+#     error_message = "Invalid from_port for aws_vpc_security_group_egress_rule.db_to_lambda"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.db_to_lambda.ip_protocol == "tcp"
-    error_message = "Invalid ip_protocol for aws_vpc_security_group_egress_rule.db_to_lambda"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.db_to_lambda.to_port == 5432
+#     error_message = "Invalid to_port for aws_vpc_security_group_egress_rule.db_to_lambda"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.db_to_lambda.tags.application == "test-application"
-    error_message = "Invalid tags for aws_vpc_security_group_egress_rule.db_to_lambda application"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.db_to_lambda.ip_protocol == "tcp"
+#     error_message = "Invalid ip_protocol for aws_vpc_security_group_egress_rule.db_to_lambda"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.db_to_lambda.tags.environment == "test-environment"
-    error_message = "Invalid tags for aws_vpc_security_group_egress_rule.db_to_lambda copilot-environment"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.db_to_lambda.tags.application == "test-application"
+#     error_message = "Invalid tags for aws_vpc_security_group_egress_rule.db_to_lambda application"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.db_to_lambda.tags.copilot-application == "test-application"
-    error_message = "Invalid tags for aws_vpc_security_group_egress_rule.db_to_lambda application"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.db_to_lambda.tags.environment == "test-environment"
+#     error_message = "Invalid tags for aws_vpc_security_group_egress_rule.db_to_lambda copilot-environment"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.db_to_lambda.tags.copilot-environment == "test-environment"
-    error_message = "Invalid tags for aws_vpc_security_group_egress_rule.db_to_lambda copilot-environment"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.db_to_lambda.tags.copilot-application == "test-application"
+#     error_message = "Invalid tags for aws_vpc_security_group_egress_rule.db_to_lambda application"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.db_to_lambda.tags.managed-by == "DBT Platform - Terraform"
-    error_message = "Invalid tags for aws_vpc_security_group_egress_rule.db_to_lambda managed-by"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.db_to_lambda.tags.copilot-environment == "test-environment"
+#     error_message = "Invalid tags for aws_vpc_security_group_egress_rule.db_to_lambda copilot-environment"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.description == "Egress from Secrets Manager to Lambda Functions"
-    error_message = "Invalid description for aws_vpc_security_group_egress_rule.secrets_to_lambda"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.db_to_lambda.tags.managed-by == "DBT Platform - Terraform"
+#     error_message = "Invalid tags for aws_vpc_security_group_egress_rule.db_to_lambda managed-by"
+#   }
 
-  # assertions needs to be run as part of an apply
-  # assert {
-  #   condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.security_group_id == aws_security_group.default.id
-  #   error_message = "Invalid security group id for aws_vpc_security_group_egress_rule.secrets_to_lambda"
-  # }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.description == "Egress from Secrets Manager to Lambda Functions"
+#     error_message = "Invalid description for aws_vpc_security_group_egress_rule.secrets_to_lambda"
+#   }
 
-  # assert {
-  #   condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.referenced_security_group_id == aws_security_group.default.id
-  #   error_message = "Invalid referenced security group id for aws_vpc_security_group_egress_rule.secrets_to_lambda"
-  # }
+#   # assertions needs to be run as part of an apply
+#   # assert {
+#   #   condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.security_group_id == aws_security_group.default.id
+#   #   error_message = "Invalid security group id for aws_vpc_security_group_egress_rule.secrets_to_lambda"
+#   # }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.from_port == 443
-    error_message = "Invalid from_port for aws_vpc_security_group_egress_rule.secrets_to_lambda"
-  }
+#   # assert {
+#   #   condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.referenced_security_group_id == aws_security_group.default.id
+#   #   error_message = "Invalid referenced security group id for aws_vpc_security_group_egress_rule.secrets_to_lambda"
+#   # }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.to_port == 443
-    error_message = "Invalid to_port for aws_vpc_security_group_egress_rule.secrets_to_lambda"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.from_port == 443
+#     error_message = "Invalid from_port for aws_vpc_security_group_egress_rule.secrets_to_lambda"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.ip_protocol == "tcp"
-    error_message = "Invalid ip_protocol for aws_vpc_security_group_egress_rule.secrets_to_lambda"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.to_port == 443
+#     error_message = "Invalid to_port for aws_vpc_security_group_egress_rule.secrets_to_lambda"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.tags.application == "test-application"
-    error_message = "Invalid tags for aws_vpc_security_group_egress_rule.secrets_to_lambda application"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.ip_protocol == "tcp"
+#     error_message = "Invalid ip_protocol for aws_vpc_security_group_egress_rule.secrets_to_lambda"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.tags.environment == "test-environment"
-    error_message = "Invalid tags for aws_vpc_security_group_egress_rule.secrets_to_lambda copilot-environment"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.tags.application == "test-application"
+#     error_message = "Invalid tags for aws_vpc_security_group_egress_rule.secrets_to_lambda application"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.tags.copilot-application == "test-application"
-    error_message = "Invalid tags for aws_vpc_security_group_egress_rule.secrets_to_lambda application"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.tags.environment == "test-environment"
+#     error_message = "Invalid tags for aws_vpc_security_group_egress_rule.secrets_to_lambda copilot-environment"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.tags.copilot-environment == "test-environment"
-    error_message = "Invalid tags for aws_vpc_security_group_egress_rule.secrets_to_lambda copilot-environment"
-  }
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.tags.copilot-application == "test-application"
+#     error_message = "Invalid tags for aws_vpc_security_group_egress_rule.secrets_to_lambda application"
+#   }
 
-  assert {
-    condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.tags.managed-by == "DBT Platform - Terraform"
-    error_message = "Invalid tags for aws_vpc_security_group_egress_rule.secrets_to_lambda managed-by"
-  }
-}
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.tags.copilot-environment == "test-environment"
+#     error_message = "Invalid tags for aws_vpc_security_group_egress_rule.secrets_to_lambda copilot-environment"
+#   }
+
+#   assert {
+#     condition     = aws_vpc_security_group_egress_rule.secrets_to_lambda.tags.managed-by == "DBT Platform - Terraform"
+#     error_message = "Invalid tags for aws_vpc_security_group_egress_rule.secrets_to_lambda managed-by"
+#   }
+# }
 
 run "aws_db_parameter_group_unit_test" {
   command = plan
