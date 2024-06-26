@@ -16,7 +16,6 @@ resource "aws_security_group" "default" {
   name        = local.name
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow access from inside the VPC"
-  tags        = local.tags
 
   ingress {
     description = "Local VPC access"
@@ -64,4 +63,6 @@ resource "aws_security_group" "default" {
 
     self = true
   }
+
+  tags = local.tags
 }
