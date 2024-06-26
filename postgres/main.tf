@@ -66,6 +66,8 @@ resource "aws_security_group" "default" {
   }
 }
 
+# Uncomment as part of https://uktrade.atlassian.net/browse/DBTP-1117
+
 # resource "aws_vpc_security_group_ingress_rule" "vpc_access" {
 #   description       = "Local VPC access"
 #   security_group_id = aws_security_group.default.id
