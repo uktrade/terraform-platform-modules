@@ -54,7 +54,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
   dynamic "rule" {
     for_each = var.config.lifecycle_rules
     content {
-      id = "rule.value-[count.index]"
+      id = "rule-${index(var.config.lifecycle_rules, rule.value)+1}"
       abort_incomplete_multipart_upload {
         days_after_initiation = 7
       }
