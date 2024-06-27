@@ -279,15 +279,15 @@ run "aws_db_instance_unit_test_set_to_non_defaults" {
 
   variables {
     config = {
-      version             = 14,
-      deletion_protection = false,
-      multi_az            = true,
-      skip_final_snapshot = true,
-      volume_size         = 20,
-      iops                = 3000,
-      instance            = "db.t3.small",
-      storage_type        = "io2"
-
+      version                 = 14,
+      deletion_protection     = false,
+      multi_az                = true,
+      skip_final_snapshot     = true,
+      volume_size             = 20,
+      iops                    = 3000,
+      instance                = "db.t3.small",
+      storage_type            = "io2"
+      backup_retention_period = 35
     }
   }
 
@@ -325,6 +325,11 @@ run "aws_db_instance_unit_test_set_to_non_defaults" {
   assert {
     condition     = aws_db_instance.default.storage_type == "io2"
     error_message = "Should be: io2"
+  }
+
+  assert {
+    condition     = aws_db_instance.default.backup_retention_period == 35
+    error_message = "Should be: 35"
   }
 
   # Test aws_db_instance.restored resource has not been created
