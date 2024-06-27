@@ -1,7 +1,4 @@
-variable "application" {
-  type = string
-}
-
-variable "environment" {
-  type = string
+variable "name_prefix" {
+  default = null
+  type    = string
 }

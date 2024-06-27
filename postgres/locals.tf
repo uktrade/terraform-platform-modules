@@ -26,6 +26,8 @@ locals {
   deletion_protection       = coalesce(var.config.deletion_protection, true)
 
   instance_class = coalesce(var.config.instance, "db.t3.micro")
+  storage_type   = coalesce(var.config.storage_type, "gp3")
+  iops           = var.config.iops != null && local.storage_type != "gp3" ? var.config.iops : null
 
   secret_prefix                = upper(replace(var.name, "-", "_"))
   rds_master_secret_name       = "${local.secret_prefix}_RDS_MASTER_ARN"

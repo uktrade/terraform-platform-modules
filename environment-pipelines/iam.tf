@@ -273,6 +273,15 @@ data "aws_iam_policy_document" "certificate" {
       "arn:aws:acm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate/*"
     ]
   }
+
+  statement {
+    actions = [
+      "acm:ListCertificates",
+    ]
+    resources = [
+      "*"
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "security_group" {
