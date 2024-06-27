@@ -41,17 +41,12 @@ dw-s3-bucket:
     dev:
       bucket_name: digital-workspace-v2-dev
       lifecycle_rules:
-        rules:
-          - filter:
-              prefix: "logs/"
-            expiration:
-              days: 90
-            enabled: true
-          - filter:
-              prefix: "foobar/"
-            expiration:
-              days: 3
-            enabled: true
+        - filter_prefix: "logs/"
+          expiration_days: 1
+          enabled: true
+        - filter_prefix: "keep_me_longer/"
+          expiration_days: 100
+          enabled: true
     hotfix:
       bucket_name: digital-workspace-v2-hotfix
     prod:

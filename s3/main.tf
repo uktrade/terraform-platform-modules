@@ -52,17 +52,17 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
   bucket = aws_s3_bucket.this.id
 
   dynamic "rule" {
-    for_each = var.config.lifecycle_rules.rules
+    for_each = var.config.lifecycle_rules
     content {
       id = "rule.value-[count.index]"
       abort_incomplete_multipart_upload {
         days_after_initiation = 7
       }
       filter {
-        prefix = rule.value.filter.prefix
+        prefix = rule.value.filter_prefix
       }
       expiration {
-        days = rule.value.expiration.days
+        days = rule.value.expiration_days
       }
       status = coalesce(rule.value.enabled, false) ? "Enabled" : "Disabled"
     }
