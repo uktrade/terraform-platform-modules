@@ -29,17 +29,6 @@ resource "aws_security_group" "default" {
   }
 
   ingress {
-    description = "Local VPC access"
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-
-    cidr_blocks = [
-      data.aws_vpc.vpc.cidr_block,
-    ]
-  }
-
-  ingress {
     description = "Ingress from Lambda Functions to DB"
     from_port   = 5432
     to_port     = 5432
@@ -75,15 +64,5 @@ resource "aws_security_group" "default" {
     self = true
   }
 
-  egress {
-    description = "Egress for HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   tags = local.tags
 }
-
