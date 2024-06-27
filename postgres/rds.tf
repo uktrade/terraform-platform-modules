@@ -126,7 +126,6 @@ resource "aws_db_instance" "restored" {
   # PITR
   restore_to_point_in_time {
     source_db_instance_identifier = aws_db_instance.default.id
-    use_latest_restorable_time    = false
     restore_time                  = var.config.restore_time
   }
 
