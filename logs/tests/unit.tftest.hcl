@@ -1,6 +1,5 @@
 variables {
-  application = "log-test-application"
-  environment = "log-test-environment"
+  name_prefix = "test-name"
 }
 
 run "log_resource_policy_unit_test" {
@@ -22,8 +21,8 @@ run "log_resource_policy_unit_test" {
   }
 
   assert {
-    condition     = strcontains(jsondecode(data.aws_iam_policy_document.log-resource-policy.json).Statement[0].Resource, "log-group:/copilot/log-test-application-log-test-environment-*:log-stream:*")
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement resource should contain log-group:/copilot/log-test-application-log-test-environment-*:log-stream:*"
+    condition     = strcontains(jsondecode(data.aws_iam_policy_document.log-resource-policy.json).Statement[0].Resource, "log-group:/copilot/*:log-stream:*")
+    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement resource should contain log-group:/copilot/*:log-stream:*"
   }
 
   assert {
@@ -42,8 +41,8 @@ run "log_resource_policy_unit_test" {
   }
 
   assert {
-    condition     = strcontains(jsondecode(data.aws_iam_policy_document.log-resource-policy.json).Statement[1].Resource, "log-group:/aws/elasticache/log-test-application/log-test-environment/*")
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement resource should contain log-group:/aws/elasticache/log-test-application/log-test-environment/*"
+    condition     = strcontains(jsondecode(data.aws_iam_policy_document.log-resource-policy.json).Statement[1].Resource, "log-group:/aws/elasticache/*")
+    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement resource should contain log-group:/aws/elasticache/*"
   }
 
   assert {
@@ -57,7 +56,7 @@ run "log_resource_policy_unit_test" {
   }
 
   assert {
-    condition     = strcontains(jsondecode(data.aws_iam_policy_document.log-resource-policy.json).Statement[2].Resource, "log-group:/aws/opensearch/log-test-application/log-test-environment/*")
-    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement resource should contain log-group:/aws/opensearch/log-test-application/log-test-environment/*"
+    condition     = strcontains(jsondecode(data.aws_iam_policy_document.log-resource-policy.json).Statement[2].Resource, "log-group:/aws/opensearch/*")
+    error_message = "Invalid value for aws_iam_policy_document log_resource_policy statement resource should contain log-group:/aws/opensearch/*"
   }
 }
