@@ -95,6 +95,59 @@ resource "aws_db_instance" "default" {
   tags = local.tags
 }
 
+resource "aws_db_instance" "restored" {
+  count = var.config.restore_time != null ? 1 : 0
+
+  identifier = "${local.name}-restored"
+
+  db_name                     = "main-restored"
+  username                    = "postgres"
+  manage_master_user_password = true
+  multi_az                    = local.multi_az
+
+  # version
+  engine         = "postgres"
+  engine_version = local.version
+  instance_class = local.instance_class
+
+  # upgrades
+  allow_major_version_upgrade = true
+  auto_minor_version_upgrade  = true
+  apply_immediately           = false
+  maintenance_window          = "Mon:00:00-Mon:03:00"
+
+  # storage
+  allocated_storage = local.volume_size
+  storage_encrypted = true
+  kms_key_id        = aws_kms_key.default.arn
+  storage_type      = local.storage_type
+  iops              = local.iops
+
+  # PITR
+  restore_to_point_in_time {
+    source_db_instance_identifier = aws_db_instance.default.id
+    use_latest_restorable_time    = false
+    restore_time                  = var.config.restore_time
+  }
+
+  parameter_group_name = aws_db_parameter_group.default.name
+  db_subnet_group_name = aws_db_subnet_group.default.name
+
+  deletion_protection = local.deletion_protection
+
+  vpc_security_group_ids              = [aws_security_group.default.id]
+  publicly_accessible                 = false
+  iam_database_authentication_enabled = false
+
+  enabled_cloudwatch_logs_exports = ["postgresql"]
+
+  depends_on = [
+    aws_db_subnet_group.default,
+    aws_security_group.default,
+    aws_db_parameter_group.default,
+  ]
+}
+
 resource "aws_iam_role" "enhanced-monitoring" {
   name_prefix        = "rds-enhanced-monitoring-"
   assume_role_policy = data.aws_iam_policy_document.enhanced-monitoring.json
