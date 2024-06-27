@@ -100,7 +100,6 @@ resource "aws_db_instance" "restored" {
 
   identifier = "${local.name}-restored"
 
-  db_name                     = "main-restored"
   username                    = "postgres"
   manage_master_user_password = true
   multi_az                    = local.multi_az
@@ -125,8 +124,8 @@ resource "aws_db_instance" "restored" {
 
   # PITR
   restore_to_point_in_time {
-    source_db_instance_identifier = aws_db_instance.default.id
-    restore_time                  = var.config.restore_time
+    source_dbi_resource_id = aws_db_instance.default.id
+    restore_time           = var.config.restore_time
   }
 
   parameter_group_name = aws_db_parameter_group.default.name
