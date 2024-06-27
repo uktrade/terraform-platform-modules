@@ -172,7 +172,7 @@ run "aws_s3_bucket_lifecycle_configuration_unit_test" {
     config = {
       "bucket_name"             = "dbt-terraform-test-s3-module",
       "type"                    = "string",
-      "lifecycle_configuration" = { "rules" = [{ "filter" = { "prefix" = "/foo" }, "expiration" = { "days" = 90 }, "enabled" = true }] },
+      "lifecycle_rules" = { "rules" = [{ "filter" = { "prefix" = "/foo" }, "expiration" = { "days" = 90 }, "enabled" = true }] },
       "objects"                 = [],
     }
   }

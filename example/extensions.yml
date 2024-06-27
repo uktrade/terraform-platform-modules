@@ -40,7 +40,7 @@ dw-s3-bucket:
   environments:
     dev:
       bucket_name: digital-workspace-v2-dev
-      lifecycle_configuration:
+      lifecycle_rules:
         rules:
           - filter:
               prefix: "logs/"

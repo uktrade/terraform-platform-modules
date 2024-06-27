@@ -29,7 +29,7 @@ variable "config" {
       days  = optional(number)
       years = optional(number)
     }))
-    lifecycle_configuration = optional(object({
+    lifecycle_rules = optional(object({
       rules = list(object({
         filter = object({
           prefix = string
