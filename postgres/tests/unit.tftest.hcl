@@ -335,7 +335,7 @@ run "aws_db_instance_unit_test_set_to_non_defaults" {
   # Test aws_db_instance.restored resource has not been created
   assert {
     condition     = length(aws_db_instance.restored) == 0
-    error_message = "Should be: []"
+    error_message = "Should be: 0"
   }
 
 }
