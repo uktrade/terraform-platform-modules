@@ -14,6 +14,7 @@ data "aws_subnets" "private-subnets" {
 }
 
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 
 resource "aws_elasticache_replication_group" "redis" {
@@ -129,6 +130,33 @@ resource "aws_kms_key" "redis-log-group-kms-key" {
   description = "KMS Key for Redis Log encryption"
   enable_key_rotation    = true
   tags        = local.tags
+}
+
+resource "aws_kms_key_policy" "redis-to-cloudwatch" {
+  key_id = aws_kms_key.redis-log-group-kms-key.key_id
+  policy = jsonencode({
+    Id = "RedisToCloudWatch"
+    Statement = [
+      {
+        "Sid": "Enable IAM User Permissions",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action": "kms:*",
+        "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
+            },
+            "Action": "kms:*",
+            "Resource": "*"
+        }
+    ]
+    Version = "2012-10-17"
+  })
 }
 resource "aws_cloudwatch_log_group" "redis-slow-log-group" {
   name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/slow"
