@@ -58,12 +58,14 @@ data "archive_file" "lambda" {
   type        = "zip"
   source_file = "${path.module}/manage_users.py"
   output_path = "${path.module}/manage_users.zip"
-  depends_on = [
+  depends_on  = [
     aws_iam_role.lambda-execution-role
   ]
 }
 
 resource "aws_lambda_function" "lambda" {
+  # checkov:skip=CKV_AWS_272:Code signing is not currently in use
+  # checkov:skip=CKV_AWS_116:Dead letter queue not required due to the nature of this function
   filename      = "${path.module}/manage_users.zip"
   function_name = "${local.name}-rds-create-user"
   role          = aws_iam_role.lambda-execution-role.arn
@@ -71,6 +73,7 @@ resource "aws_lambda_function" "lambda" {
   runtime       = "python3.11"
   memory_size   = 128
   timeout       = 10
+  reserved_concurrent_executions = -1
 
   layers = ["arn:aws:lambda:eu-west-2:763451185160:layer:python-postgres:1"]
 
@@ -79,6 +82,10 @@ resource "aws_lambda_function" "lambda" {
   vpc_config {
     security_group_ids = [aws_security_group.default.id, data.aws_security_group.rds-endpoint.id]
     subnet_ids         = data.aws_subnets.private-subnets.ids
+  }
+
+  tracing_config {
+    mode = "Active"
   }
 }
 

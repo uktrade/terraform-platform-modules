@@ -153,15 +153,6 @@
                         "CKV_AWS_111",
                         "CKV_AWS_356"
                     ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.postgres.aws_lambda_function.lambda",
-                    "check_ids": [
-                        "CKV_AWS_115",
-                        "CKV_AWS_116",
-                        "CKV_AWS_272",
-                        "CKV_AWS_50"
-                    ]
                 }
             ]
         },
