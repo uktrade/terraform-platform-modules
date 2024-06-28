@@ -357,15 +357,18 @@ run "aws_db_instance_restored_unit_test" {
     }
   }
 
-  # Test single aws_db_instance.restored resource has been created
   assert {
     condition     = length(aws_db_instance.restored) == 1
     error_message = "Should be: 2024-06-27T00:00:00Z"
   }
 
-  # Test aws_db_instance.restored resource restore time
   assert {
     condition     = aws_db_instance.restored[0].restore_to_point_in_time[0].restore_time == "2024-06-27T00:00:00Z"
+    error_message = "Should be: 2024-06-27T00:00:00Z"
+  }
+
+  assert {
+    condition     = aws_db_instance.restored[0].tags.restore-time == "2024-06-27T00:00:00Z"
     error_message = "Should be: 2024-06-27T00:00:00Z"
   }
 }

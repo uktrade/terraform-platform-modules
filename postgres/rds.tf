@@ -144,6 +144,8 @@ resource "aws_db_instance" "restored" {
     aws_security_group.default,
     aws_db_parameter_group.default,
   ]
+
+  tags = merge(local.tags, {restore-time: var.config.restore_time})
 }
 
 resource "aws_iam_role" "enhanced-monitoring" {
