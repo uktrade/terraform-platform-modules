@@ -42,5 +42,4 @@ phases:
         fi
 artifacts:
   files:
-    - terraform/environments/${ENVIRONMENT}/plan.tfplan
-    - copilot/environments/${ENVIRONMENT}/manifest.yml
+    - "**/*"

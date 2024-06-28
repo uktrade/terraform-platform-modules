@@ -771,15 +771,11 @@ run "test_stages" {
     error_message = "Action provider incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts) == 2
+    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts) == 1
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[0] == "build_output"
-    error_message = "Input artifacts incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[1] == "dev_terraform_plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[0] == "dev_terraform_plan"
     error_message = "Input artifacts incorrect"
   }
   assert {
@@ -795,7 +791,7 @@ run "test_stages" {
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.PrimarySource == "build_output"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.PrimarySource == "dev_terraform_plan"
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
@@ -925,15 +921,11 @@ run "test_stages" {
     error_message = "Action provider incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts) == 2
+    condition     = length(aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts) == 1
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[0] == "build_output"
-    error_message = "Input artifacts incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[1] == "prod_terraform_plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[0] == "prod_terraform_plan"
     error_message = "Input artifacts incorrect"
   }
   assert {
@@ -949,7 +941,7 @@ run "test_stages" {
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.PrimarySource == "build_output"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.PrimarySource == "prod_terraform_plan"
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
