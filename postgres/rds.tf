@@ -100,6 +100,12 @@ resource "aws_db_instance" "restored" {
 
   identifier = "${local.name}-restored"
 
+  # PITR
+  restore_to_point_in_time {
+    source_dbi_resource_id = aws_db_instance.default.id
+    restore_time           = var.config.restore_time
+  }
+
   username                    = "postgres"
   manage_master_user_password = true
   multi_az                    = local.multi_az
@@ -122,22 +128,29 @@ resource "aws_db_instance" "restored" {
   storage_type      = local.storage_type
   iops              = local.iops
 
-  # PITR
-  restore_to_point_in_time {
-    source_dbi_resource_id = aws_db_instance.default.id
-    restore_time           = var.config.restore_time
-  }
-
   parameter_group_name = aws_db_parameter_group.default.name
   db_subnet_group_name = aws_db_subnet_group.default.name
 
-  deletion_protection = local.deletion_protection
+  backup_retention_period = coalesce(var.config.backup_retention_period, 7)
+  backup_window           = "07:00-09:00"
+  deletion_protection     = local.deletion_protection
 
   vpc_security_group_ids              = [aws_security_group.default.id]
   publicly_accessible                 = false
   iam_database_authentication_enabled = false
 
+  snapshot_identifier       = local.snapshot_id
+  skip_final_snapshot       = local.skip_final_snapshot
+  final_snapshot_identifier = local.final_snapshot_identifier
+  copy_tags_to_snapshot     = true
+
   enabled_cloudwatch_logs_exports = ["postgresql"]
+
+  # monitoring and performance
+  performance_insights_enabled          = true
+  performance_insights_retention_period = 7
+  monitoring_interval                   = 15
+  monitoring_role_arn                   = aws_iam_role.enhanced-monitoring.arn
 
   depends_on = [
     aws_db_subnet_group.default,
