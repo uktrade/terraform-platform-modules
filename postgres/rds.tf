@@ -65,7 +65,7 @@ resource "aws_db_instance" "default" {
   parameter_group_name = aws_db_parameter_group.default.name
   db_subnet_group_name = aws_db_subnet_group.default.name
 
-  backup_retention_period = 7
+  backup_retention_period = coalesce(var.config.backup_retention_period, 7)
   backup_window           = "07:00-09:00"
   deletion_protection     = local.deletion_protection
 
@@ -93,6 +93,59 @@ resource "aws_db_instance" "default" {
   ]
 
   tags = local.tags
+}
+
+resource "aws_db_instance" "restored" {
+  count = var.config.restore_time != null ? 1 : 0
+
+  identifier = "${local.name}-restored"
+
+  username                    = "postgres"
+  manage_master_user_password = true
+  multi_az                    = local.multi_az
+
+  # version
+  engine         = "postgres"
+  engine_version = local.version
+  instance_class = local.instance_class
+
+  # upgrades
+  allow_major_version_upgrade = true
+  auto_minor_version_upgrade  = true
+  apply_immediately           = false
+  maintenance_window          = "Mon:00:00-Mon:03:00"
+
+  # storage
+  allocated_storage = local.volume_size
+  storage_encrypted = true
+  kms_key_id        = aws_kms_key.default.arn
+  storage_type      = local.storage_type
+  iops              = local.iops
+
+  # PITR
+  restore_to_point_in_time {
+    source_dbi_resource_id = aws_db_instance.default.id
+    restore_time           = var.config.restore_time
+  }
+
+  parameter_group_name = aws_db_parameter_group.default.name
+  db_subnet_group_name = aws_db_subnet_group.default.name
+
+  deletion_protection = local.deletion_protection
+
+  vpc_security_group_ids              = [aws_security_group.default.id]
+  publicly_accessible                 = false
+  iam_database_authentication_enabled = false
+
+  enabled_cloudwatch_logs_exports = ["postgresql"]
+
+  depends_on = [
+    aws_db_subnet_group.default,
+    aws_security_group.default,
+    aws_db_parameter_group.default,
+  ]
+
+  tags = merge(local.tags, { restore-time : var.config.restore_time })
 }
 
 resource "aws_iam_role" "enhanced-monitoring" {
