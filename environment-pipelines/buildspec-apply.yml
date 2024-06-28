@@ -9,7 +9,6 @@ phases:
     commands:
       - export PATH="${CODEBUILD_SRC_DIR}/build-tools/bin:$PATH"
       - export PYTHONPATH="${CODEBUILD_SRC_DIR}/build-tools"
-      - eval export PLAN_TF_DIR=\$CODEBUILD_SRC_DIR_${ENVIRONMENT}_terraform_plan
   build:
     commands:
       - set -e
@@ -17,8 +16,7 @@ phases:
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting terraform apply phase for the ${ENVIRONMENT} environment."
       - echo -e "\nWorking on environment ${ENVIRONMENT}"
       - cd "terraform/environments/${ENVIRONMENT}"
-      - terraform init
-      - terraform apply "${PLAN_TF_DIR}/terraform/environments/${ENVIRONMENT}/plan.tfplan"
+      - terraform apply plan.tfplan
       - echo -e "\nGenerating manifests and deploying AWS Copilot environment resources"
       - cd "${CODEBUILD_SRC_DIR}"
       - platform-helper environment generate --name "${ENVIRONMENT}"
