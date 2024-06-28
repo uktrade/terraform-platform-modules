@@ -26,6 +26,7 @@ locals {
           ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-plan"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([
+            { name : "APPLICATION", value : var.application },
             { name : "ENVIRONMENT", value : env.name },
             { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
