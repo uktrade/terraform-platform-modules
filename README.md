@@ -29,6 +29,12 @@ Various quality checks are run in AWS Codebuild in the `platform-tools` account 
 
 ### Running the terraform unit tests locally
 
+Ensure that local variable `AWS_PROFILE` is set to `sandbox` and that you have run:
+
+```shell
+aws sso login
+```
+
 The faster, but less comprehensive, tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
 
 ```shell
