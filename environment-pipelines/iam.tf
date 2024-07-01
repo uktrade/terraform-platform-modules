@@ -538,10 +538,24 @@ data "aws_iam_policy_document" "postgres" {
         "lambda:GetFunction",
         "lambda:InvokeFunction",
         "lambda:ListVersionsByFunction",
-        "lambda:GetFunctionCodeSigningConfig"
+        "lambda:GetFunctionCodeSigningConfig",
+        "lambda:UpdateFunctionCode",
+        "lambda:CreateFunction"
       ]
       resources = [
         "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${statement.value.name}-*"
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = local.environment_config
+    content {
+      actions = [
+        "lambda:GetLayerVersion"
+      ]
+      resources = [
+        "arn:aws:lambda:eu-west-2:763451185160:layer:python-postgres:1"
       ]
     }
   }
@@ -556,7 +570,9 @@ data "aws_iam_policy_document" "postgres" {
         "rds:DescribeDBParameterGroups",
         "rds:DescribeDBParameters",
         "rds:ListTagsForResource",
-        "rds:CreateDBInstance"
+        "rds:CreateDBInstance",
+        "rds:ModifyDBInstance",
+        "rds:DeleteDBParameterGroup"
       ]
       resources = [
         "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:pg:${var.application}-${statement.value.name}-*"
