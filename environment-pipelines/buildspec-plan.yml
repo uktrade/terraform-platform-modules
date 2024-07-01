@@ -17,9 +17,12 @@ phases:
       - echo "Terraform Plan Phase"
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting terraform plan phase for the ${ENVIRONMENT} environment."
       - echo "Working on environment ${ENVIRONMENT}"
-      - echo "Generating manifests"
-      - copilot env init --name ${ENVIRONMENT} --profile ${COPILOT_PROFILE} --default-config
-      - platform-helper copilot make-addons
+      - |
+        if [ "${APPLICATION}" == "demodjango" ] && [ "${ENVIRONMENT}" == "toolspr" ]; then
+          echo "Skipping platform-helper environment generate-terraform for demodjango toolspr environment until we can make it use terraform-platform-modules main branch"
+        else
+          platform-helper environment generate-terraform --name "${ENVIRONMENT}"
+        fi
       - cd terraform/environments/${ENVIRONMENT}
       - terraform init
       - terraform plan -out=plan.tfplan
@@ -39,4 +42,4 @@ phases:
         fi
 artifacts:
   files:
-    - terraform/environments/${ENVIRONMENT}/plan.tfplan
+    - "**/*"

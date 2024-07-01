@@ -148,17 +148,17 @@ override_data {
 }
 
 variables {
-  application = "my-app"
-  repository  = "my-repository"
+  application   = "my-app"
+  repository    = "my-repository"
+  pipeline_name = "my-pipeline"
   expected_tags = {
     application         = "my-app"
     copilot-application = "my-app"
     managed-by          = "DBT Platform - Terraform"
   }
 
-  environments = [
-    {
-      name = "dev",
+  environment_config = {
+    "*" = {
       accounts = {
         deploy = {
           name = "sandbox"
@@ -169,9 +169,11 @@ variables {
           id   = "000987654321"
         }
       }
+      requires_approval : false
+      vpc : "platform-sandbox-dev"
     },
-    {
-      name = "prod",
+    "dev" = null,
+    "prod" = {
       accounts = {
         deploy = {
           name = "prod"
@@ -183,21 +185,27 @@ variables {
         }
       }
       requires_approval = true
+      vpc : "platform-sandbox-prod"
     }
-  ]
+  }
+
+  environments = {
+    "dev" : null
+    "prod" : null
+  }
 }
 
 run "test_code_pipeline" {
   command = plan
 
   assert {
-    condition     = aws_codepipeline.environment_pipeline.name == "my-app-environment-pipeline"
-    error_message = "Should be: my-app-environment-pipeline"
+    condition     = aws_codepipeline.environment_pipeline.name == "my-app-my-pipeline-environment-pipeline"
+    error_message = "Should be: my-app-my-pipeline-environment-pipeline"
   }
   # aws_codepipeline.environment_pipeline.role_arn cannot be tested on a plan
   assert {
-    condition     = tolist(aws_codepipeline.environment_pipeline.artifact_store)[0].location == "my-app-environment-pipeline-artifact-store"
-    error_message = "Should be: my-app-environment-pipeline-artifact-store"
+    condition     = tolist(aws_codepipeline.environment_pipeline.artifact_store)[0].location == "my-app-my-pipeline-environment-pipeline-artifact-store"
+    error_message = "Should be: my-app-my-pipeline-environment-pipeline-artifact-store"
   }
   assert {
     condition     = tolist(aws_codepipeline.environment_pipeline.artifact_store)[0].type == "S3"
@@ -282,8 +290,8 @@ run "test_code_pipeline" {
     error_message = "Should be: build_output"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-environment-pipeline-build"
-    error_message = "Should be: my-app-environment-pipeline-build"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-build"
+    error_message = "Should be: my-app-my-pipeline-environment-pipeline-build"
   }
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].configuration.PrimarySource == "project_deployment_source"
@@ -301,8 +309,8 @@ run "test_codebuild" {
   command = plan
 
   assert {
-    condition     = aws_codebuild_project.environment_pipeline_build.name == "my-app-environment-pipeline-build"
-    error_message = "Should be: my-app-environment-pipeline-build"
+    condition     = aws_codebuild_project.environment_pipeline_build.name == "my-app-my-pipeline-environment-pipeline-build"
+    error_message = "Should be: my-app-my-pipeline-environment-pipeline-build"
   }
   assert {
     condition     = aws_codebuild_project.environment_pipeline_build.description == "Provisions the my-app application's extensions."
@@ -321,8 +329,8 @@ run "test_codebuild" {
     error_message = "Should be: 'S3'"
   }
   assert {
-    condition     = one(aws_codebuild_project.environment_pipeline_build.cache).location == "my-app-environment-pipeline-artifact-store"
-    error_message = "Should be: 'my-app-environment-pipeline-artifact-store'"
+    condition     = one(aws_codebuild_project.environment_pipeline_build.cache).location == "my-app-my-pipeline-environment-pipeline-artifact-store"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-artifact-store'"
   }
   assert {
     condition     = one(aws_codebuild_project.environment_pipeline_build.environment).compute_type == "BUILD_GENERAL1_SMALL"
@@ -342,12 +350,12 @@ run "test_codebuild" {
     error_message = "Should be: 'CODEBUILD'"
   }
   assert {
-    condition     = aws_codebuild_project.environment_pipeline_build.logs_config[0].cloudwatch_logs[0].group_name == "codebuild/my-app-environment-terraform/log-group"
-    error_message = "Should be: 'codebuild/my-app-environment-terraform/log-group'"
+    condition     = aws_codebuild_project.environment_pipeline_build.logs_config[0].cloudwatch_logs[0].group_name == "codebuild/my-app-my-pipeline-environment-terraform/log-group"
+    error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-group'"
   }
   assert {
-    condition     = aws_codebuild_project.environment_pipeline_build.logs_config[0].cloudwatch_logs[0].stream_name == "codebuild/my-app-environment-terraform/log-stream"
-    error_message = "Should be: 'codebuild/my-app-environment-terraform/log-group'"
+    condition     = aws_codebuild_project.environment_pipeline_build.logs_config[0].cloudwatch_logs[0].stream_name == "codebuild/my-app-my-pipeline-environment-terraform/log-stream"
+    error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-group'"
   }
   assert {
     condition     = one(aws_codebuild_project.environment_pipeline_build.source).type == "CODEPIPELINE"
@@ -364,20 +372,20 @@ run "test_codebuild" {
 
   # Cloudwatch config:
   assert {
-    condition     = aws_cloudwatch_log_group.environment_pipeline_codebuild.name == "codebuild/my-app-environment-terraform/log-group"
-    error_message = "Should be: 'codebuild/my-app-environment-terraform/log-group'"
+    condition     = aws_cloudwatch_log_group.environment_pipeline_codebuild.name == "codebuild/my-app-my-pipeline-environment-terraform/log-group"
+    error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-group'"
   }
   assert {
     condition     = aws_cloudwatch_log_group.environment_pipeline_codebuild.retention_in_days == 90
     error_message = "Should be: 90"
   }
   assert {
-    condition     = aws_cloudwatch_log_stream.environment_pipeline_codebuild.name == "codebuild/my-app-environment-terraform/log-stream"
-    error_message = "Should be: 'codebuild/my-app-environment-terraform/log-stream'"
+    condition     = aws_cloudwatch_log_stream.environment_pipeline_codebuild.name == "codebuild/my-app-my-pipeline-environment-terraform/log-stream"
+    error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-stream'"
   }
   assert {
-    condition     = aws_cloudwatch_log_stream.environment_pipeline_codebuild.log_group_name == "codebuild/my-app-environment-terraform/log-group"
-    error_message = "Should be: 'codebuild/my-app-environment-terraform/log-group'"
+    condition     = aws_cloudwatch_log_stream.environment_pipeline_codebuild.log_group_name == "codebuild/my-app-my-pipeline-environment-terraform/log-group"
+    error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-group'"
   }
 }
 
@@ -386,8 +394,8 @@ run "test_iam" {
 
   # IAM Role for the pipeline.
   assert {
-    condition     = aws_iam_role.environment_pipeline_codepipeline.name == "my-app-environment-pipeline-codepipeline"
-    error_message = "Should be: 'my-app-environment-pipeline-codepipeline'"
+    condition     = aws_iam_role.environment_pipeline_codepipeline.name == "my-app-my-pipeline-environment-pipeline-codepipeline"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codepipeline'"
   }
   assert {
     condition     = aws_iam_role.environment_pipeline_codepipeline.assume_role_policy == "{\"Sid\": \"AssumePipelineRole\"}"
@@ -400,8 +408,8 @@ run "test_iam" {
 
   # IAM Role for the codebuild
   assert {
-    condition     = aws_iam_role.environment_pipeline_codebuild.name == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role.environment_pipeline_codebuild.name == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   assert {
     condition     = aws_iam_role.environment_pipeline_codebuild.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
@@ -415,88 +423,88 @@ run "test_iam" {
 
   # Policy links
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.name == "my-app-artifact-store-access-for-environment-codepipeline"
+    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.name == "my-app-my-pipeline-artifact-store-access-for-environment-codepipeline"
     error_message = "Should be: 'my-app-artifact-store-access-for-environment-codepipeline'"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.role == "my-app-environment-pipeline-codepipeline"
-    error_message = "Should be: 'my-app-environment-pipeline-codepipeline'"
+    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.role == "my-app-my-pipeline-environment-pipeline-codepipeline"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codepipeline'"
   }
   # aws_iam_role_policy.artifact_store_access_for_environment_codepipeline.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codebuild.name == "my-app-artifact-store-access-for-environment-codebuild"
+    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codebuild.name == "my-app-my-pipeline-artifact-store-access-for-environment-codebuild"
     error_message = "Should be: 'my-app-artifact-store-access-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.artifact_store_access_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.artifact_store_access_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.log_access_for_environment_codebuild.name == "my-app-log-access-for-environment-codebuild"
+    condition     = aws_iam_role_policy.log_access_for_environment_codebuild.name == "my-app-my-pipeline-log-access-for-environment-codebuild"
     error_message = "Should be: 'my-app-log-access-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.log_access_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.log_access_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.state_bucket_access_for_environment_codebuild.name == "my-app-state-bucket-access-for-environment-codebuild"
+    condition     = aws_iam_role_policy.state_bucket_access_for_environment_codebuild.name == "my-app-my-pipeline-state-bucket-access-for-environment-codebuild"
     error_message = "Should be: 'my-app-state-bucket-access-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.state_bucket_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.state_bucket_access_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.state_bucket_access_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.name == "my-app-state-kms-key-access-for-environment-codebuild"
+    condition     = aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.name == "my-app-my-pipeline-state-kms-key-access-for-environment-codebuild"
     error_message = "Should be: 'my-app-state-kms-key-access-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.state_kms_key_access_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.name == "my-app-state-dynamo-db-access-for-environment-codebuild"
+    condition     = aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.name == "my-app-my-pipeline-state-dynamo-db-access-for-environment-codebuild"
     error_message = "Should be: 'my-app-state-dynamo-db-access-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.state_dynamo_db_access_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.ec2_read_access_for_environment_codebuild.name == "my-app-ec2-read-access-for-environment-codebuild"
+    condition     = aws_iam_role_policy.ec2_read_access_for_environment_codebuild.name == "my-app-my-pipeline-ec2-read-access-for-environment-codebuild"
     error_message = "Should be: 'my-app-ec2-read-access-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.ec2_read_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.ec2_read_access_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.ec2_read_access_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.ssm_read_access_for_environment_codebuild.name == "my-app-ssm-read-access-for-environment-codebuild"
+    condition     = aws_iam_role_policy.ssm_read_access_for_environment_codebuild.name == "my-app-my-pipeline-ssm-read-access-for-environment-codebuild"
     error_message = "Should be: 'my-app-ssm-read-access-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.ssm_read_access_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.ssm_read_access_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.ssm_read_access_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.name == "my-app-dns-account-assume-role-for-environment-codebuild"
+    condition     = aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.name == "my-app-my-pipeline-dns-account-assume-role-for-environment-codebuild"
     error_message = "Should be: 'my-app-dns-account-assume-role-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.dns_account_assume_role_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_policy.load_balancer.name == "load-balancer-access"
+    condition     = aws_iam_policy.load_balancer.name == "my-app-my-pipeline-pipeline-load-balancer-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -512,62 +520,62 @@ run "test_iam" {
     error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_role_policy.certificate_for_environment_codebuild.name == "my-app-certificate-for-environment-codebuild"
+    condition     = aws_iam_role_policy.certificate_for_environment_codebuild.name == "my-app-my-pipeline-certificate-for-environment-codebuild"
     error_message = "Should be: 'my-app-certificate-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.certificate_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.certificate_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.certificate_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.security_group_for_environment_codebuild.name == "my-app-security-group-for-environment-codebuild"
+    condition     = aws_iam_role_policy.security_group_for_environment_codebuild.name == "my-app-my-pipeline-security-group-for-environment-codebuild"
     error_message = "Should be: 'my-app-security-group-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.security_group_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.security_group_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.security_group_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.ssm_parameter_for_environment_codebuild.name == "my-app-ssm-parameter-for-environment-codebuild"
+    condition     = aws_iam_role_policy.ssm_parameter_for_environment_codebuild.name == "my-app-my-pipeline-ssm-parameter-for-environment-codebuild"
     error_message = "Should be: 'my-app-ssm-parameter-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.ssm_parameter_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.ssm_parameter_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.ssm_parameter_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.cloudwatch_for_environment_codebuild.name == "my-app-cloudwatch-for-environment-codebuild"
+    condition     = aws_iam_role_policy.cloudwatch_for_environment_codebuild.name == "my-app-my-pipeline-cloudwatch-for-environment-codebuild"
     error_message = "Should be: 'my-app-cloudwatch-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.cloudwatch_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.cloudwatch_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.cloudwatch_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_role_policy.logs_for_environment_codebuild.name == "my-app-logs-for-environment-codebuild"
+    condition     = aws_iam_role_policy.logs_for_environment_codebuild.name == "my-app-my-pipeline-logs-for-environment-codebuild"
     error_message = "Should be: 'my-app-logs-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.logs_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.logs_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.logs_for_environment_codebuild.policy cannot be tested on a plan
 
   assert {
-    condition     = aws_iam_role_policy.kms_key_for_environment_codebuild.name == "my-app-kms-key-for-environment-codebuild"
+    condition     = aws_iam_role_policy.kms_key_for_environment_codebuild.name == "my-app-my-pipeline-kms-key-for-environment-codebuild"
     error_message = "Should be: 'my-app-kms-key-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.kms_key_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.kms_key_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.kms_key_for_environment_codebuild.policy cannot be tested on a plan
   assert {
-    condition     = aws_iam_policy.redis.name == "redis-access"
+    condition     = aws_iam_policy.redis.name == "my-app-my-pipeline-pipeline-redis-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -583,7 +591,7 @@ run "test_iam" {
     error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_policy.postgres.name == "postgres-access"
+    condition     = aws_iam_policy.postgres.name == "my-app-my-pipeline-pipeline-postgres-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -599,7 +607,7 @@ run "test_iam" {
     error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_policy.s3.name == "s3-access"
+    condition     = aws_iam_policy.s3.name == "my-app-my-pipeline-pipeline-s3-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -615,7 +623,7 @@ run "test_iam" {
     error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_policy.opensearch.name == "opensearch-access"
+    condition     = aws_iam_policy.opensearch.name == "my-app-my-pipeline-pipeline-opensearch-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -631,7 +639,7 @@ run "test_iam" {
     error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_policy.cloudformation.name == "cloudformation-access"
+    condition     = aws_iam_policy.cloudformation.name == "my-app-my-pipeline-pipeline-cloudformation-access"
     error_message = "Unexpected name"
   }
   assert {
@@ -647,12 +655,12 @@ run "test_iam" {
     error_message = "Unexpected policy"
   }
   assert {
-    condition     = aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.name == "my-app-copilot-assume-role-for-environment-codebuild"
+    condition     = aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.name == "my-app-my-pipeline-copilot-assume-role-for-environment-codebuild"
     error_message = "Should be: 'my-app-copilot-assume-role-for-environment-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.role == "my-app-environment-pipeline-codebuild"
-    error_message = "Should be: 'my-app-environment-pipeline-codebuild'"
+    condition     = aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.policy cannot be tested on a plan
 }
@@ -662,8 +670,8 @@ run "test_artifact_store" {
 
   # artifact-store S3 bucket.
   assert {
-    condition     = module.artifact_store.bucket_name == "my-app-environment-pipeline-artifact-store"
-    error_message = "Should be: my-app-environment-pipeline-artifact-store"
+    condition     = module.artifact_store.bucket_name == "my-app-my-pipeline-environment-pipeline-artifact-store"
+    error_message = "Should be: my-app-my-pipeline-environment-pipeline-artifact-store"
   }
 }
 
@@ -725,7 +733,7 @@ run "test_stages" {
     error_message = "Action Version incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.ProjectName == "my-app-environment-pipeline-plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-plan"
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
@@ -733,7 +741,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
@@ -763,15 +771,11 @@ run "test_stages" {
     error_message = "Action provider incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts) == 2
+    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts) == 1
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[0] == "build_output"
-    error_message = "Input artifacts incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[1] == "dev_terraform_plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[0] == "dev_terraform_plan"
     error_message = "Input artifacts incorrect"
   }
   assert {
@@ -783,15 +787,15 @@ run "test_stages" {
     error_message = "Action Version incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.ProjectName == "my-app-environment-pipeline-apply"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-apply"
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.PrimarySource == "build_output"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.PrimarySource == "dev_terraform_plan"
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"VPC\",\"value\":\"platform-sandbox-dev\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
@@ -837,7 +841,7 @@ run "test_stages" {
     error_message = "Action Version incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.ProjectName == "my-app-environment-pipeline-plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-plan"
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
@@ -845,7 +849,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
@@ -891,7 +895,7 @@ run "test_stages" {
     error_message = "Configuration CustomData incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.ExternalEntityLink == "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/my-app-environment-pipeline-plan/build/#{prod-plan.BUILD_ID}"
+    condition     = aws_codepipeline.environment_pipeline.stage[5].action[0].configuration.ExternalEntityLink == "https://${data.aws_region.current.name}.console.aws.amazon.com/codesuite/codebuild/${data.aws_caller_identity.current.account_id}/projects/my-app-my-pipeline-environment-pipeline-plan/build/#{prod-plan.BUILD_ID}"
     error_message = "Configuration ExternalEntityLink incorrect"
   }
 
@@ -917,15 +921,11 @@ run "test_stages" {
     error_message = "Action provider incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts) == 2
+    condition     = length(aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts) == 1
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[0] == "build_output"
-    error_message = "Input artifacts incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[1] == "prod_terraform_plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[0] == "prod_terraform_plan"
     error_message = "Input artifacts incorrect"
   }
   assert {
@@ -937,15 +937,15 @@ run "test_stages" {
     error_message = "Action Version incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.ProjectName == "my-app-environment-pipeline-apply"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-apply"
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.PrimarySource == "build_output"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.PrimarySource == "prod_terraform_plan"
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"VPC\",\"value\":\"platform-sandbox-prod\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 }
