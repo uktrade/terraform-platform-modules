@@ -48,6 +48,7 @@ resource "aws_security_group" "alb-security-group" {
   # checkov:skip=CKV2_AWS_5:Security group is used by VPC. Ticket to investigate: https://uktrade.atlassian.net/browse/DBTP-1039
   for_each = local.protocols
   name     = "${var.application}-${var.environment}-alb-${each.key}"
+  description = "Managed by Terraform"
   vpc_id   = data.aws_vpc.vpc.id
   tags     = local.tags
   ingress {

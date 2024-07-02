@@ -6,7 +6,6 @@
                 {
                     "resource": "module.extensions-staging.module.alb.aws_lb.this",
                     "check_ids": [
-                        "CKV2_AWS_28",
                         "CKV_AWS_131",
                         "CKV_AWS_150"
                     ]
@@ -14,7 +13,6 @@
                 {
                     "resource": "module.extensions-staging.module.alb.aws_lb_listener.alb-listener",
                     "check_ids": [
-                        "CKV_AWS_103",
                         "CKV_AWS_2"
                     ]
                 },
@@ -22,43 +20,6 @@
                     "resource": "module.extensions-staging.module.alb.aws_lb_target_group.http-target-group",
                     "check_ids": [
                         "CKV_AWS_261"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.alb.aws_security_group.alb-security-group",
-                    "check_ids": [
-                        "CKV_AWS_23",
-                        "CKV2_AWS_5"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/domain/main.tf",
-            "findings": [
-                {
-                    "resource": "aws_route53_zone.new-zone",
-                    "check_ids": [
-                        "CKV2_AWS_38",
-                        "CKV2_AWS_39"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/elasticache-redis/e2e-tests/setup/main.tf",
-            "findings": [
-                {
-                    "resource": "aws_security_group.vpc-core-sg",
-                    "check_ids": [
-                        "CKV2_AWS_5"
-                    ]
-                },
-                {
-                    "resource": "aws_vpc.main",
-                    "check_ids": [
-                        "CKV2_AWS_11",
-                        "CKV2_AWS_12"
                     ]
                 }
             ]
@@ -71,12 +32,6 @@
                     "check_ids": [
                         "CKV_AWS_191",
                         "CKV_AWS_31"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.elasticache-redis.aws_security_group.redis",
-                    "check_ids": [
-                        "CKV_AWS_23"
                     ]
                 }
             ]
@@ -99,7 +54,6 @@
                 {
                     "resource": "module.extensions-staging.aws_ssm_parameter.addons",
                     "check_ids": [
-                        "CKV2_AWS_34",
                         "CKV_AWS_337"
                     ]
                 }
@@ -123,16 +77,9 @@
                 {
                     "resource": "module.extensions-staging.module.opensearch.aws_opensearch_domain.this",
                     "check_ids": [
-                        "CKV2_AWS_59",
                         "CKV_AWS_247",
                         "CKV_AWS_317",
                         "CKV_AWS_318"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.opensearch.aws_security_group.opensearch-security-group",
-                    "check_ids": [
-                        "CKV2_AWS_5"
                     ]
                 },
                 {
@@ -163,7 +110,6 @@
                     "resource": "module.extensions-staging.module.postgres.aws_db_instance.default",
                     "check_ids": [
                         "CKV_AWS_161",
-                        "CKV_AWS_293",
                         "CKV_AWS_354"
                     ]
                 },
