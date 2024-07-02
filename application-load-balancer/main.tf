@@ -25,10 +25,15 @@ resource "aws_lb" "this" {
     prefix  = "${var.application}/${var.environment}"
     enabled = true
   }
+
   tags = local.tags
+
+  drop_invalid_header_fields = true
+  enable_deletion_protection = true
 }
 
 resource "aws_lb_listener" "alb-listener" {
+  # checkov:skip=CKV_AWS_2:Checkov Looking for Hard Coded HTTPS but we use a variable.
   depends_on = [aws_acm_certificate_validation.cert_validate]
 
   for_each          = local.protocols
@@ -68,6 +73,7 @@ resource "aws_security_group" "alb-security-group" {
 }
 
 resource "aws_lb_target_group" "http-target-group" {
+  # checkov:skip=CKV_AWS_261:Health Check is Defined by copilot
   name        = "${var.application}-${var.environment}-http"
   port        = 80
   protocol    = "HTTP"

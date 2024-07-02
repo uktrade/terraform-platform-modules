@@ -6,22 +6,9 @@
                 {
                     "resource": "module.extensions-staging.module.alb.aws_lb.this",
                     "check_ids": [
-                        "CKV_AWS_131",
-                        "CKV_AWS_150"
+                        "CKV_AWS_131"
                     ]
                 },
-                {
-                    "resource": "module.extensions-staging.module.alb.aws_lb_listener.alb-listener",
-                    "check_ids": [
-                        "CKV_AWS_2"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.alb.aws_lb_target_group.http-target-group",
-                    "check_ids": [
-                        "CKV_AWS_261"
-                    ]
-                }
             ]
         },
         {
