@@ -171,6 +171,34 @@ demodjango-monitoring:
       enable_ops_center: true
 ```
 
+## S3 bucket
+
+An s3 bucket can be added by configuring the `extensions.yml` file. Below is an example configuration, showing the available options:
+
+```yaml
+my-s3-bucket:
+  type: s3
+  readonly: false # Optional
+  services: # Optional
+    - "web"
+  environments:
+    "*":  # Default configuration values
+      bucket_name: my-bucket-dev # Mandatory
+      retention_policy: # Optional
+        mode: COMPLIANCE # GOVERNANCE" or "COMPLIANCE"
+        days: 10 # Integer value.  Alternatively years may be specified.
+      versioning: true # Optional
+      lifecycle_rules: # Optional.  If present, contains a list of rules.
+        - filter_prefix: "bananas/" # Optional
+          expiration_days: 10 # Integer value
+          enabled: true # Mandatory flag
+  objects: # Optional.  If present, contains a list of objects
+    - key: healthcheck.txt # Mandatory
+      body: | # Optional
+        HEALTHCHECK WORKS!
+```
+
+
 ## Using our `demodjango` application for testing
 
 See [instructions in the demodjango-deploy repository](https://github.com/uktrade/demodjango-deploy/tree/main#deploying-a-new-environment).
