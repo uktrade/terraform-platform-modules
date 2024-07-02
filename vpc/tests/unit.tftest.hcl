@@ -47,16 +47,16 @@ run "aws_vpc_unit_test" {
 
   ### nat_gateway_eip aws_ssm_parameter ###
   assert {
-    condition     = aws_ssm_parameter.nat_gateway_eip["a"].name == "/vpc-test-name/nat-eip-a/ADDITIONAL_IP_LIST"
-    error_message = "Should be: /vpc-test-name/vpc-test-name-nat-eip-a"
+    condition     = aws_ssm_parameter.combined_nat_gateway_eips.name == "/vpc-test-name/ADDITIONAL_IP_LIST"
+    error_message = "Should be: /vpc-test-name/ADDITIONAL_IP_LIST"
   }
 
   assert {
-    condition     = aws_ssm_parameter.nat_gateway_eip["a"].type == "String"
+    condition     = aws_ssm_parameter.combined_nat_gateway_eips.type == "String"
     error_message = "Should be: String"
   }
 
-  # aws_ssm_parameter.nat_gateway_eip["a"].value cannot be tested on a plan
+  # aws_ssm_parameter.combined_nat_gateway_eips.value cannot be tested on a plan
 }
 
 run "aws_security_group_unit_test" {
