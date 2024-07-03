@@ -41,9 +41,7 @@
                 {
                     "resource": "module.extensions-staging.module.opensearch.aws_opensearch_domain.this",
                     "check_ids": [
-                        "CKV_AWS_247",
-                        "CKV_AWS_317",
-                        "CKV_AWS_318"
+                        "CKV_AWS_247"
                     ]
                 },
                 {
@@ -68,59 +66,12 @@
             ]
         },
         {
-            "file": "/postgres/rds.tf",
-            "findings": [
-                {
-                    "resource": "module.extensions-staging.module.postgres.aws_db_instance.default",
-                    "check_ids": [
-                        "CKV_AWS_161",
-                        "CKV_AWS_354"
-                    ]
-                }
-            ]
-        },
-        {
             "file": "/postgres/secrets.tf",
             "findings": [
                 {
                     "resource": "module.extensions-staging.module.postgres.aws_ssm_parameter.master-secret-arn",
                     "check_ids": [
                         "CKV_AWS_337"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/s3/main.tf",
-            "findings": [
-                {
-                    "resource": "module.artifact_store.aws_kms_key.kms-key",
-                    "check_ids": [
-                        "CKV_AWS_7"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.s3.aws_kms_key.kms-key",
-                    "check_ids": [
-                        "CKV_AWS_7"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/statefile-backend/main.tf",
-            "findings": [
-                {
-                    "resource": "aws_dynamodb_table.terraform-state",
-                    "check_ids": [
-                        "CKV_AWS_119",
-                        "CKV_AWS_28"
-                    ]
-                },
-                {
-                    "resource": "aws_kms_key.terraform-bucket-key",
-                    "check_ids": [
-                        "CKV_AWS_7"
                     ]
                 }
             ]

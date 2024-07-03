@@ -32,12 +32,13 @@ resource "aws_db_subnet_group" "default" {
 }
 
 resource "aws_kms_key" "default" {
-  description = "${local.name} KMS key"
-  enable_key_rotation    = true
+  description         = "${local.name} KMS key"
+  enable_key_rotation = true
 }
 
 resource "aws_db_instance" "default" {
-
+  # checkov:skip=CKV_AWS_354:Performance Insights key cannot be changed once the database has been created. (https://github.com/hashicorp/terraform-provider-aws/issues/9399)
+  # checkov:skip=CKV_AWS_161:Significant upstream impact to other components
   identifier = local.name
 
   db_name                     = "main"

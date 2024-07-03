@@ -2,9 +2,9 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_kms_key" "cloudwatch_log_group_kms_key" {
-  description = "KMS Key for CloudWatch Log encryption"
-  enable_key_rotation    = true
-  tags        = local.tags
+  description         = "KMS Key for CloudWatch Log encryption"
+  enable_key_rotation = true
+  tags                = local.tags
 }
 
 resource "aws_kms_key_policy" "opensearch_to_cloudwatch" {
@@ -13,22 +13,22 @@ resource "aws_kms_key_policy" "opensearch_to_cloudwatch" {
     Id = "OpenSearchToCloudWatch"
     Statement = [
       {
-        "Sid": "Enable IAM User Permissions",
-        "Effect": "Allow",
-        "Principal": {
-          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         },
-        "Action": "kms:*",
-        "Resource": "*"
+        "Action" : "kms:*",
+        "Resource" : "*"
+      },
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "logs.${data.aws_region.current.name}.amazonaws.com"
         },
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
-            },
-            "Action": "kms:*",
-            "Resource": "*"
-        }
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
     ]
     Version = "2012-10-17"
   })
@@ -37,29 +37,25 @@ resource "aws_kms_key_policy" "opensearch_to_cloudwatch" {
 resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
   name              = "/aws/opensearch/${local.domain_name}/index-slow"
   retention_in_days = coalesce(var.config.index_slow_log_retention_in_days, 7)
-
-  kms_key_id = aws_kms_key.cloudwatch_log_group_kms_key.arn
+  kms_key_id        = aws_kms_key.cloudwatch_log_group_kms_key.arn
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
   name              = "/aws/opensearch/${local.domain_name}/search-slow"
   retention_in_days = coalesce(var.config.search_slow_log_retention_in_days, 7)
-
-  kms_key_id = aws_kms_key.cloudwatch_log_group_kms_key.arn
+  kms_key_id        = aws_kms_key.cloudwatch_log_group_kms_key.arn
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
   name              = "/aws/opensearch/${local.domain_name}/es-application"
   retention_in_days = coalesce(var.config.es_app_log_retention_in_days, 7)
-
-  kms_key_id = aws_kms_key.cloudwatch_log_group_kms_key.arn
+  kms_key_id        = aws_kms_key.cloudwatch_log_group_kms_key.arn
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
   name              = "/aws/opensearch/${local.domain_name}/audit"
   retention_in_days = coalesce(var.config.audit_log_retention_in_days, 7)
-
-  kms_key_id = aws_kms_key.cloudwatch_log_group_kms_key.arn
+  kms_key_id        = aws_kms_key.cloudwatch_log_group_kms_key.arn
 }
 
 resource "aws_cloudwatch_log_resource_policy" "opensearch_log_group_policy" {
@@ -138,7 +134,7 @@ resource "aws_opensearch_domain" "this" {
   ]
 
   cluster_config {
-    dedicated_master_count   = 1
+    dedicated_master_count   = 3
     dedicated_master_type    = var.config.master ? var.config.instance : null
     dedicated_master_enabled = var.config.master
     instance_type            = var.config.instance
@@ -201,6 +197,7 @@ resource "aws_opensearch_domain" "this" {
   log_publishing_options {
     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_audit_logs.arn
     log_type                 = "AUDIT_LOGS"
+    enabled = true
   }
 
   node_to_node_encryption {

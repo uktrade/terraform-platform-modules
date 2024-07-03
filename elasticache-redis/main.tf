@@ -18,6 +18,7 @@ data "aws_region" "current" {}
 
 
 resource "aws_elasticache_replication_group" "redis" {
+  # checkov:skip=CKV_AWS_31:Cascading impact on Celery. Requires further analysis
   replication_group_id       = "${var.name}-${var.environment}"
   description                = "${var.name}-${var.environment}-redis-cluster"
   engine                     = "redis"
@@ -129,9 +130,9 @@ resource "aws_elasticache_subnet_group" "es-subnet-group" {
 }
 
 resource "aws_kms_key" "redis-log-group-kms-key" {
-  description = "KMS Key for Redis Log encryption"
-  enable_key_rotation    = true
-  tags        = local.tags
+  description         = "KMS Key for Redis Log encryption"
+  enable_key_rotation = true
+  tags                = local.tags
 }
 
 resource "aws_kms_key_policy" "redis-to-cloudwatch" {
@@ -140,42 +141,40 @@ resource "aws_kms_key_policy" "redis-to-cloudwatch" {
     Id = "RedisToCloudWatch"
     Statement = [
       {
-        "Sid": "Enable IAM User Permissions",
-        "Effect": "Allow",
-        "Principal": {
-          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         },
-        "Action": "kms:*",
-        "Resource": "*"
+        "Action" : "kms:*",
+        "Resource" : "*"
+      },
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "logs.${data.aws_region.current.name}.amazonaws.com"
         },
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
-            },
-            "Action": "kms:*",
-            "Resource": "*"
-        }
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
     ]
     Version = "2012-10-17"
   })
 }
 resource "aws_cloudwatch_log_group" "redis-slow-log-group" {
-  name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/slow"
   # checkov:skip=CKV_AWS_338:Retains logs for 7 days instead of 1 year
+  name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/slow"
   retention_in_days = 7
   tags              = local.tags
-
-  kms_key_id = aws_kms_key.redis-log-group-kms-key.arn
+  kms_key_id        = aws_kms_key.redis-log-group-kms-key.arn
 }
 
 resource "aws_cloudwatch_log_group" "redis-engine-log-group" {
-  name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/engine"
   # checkov:skip=CKV_AWS_338:Retains logs for 7 days instead of 1 year
+  name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/engine"
   retention_in_days = 7
   tags              = local.tags
-
-  kms_key_id = aws_kms_key.redis-log-group-kms-key.arn
+  kms_key_id        = aws_kms_key.redis-log-group-kms-key.arn
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "redis-subscription-filter-engine" {

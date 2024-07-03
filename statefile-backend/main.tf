@@ -38,6 +38,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
 }
 
 resource "aws_kms_key" "terraform-bucket-key" {
+  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "This key is used to encrypt bucket objects"
   tags = merge(
     local.tags,
@@ -65,6 +66,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "terraform-state-s
 }
 
 resource "aws_dynamodb_table" "terraform-state" {
+  # checkov:skip=CKV_AWS_28:No requirement for point in time backups of the Terraform state lock database
+  # checkov:skip=CKV_AWS_119:No requirement for CMK for the Terraform state lock database
   name           = "terraform-platform-lockdb-${var.aws_account_name}"
   read_capacity  = 20
   write_capacity = 20
