@@ -1,17 +1,6 @@
 {
     "failed_checks": [
         {
-            "file": "/application-load-balancer/main.tf",
-            "findings": [
-                {
-                    "resource": "module.extensions-staging.module.alb.aws_lb.this",
-                    "check_ids": [
-                        "CKV_AWS_131"
-                    ]
-                },
-            ]
-        },
-        {
             "file": "/elasticache-redis/main.tf",
             "findings": [
                 {
@@ -42,18 +31,6 @@
                     "resource": "module.extensions-staging.aws_ssm_parameter.addons",
                     "check_ids": [
                         "CKV_AWS_337"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/opensearch/e2e-tests/setup/main.tf",
-            "findings": [
-                {
-                    "resource": "aws_vpc.main",
-                    "check_ids": [
-                        "CKV2_AWS_11",
-                        "CKV2_AWS_12"
                     ]
                 }
             ]
@@ -99,13 +76,6 @@
                         "CKV_AWS_161",
                         "CKV_AWS_354"
                     ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.postgres.aws_kms_key.default",
-                    "check_ids": [
-                        "CKV2_AWS_64",
-                        "CKV_AWS_7"
-                    ]
                 }
             ]
         },
@@ -126,35 +96,13 @@
                 {
                     "resource": "module.artifact_store.aws_kms_key.kms-key",
                     "check_ids": [
-                        "CKV2_AWS_64",
                         "CKV_AWS_7"
-                    ]
-                },
-                {
-                    "resource": "module.artifact_store.aws_s3_bucket.this",
-                    "check_ids": [
-                        "CKV2_AWS_6",
-                        "CKV2_AWS_61",
-                        "CKV2_AWS_62",
-                        "CKV_AWS_144",
-                        "CKV_AWS_18"
                     ]
                 },
                 {
                     "resource": "module.extensions-staging.module.s3.aws_kms_key.kms-key",
                     "check_ids": [
-                        "CKV2_AWS_64",
                         "CKV_AWS_7"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.s3.aws_s3_bucket.this",
-                    "check_ids": [
-                        "CKV2_AWS_6",
-                        "CKV2_AWS_61",
-                        "CKV2_AWS_62",
-                        "CKV_AWS_144",
-                        "CKV_AWS_18"
                     ]
                 }
             ]
@@ -165,7 +113,6 @@
                 {
                     "resource": "aws_dynamodb_table.terraform-state",
                     "check_ids": [
-                        "CKV2_AWS_16",
                         "CKV_AWS_119",
                         "CKV_AWS_28"
                     ]
@@ -173,35 +120,7 @@
                 {
                     "resource": "aws_kms_key.terraform-bucket-key",
                     "check_ids": [
-                        "CKV2_AWS_64",
                         "CKV_AWS_7"
-                    ]
-                },
-                {
-                    "resource": "aws_s3_bucket.terraform-state",
-                    "check_ids": [
-                        "CKV2_AWS_61",
-                        "CKV2_AWS_62",
-                        "CKV_AWS_144",
-                        "CKV_AWS_18"
-                    ]
-                },
-                {
-                    "resource": "aws_s3_bucket_ownership_controls.terraform-state-ownership",
-                    "check_ids": [
-                        "CKV2_AWS_65"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/vpc/main.tf",
-            "findings": [
-                {
-                    "resource": "aws_vpc.vpc",
-                    "check_ids": [
-                        "CKV2_AWS_11",
-                        "CKV2_AWS_12"
                     ]
                 }
             ]
