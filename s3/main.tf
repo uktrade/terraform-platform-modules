@@ -60,7 +60,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
         days_after_initiation = 7
       }
       filter {
-        prefix = rule.value.filter_prefix != null ? rule.value.filter_prefix : null
+        prefix = rule.value.filter_prefix
       }
       expiration {
         days = rule.value.expiration_days
