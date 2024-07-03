@@ -26,6 +26,7 @@ locals {
           ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-plan"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([
+            { name : "APPLICATION", value : var.application },
             { name : "ENVIRONMENT", value : env.name },
             { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
@@ -54,11 +55,11 @@ locals {
         env : env.name,
         stage_name : "Apply-${env.name}",
         accounts : env.accounts,
-        input_artifacts : ["build_output", "${env.name}_terraform_plan"],
+        input_artifacts : ["${env.name}_terraform_plan"],
         output_artifacts : [],
         configuration : {
           ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-apply"
-          PrimarySource : "build_output"
+          PrimarySource : "${env.name}_terraform_plan"
           EnvironmentVariables : jsonencode([
             { name : "ENVIRONMENT", value : env.name },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },

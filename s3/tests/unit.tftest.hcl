@@ -185,12 +185,41 @@ run "aws_s3_bucket_lifecycle_configuration_unit_test" {
 
   assert {
     condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].expiration[0].days == 90
-    error_message = "Should be: /foo"
+    error_message = "Should be: 90"
   }
 
   assert {
     condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].abort_incomplete_multipart_upload[0].days_after_initiation == 7
     error_message = "Should be: 7"
+  }
+
+  assert {
+    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].status == "Enabled"
+    error_message = "Should be: Enabled"
+  }
+}
+
+run "aws_s3_bucket_lifecycle_configuration_no_prefix_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name"     = "dbt-terraform-test-s3-module",
+      "type"            = "string",
+      "lifecycle_rules" = [{ "expiration_days" = 90, "enabled" = true }],
+      "objects"         = [],
+    }
+  }
+
+  ### Test aws_s3_bucket_lifecycle_configuration resource when no prefix is used ###
+  assert {
+    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].filter[0] != null
+    error_message = "Should be: {}"
+  }
+
+  assert {
+    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].filter[0].prefix == null
+    error_message = "Should be: null"
   }
 }
 
