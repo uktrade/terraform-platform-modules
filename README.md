@@ -195,7 +195,7 @@ my-s3-bucket:
         days: 10 # Integer value.  Alternatively years may be specified.
       versioning: true # Optional
       lifecycle_rules: # Optional.  If present, contains a list of rules.
-        - filter_prefix: "bananas/" # Optional
+        - filter_prefix: "bananas/" # Optional.  If none, the rule applies to all objects. Use an empty string for a catch-all rule.
           expiration_days: 10 # Integer value
           enabled: true # Mandatory flag
   objects: # Optional.  If present, contains a list of objects
