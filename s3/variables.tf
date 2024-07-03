@@ -30,7 +30,7 @@ variable "config" {
       years = optional(number)
     }))
     lifecycle_rules = optional(list(object({
-      filter_prefix   = string
+      filter_prefix   = optional(string)
       expiration_days = number
       enabled         = bool
       })
