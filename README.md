@@ -207,7 +207,7 @@ my-s3-bucket:
 ## Postgres database
 
 ```yaml
-my-rds-db:
+my-postgres-db:
   type: postgres
   version: 16.2
   environments:
