@@ -47,8 +47,8 @@ run "aws_vpc_unit_test" {
 
   ### nat_gateway_eip aws_ssm_parameter ###
   assert {
-    condition     = aws_ssm_parameter.combined_nat_gateway_eips.name == "/vpc-test-name/ADDITIONAL_IP_LIST"
-    error_message = "Should be: /vpc-test-name/ADDITIONAL_IP_LIST"
+    condition     = aws_ssm_parameter.combined_nat_gateway_eips.name == "/vpc-test-name/EGRESS_IPS"
+    error_message = "Should be: /vpc-test-name/EGRESS_IPS"
   }
 
   assert {

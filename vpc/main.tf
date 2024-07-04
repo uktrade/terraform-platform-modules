@@ -113,7 +113,7 @@ locals {
 resource "aws_ssm_parameter" "combined_nat_gateway_eips" {
   # checkov:skip=CKV_AWS_337:Ensure SSM parameters are using KMS CMK. Related ticket: https://uktrade.atlassian.net/browse/DBTP-946
   # checkov:skip=CKV2_AWS_34:AWS SSM Parameter should be Encrypted. Related ticket: https://uktrade.atlassian.net/browse/DBTP-946
-  name  = "/${var.arg_name}/ADDITIONAL_IP_LIST"
+  name  = "/${var.arg_name}/EGRESS_IPS"
   type  = "String"
   value = join(",", local.nat_gateway_eips)
   tags  = local.tags
