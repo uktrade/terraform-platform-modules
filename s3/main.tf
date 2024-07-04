@@ -46,6 +46,30 @@ resource "aws_s3_bucket_versioning" "this-versioning" {
   }
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
+  count = var.config.lifecycle_rules != null ? 1 : 0
+
+  bucket = aws_s3_bucket.this.id
+
+  # checkov:skip=CKV_AWS_300: Ensure S3 lifecycle configuration sets period for aborting failed uploads
+  dynamic "rule" {
+    for_each = var.config.lifecycle_rules
+    content {
+      id = "rule-${index(var.config.lifecycle_rules, rule.value) + 1}"
+      abort_incomplete_multipart_upload {
+        days_after_initiation = 7
+      }
+      filter {
+        prefix = rule.value.filter_prefix
+      }
+      expiration {
+        days = rule.value.expiration_days
+      }
+      status = coalesce(rule.value.enabled, false) ? "Enabled" : "Disabled"
+    }
+  }
+}
+
 resource "aws_kms_key" "kms-key" {
   description = "KMS Key for S3 encryption"
   tags        = local.tags

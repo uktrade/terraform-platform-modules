@@ -1,5 +1,38 @@
 # Changelog
 
+## [4.1.0](https://github.com/uktrade/terraform-platform-modules/compare/4.0.0...4.1.0) (2024-07-03)
+
+
+### Features
+
+* DBTP-1040 support s3 lifecycle policy ([#168](https://github.com/uktrade/terraform-platform-modules/issues/168)) ([73aa377](https://github.com/uktrade/terraform-platform-modules/commit/73aa3777b99e49564393b5e170ea5522fd593ad0))
+
+
+### Bug Fixes
+
+* DBTP-1040 - filter_prefix terraform variable is optional ([#178](https://github.com/uktrade/terraform-platform-modules/issues/178)) ([d0c5a00](https://github.com/uktrade/terraform-platform-modules/commit/d0c5a00fbbffe67c6a9d88c7f9f1de2d937e648b))
+
+## [4.0.0](https://github.com/uktrade/terraform-platform-modules/compare/3.0.0...4.0.0) (2024-07-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* DBTP-958 Straighten up Postgres plans (replay) ([#135](https://github.com/uktrade/terraform-platform-modules/issues/135))
+
+### Features
+
+* DBTP-1072 As a developer, when I create an API and a frontend service in the same environment and put the frontend service behind the IP Filter, I want the front end service to be able to access the api ([#165](https://github.com/uktrade/terraform-platform-modules/issues/165)) ([4bcce04](https://github.com/uktrade/terraform-platform-modules/commit/4bcce0421e5a3f305ec5384b8b0987f49ec1113a))
+* DBTP-958 Straighten up Postgres plans (replay) ([#135](https://github.com/uktrade/terraform-platform-modules/issues/135)) ([1d566f1](https://github.com/uktrade/terraform-platform-modules/commit/1d566f13c6184caf7f73a770457f08affd0c7739))
+
+
+### Bug Fixes
+
+* Add ListCertificates permission ([#170](https://github.com/uktrade/terraform-platform-modules/issues/170)) ([4f53a0c](https://github.com/uktrade/terraform-platform-modules/commit/4f53a0c120940f633d80392423afd7654d702e65))
+* DBTP-1089 Move to shared log resource policy ([#166](https://github.com/uktrade/terraform-platform-modules/issues/166)) ([9527e75](https://github.com/uktrade/terraform-platform-modules/commit/9527e75131d001ca6ed52e3dd4d1268e2701eea5))
+* DBTP-1104 Ensure Terraform plan resources are available during apply stage. ([#174](https://github.com/uktrade/terraform-platform-modules/issues/174)) ([7d2b397](https://github.com/uktrade/terraform-platform-modules/commit/7d2b397099ba327414bde68c28727d5338a0fa35))
+* Don't generate environment Terraform manifest for demodjango toolspr ([#172](https://github.com/uktrade/terraform-platform-modules/issues/172)) ([f57b122](https://github.com/uktrade/terraform-platform-modules/commit/f57b122a3ef05557ddccab146bb166def492902a))
+* Missing IAM permissions for pipeline to modify database ([#176](https://github.com/uktrade/terraform-platform-modules/issues/176)) ([33cd536](https://github.com/uktrade/terraform-platform-modules/commit/33cd5360afd4204b5ea43333834c13bf33a01708))
+
 ## [3.0.0](https://github.com/uktrade/terraform-platform-modules/compare/2.3.0...3.0.0) (2024-06-21)
 
 

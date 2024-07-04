@@ -29,6 +29,13 @@ variable "config" {
       days  = optional(number)
       years = optional(number)
     }))
+    lifecycle_rules = optional(list(object({
+      filter_prefix   = optional(string)
+      expiration_days = number
+      enabled         = bool
+      })
+      )
+    )
     # NOTE: readonly access is managed by Copilot server addon s3 policy.
     readonly = optional(bool)
     objects = optional(list(object({
