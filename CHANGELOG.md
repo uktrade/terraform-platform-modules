@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.1.0](https://github.com/uktrade/terraform-platform-modules/compare/4.0.0...4.1.0) (2024-07-03)
+
+
+### Features
+
+* DBTP-1040 support s3 lifecycle policy ([#168](https://github.com/uktrade/terraform-platform-modules/issues/168)) ([73aa377](https://github.com/uktrade/terraform-platform-modules/commit/73aa3777b99e49564393b5e170ea5522fd593ad0))
+
+
+### Bug Fixes
+
+* DBTP-1040 - filter_prefix terraform variable is optional ([#178](https://github.com/uktrade/terraform-platform-modules/issues/178)) ([d0c5a00](https://github.com/uktrade/terraform-platform-modules/commit/d0c5a00fbbffe67c6a9d88c7f9f1de2d937e648b))
+
 ## [4.0.0](https://github.com/uktrade/terraform-platform-modules/compare/3.0.0...4.0.0) (2024-07-01)
 
 
