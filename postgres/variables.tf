@@ -25,7 +25,6 @@ variable "config" {
     multi_az              = optional(bool)
     instance              = optional(string)
     storage_type          = optional(string)
-    restore_time          = optional(string)
     backup_retention_days = optional(number)
   })
 }

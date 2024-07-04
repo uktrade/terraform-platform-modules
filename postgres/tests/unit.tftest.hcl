@@ -331,46 +331,6 @@ run "aws_db_instance_unit_test_set_to_non_defaults" {
     condition     = aws_db_instance.default.backup_retention_period == 35
     error_message = "Should be: 35"
   }
-
-  # Test aws_db_instance.restored resource has not been created
-  assert {
-    condition     = length(aws_db_instance.restored) == 0
-    error_message = "Should be: 0"
-  }
-
-}
-
-run "aws_db_instance_restored_unit_test" {
-  command = plan
-
-  variables {
-    config = {
-      version             = 14,
-      deletion_protection = false,
-      multi_az            = true,
-      skip_final_snapshot = true,
-      volume_size         = 20,
-      iops                = 3000,
-      instance            = "db.t3.small",
-      storage_type        = "io2"
-      restore_time        = "2024-06-27T00:00:00Z"
-    }
-  }
-
-  assert {
-    condition     = length(aws_db_instance.restored) == 1
-    error_message = "Should be: 2024-06-27T00:00:00Z"
-  }
-
-  assert {
-    condition     = aws_db_instance.restored[0].restore_to_point_in_time[0].restore_time == "2024-06-27T00:00:00Z"
-    error_message = "Should be: 2024-06-27T00:00:00Z"
-  }
-
-  assert {
-    condition     = aws_db_instance.restored[0].tags.restore-time == "2024-06-27T00:00:00Z"
-    error_message = "Should be: 2024-06-27T00:00:00Z"
-  }
 }
 
 run "aws_iam_role_unit_test" {
