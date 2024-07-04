@@ -206,6 +206,8 @@ my-s3-bucket:
 
 ## Postgres database
 
+An postgres database can be added by configuring the `extensions.yml` file. Below is a simple example configuration, showing some of the available options:
+
 ```yaml
 my-postgres-db:
   type: postgres
