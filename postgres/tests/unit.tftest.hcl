@@ -272,6 +272,11 @@ run "aws_db_instance_unit_test" {
     error_message = "Should be: gp3"
   }
 
+  assert {
+    condition     = aws_db_instance.default.backup_retention_period == 7
+    error_message = "Should be: 7"
+  }
+
   # aws_db_instance.default.iops cannot be tested on a plan
 }
 
