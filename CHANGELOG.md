@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.0](https://github.com/uktrade/terraform-platform-modules/compare/4.1.0...4.2.0) (2024-07-05)
+
+
+### Features
+
+* DBTP-1116 - support configurable backup_retention_period for postgres DB ([#173](https://github.com/uktrade/terraform-platform-modules/issues/173)) ([53afce8](https://github.com/uktrade/terraform-platform-modules/commit/53afce8dbfe524b423043e933980351d63acfdf0))
+
 ## [4.1.0](https://github.com/uktrade/terraform-platform-modules/compare/4.0.0...4.1.0) (2024-07-03)
 
 
