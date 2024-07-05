@@ -204,6 +204,22 @@ my-s3-bucket:
         HEALTHCHECK WORKS!
 ```
 
+## Postgres database
+
+A postgres database can be added by configuring the `extensions.yml` file. Below is a simple example configuration, showing some of the available options:
+
+```yaml
+my-postgres-db:
+  type: postgres
+  version: 16.2
+  environments:
+    "*":
+      plan: tiny
+      backup_retention_days: 1 # Optional.  Must be between 1 and 35.  If none, defaults to 7.
+    prod:
+      deletion_protection: true # Optional
+      deletion_policy: Retain # Optional: Delete or Retain
+```
 
 ## Using our `demodjango` application for testing
 
