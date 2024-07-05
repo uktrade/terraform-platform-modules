@@ -65,7 +65,7 @@ resource "aws_db_instance" "default" {
   parameter_group_name = aws_db_parameter_group.default.name
   db_subnet_group_name = aws_db_subnet_group.default.name
 
-  backup_retention_period = 7
+  backup_retention_period = local.backup_retention_days
   backup_window           = "07:00-09:00"
   deletion_protection     = local.deletion_protection
 
