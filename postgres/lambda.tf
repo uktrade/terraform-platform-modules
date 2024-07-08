@@ -10,6 +10,9 @@ data "aws_iam_policy_document" "lambda-assume-role-policy" {
 }
 
 data "aws_iam_policy_document" "lambda-execution-policy" {
+  # checkov:skip=CKV_AWS_108:Permissions required to perform Lambda role
+  # checkov:skip=CKV_AWS_111:Permissions required to perform Lambda role
+  # checkov:skip=CKV_AWS_356:Permissions required to perform Lambda role
   statement {
     effect = "Allow"
     actions = [
