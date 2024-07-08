@@ -80,6 +80,26 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
   tags = local.tags
 }
 
+resource "aws_kms_key_policy" "ssm_redis_endpoint" {
+  key_id = aws_kms_key.ssm_redis_endpoint.arn
+  policy = jsonencode({
+    Id = "ECS Access to Decode CMK Secret"
+    Statement = [
+      {
+        Action = "kms:*"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+    ]
+    Version = "2012-10-17"
+  })
+}
+
 resource "aws_ssm_parameter" "endpoint_short" {
   name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}"
   description = "Redis endpoint (Deprecated in favour of endpoint_ssl which has the ssl_cert_reqs parameter baked in)"
