@@ -83,7 +83,6 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
 
   tags = local.tags
 }
-
 resource "aws_ssm_parameter" "endpoint_short" {
   name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}"
   description = "Redis endpoint (Deprecated in favour of endpoint_ssl which has the ssl_cert_reqs parameter baked in)"

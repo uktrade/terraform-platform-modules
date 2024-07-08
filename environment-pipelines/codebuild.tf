@@ -43,8 +43,8 @@ resource "aws_kms_key" "codebuild_kms_key" {
 }
 
 resource "aws_cloudwatch_log_group" "environment_pipeline_codebuild" {
-  name = "codebuild/${var.application}-${var.pipeline_name}-environment-terraform/log-group"
   # checkov:skip=CKV_AWS_338:Retains logs for 3 months instead of 1 year
+  name = "codebuild/${var.application}-${var.pipeline_name}-environment-terraform/log-group"
   retention_in_days = 90
   kms_key_id        = aws_kms_key.codebuild_kms_key.arn
 }
