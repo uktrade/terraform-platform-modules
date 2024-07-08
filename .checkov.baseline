@@ -13,18 +13,6 @@
             ]
         },
         {
-            "file": "/environment-pipelines/iam.tf",
-            "findings": [
-                {
-                    "resource": "aws_iam_policy_document.access_artifact_store",
-                    "check_ids": [
-                        "CKV_AWS_111",
-                        "CKV_AWS_356"
-                    ]
-                }
-            ]
-        },
-        {
             "file": "/extensions/main.tf",
             "findings": [
                 {
@@ -42,25 +30,6 @@
                     "resource": "module.extensions-staging.module.opensearch.aws_opensearch_domain.this",
                     "check_ids": [
                         "CKV_AWS_247"
-                    ]
-                },
-                {
-                    "resource": "module.extensions-staging.module.opensearch.aws_ssm_parameter.opensearch_endpoint",
-                    "check_ids": [
-                        "CKV_AWS_337"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/postgres/lambda.tf",
-            "findings": [
-                {
-                    "resource": "module.extensions-staging.module.postgres.aws_iam_policy_document.lambda-execution-policy",
-                    "check_ids": [
-                        "CKV_AWS_108",
-                        "CKV_AWS_111",
-                        "CKV_AWS_356"
                     ]
                 }
             ]
