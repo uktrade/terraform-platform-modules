@@ -32,7 +32,7 @@ run "e2e_tests" {
 
   ### nat_gateway_eip aws_ssm_parameter ###
   assert {
-    condition     = aws_ssm_parameter.nat_gateway_eip["a"].value == aws_eip.public["a"].public_ip
+    condition     = aws_ssm_parameter.combined_nat_gateway_eips["a"].value == aws_eip.public["a"].public_ip
     error_message = "Should be an IP address"
   }
 
