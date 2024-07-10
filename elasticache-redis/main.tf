@@ -80,24 +80,43 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
   tags = local.tags
 }
 
-resource "aws_kms_key_policy" "ssm_redis_endpoint" {
-  key_id = aws_kms_key.ssm_redis_endpoint.arn
-  policy = jsonencode({
-    Id = "ECS Access to Decode CMK Secret"
-    Statement = [
-      {
-        Action = "kms:*"
-        Effect = "Allow"
-        Principal = {
-          AWS = "*"
-        }
+resource "aws_iam_role" "ecs_task_role" {
+  name = "${var.name}-${var.application}-${var.environment}-ecsTask"
+  assume_role_policy = data.aws_iam_policy_document.assume_ecstask_role.json
 
-        Resource = "*"
-        Sid      = "Enable IAM User Permissions"
-      },
+  inline_policy {
+    name = "AllowReadingofCMKSecrets"
+    policy = data.aws_iam_policy_document.access_ssm_with_kms.json
+  }
+
+  tags = local.tags
+}
+
+data "aws_iam_policy_document" "assume_ecstask_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy_document" "access_ssm_with_kms" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "ssm:GetParameters",
+      "logs:CreateLogStream"
     ]
-    Version = "2012-10-17"
-  })
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+  }
 }
 
 resource "aws_ssm_parameter" "endpoint_short" {
