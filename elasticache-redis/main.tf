@@ -81,11 +81,11 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
 }
 
 resource "aws_iam_role" "ecs_task_role" {
-  name = "${var.name}-${var.application}-${var.environment}-ecsTask"
+  name               = "${var.name}-${var.application}-${var.environment}-ecsTask"
   assume_role_policy = data.aws_iam_policy_document.assume_ecstask_role.json
 
   inline_policy {
-    name = "AllowReadingofCMKSecrets"
+    name   = "AllowReadingofCMKSecrets"
     policy = data.aws_iam_policy_document.access_ssm_with_kms.json
   }
 
