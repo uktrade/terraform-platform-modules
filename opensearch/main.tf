@@ -217,7 +217,9 @@ data "aws_iam_policy_document" "access_ssm_with_kms" {
     ]
     effect = "Allow"
     resources = [
-      "*"
+      aws_kms_key.ssm_opensearch_endpoint.arn,
+      aws_ssm_parameter.opensearch_endpoint.arn,
+      "arn:aws:logs:*:*:*"
     ]
   }
 }
