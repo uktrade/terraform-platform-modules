@@ -86,7 +86,7 @@ resource "aws_eip" "public" {
   tags = merge(
     local.tags,
     {
-      Name = "${var.arg_name}nat-eip-${each.key}"
+      Name = "${var.arg_name}-nat-eip-${each.key}"
     }
   )
 }
