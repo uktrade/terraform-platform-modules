@@ -370,3 +370,32 @@ run "test_create_cloudwatch_subscription_filters" {
     error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_audit_logs'Should be: '/aws/opensearch/my-env-my-name/audit'"
   }
 }
+
+run "test_create_conduit_iam_role" {
+  command = plan
+
+  variables {
+    application = "my_app"
+    environment = "my_env"
+    name        = "my_name"
+    vpc_name    = "terraform-tests-vpc"
+
+    config = {
+      engine      = "2.5"
+      instance    = "t3.small.search"
+      instances   = 1
+      volume_size = 80
+      master      = false
+    }
+  }
+
+  assert {
+    condition     = aws_iam_role.conduit_ecs_task_role.name == "my_name-my_app-my_env-conduitEcsTask"
+    error_message = "Should be: my_name-my_app-my_env-conduitEcsTask"
+  }
+
+  assert {
+    condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
+    error_message = "Should be: \"{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}\""
+  }
+}

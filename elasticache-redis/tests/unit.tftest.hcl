@@ -366,3 +366,17 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter role_arn"
   }
 }
+
+run "test_create_conduit_iam_role" {
+  command = plan
+  
+  assert {
+    condition     = aws_iam_role.conduit_ecs_task_role.name == "test-redis-test-application-test-environment-conduitEcsTask"
+    error_message = "Should be: test-redis-test-application-test-environment-conduitEcsTask"
+  }
+
+  assert {
+    condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
+    error_message = "Should be: \"{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}\""
+  }
+}
