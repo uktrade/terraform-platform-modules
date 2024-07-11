@@ -369,7 +369,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
 
 run "test_create_conduit_iam_role" {
   command = plan
-  
+
   assert {
     condition     = aws_iam_role.conduit_ecs_task_role.name == "test-redis-test-application-test-environment-conduitEcsTask"
     error_message = "Should be: test-redis-test-application-test-environment-conduitEcsTask"
