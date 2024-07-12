@@ -80,6 +80,49 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
   tags = local.tags
 }
 
+resource "aws_iam_role" "conduit_ecs_task_role" {
+  name               = "${var.name}-${var.application}-${var.environment}-conduitEcsTask"
+  assume_role_policy = data.aws_iam_policy_document.assume_ecstask_role.json
+
+  inline_policy {
+    name   = "AllowReadingofCMKSecrets"
+    policy = data.aws_iam_policy_document.access_ssm_with_kms.json
+  }
+
+  tags = local.tags
+}
+
+data "aws_iam_policy_document" "assume_ecstask_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy_document" "access_ssm_with_kms" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "ssm:GetParameters",
+      "logs:CreateLogStream"
+    ]
+    effect = "Allow"
+    resources = [
+      aws_kms_key.ssm_redis_endpoint.arn,
+      aws_ssm_parameter.redis_url.arn,
+      aws_ssm_parameter.endpoint.arn,
+      aws_ssm_parameter.endpoint_short.arn,
+      "arn:aws:logs:*:*:*"
+    ]
+  }
+}
+
 resource "aws_ssm_parameter" "endpoint_short" {
   name        = "/copilot/${var.application}/${var.environment}/secrets/${upper(replace(var.name, "-", "_"))}"
   description = "Redis endpoint (Deprecated in favour of endpoint_ssl which has the ssl_cert_reqs parameter baked in)"
