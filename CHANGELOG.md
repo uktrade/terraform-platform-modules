@@ -1,5 +1,26 @@
 # Changelog
 
+## [5.0.0](https://github.com/uktrade/terraform-platform-modules/compare/4.2.0...5.0.0) (2024-07-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* DBTP-1072 Change ADDITIONAL_IP_LIST to EGRESS_IPS ([#179](https://github.com/uktrade/terraform-platform-modules/issues/179))
+
+### Features
+
+* Removing all copilot commands from the terraform pipelines ([#185](https://github.com/uktrade/terraform-platform-modules/issues/185)) ([68506bc](https://github.com/uktrade/terraform-platform-modules/commit/68506bcc541b349285dc3f63b5a02b2ab8a3e5a2))
+
+
+### Bug Fixes
+
+* DBTP-1166 - Fix failing e2e tests ([#183](https://github.com/uktrade/terraform-platform-modules/issues/183)) ([d09a696](https://github.com/uktrade/terraform-platform-modules/commit/d09a6965499748edf38e67624247306129499cb8))
+
+
+### Miscellaneous Chores
+
+* DBTP-1072 Change ADDITIONAL_IP_LIST to EGRESS_IPS ([#179](https://github.com/uktrade/terraform-platform-modules/issues/179)) ([0db3962](https://github.com/uktrade/terraform-platform-modules/commit/0db39629412f4c75c437f91b072a09b7358b3718))
+
 ## [4.2.0](https://github.com/uktrade/terraform-platform-modules/compare/4.1.0...4.2.0) (2024-07-05)
 
 
