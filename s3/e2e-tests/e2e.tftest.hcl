@@ -62,8 +62,8 @@ run "aws_kms_alias_e2e_test" {
   command = apply
 
   assert {
-    condition     = aws_kms_alias.s3-bucket.name == "alias/dbt-terraform-test-s3-module-key"
-    error_message = "Should be: alias/dbt-terraform-test-s3-module-key"
+    condition     = aws_kms_alias.s3-bucket.name == "alias/s3-test-application-s3-test-environment-dbt-terraform-test-s3-module-key"
+    error_message = "Should be: alias/s3-test-application-s3-test-environment-dbt-terraform-test-s3-module-key"
   }
 }
 

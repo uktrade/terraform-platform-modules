@@ -72,12 +72,12 @@ run "opensearch_e2e_test" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.name == "/copilot/opensearch-application/test/secrets/OPENSEARCH_NAME_ENDPOINT"
+    condition     = aws_ssm_parameter.opensearch_endpoint.name == "/copilot/opensearch-application/test/secrets/OPENSEARCH_NAME_ENDPOINT"
     error_message = "Should be: '/copilot/opensearch-application/test/secrets/OPENSEARCH_NAME_ENDPOINT'"
   }
 
   assert {
-    condition     = aws_ssm_parameter.this-master-user.description == "opensearch_password"
+    condition     = aws_ssm_parameter.opensearch_endpoint.description == "opensearch_password"
     error_message = "Should be: 'opensearch_password'"
   }
 }
