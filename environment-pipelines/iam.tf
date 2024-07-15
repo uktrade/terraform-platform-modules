@@ -737,8 +737,19 @@ data "aws_iam_policy_document" "iam" {
   statement {
     actions = [
       "iam:AttachRolePolicy",
+      "iam:DetachRolePolicy",
       "iam:CreatePolicy",
+      "iam:DeletePolicy",
       "iam:CreateRole",
+      "iam:DeleteRole",
+      "iam:TagRole",
+      "iam:PutRolePolicy",
+      "iam:GetRole",
+      "iam:ListRolePolicies",
+      "iam:GetRolePolicy",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListInstanceProfilesForRole",
+      "iam:DeleteRolePolicy",
     ]
     resources = [
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
