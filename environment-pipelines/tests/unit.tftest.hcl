@@ -147,6 +147,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.iam
+  values = {
+    json = "{\"Sid\": \"IAM\"}"
+  }
+}
+
 variables {
   application   = "my-app"
   repository    = "my-repository"
@@ -663,6 +670,16 @@ run "test_iam" {
     error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.policy cannot be tested on a plan
+
+  assert {
+    condition     = aws_iam_policy.iam.name == "my-app-my-pipeline-pipeline-iam"
+    error_message = "Should be: my-app-my-pipeline-pipeline-iam"
+  }
+
+  assert {
+    condition     = aws_iam_policy.iam.policy == "{\"Sid\": \"IAM\"}"
+    error_message = "Unexpected policy"
+  }
 }
 
 run "test_artifact_store" {
