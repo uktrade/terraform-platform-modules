@@ -1,18 +1,6 @@
 {
     "failed_checks": [
         {
-            "file": "/elasticache-redis/main.tf",
-            "findings": [
-                {
-                    "resource": "module.extensions-staging.module.elasticache-redis.aws_elasticache_replication_group.redis",
-                    "check_ids": [
-                        "CKV_AWS_191",
-                        "CKV_AWS_31"
-                    ]
-                }
-            ]
-        },
-        {
             "file": "/extensions/main.tf",
             "findings": [
                 {

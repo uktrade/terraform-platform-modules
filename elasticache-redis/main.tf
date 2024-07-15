@@ -18,7 +18,8 @@ data "aws_region" "current" {}
 
 
 resource "aws_elasticache_replication_group" "redis" {
-  # checkov:skip=CKV_AWS_31:Cascading impact on Celery. Requires further analysis
+  # checkov:skip=CKV_AWS_31:Potential cascading impact on Celery. Requires further analysis
+  # checkov:skip=CKV_AWS_191:Potential cascading impact on Celery. Requires further analysis
   replication_group_id       = "${var.name}-${var.environment}"
   description                = "${var.name}-${var.environment}-redis-cluster"
   engine                     = "redis"
