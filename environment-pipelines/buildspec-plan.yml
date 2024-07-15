@@ -18,10 +18,15 @@ phases:
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting terraform plan phase for the ${ENVIRONMENT} environment."
       - echo "Working on environment ${ENVIRONMENT}"
       - |
+        ADDITIONAL_OPTIONS=
+        if [ ! -z "${TERRAFORM_PLATFORM_MODULES_VERSION}" ]
+        then 
+          $ADDITIONAL_OPTIONS+=" --terraform-platform-modules-version ${TERRAFORM_PLATFORM_MODULES_VERSION}"
+        fi
         if [ "${APPLICATION}" == "demodjango" ] && [ "${ENVIRONMENT}" == "toolspr" ]; then
           echo "Skipping platform-helper environment generate-terraform for demodjango toolspr environment until we can make it use terraform-platform-modules main branch"
         else
-          platform-helper environment generate-terraform --name "${ENVIRONMENT}"
+          platform-helper environment generate-terraform --name "${ENVIRONMENT}" "${ADDITIONAL_OPTIONS}"
         fi
       - cd terraform/environments/${ENVIRONMENT}
       - terraform init

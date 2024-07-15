@@ -39,3 +39,8 @@ variable "trigger_on_push" {
   type    = bool
   default = true
 }
+
+variable "versions" {
+  type    = map(string)
+  default = {}
+}

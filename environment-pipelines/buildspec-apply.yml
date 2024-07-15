@@ -17,8 +17,6 @@ phases:
       - echo -e "\nWorking on environment ${ENVIRONMENT}"
       - cd "terraform/environments/${ENVIRONMENT}"
       - terraform apply plan.tfplan
-      - echo -e "\nGenerating manifests and deploying AWS Copilot environment resources"
-      - cd "${CODEBUILD_SRC_DIR}"
   post_build:
     commands:
       - |

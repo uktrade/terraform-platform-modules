@@ -741,7 +741,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"},{\"name\":\"TERRAFORM_PLATFORM_MODULES_VERSION\",\"value\":\"\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
@@ -849,7 +849,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"},{\"name\":\"TERRAFORM_PLATFORM_MODULES_VERSION\",\"value\":\"\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
@@ -950,6 +950,23 @@ run "test_stages" {
   }
 }
 
+run "test_stages_have_configurable_terraform_platform_modules" {
+  command = plan
+  variables {
+    versions = {
+      terraform-platform-modules : "1.2.3"
+    }
+  }
 
+  # Stage: dev plan
+  assert {
+    condition     = strcontains(aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables, "{\"name\":\"TERRAFORM_PLATFORM_MODULES_VERSION\",\"value\":\"1.2.3\"}]")
+    error_message = "Configuration Env Vars incorrect"
+  }
 
-
+  # Stage: prod Plan
+  assert {
+    condition     = strcontains(aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables, "{\"name\":\"TERRAFORM_PLATFORM_MODULES_VERSION\",\"value\":\"1.2.3\"}]")
+    error_message = "Configuration Env Vars incorrect"
+  }
+}
