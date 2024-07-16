@@ -676,6 +676,7 @@ run "test_iam" {
     error_message = "Should be: my-app-my-pipeline-pipeline-iam"
   }
 
+  # IAM Policy not currently computed by mock due to https://github.com/hashicorp/terraform-provider-aws/issues/36700. Using override
   assert {
     condition     = aws_iam_policy.iam.policy == "{\"Sid\": \"IAM\"}"
     error_message = "Unexpected policy"
