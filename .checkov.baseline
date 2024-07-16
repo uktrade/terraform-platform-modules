@@ -1,37 +1,4 @@
 {
     "failed_checks": [
-        {
-            "file": "/extensions/main.tf",
-            "findings": [
-                {
-                    "resource": "module.extensions-staging.aws_ssm_parameter.addons",
-                    "check_ids": [
-                        "CKV_AWS_337"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/opensearch/main.tf",
-            "findings": [
-                {
-                    "resource": "module.extensions-staging.module.opensearch.aws_opensearch_domain.this",
-                    "check_ids": [
-                        "CKV_AWS_247"
-                    ]
-                }
-            ]
-        },
-        {
-            "file": "/postgres/secrets.tf",
-            "findings": [
-                {
-                    "resource": "module.extensions-staging.module.postgres.aws_ssm_parameter.master-secret-arn",
-                    "check_ids": [
-                        "CKV_AWS_337"
-                    ]
-                }
-            ]
-        }
     ]
 }

@@ -43,25 +43,6 @@ resource "aws_kms_key" "ssm_opensearch_endpoint" {
   tags = local.tags
 }
 
-resource "aws_kms_key_policy" "ssm_redis_endpoint" {
-  key_id = aws_kms_key.ssm_opensearch_endpoint.arn
-  policy = jsonencode({
-    Id = "ECS Access to Decode CMK Secret"
-    Statement = [
-      {
-        Action = "kms:*"
-        Effect = "Allow"
-        Principal = {
-          AWS = "*"
-        }
-
-        Resource = "*"
-        Sid      = "Enable IAM User Permissions"
-      },
-    ]
-    Version = "2012-10-17"
-  })
-}
 resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
   name              = "/aws/opensearch/${local.domain_name}/index-slow"
   retention_in_days = coalesce(var.config.index_slow_log_retention_in_days, 7)
@@ -149,8 +130,8 @@ resource "random_password" "password" {
   min_lower   = 1
   min_numeric = 1
 }
-
 resource "aws_opensearch_domain" "this" {
+  # checkov:skip=CKV_AWS_247: Enabling CMK Forces Cluster Recreation. To be implemented as a separate breaking change
   domain_name    = local.domain_name
   engine_version = "OpenSearch_${var.config.engine}"
 
