@@ -278,6 +278,23 @@ run "aws_kms_key_unit_test" {
     condition     = jsonencode(aws_kms_key.ssm_redis_endpoint.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
+
+  assert {
+    condition     = aws_kms_key.redis-log-group-kms-key.description == "KMS Key for test-redis-test-environment Redis Log encryption"
+    error_message = "Should be: KMS key for test-redis-test-environment Redis Log encryption"
+  }
+
+  assert {
+    condition     = aws_kms_key.redis-log-group-kms-key.enable_key_rotation == true
+    error_message = "Should be: true"
+  }
+
+  assert {
+    condition     = jsonencode(aws_kms_key.redis-log-group-kms-key.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+
+  
 }
 
 run "aws_cloudwatch_log_group_unit_test" {

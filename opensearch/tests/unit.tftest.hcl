@@ -370,3 +370,22 @@ run "test_create_cloudwatch_subscription_filters" {
     error_message = "Cloudwatch log subscription filter log group name for cloudwatch log 'opensearch_log_group_audit_logs'Should be: '/aws/opensearch/my-env-my-name/audit'"
   }
 }
+
+run "aws_kms_key_unit_test" {
+  command = plan
+
+  assert {
+    condition     = aws_kms_key.opensearch_kms_key.description == "KMS Key for test-openseach-test-environment Opensearch Log encryption"
+    error_message = "Should be: KMS Key for test-opensearch-test-environment OpenSearch Log encryption"
+  }
+  
+  assert {
+    condition     = aws_kms_key.cloudwatch_log_group_kms_key.enable_key_rotation == true
+    error_message = "Should be: true"
+  }
+
+  assert {
+    condition     = jsonencode(aws_kms_key.cloudwatch_log_group_kms_key.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+}

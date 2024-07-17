@@ -513,6 +513,11 @@ run "aws_lambda_invocation_unit_test" {
     condition     = aws_lambda_invocation.create-readonly-user.terraform_key == "tf"
     error_message = "Should be: tf"
   }
+
+  assert {
+    condition     = reserved_concurrent_executions == -1
+    error_message = "Should be: -1"
+  }
 }
 
 run "aws_ssm_parameter_master_secret_arn_unit_test" {
