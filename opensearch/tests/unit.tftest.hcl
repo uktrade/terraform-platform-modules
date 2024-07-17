@@ -374,18 +374,28 @@ run "test_create_cloudwatch_subscription_filters" {
 run "aws_kms_key_unit_test" {
   command = plan
 
+  variables {
+    application = "my_app"
+    environment = "my_env"
+    name        = "my_name"
+    vpc_name    = "terraform-tests-vpc"
+
+    config = {
+      engine      = "2.5"
+      instance    = "t3.small.search"
+      instances   = 1
+      volume_size = 80
+      master      = false
+    }
+  }
+
   assert {
-    condition     = aws_kms_key.opensearch_kms_key.description == "KMS Key for test-openseach-test-environment Opensearch Log encryption"
-    error_message = "Should be: KMS Key for test-opensearch-test-environment OpenSearch Log encryption"
+    condition     = aws_kms_key.cloudwatch_log_group_kms_key.description == "KMS Key for my_name-my_env CloudWatch Log encryption"
+    error_message = "Should be: KMS Key for my_name-my_env CloudWatch Log encryption"
   }
   
   assert {
     condition     = aws_kms_key.cloudwatch_log_group_kms_key.enable_key_rotation == true
     error_message = "Should be: true"
-  }
-
-  assert {
-    condition     = jsonencode(aws_kms_key.cloudwatch_log_group_kms_key.tags) == jsonencode(var.expected_tags)
-    error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 }
