@@ -29,6 +29,12 @@ Various quality checks are run in AWS Codebuild in the `platform-tools` account 
 
 ### Running the terraform unit tests locally
 
+Ensure that local variable `AWS_PROFILE` is set to `sandbox` and that you have run:
+
+```shell
+aws sso login
+```
+
 The faster, but less comprehensive, tests that run against the `terraform plan` for a module can be run by `cd`-ing into the module folder and running:
 
 ```shell
@@ -169,6 +175,50 @@ demodjango-monitoring:
       enable_ops_center: false
     prod:
       enable_ops_center: true
+```
+
+## S3 bucket
+
+An s3 bucket can be added by configuring the `extensions.yml` file. Below is an example configuration, showing the available options:
+
+```yaml
+my-s3-bucket:
+  type: s3
+  readonly: false # Optional
+  services: # Optional
+    - "web"
+  environments:
+    "*":  # Default configuration values
+      bucket_name: my-bucket-dev # Mandatory
+      retention_policy: # Optional
+        mode: COMPLIANCE # GOVERNANCE" or "COMPLIANCE"
+        days: 10 # Integer value.  Alternatively years may be specified.
+      versioning: true # Optional
+      lifecycle_rules: # Optional.  If present, contains a list of rules.
+        - filter_prefix: "bananas/" # Optional.  If none, the rule applies to all objects. Use an empty string for a catch-all rule.
+          expiration_days: 10 # Integer value
+          enabled: true # Mandatory flag
+  objects: # Optional.  If present, contains a list of objects
+    - key: healthcheck.txt # Mandatory
+      body: | # Optional
+        HEALTHCHECK WORKS!
+```
+
+## Postgres database
+
+A postgres database can be added by configuring the `extensions.yml` file. Below is a simple example configuration, showing some of the available options:
+
+```yaml
+my-postgres-db:
+  type: postgres
+  version: 16.2
+  environments:
+    "*":
+      plan: tiny
+      backup_retention_days: 1 # Optional.  Must be between 1 and 35.  If none, defaults to 7.
+    prod:
+      deletion_protection: true # Optional
+      deletion_policy: Retain # Optional: Delete or Retain
 ```
 
 ## Using our `demodjango` application for testing

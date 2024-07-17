@@ -71,6 +71,7 @@ run "aws_security_group_unit_test" {
   }
 }
 
+
 run "aws_db_parameter_group_unit_test" {
   command = plan
 
@@ -271,6 +272,11 @@ run "aws_db_instance_unit_test" {
     error_message = "Should be: gp3"
   }
 
+  assert {
+    condition     = aws_db_instance.default.backup_retention_period == 7
+    error_message = "Should be: 7"
+  }
+
   # aws_db_instance.default.iops cannot be tested on a plan
 }
 
@@ -279,15 +285,15 @@ run "aws_db_instance_unit_test_set_to_non_defaults" {
 
   variables {
     config = {
-      version             = 14,
-      deletion_protection = false,
-      multi_az            = true,
-      skip_final_snapshot = true,
-      volume_size         = 20,
-      iops                = 3000,
-      instance            = "db.t3.small",
-      storage_type        = "io2"
-
+      version               = 14,
+      deletion_protection   = false,
+      multi_az              = true,
+      skip_final_snapshot   = true,
+      volume_size           = 20,
+      iops                  = 3000,
+      instance              = "db.t3.small",
+      storage_type          = "io2"
+      backup_retention_days = 35
     }
   }
 
@@ -327,6 +333,10 @@ run "aws_db_instance_unit_test_set_to_non_defaults" {
     error_message = "Should be: io2"
   }
 
+  assert {
+    condition     = aws_db_instance.default.backup_retention_period == 35
+    error_message = "Should be: 35"
+  }
 }
 
 run "aws_iam_role_unit_test" {

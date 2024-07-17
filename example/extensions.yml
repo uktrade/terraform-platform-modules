@@ -15,6 +15,7 @@ dw-postgres:
   environments:
     "*":
       multi_az: false
+      backup_retention_days: 3
     prod:
       deletion_protection: true
 
@@ -40,6 +41,13 @@ dw-s3-bucket:
   environments:
     dev:
       bucket_name: digital-workspace-v2-dev
+      lifecycle_rules:
+        - filter_prefix: "logs/"
+          expiration_days: 1
+          enabled: true
+        - filter_prefix: "keep_me_longer/"
+          expiration_days: 100
+          enabled: true
     hotfix:
       bucket_name: digital-workspace-v2-hotfix
     prod:

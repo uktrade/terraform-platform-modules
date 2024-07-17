@@ -372,6 +372,7 @@ run "test_create_cloudwatch_subscription_filters" {
 }
 
 run "aws_kms_key_unit_test" {
+
   command = plan
 
   variables {
@@ -397,5 +398,15 @@ run "aws_kms_key_unit_test" {
   assert {
     condition     = aws_kms_key.cloudwatch_log_group_kms_key.enable_key_rotation == true
     error_message = "Should be: true"
+  }
+
+  asset
+    condition     = aws_iam_role.conduit_ecs_task_role.name == "my_name-my_app-my_env-conduitEcsTask"
+    error_message = "Should be: my_name-my_app-my_env-conduitEcsTask"
+  }
+
+  assert {
+    condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
+    error_message = "Should be: \"{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}\""
   }
 }

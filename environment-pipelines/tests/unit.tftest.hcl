@@ -147,6 +147,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.iam
+  values = {
+    json = "{\"Sid\": \"IAM\"}"
+  }
+}
+
 variables {
   application   = "my-app"
   repository    = "my-repository"
@@ -663,6 +670,17 @@ run "test_iam" {
     error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild'"
   }
   # aws_iam_role_policy.copilot_assume_role_for_environment_codebuild.policy cannot be tested on a plan
+
+  assert {
+    condition     = aws_iam_policy.iam.name == "my-app-my-pipeline-pipeline-iam"
+    error_message = "Should be: my-app-my-pipeline-pipeline-iam"
+  }
+
+  # IAM Policy not currently computed by mock due to https://github.com/hashicorp/terraform-provider-aws/issues/36700. Using override
+  assert {
+    condition     = aws_iam_policy.iam.policy == "{\"Sid\": \"IAM\"}"
+    error_message = "Unexpected policy"
+  }
 }
 
 run "test_artifact_store" {
@@ -741,7 +759,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
@@ -771,15 +789,11 @@ run "test_stages" {
     error_message = "Action provider incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts) == 2
+    condition     = length(aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts) == 1
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[0] == "build_output"
-    error_message = "Input artifacts incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[1] == "dev_terraform_plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].input_artifacts[0] == "dev_terraform_plan"
     error_message = "Input artifacts incorrect"
   }
   assert {
@@ -795,7 +809,7 @@ run "test_stages" {
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.PrimarySource == "build_output"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.PrimarySource == "dev_terraform_plan"
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
@@ -853,7 +867,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
@@ -925,15 +939,11 @@ run "test_stages" {
     error_message = "Action provider incorrect"
   }
   assert {
-    condition     = length(aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts) == 2
+    condition     = length(aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts) == 1
     error_message = "Input artifacts incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[0] == "build_output"
-    error_message = "Input artifacts incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[1] == "prod_terraform_plan"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].input_artifacts[0] == "prod_terraform_plan"
     error_message = "Input artifacts incorrect"
   }
   assert {
@@ -949,7 +959,7 @@ run "test_stages" {
     error_message = "Configuration ProjectName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.PrimarySource == "build_output"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.PrimarySource == "prod_terraform_plan"
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {

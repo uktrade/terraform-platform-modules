@@ -67,29 +67,6 @@ resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
   kms_key_id        = aws_kms_key.cloudwatch_log_group_kms_key.arn
 }
 
-resource "aws_cloudwatch_log_resource_policy" "opensearch_log_group_policy" {
-  policy_name     = "opensearch_log_group_policy"
-  policy_document = <<CONFIG
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "es.amazonaws.com"
-      },
-      "Action": [
-        "logs:PutLogEvents",
-        "logs:PutLogEventsBatch",
-        "logs:CreateLogStream"
-      ],
-      "Resource": "arn:aws:logs:*"
-    }
-  ]
-}
-CONFIG
-}
-
 resource "aws_security_group" "opensearch-security-group" {
   name        = local.domain_name
   vpc_id      = data.aws_vpc.vpc.id
@@ -243,6 +220,55 @@ resource "aws_ssm_parameter" "opensearch_endpoint" {
   key_id      = aws_kms_key.ssm_opensearch_endpoint.arn
 
   tags = local.tags
+}
+resource "aws_kms_key" "ssm_opensearch_endpoint" {
+  # checkov:skip=CKV2_AWS_64:skipping pending discussion with rest of team on the policy
+  description             = "KMS key for ${var.name}-${var.application}-${var.environment}-opensearch-cluster SSM parameters"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+
+  tags = local.tags
+}
+
+resource "aws_iam_role" "conduit_ecs_task_role" {
+  name               = "${var.name}-${var.application}-${var.environment}-conduitEcsTask"
+  assume_role_policy = data.aws_iam_policy_document.assume_ecstask_role.json
+
+  inline_policy {
+    name   = "AllowReadingofCMKSecrets"
+    policy = data.aws_iam_policy_document.access_ssm_with_kms.json
+  }
+
+  tags = local.tags
+}
+
+data "aws_iam_policy_document" "assume_ecstask_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy_document" "access_ssm_with_kms" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "ssm:GetParameters",
+      "logs:CreateLogStream"
+    ]
+    effect = "Allow"
+    resources = [
+      aws_kms_key.ssm_opensearch_endpoint.arn,
+      aws_ssm_parameter.opensearch_endpoint.arn,
+      "arn:aws:logs:*:*:*"
+    ]
+  }
 }
 
 data "aws_vpc" "vpc" {

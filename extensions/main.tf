@@ -97,10 +97,3 @@ resource "aws_ssm_parameter" "addons" {
   value = jsonencode(var.args.services)
   tags  = local.tags
 }
-
-module "logs" {
-  source = "../logs"
-
-  application = var.args.application
-  environment = var.environment
-}
