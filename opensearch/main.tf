@@ -174,7 +174,7 @@ resource "aws_opensearch_domain" "this" {
   log_publishing_options {
     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_audit_logs.arn
     log_type                 = "AUDIT_LOGS"
-    enabled = true
+    enabled                  = true
   }
 
   node_to_node_encryption {

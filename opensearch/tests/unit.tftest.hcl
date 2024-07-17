@@ -394,7 +394,7 @@ run "aws_kms_key_unit_test" {
     condition     = aws_kms_key.cloudwatch_log_group_kms_key.description == "KMS Key for my_name-my_env CloudWatch Log encryption"
     error_message = "Should be: KMS Key for my_name-my_env CloudWatch Log encryption"
   }
-  
+
   assert {
     condition     = aws_kms_key.cloudwatch_log_group_kms_key.enable_key_rotation == true
     error_message = "Should be: true"

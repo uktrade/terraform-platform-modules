@@ -525,7 +525,7 @@ run "aws_lambda_invocation_unit_test" {
   }
 
   assert {
-    condition     = reserved_concurrent_executions == -1
+    condition     = aws_lambda_function.lambda.reserved_concurrent_executions == -1
     error_message = "Should be: -1"
   }
 }

@@ -294,7 +294,7 @@ run "aws_kms_key_unit_test" {
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 
-  
+
 }
 
 run "aws_cloudwatch_log_group_unit_test" {
