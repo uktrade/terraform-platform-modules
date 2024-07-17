@@ -733,6 +733,37 @@ resource "aws_iam_policy" "cloudformation" {
   policy      = data.aws_iam_policy_document.cloudformation.json
 }
 
+data "aws_iam_policy_document" "iam" {
+  statement {
+    actions = [
+      "iam:AttachRolePolicy",
+      "iam:DetachRolePolicy",
+      "iam:CreatePolicy",
+      "iam:DeletePolicy",
+      "iam:CreateRole",
+      "iam:DeleteRole",
+      "iam:TagRole",
+      "iam:PutRolePolicy",
+      "iam:GetRole",
+      "iam:ListRolePolicies",
+      "iam:GetRolePolicy",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListInstanceProfilesForRole",
+      "iam:DeleteRolePolicy",
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
+    ]
+  }
+}
+
+resource "aws_iam_policy" "iam" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-iam"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to manage roles"
+  policy      = data.aws_iam_policy_document.iam.json
+}
+
 # Roles
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
   name               = "${var.application}-${var.pipeline_name}-environment-pipeline-codepipeline"
@@ -744,6 +775,7 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
   name               = "${var.application}-${var.pipeline_name}-environment-pipeline-codebuild"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
   managed_policy_arns = [
+    aws_iam_policy.iam.arn,
     aws_iam_policy.cloudformation.arn,
     aws_iam_policy.redis.arn,
     aws_iam_policy.postgres.arn,
