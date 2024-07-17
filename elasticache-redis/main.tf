@@ -130,7 +130,7 @@ resource "aws_elasticache_subnet_group" "es-subnet-group" {
 }
 
 resource "aws_kms_key" "redis-log-group-kms-key" {
-  description         = "KMS Key for Redis Log encryption"
+  description         = "KMS Key for ${var.name}-${var.environment} Redis Log encryption"
   enable_key_rotation = true
   tags                = local.tags
 }

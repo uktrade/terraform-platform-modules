@@ -37,7 +37,7 @@ resource "aws_codebuild_project" "environment_pipeline_build" {
 }
 
 resource "aws_kms_key" "codebuild_kms_key" {
-  description         = "KMS Key for CodeBuild encryption"
+  description         = "KMS Key for ${var.application}-${var.pipeline_name} CodeBuild encryption"
   enable_key_rotation = true
   tags                = local.tags
 }

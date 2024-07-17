@@ -134,8 +134,8 @@ run "aws_kms_key_unit_test" {
   }
 
   assert {
-    condition     = aws_kms_key.default.enable_key_rotation == false
-    error_message = "Should be: false"
+    condition     = aws_kms_key.default.enable_key_rotation == true
+    error_message = "Should be: true"
   }
 
   assert {

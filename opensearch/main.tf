@@ -2,7 +2,7 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_kms_key" "cloudwatch_log_group_kms_key" {
-  description         = "KMS Key for CloudWatch Log encryption"
+  description         = "KMS Key for ${var.name}-${var.environment} CloudWatch Log encryption"
   enable_key_rotation = true
   tags                = local.tags
 }
