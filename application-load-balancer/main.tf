@@ -13,6 +13,7 @@ data "aws_subnets" "public-subnets" {
 }
 
 resource "aws_lb" "this" {
+  # checkov:skip=CKV_AWS_28: WAF is outside of terraform-platform-modules
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
   subnets            = tolist(data.aws_subnets.public-subnets.ids)
@@ -34,6 +35,7 @@ resource "aws_lb" "this" {
 
 resource "aws_lb_listener" "alb-listener" {
   # checkov:skip=CKV_AWS_2:Checkov Looking for Hard Coded HTTPS but we use a variable.
+  # checkov:skip=CKV_AWS_103:Checkov Looking for Hard Coded TLS1.2 but we use a variable.
   depends_on = [aws_acm_certificate_validation.cert_validate]
 
   for_each          = local.protocols
