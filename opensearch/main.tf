@@ -34,15 +34,6 @@ resource "aws_kms_key_policy" "opensearch_to_cloudwatch" {
   })
 }
 
-resource "aws_kms_key" "ssm_opensearch_endpoint" {
-  # checkov:skip=CKV2_AWS_64:skipping pending discussion with rest of team on the policy
-  description             = "KMS key for ${var.name}-${var.application}-${var.environment}-opensearch-cluster SSM parameters"
-  deletion_window_in_days = 10
-  enable_key_rotation     = true
-
-  tags = local.tags
-}
-
 resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
   name              = "/aws/opensearch/${local.domain_name}/index-slow"
   retention_in_days = coalesce(var.config.index_slow_log_retention_in_days, 7)

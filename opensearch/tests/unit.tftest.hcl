@@ -400,7 +400,7 @@ run "aws_kms_key_unit_test" {
     error_message = "Should be: true"
   }
 
-  asset
+  assert {
     condition     = aws_iam_role.conduit_ecs_task_role.name == "my_name-my_app-my_env-conduitEcsTask"
     error_message = "Should be: my_name-my_app-my_env-conduitEcsTask"
   }
