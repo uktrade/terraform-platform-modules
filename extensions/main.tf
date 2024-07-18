@@ -91,7 +91,7 @@ module "monitoring" {
 
 resource "aws_ssm_parameter" "addons" {
   # checkov:skip=CKV_AWS_337: Used by copilot potential changes to platform-helper before CMK can be enabled
-  # checkov:skip=CKV_AWS_34: Used by copilot potential changes to platform-helper before CMK can be enabled
+  # checkov:skip=CKV2_AWS_34: Used by copilot potential changes to platform-helper before CMK can be enabled
   name  = "/copilot/applications/${var.args.application}/environments/${var.environment}/addons"
   tier  = "Intelligent-Tiering"
   type  = "String"
