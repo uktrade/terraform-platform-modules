@@ -85,7 +85,7 @@ run "aws_s3_object_e2e_test" {
   }
 
   assert {
-    condition     = strcontains(aws_s3_object.object["local_file"].kms_key_id, "${aws_kms_key.kms-key.id}")
+    condition     = aws_s3_object.object["local_file"].kms_key_id == "arn:aws:kms:eu-west-2:${data.aws_caller_identity.current.account_id}:key/${aws_kms_key.kms-key.id}"
     error_message = "Invalid kms key id"
   }
 
