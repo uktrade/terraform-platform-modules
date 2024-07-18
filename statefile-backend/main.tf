@@ -1,5 +1,8 @@
 resource "aws_s3_bucket" "terraform-state" {
+  # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
+  # checkov:skip=CKV2_AWS_62: Platform does not currently have the supporting infrastructure to process events
   bucket = "terraform-platform-state-${var.aws_account_name}"
+
   tags = merge(
     local.tags,
     {
@@ -41,6 +44,23 @@ resource "aws_s3_bucket_public_access_block" "block" {
 resource "aws_kms_key" "terraform-bucket-key" {
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "This key is used to encrypt bucket objects"
+
+  policy = jsonencode({
+    Id = "key-default-1"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
+
   tags = merge(
     local.tags,
     {

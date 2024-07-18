@@ -39,7 +39,24 @@ resource "aws_codebuild_project" "environment_pipeline_build" {
 resource "aws_kms_key" "codebuild_kms_key" {
   description         = "KMS Key for ${var.application}-${var.pipeline_name} CodeBuild encryption"
   enable_key_rotation = true
-  tags                = local.tags
+
+  policy = jsonencode({
+    Id = "key-default-1"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
+
+  tags = local.tags
 }
 
 resource "aws_cloudwatch_log_group" "environment_pipeline_codebuild" {

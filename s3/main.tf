@@ -1,4 +1,7 @@
+data "aws_caller_identity" "current" {}
 resource "aws_s3_bucket" "this" {
+  # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
+  # checkov:skip=CKV2_AWS_62: Platform does not currently have the supporting infrastructure to process events
   bucket = var.config.bucket_name
 
   tags = local.tags
@@ -74,6 +77,22 @@ resource "aws_kms_key" "kms-key" {
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
+
+  policy = jsonencode({
+    Id = "key-default-1"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
 }
 
 resource "aws_kms_alias" "s3-bucket" {

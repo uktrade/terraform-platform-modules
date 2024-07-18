@@ -34,6 +34,22 @@ resource "aws_db_subnet_group" "default" {
 resource "aws_kms_key" "default" {
   description         = "${local.name} KMS key"
   enable_key_rotation = true
+
+  policy = jsonencode({
+    Id = "key-default-1"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
 }
 
 resource "aws_db_instance" "default" {
