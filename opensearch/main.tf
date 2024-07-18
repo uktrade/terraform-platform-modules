@@ -59,6 +59,7 @@ resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
 }
 
 resource "aws_security_group" "opensearch-security-group" {
+  # checkov:skip=CKV2_AWS_5: False Positive in Checkov - https://github.com/bridgecrewio/checkov/issues/3010
   name        = local.domain_name
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow inbound HTTP traffic"

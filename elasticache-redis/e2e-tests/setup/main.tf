@@ -24,7 +24,7 @@ resource "aws_subnet" "primary" {
 }
 
 resource "aws_security_group" "vpc-core-sg" {
-  # checkov:skip=CKV2_AWS_5:Security group is used by VPC. Ticket to investigate: https://uktrade.atlassian.net/browse/DBTP-1039
+  # checkov:skip=CKV2_AWS_5: False Positive in Checkov - https://github.com/bridgecrewio/checkov/issues/3010
   name        = "sandbox-elasticache-redis-base-sg"
   description = "Base security group for VPC"
   vpc_id      = aws_vpc.main.id

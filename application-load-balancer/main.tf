@@ -13,7 +13,7 @@ data "aws_subnets" "public-subnets" {
 }
 
 resource "aws_lb" "this" {
-  # checkov:skip=CKV_AWS_28: WAF is outside of terraform-platform-modules
+  # checkov:skip=CKV2_AWS_28: WAF is outside of terraform-platform-modules
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
   subnets            = tolist(data.aws_subnets.public-subnets.ids)
@@ -52,7 +52,7 @@ resource "aws_lb_listener" "alb-listener" {
 }
 
 resource "aws_security_group" "alb-security-group" {
-  # checkov:skip=CKV2_AWS_5:Security group is used by VPC. Ticket to investigate: https://uktrade.atlassian.net/browse/DBTP-1039
+  # checkov:skip=CKV2_AWS_5: False Positive in Checkov - https://github.com/bridgecrewio/checkov/issues/3010
   for_each    = local.protocols
   name        = "${var.application}-${var.environment}-alb-${each.key}"
   description = "Managed by Terraform"
