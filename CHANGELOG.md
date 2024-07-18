@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.0.1](https://github.com/uktrade/terraform-platform-modules/compare/5.0.0...5.0.1) (2024-07-18)
+
+
+### Bug Fixes
+
+* DBTP-1128 - Connection Error when trying to connect to Redis via Conduit ([#184](https://github.com/uktrade/terraform-platform-modules/issues/184)) ([65cc75d](https://github.com/uktrade/terraform-platform-modules/commit/65cc75deae092f0287a32daa7119069c880dffc4))
+* DBTP-1128 Allow Pipeline Account to Create IAM Roles ([#189](https://github.com/uktrade/terraform-platform-modules/issues/189)) ([f95d923](https://github.com/uktrade/terraform-platform-modules/commit/f95d923dcf950350dda822b097f5ff25783f0adf))
+
 ## [5.0.0](https://github.com/uktrade/terraform-platform-modules/compare/4.2.0...5.0.0) (2024-07-12)
 
 
