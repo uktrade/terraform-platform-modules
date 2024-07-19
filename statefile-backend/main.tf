@@ -1,6 +1,9 @@
+data "aws_caller_identity" "current" {}
 resource "aws_s3_bucket" "terraform-state" {
   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
-  # checkov:skip=CKV2_AWS_62: Platform does not currently have the supporting infrastructure to process events
+  # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
+  # checkov:skip=CKV2_AWS_61: This bucket is only used for the TF state, so no requirement for lifecycle configuration
+  # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   bucket = "terraform-platform-state-${var.aws_account_name}"
 
   tags = merge(

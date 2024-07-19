@@ -1,7 +1,8 @@
 data "aws_caller_identity" "current" {}
 resource "aws_s3_bucket" "this" {
   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
-  # checkov:skip=CKV2_AWS_62: Platform does not currently have the supporting infrastructure to process events
+  # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
+  # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   bucket = var.config.bucket_name
 
   tags = local.tags
@@ -138,4 +139,12 @@ resource "aws_s3_object" "object" {
 
   kms_key_id             = aws_kms_key.kms-key.arn
   server_side_encryption = "aws:kms"
+}
+
+resource "aws_s3_bucket_public_access_block" "public_access_block" {
+  bucket = aws_s3_bucket.this.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }

@@ -3,6 +3,7 @@ data "aws_route53_zone" "root-zone" {
 }
 
 resource "aws_route53_zone" "new-zone" {
+  # checkov:skip=CKV2_AWS_39:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   for_each = toset(var.zones)
   name     = "${each.key}.${data.aws_route53_zone.root-zone.name}"
   tags     = local.tags
