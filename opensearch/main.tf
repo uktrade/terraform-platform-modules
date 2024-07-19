@@ -101,6 +101,7 @@ resource "random_password" "password" {
 }
 resource "aws_opensearch_domain" "this" {
   # checkov:skip=CKV_AWS_247: Enabling CMK Forces Cluster Recreation. To be implemented as a separate breaking change
+  # checkov:skip=CKV2_AWS_59: This is a configurable option not picked up by Checkov as it's variablised
   domain_name    = local.domain_name
   engine_version = "OpenSearch_${var.config.engine}"
 

@@ -10,6 +10,7 @@ terraform {
 
 resource "aws_vpc" "main" {
   # checkov:skip=CKV2_AWS_11: As this VPC is used for E2E testing and torn down. No flow logging required
+  # checkov:skip=CKV2_AWS_12: As this VPC is used for E2E testing and torn down. Not required 
   cidr_block = "10.0.0.0/16"
   tags = {
     Name = "sandbox-opensearch"
