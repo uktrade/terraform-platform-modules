@@ -55,7 +55,7 @@ resource "aws_security_group" "alb-security-group" {
   # checkov:skip=CKV2_AWS_5: False Positive in Checkov - https://github.com/bridgecrewio/checkov/issues/3010
   for_each    = local.protocols
   name        = "${var.application}-${var.environment}-alb-${each.key}"
-  description = "Managed by Terraform"
+  description = "Security group for application load balancer"
   vpc_id      = data.aws_vpc.vpc.id
   tags        = local.tags
   ingress {
