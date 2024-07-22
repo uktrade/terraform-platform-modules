@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.0.1](https://github.com/uktrade/terraform-platform-modules/compare/5.0.0...5.0.1) (2024-07-18)
+
+
+### Bug Fixes
+
+* DBTP-1128 - Connection Error when trying to connect to Redis via Conduit ([#184](https://github.com/uktrade/terraform-platform-modules/issues/184)) ([65cc75d](https://github.com/uktrade/terraform-platform-modules/commit/65cc75deae092f0287a32daa7119069c880dffc4))
+* DBTP-1128 Allow Pipeline Account to Create IAM Roles ([#189](https://github.com/uktrade/terraform-platform-modules/issues/189)) ([f95d923](https://github.com/uktrade/terraform-platform-modules/commit/f95d923dcf950350dda822b097f5ff25783f0adf))
+
 ## [5.0.0](https://github.com/uktrade/terraform-platform-modules/compare/4.2.0...5.0.0) (2024-07-12)
 
 
@@ -208,3 +216,4 @@
 * Add domain provider alias to extensions unit test ([#86](https://github.com/uktrade/terraform-platform-modules/issues/86)) ([4a62675](https://github.com/uktrade/terraform-platform-modules/commit/4a62675df58a522717ec93a16fddcc42c0e8e3df))
 * DBTP-896 - invalid opensearch config ([#73](https://github.com/uktrade/terraform-platform-modules/issues/73)) ([7e30b05](https://github.com/uktrade/terraform-platform-modules/commit/7e30b05036c2b3281ce28f58feaa1957c7c281a2))
 * Parameterised account ID in unit test to allow tests to run in other accounts ([#84](https://github.com/uktrade/terraform-platform-modules/issues/84)) ([cec7852](https://github.com/uktrade/terraform-platform-modules/commit/cec7852be7c7e73393fb34b15a1b53eecb4a5ec5))
+
