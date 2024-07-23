@@ -86,7 +86,7 @@ resource "aws_codepipeline" "environment_pipeline" {
 
   lifecycle {
     ignore_changes = [
-        trigger
+      trigger
     ]
   }
 }
