@@ -90,6 +90,8 @@ module "monitoring" {
 }
 
 resource "aws_ssm_parameter" "addons" {
+  # checkov:skip=CKV_AWS_337: Used by copilot needs further analysis to ensure doesn't create similar issue to DBTP-1128 - raised as DBTP-1217
+  # checkov:skip=CKV2_AWS_34: Used by copilot needs further analysis to ensure doesn't create similar issue to DBTP-1128 - raised as DBTP-1217
   name  = "/copilot/applications/${var.args.application}/environments/${var.environment}/addons"
   tier  = "Intelligent-Tiering"
   type  = "String"

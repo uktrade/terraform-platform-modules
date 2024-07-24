@@ -36,10 +36,34 @@ resource "aws_codebuild_project" "environment_pipeline_build" {
   tags = local.tags
 }
 
+resource "aws_kms_key" "codebuild_kms_key" {
+  description         = "KMS Key for ${var.application}-${var.pipeline_name} CodeBuild encryption"
+  enable_key_rotation = true
+
+  policy = jsonencode({
+    Id = "key-default-1"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
+
+  tags = local.tags
+}
+
 resource "aws_cloudwatch_log_group" "environment_pipeline_codebuild" {
-  name = "codebuild/${var.application}-${var.pipeline_name}-environment-terraform/log-group"
   # checkov:skip=CKV_AWS_338:Retains logs for 3 months instead of 1 year
+  name              = "codebuild/${var.application}-${var.pipeline_name}-environment-terraform/log-group"
   retention_in_days = 90
+  kms_key_id        = aws_kms_key.codebuild_kms_key.arn
 }
 
 resource "aws_cloudwatch_log_stream" "environment_pipeline_codebuild" {

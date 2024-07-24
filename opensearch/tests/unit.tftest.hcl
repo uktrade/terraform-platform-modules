@@ -371,7 +371,8 @@ run "test_create_cloudwatch_subscription_filters" {
   }
 }
 
-run "test_create_conduit_iam_role" {
+run "aws_kms_key_unit_test" {
+
   command = plan
 
   variables {
@@ -387,6 +388,16 @@ run "test_create_conduit_iam_role" {
       volume_size = 80
       master      = false
     }
+  }
+
+  assert {
+    condition     = aws_kms_key.cloudwatch_log_group_kms_key.description == "KMS Key for my_name-my_env CloudWatch Log encryption"
+    error_message = "Should be: KMS Key for my_name-my_env CloudWatch Log encryption"
+  }
+
+  assert {
+    condition     = aws_kms_key.cloudwatch_log_group_kms_key.enable_key_rotation == true
+    error_message = "Should be: true"
   }
 
   assert {

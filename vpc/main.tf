@@ -1,5 +1,7 @@
 # VPC
 resource "aws_vpc" "vpc" {
+  # checkov:skip=CKV2_AWS_11: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
+  # checkov:skip=CKV2_AWS_12: Functionality provided via default_acl rather than default_security_group
   cidr_block           = "${var.arg_config.cidr}${local.vpc_cidr_mask}"
   enable_dns_hostnames = true
   tags = merge(
