@@ -83,6 +83,12 @@ resource "aws_codepipeline" "environment_pipeline" {
   }
 
   tags = local.tags
+
+  lifecycle {
+    ignore_changes = [
+      trigger
+    ]
+  }
 }
 
 module "artifact_store" {
