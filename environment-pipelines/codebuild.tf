@@ -124,3 +124,101 @@ resource "aws_codebuild_project" "environment_pipeline_apply" {
 
   tags = local.tags
 }
+
+resource "aws_codebuild_project" "trigger_other_environment_pipeline" {
+  name           = "${var.application}-${var.pipeline_name}-environment-pipeline-trigger"
+  description    = "Triggers a target pipeline"
+  build_timeout  = 5
+  service_role   = aws_iam_role.environment_pipeline_codebuild.arn
+  encryption_key = module.artifact_store.kms_key_arn
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  cache {
+    type     = "S3"
+    location = module.artifact_store.bucket_name
+  }
+
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name  = aws_cloudwatch_log_group.environment_pipeline_codebuild.name
+      stream_name = aws_cloudwatch_log_stream.environment_pipeline_codebuild.name
+    }
+  }
+
+  source {
+    type      = "CODEPIPELINE"
+    buildspec = file("${path.module}/buildspec.yml")
+  }
+
+  tags = local.tags
+}
+
+#--------SOURCE--ACCOUNT------
+
+resource "aws_iam_role" "trigger_pipeline_codebuild" {
+  name               = "${var.application}-${var.pipeline_name}-trigger-pipeline-codebuild"
+  assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
+  managed_policy_arns = [
+  ]
+  tags = local.tags
+}
+
+#------PROD-TARGET-ACCOUNT------
+
+resource "aws_iam_role_policy" "trigger_pipeline" {
+  name   = "${var.application}-${var.pipeline_name}-trigger-pipeline"
+  role   = aws_iam_role.environment_pipeline_codepipeline.name
+  policy = data.aws_iam_policy.trigger_pipeline.json
+}
+
+data "aws_iam_policy_document" "assume_trigger_pipeline" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_policy" "assume_trigger_pipeline" {
+  name        = "${var.application}-${var.pipeline_name}-assume-role"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} to assume trigger pipeline role"
+  policy      = data.aws_iam_policy_document.assume_trigger_pipeline.json
+}
+
+resource "aws_iam_policy" "trigger_pipeline" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-iam"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to trigger target pipeline"
+  policy      = data.aws_iam_policy_document.trigger_pipeline.json
+}
+
+data "aws_iam_policy_document" "trigger_pipeline" {
+  statement {
+    actions = [
+      "codepipeline:startpipelineexecution",
+    ]
+    resources = [
+      "*",
+    ]
+  }
+}
+
+resource "aws_iam_role" "trigger_pipeline" {
+  name               = "${var.application}-${var.pipeline_name}-trigger-pipeline"
+  assume_role_policy = data.aws_iam_policy.assume_trigger_pipeline.json
+  tags               = local.tags
+}
