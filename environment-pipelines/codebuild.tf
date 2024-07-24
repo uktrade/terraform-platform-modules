@@ -157,7 +157,7 @@ resource "aws_codebuild_project" "trigger_other_environment_pipeline" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("${path.module}/buildspec.yml")
+    buildspec = file("${path.module}/buildspec-trigger.yml")
   }
 
   tags = local.tags
@@ -174,11 +174,41 @@ resource "aws_iam_role" "trigger_pipeline_codebuild" {
 }
 
 #------PROD-TARGET-ACCOUNT------
+# resource "aws_iam_policy" "assume_trigger_pipeline" {
+#   name        = "${var.application}-${var.pipeline_name}-assume-role"
+#   path        = "/${var.application}/codebuild/"
+#   description = "Allow ${var.application} to assume trigger pipeline role"
+#   policy      = data.aws_iam_policy_document.assume_trigger_pipeline.json
+# }
+
+# resource "aws_iam_policy" "trigger_pipeline" {
+#   name        = "${var.application}-${var.pipeline_name}-pipeline-iam"
+#   path        = "/${var.application}/codebuild/"
+#   description = "Allow ${var.application} codebuild job to trigger target pipeline"
+#   policy      = data.aws_iam_policy_document.trigger_pipeline.json
+# }
+
+resource "aws_iam_role" "trigger_pipeline" {
+  name               = "${var.application}-${var.pipeline_name}-trigger-pipeline"
+  assume_role_policy = data.aws_iam_policy_document.assume_trigger_pipeline.json
+  tags               = local.tags
+}
 
 resource "aws_iam_role_policy" "trigger_pipeline" {
   name   = "${var.application}-${var.pipeline_name}-trigger-pipeline"
   role   = aws_iam_role.environment_pipeline_codepipeline.name
-  policy = data.aws_iam_policy.trigger_pipeline.json
+  policy = data.aws_iam_policy_document.trigger_pipeline.json
+}
+
+data "aws_iam_policy_document" "trigger_pipeline" {
+  statement {
+    actions = [
+      "codepipeline:StartPipelineExecution",
+    ]
+    resources = [
+      "*",
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "assume_trigger_pipeline" {
@@ -192,33 +222,24 @@ data "aws_iam_policy_document" "assume_trigger_pipeline" {
   }
 }
 
-resource "aws_iam_policy" "assume_trigger_pipeline" {
-  name        = "${var.application}-${var.pipeline_name}-assume-role"
-  path        = "/${var.application}/codebuild/"
-  description = "Allow ${var.application} to assume trigger pipeline role"
-  policy      = data.aws_iam_policy_document.assume_trigger_pipeline.json
+# NON PROD Assume role role
+resource "aws_iam_role" "assume_role_to_trigger_codepipeline" {
+  name               = "${var.application}-${var.pipeline_name}-assume-role-to-trigger-codepipeline"
+  assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
+  tags               = local.tags
 }
 
-resource "aws_iam_policy" "trigger_pipeline" {
-  name        = "${var.application}-${var.pipeline_name}-pipeline-iam"
-  path        = "/${var.application}/codebuild/"
-  description = "Allow ${var.application} codebuild job to trigger target pipeline"
-  policy      = data.aws_iam_policy_document.trigger_pipeline.json
+resource "aws_iam_role_policy" "assume_role_to_trigger_pipeline_policy" {
+  name        = "${var.application}-${var.pipeline_name}-assume-role-to-trigger-codepipeline-policy"
+  role        = aws_iam_role.assume_role_to_trigger_codepipeline.name
+  policy      = data.aws_iam_policy_document.assume_role_to_trigger_codepipeline_policy_document.json
 }
 
-data "aws_iam_policy_document" "trigger_pipeline" {
+data "aws_iam_policy_document" "assume_role_to_trigger_codepipeline_policy_document" {
   statement {
     actions = [
-      "codepipeline:startpipelineexecution",
+      "sts:AssumeRole"
     ]
-    resources = [
-      "*",
-    ]
+    resources = [local.triggered_pipeline_account]
   }
-}
-
-resource "aws_iam_role" "trigger_pipeline" {
-  name               = "${var.application}-${var.pipeline_name}-trigger-pipeline"
-  assume_role_policy = data.aws_iam_policy.assume_trigger_pipeline.json
-  tags               = local.tags
 }

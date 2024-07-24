@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - export PATH="${CODEBUILD_SRC_DIR}/build-tools/bin:$PATH"
+      - export PYTHONPATH="${CODEBUILD_SRC_DIR}/build-tools"
+  build:
+    commands:
+      - set -e
+      - echo -e "\nTerraform Trigger Phase"
+      - aws sts get-caller-identity
+artifacts:
+  files: []
