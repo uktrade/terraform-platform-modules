@@ -72,7 +72,8 @@ locals {
 
   # We flatten a list of lists for each env:
   triggered_pipeline_account = "arn:aws:iam::891377058512:role/demodjango-prod-main-trigger-pipeline"
-  triggered_pipeline         = "demodjango-prod-main-environment-pipeline"
+ pipeline_that_gets_triggered = "demodjango-prod-main-environment-pipeline"
+ # pipeline_that_gets_triggered = "${var.application}-${local.selected_environment}-environment-pipeline"
   triggered_aws_profile      = "platform-prod"
 
   all_stages = flatten(
@@ -87,7 +88,7 @@ locals {
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([
             { name : "TRIGGERED_ACCOUNT_ROLE_ARN", value : local.triggered_pipeline_account },
-            { name : "TRIGGERED_PIPELINE_NAME", value : local.triggered_pipeline },
+            { name : "TRIGGERED_PIPELINE_NAME", value : local.pipeline_that_gets_triggered },
             { name : "TRIGGERED_PIPELINE_AWS_PROFILE", value : local.triggered_aws_profile },
           ])
         },

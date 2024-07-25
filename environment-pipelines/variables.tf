@@ -39,3 +39,15 @@ variable "trigger_on_push" {
   type    = bool
   default = true
 }
+
+variable "pipeline_that_gets_triggered" {
+  type    = string
+}
+
+variable "triggered_by" {
+  type    = string
+}
+
+# variable "pipelines" {
+#   type = any
+# }
