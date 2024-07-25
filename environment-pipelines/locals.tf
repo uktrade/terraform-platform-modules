@@ -72,7 +72,7 @@ locals {
 
   # We flatten a list of lists for each env:
   triggered_pipeline_account = "arn:aws:iam::891377058512:role/demodjango-prod-main-trigger-pipeline"
-  triggered_pipeline         = "prod-main"
+  triggered_pipeline         = "demodjango-prod-main-environment-pipeline"
   triggered_aws_profile      = "platform-prod"
 
   all_stages = flatten(
