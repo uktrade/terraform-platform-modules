@@ -163,16 +163,6 @@ resource "aws_codebuild_project" "trigger_other_environment_pipeline" {
   tags = local.tags
 }
 
-#--------SOURCE--ACCOUNT------
-
-resource "aws_iam_role" "trigger_pipeline_codebuild" {
-  name               = "${var.application}-${var.pipeline_name}-trigger-pipeline-codebuild"
-  assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
-  managed_policy_arns = [
-  ]
-  tags = local.tags
-}
-
 #------PROD-TARGET-ACCOUNT------
 # resource "aws_iam_policy" "assume_trigger_pipeline" {
 #   name        = "${var.application}-${var.pipeline_name}-assume-role"
