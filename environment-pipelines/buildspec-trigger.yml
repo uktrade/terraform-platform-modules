@@ -9,6 +9,7 @@ phases:
     commands:
       - set -e
       - echo -e "\nTerraform Trigger Phase"
-      - aws sts get-caller-identity
+      - aws codepipeline start-pipeline-execution --name "prod-main" --profile platform-prod
+
 artifacts:
   files: []
