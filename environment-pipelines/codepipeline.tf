@@ -39,7 +39,7 @@ resource "aws_codepipeline" "environment_pipeline" {
   }
 
   stage {
-    name = "Install Build Tools"
+    name = "Install-Build-Tools"
 
     action {
       name             = "InstallTools"
