@@ -71,6 +71,10 @@ locals {
   ]
 
   # We flatten a list of lists for each env:
+  triggered_pipeline_account = "arn:aws:iam::891377058512:role/demodjango-prod-main-trigger-pipeline"
+  triggered_pipeline         = "prod-main"
+  triggered_aws_profile      = "platform-prod"
+
   all_stages = flatten(
     concat(local.initial_stages, [
       {
@@ -82,7 +86,9 @@ locals {
           ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-trigger"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([
-            #       { name : "ENVIRONMENT", value : env.name },
+            { name : "TRIGGERED_ACCOUNT_ROLE_ARN", value : local.triggered_pipeline_account },
+            { name : "TRIGGERED_PIPELINE_NAME", value : local.triggered_pipeline },
+            { name : "TRIGGERED_PIPELINE_AWS_PROFILE", value : local.triggered_aws_profile },
           ])
         },
         namespace : null
@@ -92,7 +98,7 @@ locals {
   dns_ids                   = tolist(toset(flatten([for stage in local.all_stages : lookup(stage, "accounts", null) != null ? [stage.accounts.dns.id] : []])))
   dns_account_assumed_roles = [for id in local.dns_ids : "arn:aws:iam::${id}:role/environment-pipeline-assumed-role"]
   # triggered_pipeline_account = "arn:aws:iam::${local.environment_config[0].prod.accounts.deploy.id}:role/environment-pipeline-assumed-role"
-  triggered_pipeline_account = "arn:aws:iam::891377058512:role/demodjango-prod-main-trigger-pipeline"
+
 
 
   # Merge in the stage specific config from the stage_config.yml file:
