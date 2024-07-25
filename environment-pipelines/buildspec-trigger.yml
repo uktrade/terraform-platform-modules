@@ -6,8 +6,7 @@ phases:
       - export PATH="${CODEBUILD_SRC_DIR}/build-tools/bin:$PATH"
       - echo -e "\nAssume triggered account role to trigger ${TRIGGERED_PIPELINE_NAME} pipeline"
       
-      - assumed_role=$(aws sts assume-role --role-arn "${TRIGGERED_ACCOUNT_ROLE_ARN}" \
-        --role-session-name "trigger-prod-pipeline-$(date +%s)")
+      - assumed_role=$(aws sts assume-role --role-arn "${TRIGGERED_ACCOUNT_ROLE_ARN}" --role-session-name "trigger-prod-pipeline-$(date +%s)")
       
       - PROD_AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId)
       - PROD_AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey)
