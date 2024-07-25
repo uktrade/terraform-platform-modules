@@ -30,7 +30,7 @@ resource "aws_codebuild_project" "environment_pipeline_build" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("${path.module}/buildspec.yml")
+    buildspec = file("${path.module}/buildspec-install-build-tools.yml")
   }
 
   tags = local.tags
