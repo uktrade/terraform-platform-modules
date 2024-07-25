@@ -35,7 +35,7 @@ locals {
       namespace : "${env.name}-plan"
     },
     # The second element of the inner list for an env is the Approval stage if required, or the empty list otherwise.
-      lookup(env, "requires_approval", false) ? [{
+    lookup(env, "requires_approval", false) ? [{
       type : "approve",
       stage_name : "Approve-${env.name}",
       env : "",
@@ -67,25 +67,25 @@ locals {
       },
       namespace : null
     }
-  ]
+    ]
   ]
 
   # We flatten a list of lists for each env:
   all_stages = flatten(
     concat(local.initial_stages, [
-    {
-      type : "trigger",
-      stage_name : "Trigger-Pipeline",
-      input_artifacts : ["build_output"],
-      output_artifacts : [],
-      configuration : {
-      ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-trigger"
-      PrimarySource : "build_output"
-      EnvironmentVariables : jsonencode([
-#       { name : "ENVIRONMENT", value : env.name },
-    ])
-    },
-      namespace : null
+      {
+        type : "trigger",
+        stage_name : "Trigger-Pipeline",
+        input_artifacts : ["build_output"],
+        output_artifacts : [],
+        configuration : {
+          ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-trigger"
+          PrimarySource : "build_output"
+          EnvironmentVariables : jsonencode([
+            #       { name : "ENVIRONMENT", value : env.name },
+          ])
+        },
+        namespace : null
     }])
   )
 

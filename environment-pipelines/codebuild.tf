@@ -194,6 +194,17 @@ resource "aws_iam_role" "trigger_pipeline" {
   tags               = local.tags
 }
 
+data "aws_iam_policy_document" "assume_trigger_pipeline" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
 resource "aws_iam_role_policy" "trigger_pipeline" {
   name   = "${var.application}-${var.pipeline_name}-trigger-pipeline"
   role   = aws_iam_role.environment_pipeline_codepipeline.name
@@ -211,17 +222,6 @@ data "aws_iam_policy_document" "trigger_pipeline" {
   }
 }
 
-data "aws_iam_policy_document" "assume_trigger_pipeline" {
-  statement {
-    effect = "Allow"
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-    actions = ["sts:AssumeRole"]
-  }
-}
-
 # NON PROD Assume role role
 resource "aws_iam_role" "assume_role_to_trigger_codepipeline" {
   name               = "${var.application}-${var.pipeline_name}-assume-role-to-trigger-codepipeline"
@@ -230,9 +230,9 @@ resource "aws_iam_role" "assume_role_to_trigger_codepipeline" {
 }
 
 resource "aws_iam_role_policy" "assume_role_to_trigger_pipeline_policy" {
-  name        = "${var.application}-${var.pipeline_name}-assume-role-to-trigger-codepipeline-policy"
-  role        = aws_iam_role.assume_role_to_trigger_codepipeline.name
-  policy      = data.aws_iam_policy_document.assume_role_to_trigger_codepipeline_policy_document.json
+  name   = "${var.application}-${var.pipeline_name}-assume-role-to-trigger-codepipeline-policy"
+  role   = aws_iam_role.assume_role_to_trigger_codepipeline.name
+  policy = data.aws_iam_policy_document.assume_role_to_trigger_codepipeline_policy_document.json
 }
 
 data "aws_iam_policy_document" "assume_role_to_trigger_codepipeline_policy_document" {
