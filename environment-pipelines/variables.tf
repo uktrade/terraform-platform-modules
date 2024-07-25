@@ -41,13 +41,14 @@ variable "trigger_on_push" {
 }
 
 variable "pipeline_that_gets_triggered" {
-  type    = string
+  type = string
 }
 
 variable "triggered_by" {
-  type    = string
+  type = string
 }
 
-# variable "pipelines" {
-#   type = any
-# }
+variable "all_pipelines" {
+  type    = any
+  default = {}
+}
