@@ -87,12 +87,14 @@ locals {
   ]
 
   # We flatten a list of lists for each env:
-  triggered_pipeline_account_role = "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_that_gets_triggered}-trigger-pipeline"
-  target_pipeline                 = "${var.application}-${var.pipeline_that_gets_triggered}-environment-pipeline"
+  triggers_another_pipeline = var.pipeline_that_gets_triggered != null
+
+  triggered_pipeline_account_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_that_gets_triggered}-trigger-pipeline" : null
+  target_pipeline                 = local.triggers_another_pipeline ? "${var.application}-${var.pipeline_that_gets_triggered}-environment-pipeline" : null
 
 
   all_stages = flatten(
-    concat(local.initial_stages, [
+    concat(local.initial_stages, local.triggers_another_pipeline ? [
       {
         type : "trigger",
         stage_name : "Trigger-Pipeline",
@@ -108,7 +110,7 @@ locals {
           ])
         },
         namespace : null
-    }])
+    }] : [])
   )
 
   dns_ids                   = tolist(toset(flatten([for stage in local.all_stages : lookup(stage, "accounts", null) != null ? [stage.accounts.dns.id] : []])))
