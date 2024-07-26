@@ -11,6 +11,9 @@ locals {
   # Convert the env config into a list and add env name and vpc / requires_approval from the environments config.
   environment_config = [for name, env in var.environments : merge(lookup(local.base_env_config, name, {}), env, { "name" = name })]
 
+  # aws_account_names_and_ids = var.aws_account_names_and_ids
+  # triggered_account         = [for account in var.aws_account_names_and_ids : account if account.name == var.pipeline_that_gets_triggered]
+
   initial_stages = [for env in local.environment_config : [
     # The first element of the inner list for an env is the Plan stage.
     {
@@ -71,9 +74,9 @@ locals {
   ]
 
   # We flatten a list of lists for each env:
-  triggered_pipeline_account = "arn:aws:iam::891377058512:role/demodjango-prod-main-trigger-pipeline"
-  target_pipeline            = "${var.application}-${var.pipeline_that_gets_triggered}-environment-pipeline"
-  triggered_aws_profile      = "platform-prod"
+  triggered_pipeline_account_role = "arn:aws:iam::891377058512:role/demodjango-prod-main-trigger-pipeline"
+  target_pipeline                 = "${var.application}-${var.pipeline_that_gets_triggered}-environment-pipeline"
+  triggered_aws_profile           = "platform-prod"
 
   all_stages = flatten(
     concat(local.initial_stages, [
@@ -86,7 +89,7 @@ locals {
           ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-trigger"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([
-            { name : "TRIGGERED_ACCOUNT_ROLE_ARN", value : local.triggered_pipeline_account },
+            { name : "TRIGGERED_ACCOUNT_ROLE_ARN", value : local.triggered_pipeline_account_role },
             { name : "TRIGGERED_PIPELINE_NAME", value : local.target_pipeline },
             { name : "TRIGGERED_PIPELINE_AWS_PROFILE", value : local.triggered_aws_profile },
           ])

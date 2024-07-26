@@ -230,6 +230,6 @@ data "aws_iam_policy_document" "assume_role_to_trigger_codepipeline_policy_docum
     actions = [
       "sts:AssumeRole"
     ]
-    resources = [local.triggered_pipeline_account]
+    resources = [local.triggered_pipeline_account_role]
   }
 }
