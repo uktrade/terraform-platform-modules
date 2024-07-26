@@ -45,7 +45,7 @@ variable "slack_channel" {
   type    = string
   default = "/codebuild/slack_pipeline_notifications_channel"
 }
-# variable "triggered_by_environment" {
+# variable "triggered_by_pipeline" {
 #   type = string
 # }
 
