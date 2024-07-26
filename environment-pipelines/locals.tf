@@ -7,12 +7,25 @@ locals {
 
   stage_config = yamldecode(file("${path.module}/stage_config.yml"))
 
-  base_env_config = { for name, config in var.environment_config : name => merge(lookup(var.environment_config, "*", {}), config) }
+  base_env_config = { for name, config in var.environment_config : name => merge(lookup(var.environment_config, "*", {}), config) if name != "*" }
+
+  extracted_account_names_and_ids = toset(flatten([
+    for env, env_config in local.base_env_config : [
+      for account_type, account_details in env_config.accounts : {
+        "name" = account_details.name,
+        "id"   = account_details.id
+      }
+    ]
+  ]))
+
+  account_map = { for account in local.extracted_account_names_and_ids : account["name"] => account["id"] }
+
   # Convert the env config into a list and add env name and vpc / requires_approval from the environments config.
   environment_config = [for name, env in var.environments : merge(lookup(local.base_env_config, name, {}), env, { "name" = name })]
 
-  # aws_account_names_and_ids = var.aws_account_names_and_ids
-  # triggered_account         = [for account in var.aws_account_names_and_ids : account if account.name == var.pipeline_that_gets_triggered]
+  triggered_pipeline_account_name = var.all_pipelines[var.pipeline_that_gets_triggered].account
+  triggered_account_id            = local.account_map[local.triggered_pipeline_account_name]
+
 
   initial_stages = [for env in local.environment_config : [
     # The first element of the inner list for an env is the Plan stage.
@@ -74,9 +87,9 @@ locals {
   ]
 
   # We flatten a list of lists for each env:
-  triggered_pipeline_account_role = "arn:aws:iam::891377058512:role/demodjango-prod-main-trigger-pipeline"
+  triggered_pipeline_account_role = "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_that_gets_triggered}-trigger-pipeline"
   target_pipeline                 = "${var.application}-${var.pipeline_that_gets_triggered}-environment-pipeline"
-  triggered_aws_profile           = "platform-prod"
+
 
   all_stages = flatten(
     concat(local.initial_stages, [
@@ -91,7 +104,7 @@ locals {
           EnvironmentVariables : jsonencode([
             { name : "TRIGGERED_ACCOUNT_ROLE_ARN", value : local.triggered_pipeline_account_role },
             { name : "TRIGGERED_PIPELINE_NAME", value : local.target_pipeline },
-            { name : "TRIGGERED_PIPELINE_AWS_PROFILE", value : local.triggered_aws_profile },
+            { name : "TRIGGERED_PIPELINE_AWS_PROFILE", value : local.triggered_pipeline_account_name },
           ])
         },
         namespace : null

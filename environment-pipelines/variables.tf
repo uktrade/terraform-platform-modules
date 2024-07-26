@@ -2,21 +2,10 @@ variable "application" {
   type = string
 }
 
-# variable "all_pipelines" {
-#   type    = any
-#   default = {}
-# }
-
-# variable "aws_account_names_and_ids" {
-#   type = list(
-#     object(
-#       {
-#         name = string
-#         id   = string
-#       }
-#     )
-#   )
-# }
+variable "all_pipelines" {
+  type    = any
+  default = {}
+}
 
 variable "branch" {
   type    = string
@@ -64,3 +53,4 @@ variable "trigger_on_push" {
   type    = bool
   default = true
 }
+
