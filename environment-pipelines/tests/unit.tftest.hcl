@@ -265,8 +265,8 @@ run "test_code_pipeline" {
 
   # Build stage
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Build"
-    error_message = "Should be: Build"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Install-Build-Tools"
+    error_message = "Should be: Install-Build-Tools"
   }
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].name == "InstallTools"
@@ -705,8 +705,8 @@ run "test_stages" {
     error_message = "Should be: Source"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Build"
-    error_message = "Should be: Build"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Install-Build-Tools"
+    error_message = "Should be: Install-Build-Tools"
   }
 
   # Stage: dev plan
