@@ -166,17 +166,18 @@ resource "aws_codebuild_project" "trigger_other_environment_pipeline" {
 #------PROD-TARGET-ACCOUNT------
 resource "aws_iam_role" "trigger_pipeline" {
   for_each           = local.set_of_triggering_pipeline_names
-  name               = "${var.application}-${var.pipeline_name}-trigger-pipeline"
-  assume_role_policy = data.aws_iam_policy_document.assume_trigger_pipeline.json
+  name               = "${var.application}-${var.pipeline_name}-trigger-pipeline-from-${each.value}"
+  assume_role_policy = data.aws_iam_policy_document.assume_trigger_pipeline[each.value].json
   tags               = local.tags
 }
 
 data "aws_iam_policy_document" "assume_trigger_pipeline" {
+  for_each           = local.set_of_triggering_pipeline_names
   statement {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = ["arn:aws:iam::${local.account_map[var.all_pipelines[each.value].account]}:root"]
     }
     actions = ["sts:AssumeRole"]
   }
@@ -184,7 +185,7 @@ data "aws_iam_policy_document" "assume_trigger_pipeline" {
 
 resource "aws_iam_role_policy" "trigger_pipeline" {
   for_each = local.set_of_triggering_pipeline_names
-  name     = "${var.application}-${var.pipeline_name}-trigger-pipeline"
+  name     = "${var.application}-${var.pipeline_name}-trigger-pipeline-${each.value}"
   role     = aws_iam_role.trigger_pipeline[each.value].name
   policy   = data.aws_iam_policy_document.trigger_pipeline.json
 }
