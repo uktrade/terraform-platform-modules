@@ -172,7 +172,7 @@ resource "aws_iam_role" "trigger_pipeline" {
 }
 
 data "aws_iam_policy_document" "assume_trigger_pipeline" {
-  for_each           = local.set_of_triggering_pipeline_names
+  for_each = local.set_of_triggering_pipeline_names
   statement {
     effect = "Allow"
     principals {
