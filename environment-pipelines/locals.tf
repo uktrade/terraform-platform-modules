@@ -21,10 +21,14 @@ locals {
   account_map = { for account in local.extracted_account_names_and_ids : account["name"] => account["id"] }
 
   # Convert the env config into a list and add env name and vpc / requires_approval from the environments config.
-  environment_config = [for name, env in var.environments : merge(lookup(local.base_env_config, name, {}), env, { "name" = name })]
+  environment_config        = [for name, env in var.environments : merge(lookup(local.base_env_config, name, {}), env, { "name" = name })]
+  triggers_another_pipeline = var.pipeline_to_trigger != null
 
-  triggered_pipeline_account_name = var.all_pipelines[var.pipeline_that_gets_triggered].account
-  triggered_account_id            = local.account_map[local.triggered_pipeline_account_name]
+  triggered_pipeline_account_name = local.triggers_another_pipeline ? var.all_pipelines[var.pipeline_to_trigger].account : null
+  triggered_account_id            = local.triggers_another_pipeline ? local.account_map[local.triggered_pipeline_account_name] : null
+
+  list_of_triggering_pipelines     = [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name]
+  set_of_triggering_pipeline_names = toset([for pipeline in local.list_of_triggering_pipelines : pipeline.name])
 
 
   initial_stages = [for env in local.environment_config : [
@@ -87,10 +91,8 @@ locals {
   ]
 
   # We flatten a list of lists for each env:
-  triggers_another_pipeline = var.pipeline_that_gets_triggered != null
-
-  triggered_pipeline_account_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_that_gets_triggered}-trigger-pipeline" : null
-  target_pipeline                 = local.triggers_another_pipeline ? "${var.application}-${var.pipeline_that_gets_triggered}-environment-pipeline" : null
+  triggered_pipeline_account_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_to_trigger}-trigger-pipeline" : null
+  target_pipeline                 = local.triggers_another_pipeline ? "${var.application}-${var.pipeline_to_trigger}-environment-pipeline" : null
 
 
   all_stages = flatten(

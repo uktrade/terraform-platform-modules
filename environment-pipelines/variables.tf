@@ -32,7 +32,7 @@ variable "pipeline_name" {
   type = string
 }
 
-variable "pipeline_that_gets_triggered" {
+variable "pipeline_to_trigger" {
   type    = string
   default = null
 }
@@ -46,10 +46,6 @@ variable "slack_channel" {
   type    = string
   default = "/codebuild/slack_pipeline_notifications_channel"
 }
-
-# variable "triggered_by_pipeline" {
-#   type = string
-# }
 
 variable "trigger_on_push" {
   type    = bool
