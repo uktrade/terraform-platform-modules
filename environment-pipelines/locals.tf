@@ -91,7 +91,7 @@ locals {
   ]
 
   # We flatten a list of lists for each env:
-  triggered_pipeline_account_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_to_trigger}-trigger-pipeline" : null
+  triggered_pipeline_account_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_to_trigger}-trigger-pipeline-from-${var.pipeline_name}" : null
   target_pipeline                 = local.triggers_another_pipeline ? "${var.application}-${var.pipeline_to_trigger}-environment-pipeline" : null
 
 
