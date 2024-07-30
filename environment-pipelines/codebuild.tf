@@ -177,7 +177,7 @@ data "aws_iam_policy_document" "assume_trigger_pipeline" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${local.account_map[var.all_pipelines[each.value].account]}:root"]
+      identifiers = ["*"]
     }
     actions = ["sts:AssumeRole"]
   }
