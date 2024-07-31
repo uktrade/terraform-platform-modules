@@ -28,4 +28,5 @@ phases:
         fi
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} for the ${ENVIRONMENT} environment."
 artifacts:
-  files: []
+  files:
+    - "**/*"
