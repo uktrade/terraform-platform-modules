@@ -49,7 +49,8 @@ locals {
           { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
           { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
-          { name : "NEEDS_APPROVAL", value : lookup(env, "requires_approval", false) ? "yes" : "no" }
+          { name : "NEEDS_APPROVAL", value : lookup(env, "requires_approval", false) ? "yes" : "no" },
+          { name : "SLACK_THREAD_ID", value : "#{variables.SLACK_THREAD_ID}" },
         ])
       }
       namespace : "${env.name}-plan"
@@ -82,7 +83,8 @@ locals {
           { name : "ENVIRONMENT", value : env.name },
           { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
-          { name : "VPC", value : local.base_env_config[env.name].vpc }
+          { name : "VPC", value : local.base_env_config[env.name].vpc },
+          { name : "SLACK_THREAD_ID", value : "#{variables.SLACK_THREAD_ID}" },
         ])
       },
       namespace : null
@@ -109,6 +111,9 @@ locals {
             { name : "TRIGGERED_ACCOUNT_ROLE_ARN", value : local.triggered_pipeline_account_role },
             { name : "TRIGGERED_PIPELINE_NAME", value : local.target_pipeline },
             { name : "TRIGGERED_PIPELINE_AWS_PROFILE", value : local.triggered_pipeline_account_name },
+            { name : "SLACK_THREAD_ID", value : "#{variables.SLACK_THREAD_ID}" },
+            { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
+            { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
           ])
         },
         namespace : null
