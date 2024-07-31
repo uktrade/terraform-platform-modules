@@ -911,10 +911,11 @@ resource "aws_iam_role_policy" "trigger_pipeline" {
   for_each = local.set_of_triggering_pipeline_names
   name     = "${var.application}-${var.pipeline_name}-trigger-pipeline-from-${each.value}"
   role     = aws_iam_role.trigger_pipeline[each.value].name
-  policy   = data.aws_iam_policy_document.trigger_pipeline.json
+  policy   = data.aws_iam_policy_document.trigger_pipeline[each.value].json
 }
 
 data "aws_iam_policy_document" "trigger_pipeline" {
+  for_each = local.set_of_triggering_pipeline_names
   statement {
     actions = [
       "codepipeline:StartPipelineExecution",
