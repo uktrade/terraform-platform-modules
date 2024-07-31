@@ -1,17 +1,22 @@
 version: 0.2
 
+env:
+  parameter-store:
+    SLACK_TOKEN: /codebuild/slack_oauth_token
+
 phases:
   install:
     commands:
       - export PATH="${CODEBUILD_SRC_DIR}/build-tools/bin:$PATH"
+      - export PYTHONPATH="${CODEBUILD_SRC_DIR}/build-tools"
       - echo -e "\nAssume triggered account role to trigger ${TRIGGERED_PIPELINE_NAME} pipeline"
-      
+
       - assumed_role=$(aws sts assume-role --role-arn "${TRIGGERED_ACCOUNT_ROLE_ARN}" --role-session-name "trigger-prod-pipeline-$(date +%s)")
-      
+
       - PROD_AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId)
       - PROD_AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey)
       - PROD_AWS_SESSION_TOKEN=$(echo $assumed_role | jq -r .Credentials.SessionToken)
-      
+
       - export PROFILE_NAME="${TRIGGERED_PIPELINE_AWS_PROFILE}"
       # populates the ~/.aws/credentials file..
       - aws configure set aws_access_key_id "${PROD_AWS_ACCESS_KEY_ID}" --profile "${PROFILE_NAME}"
@@ -26,9 +31,9 @@ phases:
       - set -e
       - echo -e "\nTerraform Trigger Phase"
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Triggering pipeline name - ${TRIGGERED_PIPELINE_NAME} pipeline"
-      
-      - aws codepipeline start-pipeline-execution --name "${TRIGGERED_PIPELINE_NAME}" --profile  "${PROFILE_NAME} --pipeline-parameters "Name=SLACK_THREAD_ID,Value=${SLACK_REF}"
-  
+
+      - aws codepipeline start-pipeline-execution --name "${TRIGGERED_PIPELINE_NAME}" --profile  "${PROFILE_NAME}" --variables "name=SLACK_THREAD_ID,value=${SLACK_REF}"
+
   post_build:
     commands:
       - |
@@ -39,8 +44,6 @@ phases:
           MESSAGE="FAILED to trigger ${TRIGGERED_PIPELINE_NAME} pipeline"
         fi
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} for the ${ENVIRONMENT} environment."
-      
-      
 
 artifacts:
   files: []
