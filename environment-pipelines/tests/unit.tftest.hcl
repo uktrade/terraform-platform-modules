@@ -175,6 +175,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.access_artifact_store
+  values = {
+    json = "{\"Sid\": \"AccessArtifactStore\"}"
+  }
+}
+
 variables {
   application   = "my-app"
   repository    = "my-repository"
@@ -187,7 +194,7 @@ variables {
 
   all_pipelines = {
     my-pipeline = {
-      account             = "platform-sandbox"
+      account             = "sandbox"
       branch              = ""
       slack_channel       = ""
       trigger_on_push     = true
@@ -198,7 +205,7 @@ variables {
     }
 
     triggered-pipeline = {
-      account         = "platform-prod"
+      account         = "prod"
       branch          = ""
       slack_channel   = ""
       trigger_on_push = false
@@ -727,12 +734,64 @@ run "test_iam" {
   }
 }
 
-# run "test_triggering_pipelines" {
-#   assert {
-#     condition     = aws_iam_role.trigger_pipeline["my-pipeline"].name == "my-app-my-pipeline-trigger-pipeline-from-my-pipeline"
-#     error_message = ""
-#   }
-# }
+run "test_triggering_pipelines" {
+  command = plan
+
+  variables {
+    pipeline_to_trigger = "triggered-pipeline"
+  }
+
+  assert {
+    condition     = aws_iam_role_policy.assume_role_to_trigger_pipeline_policy[""].name == "my-app-my-pipeline-assume-role-to-trigger-codepipeline-policy"
+    error_message = ""
+  }
+
+  assert {
+    condition     =  local.triggers_another_pipeline
+    error_message = ""
+  }
+}
+
+run "test_triggered_pipelines" {
+  command = plan
+
+  variables {
+    pipeline_name = "triggered-pipeline"
+  }
+
+  assert {
+    condition     =  local.triggers_another_pipeline == false
+    error_message = ""
+  }
+
+  assert {
+    condition = aws_iam_role.trigger_pipeline["my-pipeline"].name == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    error_message = ""
+  }
+
+  assert {
+    condition =  aws_iam_role.trigger_pipeline["my-pipeline"].assume_role_policy == "{\"Sid\": \"AssumeTriggerCodePipeline\"}"
+    error_message = ""
+  }
+
+  assert {
+    condition     = jsonencode(aws_iam_role.trigger_pipeline["my-pipeline"].tags) == jsonencode(var.expected_tags)
+    error_message = ""
+  }
+
+  assert {
+    condition = aws_iam_role_policy.trigger_pipeline["my-pipeline"].name == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    error_message = ""
+  }
+
+  assert {
+    condition = aws_iam_role_policy.trigger_pipeline["my-pipeline"].role == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    error_message = ""
+  }
+
+  # aws_iam_role_policy.trigger_pipeline["my-pipeline"].policy cannot be tested on a plan
+
+}
 
 run "test_artifact_store" {
   command = plan
