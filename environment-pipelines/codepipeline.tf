@@ -8,6 +8,12 @@ resource "aws_codepipeline" "environment_pipeline" {
   depends_on    = [aws_iam_role_policy.artifact_store_access_for_environment_codebuild]
   pipeline_type = "V2"
 
+  variable {
+    name          = "SLACK_THREAD_ID"
+    default_value = "NONE"
+    description   = "This can be set by a triggering pipeline to continue an existing message thread"
+  }
+
   artifact_store {
     location = module.artifact_store.bucket_name
     type     = "S3"

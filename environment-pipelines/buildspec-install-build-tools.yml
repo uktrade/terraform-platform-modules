@@ -28,11 +28,16 @@ phases:
       - export "PATH=$(pwd)/bin:$PATH"
       - export PYTHONPATH=$(pwd)
       - | 
-          export SLACK_REF=$(platform-helper notify environment-progress "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" \
-          "*Deploying ${APPLICATION} environments*" \
-          --build-arn "${CODEBUILD_BUILD_ARN}" \
-          --repository "${REPOSITORY}" \
-          --commit-sha "${CODEBUILD_RESOLVED_SOURCE_VERSION: -7}")
+          if [ "${SLACK_THREAD_ID}" == "NONE" ]
+          then
+            export SLACK_REF=$(platform-helper notify environment-progress "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" \
+            "*Deploying ${APPLICATION} environments*" \
+            --build-arn "${CODEBUILD_BUILD_ARN}" \
+            --repository "${REPOSITORY}" \
+            --commit-sha "${CODEBUILD_RESOLVED_SOURCE_VERSION: -7}")
+          else
+            export SLACK_REF="${SLACK_THREAD_ID}"
+          fi
       - cd bin
       - curl -s -qL -o terraform_install.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
       - unzip terraform_install.zip

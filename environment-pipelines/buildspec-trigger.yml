@@ -25,9 +25,22 @@ phases:
     commands:
       - set -e
       - echo -e "\nTerraform Trigger Phase"
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Triggering pipeline name - ${TRIGGERED_PIPELINE_NAME} pipeline"
+      
+      - aws codepipeline start-pipeline-execution --name "${TRIGGERED_PIPELINE_NAME}" --profile  "${PROFILE_NAME} --pipeline-parameters "Name=SLACK_THREAD_ID,Value=${SLACK_REF}"
+  
+  post_build:
+    commands:
+      - |
+        if [ "${CODEBUILD_BUILD_SUCCEEDING}" == "1" ]
+        then
+          MESSAGE="SUCCESSFULLY triggered ${TRIGGERED_PIPELINE_NAME} pipeline"
+        else
+          MESSAGE="FAILED to trigger ${TRIGGERED_PIPELINE_NAME} pipeline"
+        fi
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} for the ${ENVIRONMENT} environment."
       
       
-      - aws codepipeline start-pipeline-execution --name "${TRIGGERED_PIPELINE_NAME}" --profile  "${PROFILE_NAME}"
 
 artifacts:
   files: []
