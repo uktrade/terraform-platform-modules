@@ -747,7 +747,17 @@ run "test_triggering_pipelines" {
   }
 
   assert {
-    condition     =  local.triggers_another_pipeline
+    condition     = aws_iam_role_policy.assume_role_to_trigger_pipeline_policy[""].role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = ""
+  }
+
+  assert {
+    condition     = aws_iam_role_policy.assume_role_to_trigger_pipeline_policy[""].policy == "{\"Sid\": \"AssumeRoleToTriggerCodePipeline\"}"
+    error_message = ""
+  }
+
+  assert {
+    condition     = local.triggers_another_pipeline
     error_message = ""
   }
 }
@@ -760,17 +770,17 @@ run "test_triggered_pipelines" {
   }
 
   assert {
-    condition     =  local.triggers_another_pipeline == false
+    condition     = local.triggers_another_pipeline == false
     error_message = ""
   }
 
   assert {
-    condition = aws_iam_role.trigger_pipeline["my-pipeline"].name == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    condition     = aws_iam_role.trigger_pipeline["my-pipeline"].name == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
     error_message = ""
   }
 
   assert {
-    condition =  aws_iam_role.trigger_pipeline["my-pipeline"].assume_role_policy == "{\"Sid\": \"AssumeTriggerCodePipeline\"}"
+    condition     = aws_iam_role.trigger_pipeline["my-pipeline"].assume_role_policy == "{\"Sid\": \"AssumeTriggerCodePipeline\"}"
     error_message = ""
   }
 
@@ -780,12 +790,12 @@ run "test_triggered_pipelines" {
   }
 
   assert {
-    condition = aws_iam_role_policy.trigger_pipeline["my-pipeline"].name == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    condition     = aws_iam_role_policy.trigger_pipeline["my-pipeline"].name == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
     error_message = ""
   }
 
   assert {
-    condition = aws_iam_role_policy.trigger_pipeline["my-pipeline"].role == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    condition     = aws_iam_role_policy.trigger_pipeline["my-pipeline"].role == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
     error_message = ""
   }
 
