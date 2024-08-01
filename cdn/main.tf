@@ -6,9 +6,10 @@ data "aws_wafv2_web_acl" "waf-default" {
 
 resource "aws_acm_certificate" "certificate" {
   provider = aws.domain-cdn
-  for_each = local.cdn_domains_list
 
-  domain_name       = each.key
+  subject_alternative_names = coalesce(try((keys(local.cdn_domains_list)), null), [])
+
+  domain_name       = local.domain_name
   validation_method = "DNS"
   key_algorithm     = "RSA_2048"
   tags              = local.tags
@@ -19,24 +20,23 @@ resource "aws_acm_certificate" "certificate" {
 
 resource "aws_acm_certificate_validation" "cert-validate" {
   provider                = aws.domain-cdn
-  for_each                = local.cdn_domains_list
-  certificate_arn         = aws_acm_certificate.certificate[each.key].arn
+  certificate_arn         = aws_acm_certificate.certificate.arn
   validation_record_fqdns = [for record in aws_route53_record.validation-record : record.fqdn]
 }
 
 data "aws_route53_zone" "domain-root" {
   provider = aws.domain-cdn
-  for_each = local.cdn_domains_list
-  name     = each.value[1]
+  count    = length(local.cdn_domains_list)
+  name     = local.cdn_domains_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
 }
 
 resource "aws_route53_record" "validation-record" {
   provider = aws.domain-cdn
-  for_each = local.cdn_domains_list
-  zone_id  = data.aws_route53_zone.domain-root[each.key].zone_id
-  name     = tolist(aws_acm_certificate.certificate[each.key].domain_validation_options)[0].resource_record_name
-  type     = tolist(aws_acm_certificate.certificate[each.key].domain_validation_options)[0].resource_record_type
-  records  = [tolist(aws_acm_certificate.certificate[each.key].domain_validation_options)[0].resource_record_value]
+  count    = length(local.cdn_domains_list)
+  zone_id  = data.aws_route53_zone.domain-root[count.index].zone_id
+  name     = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
+  type     = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
+  records  = [tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_value]
   ttl      = 300
 }
 
@@ -85,7 +85,7 @@ resource "aws_cloudfront_distribution" "standard" {
 
   viewer_certificate {
     cloudfront_default_certificate = false
-    acm_certificate_arn            = aws_acm_certificate.certificate[each.key].arn
+    acm_certificate_arn            = aws_acm_certificate.certificate.arn
     minimum_protocol_version       = local.cdn_defaults.viewer_certificate.minimum_protocol_version
     ssl_support_method             = local.cdn_defaults.viewer_certificate.ssl_support_method
   }
@@ -116,7 +116,7 @@ resource "aws_route53_record" "cdn-address" {
   provider = aws.domain-cdn
 
   for_each = local.cdn_records
-  zone_id  = data.aws_route53_zone.domain-root[each.key].zone_id
+  zone_id  = data.aws_route53_zone.domain-root[index(keys(local.cdn_records), each.key)].zone_id
   name     = each.key
   type     = "A"
   alias {
