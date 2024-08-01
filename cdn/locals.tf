@@ -9,10 +9,10 @@ locals {
 
   # The primary domain for every application follows the naming standard documented under https://github.com/uktrade/terraform-platform-modules/blob/main/README.md#application-load-balancer-module
   domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "${var.application}.prod.uktrade.digital") : coalesce(var.config.env_root, "${var.environment}.${var.application}.uktrade.digital")
+  domain_name   = var.environment == "prod" ? "${local.domain_prefix}.${local.domain_suffix}" : "${local.domain_prefix}.${local.domain_suffix}"
+  domain_prefix = coalesce(var.config.domain_prefix, "internal")
 
   # Cull the domain from the cdn_domains_list if "disable_cdn" is set in the value list.
-  domain_prefix    = coalesce(var.config.domain_prefix, "internal")
-  domain_name      = var.environment == "prod" ? "${local.domain_prefix}.${local.domain_suffix}" : "${local.domain_prefix}.${local.domain_suffix}"
   cdn_domains_list = try({ for k, v in var.config.cdn_domains_list : k => v if !contains(v, "disable_cdn") }, {})
 
   # To avoid overwrites in prod we do not want to update R53 records by default, can be bypassed if "enable_record" is set in the value list.
