@@ -757,11 +757,32 @@ data "aws_iam_policy_document" "iam" {
   }
 }
 
+data "aws_iam_policy_document" "codepipeline" {
+  statement {
+    actions = [
+      "codepipeline:GetPipelineState",
+      "codepipeline:GetPipelineExecution",
+      "codepipeline:ListPipelineExecutions",
+      "codepipeline:StopPipelineExecution",
+    ]
+    resources = [
+      "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.application}-${var.pipeline_name}-environment-pipeline"
+    ]
+  }
+}
+
 resource "aws_iam_policy" "iam" {
   name        = "${var.application}-${var.pipeline_name}-pipeline-iam"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to manage roles"
   policy      = data.aws_iam_policy_document.iam.json
+}
+
+resource "aws_iam_policy" "codepipeline" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-codepipeline"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to codepipelines"
+  policy      = data.aws_iam_policy_document.codepipeline.json
 }
 
 # Roles
@@ -777,6 +798,7 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
   managed_policy_arns = [
     aws_iam_policy.iam.arn,
     aws_iam_policy.cloudformation.arn,
+    aws_iam_policy.codepipeline.arn,
     aws_iam_policy.redis.arn,
     aws_iam_policy.postgres.arn,
     aws_iam_policy.opensearch.arn,
