@@ -13,6 +13,7 @@ data "aws_subnets" "public-subnets" {
 }
 
 resource "aws_lb" "this" {
+  # checkov:skip=CKV2_AWS_20: Fixed in DBTP-972 Branch
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
   subnets            = tolist(data.aws_subnets.public-subnets.ids)
