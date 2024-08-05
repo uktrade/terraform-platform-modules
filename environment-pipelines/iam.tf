@@ -923,7 +923,7 @@ data "aws_iam_policy_document" "assume_trigger_pipeline" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = ["codepipeline.amazonaws.com"]
     }
     actions = ["sts:AssumeRole"]
   }
