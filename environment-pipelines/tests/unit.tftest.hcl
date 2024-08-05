@@ -269,6 +269,21 @@ run "test_code_pipeline" {
   }
   # aws_codepipeline.environment_pipeline.role_arn cannot be tested on a plan
   assert {
+    condition     = aws_codepipeline.environment_pipeline.variable[0].name == "SLACK_THREAD_ID"
+    error_message = "Should be: 'SLACK_THREAD_ID'"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.variable[0].default_value == "NONE"
+    error_message = "Should be: 'NONE'"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.variable[0].description == "This can be set by a triggering pipeline to continue an existing message thread"
+    error_message = "Should be: 'This can be set by a triggering pipeline to continue an existing message thread'"
+  }
+
+  assert {
     condition     = tolist(aws_codepipeline.environment_pipeline.artifact_store)[0].location == "my-app-my-pipeline-environment-pipeline-artifact-store"
     error_message = "Should be: my-app-my-pipeline-environment-pipeline-artifact-store"
   }
@@ -841,6 +856,66 @@ run "test_triggering_pipelines" {
     condition     = local.triggers_another_pipeline
     error_message = ""
   }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].name == "Trigger-Pipeline"
+    error_message = "Should be: Trigger-Pipeline"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].name == "Trigger"
+    error_message = "Action name incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].category == "Build"
+    error_message = "Action category incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].owner == "AWS"
+    error_message = "Action owner incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].provider == "CodeBuild"
+    error_message = "Action provider incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].version == "1"
+    error_message = "Action version incorrect"
+  }
+
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[7].action[0].input_artifacts) == 1
+    error_message = "Input artifacts incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].input_artifacts[0] == "build_output"
+    error_message = "Input artifacts incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.EnvironmentVariables == "[{\"name\":\"TRIGGERED_ACCOUNT_ROLE_ARN\",\"value\":\"arn:aws:iam::000123456789:role/my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline\"},{\"name\":\"TRIGGERED_PIPELINE_NAME\",\"value\":\"my-app-triggered-pipeline-environment-pipeline\"},{\"name\":\"TRIGGERED_PIPELINE_AWS_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    error_message = "Configuration Env Vars incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-trigger"
+    error_message = "Configuration ProjectName incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.PrimarySource == "build_output"
+    error_message = "Configuration PrimarySource incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].namespace == null
+    error_message = "Namespace incorrect"
+  }
 }
 
 run "test_triggered_pipelines" {
@@ -882,6 +957,10 @@ run "test_triggered_pipelines" {
 
   # aws_iam_role_policy.trigger_pipeline["my-pipeline"].policy cannot be tested on a plan
 
+  assert {
+    condition     = length(toset(local.list_of_triggering_pipelines)) == 1
+    error_message = ""
+  }
 }
 
 run "test_artifact_store" {
