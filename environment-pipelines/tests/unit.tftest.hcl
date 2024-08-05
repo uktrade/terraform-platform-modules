@@ -182,6 +182,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.codepipeline
+  values = {
+    json = "{\"Sid\": \"codepipeline\"}"
+  }
+}
+
 variables {
   application   = "my-app"
   repository    = "my-repository"
@@ -730,6 +737,11 @@ run "test_iam" {
   # IAM Policy not currently computed by mock due to https://github.com/hashicorp/terraform-provider-aws/issues/36700. Using override
   assert {
     condition     = aws_iam_policy.iam.policy == "{\"Sid\": \"IAM\"}"
+    error_message = "Unexpected policy"
+  }
+
+  assert {
+    condition     = aws_iam_policy.codepipeline.policy == "{\"Sid\": \"codepipeline\"}"
     error_message = "Unexpected policy"
   }
 }
