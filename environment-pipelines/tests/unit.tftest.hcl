@@ -754,18 +754,87 @@ run "test_triggering_pipelines" {
   }
 
   assert {
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline.name == "my-app-my-pipeline-environment-pipeline-trigger"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-trigger"
+  }
+
+  assert {
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline.description == "Triggers a target pipeline"
+    error_message = "Should be: 'Triggers a target pipeline'"
+  }
+
+  assert {
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline.build_timeout == 5
+    error_message = "Should be: 5"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.artifacts).type == "CODEPIPELINE"
+    error_message = "Should be: 'CODEPIPELINE'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.cache).type == "S3"
+    error_message = "Should be: 'S3'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.cache).location == "my-app-my-pipeline-environment-pipeline-artifact-store"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-artifact-store'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.environment).compute_type == "BUILD_GENERAL1_SMALL"
+    error_message = "Should be: 'BUILD_GENERAL1_SMALL'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    error_message = "Should be: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.environment).type == "LINUX_CONTAINER"
+    error_message = "Should be: 'LINUX_CONTAINER'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.environment).image_pull_credentials_type == "CODEBUILD"
+    error_message = "Should be: 'CODEBUILD'"
+  }
+
+  assert {
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline.logs_config[0].cloudwatch_logs[0].group_name == "codebuild/my-app-my-pipeline-environment-terraform/log-group"
+    error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-group'"
+  }
+  assert {
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline.logs_config[0].cloudwatch_logs[0].stream_name == "codebuild/my-app-my-pipeline-environment-terraform/log-stream"
+    error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-group'"
+  }
+
+  assert {
     condition     = aws_iam_role_policy.assume_role_to_trigger_pipeline_policy[""].name == "my-app-my-pipeline-assume-role-to-trigger-codepipeline-policy"
-    error_message = ""
+    error_message = "Should be: 'my-app-my-pipeline-assume-role-to-trigger-codepipeline-policy"
   }
 
   assert {
     condition     = aws_iam_role_policy.assume_role_to_trigger_pipeline_policy[""].role == "my-app-my-pipeline-environment-pipeline-codebuild"
-    error_message = ""
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild"
   }
 
   assert {
     condition     = aws_iam_role_policy.assume_role_to_trigger_pipeline_policy[""].policy == "{\"Sid\": \"AssumeRoleToTriggerCodePipeline\"}"
-    error_message = ""
+    error_message = "Should be: 'AssumeRoleToTriggerCodePipeline'"
+  }
+
+  assert {
+    condition     = length(regexall(".*echo \"Terraform Trigger Phase\".*", aws_codebuild_project.trigger_other_environment_pipeline.source[0].buildspec)) > 0
+    error_message = "Should contain: Terraform Trigger Phase"
+  }
+
+  assert {
+    condition     = jsonencode(aws_codebuild_project.trigger_other_environment_pipeline.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 
   assert {
