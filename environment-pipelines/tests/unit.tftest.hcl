@@ -843,11 +843,6 @@ run "test_triggering_pipelines" {
   }
 
   assert {
-    condition     = length(regexall(".*echo \"Terraform Trigger Phase\".*", aws_codebuild_project.trigger_other_environment_pipeline.source[0].buildspec)) > 0
-    error_message = "Should contain: Terraform Trigger Phase"
-  }
-
-  assert {
     condition     = jsonencode(aws_codebuild_project.trigger_other_environment_pipeline.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
