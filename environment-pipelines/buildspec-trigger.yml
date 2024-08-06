@@ -29,7 +29,7 @@ phases:
   build:
     commands:
       - set -e
-      - message="Triggering ${TRIGGERED_PIPELINE_NAME} pipeline"
+      - Message="Triggering ${TRIGGERED_PIPELINE_NAME} pipeline"
       - echo "${message}"
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${message}"
 

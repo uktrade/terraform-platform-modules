@@ -914,11 +914,11 @@ resource "aws_iam_role_policy" "copilot_assume_role_for_environment_codebuild" {
 resource "aws_iam_role" "trigger_pipeline" {
   for_each           = local.set_of_triggering_pipeline_names
   name               = "${var.application}-${var.pipeline_name}-trigger-pipeline-from-${each.value}"
-  assume_role_policy = data.aws_iam_policy_document.assume_trigger_pipeline.json
+  assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
   tags               = local.tags
 }
 
-data "aws_iam_policy_document" "assume_trigger_pipeline" {
+data "aws_iam_policy_document" "assume_codepipeline_role" {
   statement {
     effect = "Allow"
     principals {

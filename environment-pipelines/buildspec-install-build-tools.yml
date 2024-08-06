@@ -27,7 +27,6 @@ phases:
       - pip install --target . --quiet dbt-platform-helper==$PLATFORM_HELPER_VERSION
       - export "PATH=$(pwd)/bin:$PATH"
       - export PYTHONPATH=$(pwd)
-      - echo "SLACK THREAD ID is - ${SLACK_THREAD_ID}"
       - | 
           if [ "${SLACK_THREAD_ID}" == "NONE" ]
           then
