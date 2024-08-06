@@ -18,7 +18,7 @@ phases:
       - PROD_AWS_SESSION_TOKEN=$(echo $assumed_role | jq -r .Credentials.SessionToken)
 
       - export PROFILE_NAME="${TRIGGERED_PIPELINE_AWS_PROFILE}"
-      # populates the ~/.aws/credentials file..
+      # Populate the ~/.aws/credentials file..
       - aws configure set aws_access_key_id "${PROD_AWS_ACCESS_KEY_ID}" --profile "${PROFILE_NAME}"
       - aws configure set aws_secret_access_key "${PROD_AWS_SECRET_ACCESS_KEY}" --profile  "${PROFILE_NAME}"
       - aws configure set aws_session_token "${PROD_AWS_SESSION_TOKEN}" --profile  "${PROFILE_NAME}"
