@@ -92,7 +92,6 @@ locals {
     ]
   ]
 
-  # We flatten a list of lists for each env:
   triggered_pipeline_account_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_to_trigger}-trigger-pipeline-from-${var.pipeline_name}" : null
   target_pipeline                 = local.triggers_another_pipeline ? "${var.application}-${var.pipeline_to_trigger}-environment-pipeline" : null
 
@@ -122,8 +121,6 @@ locals {
 
   dns_ids                   = tolist(toset(flatten([for stage in local.all_stages : lookup(stage, "accounts", null) != null ? [stage.accounts.dns.id] : []])))
   dns_account_assumed_roles = [for id in local.dns_ids : "arn:aws:iam::${id}:role/environment-pipeline-assumed-role"]
-  # triggered_pipeline_account = "arn:aws:iam::${local.environment_config[0].prod.accounts.deploy.id}:role/environment-pipeline-assumed-role"
-
 
 
   # Merge in the stage specific config from the stage_config.yml file:
