@@ -918,16 +918,6 @@ resource "aws_iam_role" "trigger_pipeline" {
   tags               = local.tags
 }
 
-data "aws_iam_policy_document" "assume_codepipeline_role" {
-  statement {
-    effect = "Allow"
-    principals {
-      type        = "Service"
-      identifiers = ["codepipeline.amazonaws.com"]
-    }
-    actions = ["sts:AssumeRole"]
-  }
-}
 
 resource "aws_iam_role_policy" "trigger_pipeline" {
   for_each = local.set_of_triggering_pipeline_names
