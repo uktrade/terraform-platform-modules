@@ -29,8 +29,9 @@ phases:
   build:
     commands:
       - set -e
-      - echo "Terraform Trigger Phase"
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Triggering pipeline name - ${TRIGGERED_PIPELINE_NAME} pipeline"
+      - message="Triggering ${TRIGGERED_PIPELINE_NAME} pipeline"
+      - echo "${message}"
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${message}"
 
       - aws codepipeline start-pipeline-execution --name "${TRIGGERED_PIPELINE_NAME}" --profile  "${PROFILE_NAME}" --variables "name=SLACK_THREAD_ID,value=${SLACK_REF}"
 
