@@ -24,7 +24,7 @@ phases:
         then
           MESSAGE="Terraform apply phase complete"
         else
-          MESSAGE="Terraform apply phase FAILED"
+          MESSAGE=":alert: @here Terraform apply phase FAILED"
         fi
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} for the ${ENVIRONMENT} environment."
 artifacts:

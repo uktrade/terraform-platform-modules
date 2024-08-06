@@ -45,7 +45,7 @@ phases:
             platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Waiting for approval for the ${ENVIRONMENT} environment."
           fi
         else
-          platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Terraform plan phase FAILED for the ${ENVIRONMENT} environment."
+          platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" ":alert: @here Terraform plan phase FAILED for the ${ENVIRONMENT} environment."
         fi
 artifacts:
   files:

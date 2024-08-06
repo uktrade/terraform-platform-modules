@@ -42,7 +42,7 @@ phases:
         then
           MESSAGE="SUCCESSFULLY triggered ${TRIGGERED_PIPELINE_NAME} pipeline"
         else
-          MESSAGE="FAILED to trigger ${TRIGGERED_PIPELINE_NAME} pipeline"
+          MESSAGE=":alert: @here FAILED to trigger ${TRIGGERED_PIPELINE_NAME} pipeline"
         fi
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} for the ${ENVIRONMENT} environment."
 
