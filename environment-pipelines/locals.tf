@@ -113,6 +113,7 @@ locals {
             { name : "SLACK_THREAD_ID", value : "#{variables.SLACK_THREAD_ID}" },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
+            { name : "ACCOUNT_NAME", value : local.triggered_pipeline_account_name },
           ])
         },
         namespace : null

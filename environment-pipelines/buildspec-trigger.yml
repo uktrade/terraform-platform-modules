@@ -29,9 +29,9 @@ phases:
   build:
     commands:
       - set -e
-      - Message="Triggering ${TRIGGERED_PIPELINE_NAME} pipeline"
-      - echo "${message}"
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${message}"
+      - MESSAGE="Triggering ${TRIGGERED_PIPELINE_NAME} pipeline"
+      - echo "${MESSAGE}"
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
 
       - aws codepipeline start-pipeline-execution --name "${TRIGGERED_PIPELINE_NAME}" --profile  "${PROFILE_NAME}" --variables "name=SLACK_THREAD_ID,value=${SLACK_REF}"
 
@@ -40,11 +40,13 @@ phases:
       - |
         if [ "${CODEBUILD_BUILD_SUCCEEDING}" == "1" ]
         then
-          MESSAGE="SUCCESSFULLY triggered ${TRIGGERED_PIPELINE_NAME} pipeline"
+          MESSAGE="SUCCESSFULLY triggered ${TRIGGERED_PIPELINE_NAME}"
+          ADDITIONAL_OPTIONS=""
         else
-          MESSAGE=":alert: @here FAILED to trigger ${TRIGGERED_PIPELINE_NAME} pipeline"
+          MESSAGE=":alert: @here FAILED to trigger ${TRIGGERED_PIPELINE_NAME}"
+          ADDITIONAL_OPTIONS="--send-to-main-channel"
         fi
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} for the ${ENVIRONMENT} environment."
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} in the ${ACCOUNT_NAME} account." ${ADDITIONAL_OPTIONS}
 
 artifacts:
   files: []
