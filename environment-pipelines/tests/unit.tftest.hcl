@@ -911,6 +911,11 @@ run "test_triggering_pipelines" {
     condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].namespace == null
     error_message = "Namespace incorrect"
   }
+
+  assert {
+    condition     = local.triggered_pipeline_account_role == "arn:aws:iam::000123456789:role/my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    error_message = "Triggered pipeline account role is incorrect"
+  }
 }
 
 run "test_triggered_pipelines" {
@@ -953,8 +958,13 @@ run "test_triggered_pipelines" {
   # aws_iam_role_policy.trigger_pipeline["my-pipeline"].policy cannot be tested on a plan
 
   assert {
-    condition     = length(toset(local.list_of_triggering_pipelines)) == 1
-    error_message = ""
+    condition     = local.list_of_triggering_pipelines[0].name == "my-pipeline"
+    error_message = "List of triggering pipelines should include my-pipeline"
+  }
+
+  assert {
+    condition     = contains(local.set_of_triggering_pipeline_names, "my-pipeline")
+    error_message = "The set of triggering pipeline names should contain my-pipeline"
   }
 
   assert {
