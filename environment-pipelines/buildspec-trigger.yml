@@ -3,6 +3,7 @@ version: 0.2
 env:
   parameter-store:
     SLACK_TOKEN: /codebuild/slack_oauth_token
+    SLACK_CHANNEL: /codebuild/slack_oauth_channel
 
 phases:
   install:
@@ -44,7 +45,7 @@ phases:
           ADDITIONAL_OPTIONS=""
         else
           MESSAGE=":alert: @here FAILED to trigger ${TRIGGERED_PIPELINE_NAME}"
-          ADDITIONAL_OPTIONS="--send-to-main-channel"
+          ADDITIONAL_OPTIONS="--send-to-main-channel ${SLACK_CHANNEL}"
         fi
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} in the ${ACCOUNT_NAME} account." ${ADDITIONAL_OPTIONS}
 
