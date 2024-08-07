@@ -182,6 +182,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.assume_trigger_pipeline
+  values = {
+    json = "{\"Sid\": \"AssumeTriggerPolicy\"}"
+  }
+}
+
 variables {
   application   = "my-app"
   repository    = "my-repository"
@@ -924,7 +931,7 @@ run "test_triggered_pipelines" {
   }
 
   assert {
-    condition     = aws_iam_role.trigger_pipeline["my-pipeline"].assume_role_policy == "{\"Sid\": \"AssumePipelineRole\"}"
+    condition     = aws_iam_role.trigger_pipeline["my-pipeline"].assume_role_policy == "{\"Sid\": \"AssumeTriggerPolicy\"}"
     error_message = ""
   }
 
