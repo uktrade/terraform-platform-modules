@@ -50,9 +50,9 @@ resource "aws_lb_listener" "alb-listener" {
 resource "aws_security_group" "alb-security-group" {
   # checkov:skip=CKV2_AWS_5: False Positive in Checkov - https://github.com/bridgecrewio/checkov/issues/3010
   # checkov:skip=CKV_AWS_260: Skipping as Variablised 
+  # checkov:skip=CKV_AWS_23: Skipping as description is added from managed-by tag.  Adding in a description forces a SG replacement.
   for_each = local.protocols
   name     = "${var.application}-${var.environment}-alb-${each.key}"
-  # description = "Security group for application load balancer"
   vpc_id = data.aws_vpc.vpc.id
   tags   = local.tags
   ingress {
