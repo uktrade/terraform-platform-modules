@@ -47,7 +47,7 @@ phases:
           MESSAGE=":alert: Terraform plan phase FAILED for the ${ENVIRONMENT} environment."
           ADDITIONAL_OPTIONS="--send-to-main-channel true"
         fi
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}" ${ADDITIONAL_OPTIONS}
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}" "${ADDITIONAL_OPTIONS}"
 artifacts:
   files:
     - "**/*"
