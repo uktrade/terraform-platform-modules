@@ -155,9 +155,37 @@ override_data {
 }
 
 override_data {
+  target = data.aws_iam_policy_document.trigger_pipeline
+  values = {
+    json = "{\"Sid\": \"TriggerCodePipeline\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.assume_role_to_trigger_codepipeline_policy_document
+  values = {
+    json = "{\"Sid\": \"AssumeRoleToTriggerCodePipeline\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.access_artifact_store
+  values = {
+    json = "{\"Sid\": \"AccessArtifactStore\"}"
+  }
+}
+
+override_data {
   target = data.aws_iam_policy_document.codepipeline
   values = {
     json = "{\"Sid\": \"codepipeline\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.assume_trigger_pipeline
+  values = {
+    json = "{\"Sid\": \"AssumeTriggerPolicy\"}"
   }
 }
 
@@ -169,6 +197,29 @@ variables {
     application         = "my-app"
     copilot-application = "my-app"
     managed-by          = "DBT Platform - Terraform"
+  }
+
+  all_pipelines = {
+    my-pipeline = {
+      account             = "sandbox"
+      branch              = ""
+      slack_channel       = ""
+      trigger_on_push     = true
+      pipeline_to_trigger = "triggered-pipeline"
+      environments = {
+        environment1 = ""
+      }
+    }
+
+    triggered-pipeline = {
+      account         = "prod"
+      branch          = ""
+      slack_channel   = ""
+      trigger_on_push = false
+      environments = {
+        environment2 = ""
+      }
+    }
   }
 
   environment_config = {
@@ -217,6 +268,21 @@ run "test_code_pipeline" {
     error_message = "Should be: my-app-my-pipeline-environment-pipeline"
   }
   # aws_codepipeline.environment_pipeline.role_arn cannot be tested on a plan
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.variable[0].name == "SLACK_THREAD_ID"
+    error_message = "Should be: 'SLACK_THREAD_ID'"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.variable[0].default_value == "NONE"
+    error_message = "Should be: 'NONE'"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.variable[0].description == "This can be set by a triggering pipeline to continue an existing message thread"
+    error_message = "Should be: 'This can be set by a triggering pipeline to continue an existing message thread'"
+  }
+
   assert {
     condition     = tolist(aws_codepipeline.environment_pipeline.artifact_store)[0].location == "my-app-my-pipeline-environment-pipeline-artifact-store"
     error_message = "Should be: my-app-my-pipeline-environment-pipeline-artifact-store"
@@ -272,8 +338,8 @@ run "test_code_pipeline" {
 
   # Build stage
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Build"
-    error_message = "Should be: Build"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Install-Build-Tools"
+    error_message = "Should be: Install-Build-Tools"
   }
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[1].action[0].name == "InstallTools"
@@ -695,6 +761,218 @@ run "test_iam" {
   }
 }
 
+run "test_triggering_pipelines" {
+  command = plan
+
+  variables {
+    pipeline_to_trigger = "triggered-pipeline"
+  }
+
+  assert {
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline[""].name == "my-app-my-pipeline-environment-pipeline-trigger"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-trigger"
+  }
+
+  assert {
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline[""].description == "Triggers a target pipeline"
+    error_message = "Should be: 'Triggers a target pipeline'"
+  }
+
+  assert {
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline[""].build_timeout == 5
+    error_message = "Should be: 5"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].artifacts).type == "CODEPIPELINE"
+    error_message = "Should be: 'CODEPIPELINE'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].cache).type == "S3"
+    error_message = "Should be: 'S3'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].cache).location == "my-app-my-pipeline-environment-pipeline-artifact-store"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-artifact-store'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].environment).compute_type == "BUILD_GENERAL1_SMALL"
+    error_message = "Should be: 'BUILD_GENERAL1_SMALL'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    error_message = "Should be: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].environment).type == "LINUX_CONTAINER"
+    error_message = "Should be: 'LINUX_CONTAINER'"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].environment).image_pull_credentials_type == "CODEBUILD"
+    error_message = "Should be: 'CODEBUILD'"
+  }
+
+  assert {
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline[""].logs_config[0].cloudwatch_logs[0].group_name == "codebuild/my-app-my-pipeline-environment-terraform/log-group"
+    error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-group'"
+  }
+  assert {
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline[""].logs_config[0].cloudwatch_logs[0].stream_name == "codebuild/my-app-my-pipeline-environment-terraform/log-stream"
+    error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-group'"
+  }
+
+  assert {
+    condition     = aws_iam_role_policy.assume_role_to_trigger_pipeline_policy[""].name == "my-app-my-pipeline-assume-role-to-trigger-codepipeline-policy"
+    error_message = "Should be: 'my-app-my-pipeline-assume-role-to-trigger-codepipeline-policy"
+  }
+
+  assert {
+    condition     = aws_iam_role_policy.assume_role_to_trigger_pipeline_policy[""].role == "my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-codebuild"
+  }
+
+  assert {
+    condition     = aws_iam_role_policy.assume_role_to_trigger_pipeline_policy[""].policy == "{\"Sid\": \"AssumeRoleToTriggerCodePipeline\"}"
+    error_message = "Should be: 'AssumeRoleToTriggerCodePipeline'"
+  }
+
+  assert {
+    condition     = jsonencode(aws_codebuild_project.trigger_other_environment_pipeline[""].tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+
+  assert {
+    condition     = local.triggers_another_pipeline
+    error_message = ""
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].name == "Trigger-Pipeline"
+    error_message = "Should be: Trigger-Pipeline"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].name == "Trigger"
+    error_message = "Action name incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].category == "Build"
+    error_message = "Action category incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].owner == "AWS"
+    error_message = "Action owner incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].provider == "CodeBuild"
+    error_message = "Action provider incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].version == "1"
+    error_message = "Action version incorrect"
+  }
+
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.stage[7].action[0].input_artifacts) == 1
+    error_message = "Input artifacts incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].input_artifacts[0] == "build_output"
+    error_message = "Input artifacts incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.EnvironmentVariables == "[{\"name\":\"TRIGGERED_ACCOUNT_ROLE_ARN\",\"value\":\"arn:aws:iam::000123456789:role/my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline\"},{\"name\":\"TRIGGERED_PIPELINE_NAME\",\"value\":\"my-app-triggered-pipeline-environment-pipeline\"},{\"name\":\"TRIGGERED_PIPELINE_AWS_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"ACCOUNT_NAME\",\"value\":\"prod\"}]"
+    error_message = "Configuration Env Vars incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-trigger[\"\"]"
+    error_message = "Configuration ProjectName incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.PrimarySource == "build_output"
+    error_message = "Configuration PrimarySource incorrect"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].namespace == null
+    error_message = "Namespace incorrect"
+  }
+
+  assert {
+    condition     = local.triggered_pipeline_account_role == "arn:aws:iam::000123456789:role/my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    error_message = "Triggered pipeline account role is incorrect"
+  }
+}
+
+run "test_triggered_pipelines" {
+  command = plan
+
+  variables {
+    pipeline_name = "triggered-pipeline"
+  }
+
+  assert {
+    condition     = local.triggers_another_pipeline == false
+    error_message = ""
+  }
+
+  assert {
+    condition     = aws_iam_role.trigger_pipeline["my-pipeline"].name == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    error_message = ""
+  }
+
+  assert {
+    condition     = aws_iam_role.trigger_pipeline["my-pipeline"].assume_role_policy == "{\"Sid\": \"AssumeTriggerPolicy\"}"
+    error_message = ""
+  }
+
+  assert {
+    condition     = jsonencode(aws_iam_role.trigger_pipeline["my-pipeline"].tags) == jsonencode(var.expected_tags)
+    error_message = ""
+  }
+
+  assert {
+    condition     = aws_iam_role_policy.trigger_pipeline["my-pipeline"].name == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    error_message = ""
+  }
+
+  assert {
+    condition     = aws_iam_role_policy.trigger_pipeline["my-pipeline"].role == "my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    error_message = ""
+  }
+
+  # aws_iam_role_policy.trigger_pipeline["my-pipeline"].policy cannot be tested on a plan
+
+  assert {
+    condition     = local.list_of_triggering_pipelines[0].name == "my-pipeline"
+    error_message = "List of triggering pipelines should include my-pipeline"
+  }
+
+  assert {
+    condition     = contains(local.set_of_triggering_pipeline_names, "my-pipeline")
+    error_message = "The set of triggering pipeline names should contain my-pipeline"
+  }
+
+  assert {
+    condition     = local.triggering_pipeline_role_arns == ["arn:aws:iam::000123456789:role/demodjango-my-pipeline-environment-pipeline-codebuild"]
+    error_message = "ARN for triggering role is incorrect"
+  }
+}
+
 run "test_artifact_store" {
   command = plan
 
@@ -717,8 +995,8 @@ run "test_stages" {
     error_message = "Should be: Source"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Build"
-    error_message = "Should be: Build"
+    condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Install-Build-Tools"
+    error_message = "Should be: Install-Build-Tools"
   }
 
   # Stage: dev plan
@@ -771,7 +1049,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"PIPELINE_NAME\",\"value\":\"my-pipeline\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
@@ -825,7 +1103,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"VPC\",\"value\":\"platform-sandbox-dev\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"VPC\",\"value\":\"platform-sandbox-dev\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
@@ -879,7 +1157,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"PIPELINE_NAME\",\"value\":\"my-pipeline\"},{\"name\":\"COPILOT_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
@@ -975,7 +1253,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"VPC\",\"value\":\"platform-sandbox-prod\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"VPC\",\"value\":\"platform-sandbox-prod\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 }

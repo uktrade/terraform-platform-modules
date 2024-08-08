@@ -19,3 +19,10 @@ apply:
   owner: "AWS"
   provider: "CodeBuild"
   version: "1"
+
+trigger:
+  name: "Trigger"
+  category: "Build"
+  owner: "AWS"
+  provider: "CodeBuild"
+  version: "1"

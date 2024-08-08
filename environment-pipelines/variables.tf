@@ -2,12 +2,14 @@ variable "application" {
   type = string
 }
 
-variable "repository" {
-  type = string
+variable "all_pipelines" {
+  type    = any
+  default = {}
 }
 
-variable "pipeline_name" {
-  type = string
+variable "branch" {
+  type    = string
+  default = "main"
 }
 
 variable "environments" {
@@ -25,9 +27,19 @@ variable "environment_config" {
   type = any
 }
 
-variable "branch" {
+
+variable "pipeline_name" {
+  type = string
+}
+
+variable "pipeline_to_trigger" {
   type    = string
-  default = "main"
+  default = null
+}
+
+
+variable "repository" {
+  type = string
 }
 
 variable "slack_channel" {
@@ -39,3 +51,4 @@ variable "trigger_on_push" {
   type    = bool
   default = true
 }
+
