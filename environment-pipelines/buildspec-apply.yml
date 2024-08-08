@@ -22,11 +22,13 @@ phases:
       - |
         if [ "${CODEBUILD_BUILD_SUCCEEDING}" == "1" ]
         then
-          MESSAGE="Terraform apply phase complete"
+          MESSAGE="Terraform apply phase complete for the ${ENVIRONMENT} environment."
+          ADDITIONAL_OPTIONS=""
         else
-          MESSAGE=":alert: @here Terraform apply phase FAILED"
+          MESSAGE=":alert: Terraform apply phase FAILED for the ${ENVIRONMENT} environment."
+          ADDITIONAL_OPTIONS="--send-to-main-channel true"
         fi
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} for the ${ENVIRONMENT} environment."
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}" ${ADDITIONAL_OPTIONS}
 artifacts:
   files:
     - "**/*"
