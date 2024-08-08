@@ -39,8 +39,8 @@ run "aws_acm_certificate_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_acm_certificate.certificate["dev.my-application.uktrade.digital"].domain_name == "dev.my-application.uktrade.digital"
-    error_message = "Should be: dev.my-application.uktrade.digital"
+    condition     = aws_acm_certificate.certificate.domain_name == "dom-prefix.env.app.uktrade.digital"
+    error_message = "Should be: dom-prefix.env.app.uktrade.digital"
   }
 
 }

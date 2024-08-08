@@ -13,6 +13,7 @@ data "aws_subnets" "public-subnets" {
 }
 
 resource "aws_lb" "this" {
+  # checkov:skip=CKV2_AWS_20: Fixed in DBTP-972 Branch
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
   subnets            = tolist(data.aws_subnets.public-subnets.ids)
@@ -29,6 +30,8 @@ resource "aws_lb" "this" {
 }
 
 resource "aws_lb_listener" "alb-listener" {
+  # checkov:skip=CKV_AWS_2:Checkov Looking for Hard Coded HTTPS but we use a variable.
+  # checkov:skip=CKV_AWS_103:Checkov Looking for Hard Coded TLS1.2 but we use a variable.
   depends_on = [aws_acm_certificate_validation.cert_validate]
 
   for_each          = local.protocols
@@ -45,7 +48,9 @@ resource "aws_lb_listener" "alb-listener" {
 }
 
 resource "aws_security_group" "alb-security-group" {
-  # checkov:skip=CKV2_AWS_5:Security group is used by VPC. Ticket to investigate: https://uktrade.atlassian.net/browse/DBTP-1039
+  # checkov:skip=CKV2_AWS_5: False Positive in Checkov - https://github.com/bridgecrewio/checkov/issues/3010
+  # checkov:skip=CKV_AWS_260: Skipping as Variablised 
+  # checkov:skip=CKV_AWS_23: Skipping as description is added from managed-by tag.  Adding in a description forces a SG replacement.
   for_each = local.protocols
   name     = "${var.application}-${var.environment}-alb-${each.key}"
   vpc_id   = data.aws_vpc.vpc.id
