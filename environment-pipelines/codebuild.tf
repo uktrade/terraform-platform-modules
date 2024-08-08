@@ -125,7 +125,6 @@ resource "aws_codebuild_project" "environment_pipeline_apply" {
   tags = local.tags
 }
 
-# Terraform trigger
 resource "aws_codebuild_project" "trigger_other_environment_pipeline" {
   name           = "${var.application}-${var.pipeline_name}-environment-pipeline-trigger"
   description    = "Triggers a target pipeline"
