@@ -52,7 +52,7 @@ resource "aws_security_group" "alb-security-group" {
   # checkov:skip=CKV_AWS_260: Skipping as Variablised 
   for_each    = local.protocols
   name        = "${var.application}-${var.environment}-alb-${each.key}"
-  description = "Security group for application load balancer"
+  # description = "Security group for application load balancer"
   vpc_id      = data.aws_vpc.vpc.id
   tags        = local.tags
   ingress {

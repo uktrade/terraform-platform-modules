@@ -11,12 +11,23 @@ locals {
   domain_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "${var.application}.prod.uktrade.digital") : coalesce(var.config.env_root, "${var.environment}.${var.application}.uktrade.digital")
   domain_name   = var.environment == "prod" ? "${local.domain_prefix}.${local.domain_suffix}" : "${local.domain_prefix}.${local.domain_suffix}"
   domain_prefix = coalesce(var.config.domain_prefix, "internal")
+  internal_suffix = var.environment == "prod" ? coalesce(var.config.env_root, "${var.application}.prod.uktrade.digital") : coalesce(var.config.env_root, "${var.application}.uktrade.digital")
 
   # Cull the domain from the cdn_domains_list if "disable_cdn" is set in the value list.
   cdn_domains_list = try({ for k, v in var.config.cdn_domains_list : k => v if !contains(v, "disable_cdn") }, {})
 
+  # A List of domains that can be used in the Subject Alternative Name (SAN) part of the certificate.
+  # Only select the domain from the value field of cdn_domain_list (drop "internal") 
+  san_list        = try({ for k, v in var.config.cdn_domains_list : k => v[1] }, {})
+
+  # Create a complete domain list, primary domain plus all CDN/SAN domains.
+  full_list = merge({ (local.domain_name) = "${local.internal_suffix}" }, local.san_list)
+
   # To avoid overwrites in prod we do not want to update R53 records by default, can be bypassed if "enable_record" is set in the value list.
   cdn_records = { for k, v in local.cdn_domains_list : k => v if(var.environment != "prod" || contains(v, "enable_record")) }
+
+  # Count total number of domains.
+  number_of_domains = length(local.full_list)
 
   # CDN logging buckets
   logging_bucket = var.environment == "prod" ? "dbt-cloudfront-logs-prod.s3-eu-west-2.amazonaws.com" : "dbt-cloudfront-logs.s3-eu-west-2.amazonaws.com"

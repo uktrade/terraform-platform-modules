@@ -7,7 +7,7 @@ data "aws_wafv2_web_acl" "waf-default" {
 resource "aws_acm_certificate" "certificate" {
   provider = aws.domain-cdn
 
-  subject_alternative_names = coalesce(try((keys(local.cdn_domains_list)), null), [])
+  subject_alternative_names = coalesce(try((keys(local.san_list)), null), []) #coalesce(try((keys(local.cdn_domains_list)), null), [])
 
   domain_name       = local.domain_name
   validation_method = "DNS"
@@ -26,13 +26,13 @@ resource "aws_acm_certificate_validation" "cert-validate" {
 
 data "aws_route53_zone" "domain-root" {
   provider = aws.domain-cdn
-  count    = length(local.cdn_domains_list)
-  name     = local.cdn_domains_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
+  count    = local.number_of_domains
+  name     = local.full_list[tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].domain_name]
 }
 
 resource "aws_route53_record" "validation-record" {
   provider = aws.domain-cdn
-  count    = length(local.cdn_domains_list)
+  count    = local.number_of_domains
   zone_id  = data.aws_route53_zone.domain-root[count.index].zone_id
   name     = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_name
   type     = tolist(aws_acm_certificate.certificate.domain_validation_options)[count.index].resource_record_type
