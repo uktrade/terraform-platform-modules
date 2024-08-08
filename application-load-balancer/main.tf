@@ -53,8 +53,8 @@ resource "aws_security_group" "alb-security-group" {
   # checkov:skip=CKV_AWS_23: Skipping as description is added from managed-by tag.  Adding in a description forces a SG replacement.
   for_each = local.protocols
   name     = "${var.application}-${var.environment}-alb-${each.key}"
-  vpc_id = data.aws_vpc.vpc.id
-  tags   = local.tags
+  vpc_id   = data.aws_vpc.vpc.id
+  tags     = local.tags
   ingress {
     description = "Allow from anyone on port ${each.value.port}"
     from_port   = each.value.port
