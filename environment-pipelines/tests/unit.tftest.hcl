@@ -769,61 +769,61 @@ run "test_triggering_pipelines" {
   }
 
   assert {
-    condition     = aws_codebuild_project.trigger_other_environment_pipeline.name == "my-app-my-pipeline-environment-pipeline-trigger"
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline[""].name == "my-app-my-pipeline-environment-pipeline-trigger"
     error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-trigger"
   }
 
   assert {
-    condition     = aws_codebuild_project.trigger_other_environment_pipeline.description == "Triggers a target pipeline"
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline[""].description == "Triggers a target pipeline"
     error_message = "Should be: 'Triggers a target pipeline'"
   }
 
   assert {
-    condition     = aws_codebuild_project.trigger_other_environment_pipeline.build_timeout == 5
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline[""].build_timeout == 5
     error_message = "Should be: 5"
   }
 
   assert {
-    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.artifacts).type == "CODEPIPELINE"
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].artifacts).type == "CODEPIPELINE"
     error_message = "Should be: 'CODEPIPELINE'"
   }
 
   assert {
-    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.cache).type == "S3"
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].cache).type == "S3"
     error_message = "Should be: 'S3'"
   }
 
   assert {
-    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.cache).location == "my-app-my-pipeline-environment-pipeline-artifact-store"
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].cache).location == "my-app-my-pipeline-environment-pipeline-artifact-store"
     error_message = "Should be: 'my-app-my-pipeline-environment-pipeline-artifact-store'"
   }
 
   assert {
-    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.environment).compute_type == "BUILD_GENERAL1_SMALL"
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].environment).compute_type == "BUILD_GENERAL1_SMALL"
     error_message = "Should be: 'BUILD_GENERAL1_SMALL'"
   }
 
   assert {
-    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
     error_message = "Should be: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0'"
   }
 
   assert {
-    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.environment).type == "LINUX_CONTAINER"
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].environment).type == "LINUX_CONTAINER"
     error_message = "Should be: 'LINUX_CONTAINER'"
   }
 
   assert {
-    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline.environment).image_pull_credentials_type == "CODEBUILD"
+    condition     = one(aws_codebuild_project.trigger_other_environment_pipeline[""].environment).image_pull_credentials_type == "CODEBUILD"
     error_message = "Should be: 'CODEBUILD'"
   }
 
   assert {
-    condition     = aws_codebuild_project.trigger_other_environment_pipeline.logs_config[0].cloudwatch_logs[0].group_name == "codebuild/my-app-my-pipeline-environment-terraform/log-group"
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline[""].logs_config[0].cloudwatch_logs[0].group_name == "codebuild/my-app-my-pipeline-environment-terraform/log-group"
     error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-group'"
   }
   assert {
-    condition     = aws_codebuild_project.trigger_other_environment_pipeline.logs_config[0].cloudwatch_logs[0].stream_name == "codebuild/my-app-my-pipeline-environment-terraform/log-stream"
+    condition     = aws_codebuild_project.trigger_other_environment_pipeline[""].logs_config[0].cloudwatch_logs[0].stream_name == "codebuild/my-app-my-pipeline-environment-terraform/log-stream"
     error_message = "Should be: 'codebuild/my-app-my-pipeline-environment-terraform/log-group'"
   }
 
@@ -843,7 +843,7 @@ run "test_triggering_pipelines" {
   }
 
   assert {
-    condition     = jsonencode(aws_codebuild_project.trigger_other_environment_pipeline.tags) == jsonencode(var.expected_tags)
+    condition     = jsonencode(aws_codebuild_project.trigger_other_environment_pipeline[""].tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 
@@ -898,7 +898,7 @@ run "test_triggering_pipelines" {
   }
 
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-trigger"
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-trigger[\"\"]"
     error_message = "Configuration ProjectName incorrect"
   }
 

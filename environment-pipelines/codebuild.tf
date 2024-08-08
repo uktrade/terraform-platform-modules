@@ -126,6 +126,7 @@ resource "aws_codebuild_project" "environment_pipeline_apply" {
 }
 
 resource "aws_codebuild_project" "trigger_other_environment_pipeline" {
+  for_each       = toset(local.triggers_another_pipeline ? [""] : [])
   name           = "${var.application}-${var.pipeline_name}-environment-pipeline-trigger"
   description    = "Triggers a target pipeline"
   build_timeout  = 5
