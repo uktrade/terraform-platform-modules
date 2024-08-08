@@ -34,19 +34,20 @@ phases:
       - terraform init
       - terraform plan -out=plan.tfplan
   post_build:
-    commands:
-      - export BUILD_ID="$CODEBUILD_BUILD_ID"
-      - |
-        if [ "${CODEBUILD_BUILD_SUCCEEDING}" == "1" ]
-        then
-          platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Terraform plan phase complete for the ${ENVIRONMENT} environment."
-          if [ "${NEEDS_APPROVAL}" == "yes" ]
-          then
-            platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Waiting for approval for the ${ENVIRONMENT} environment."
-          fi
-        else
-          platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" ":alert: @here Terraform plan phase FAILED for the ${ENVIRONMENT} environment."
+  commands:
+    - export BUILD_ID="$CODEBUILD_BUILD_ID"
+    - |
+      if [ "${CODEBUILD_BUILD_SUCCEEDING}" == "1" ]; then
+        MESSAGE="Terraform plan phase complete for the ${ENVIRONMENT} environment."
+        if [ "${NEEDS_APPROVAL}" == "yes" ]; then
+          MESSAGE="${MESSAGE} Waiting for approval for the ${ENVIRONMENT} environment."
         fi
+        ADDITIONAL_OPTIONS=""
+      else
+        MESSAGE=":alert: Terraform plan phase FAILED for the ${ENVIRONMENT} environment."
+        ADDITIONAL_OPTIONS="--send-to-main-channel true"
+      fi
+    - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}" ${ADDITIONAL_OPTIONS}
 artifacts:
   files:
     - "**/*"
