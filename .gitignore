@@ -6,3 +6,5 @@
 *.envrc
 *.idea*
 *.DS_Store
+*.env*
+*venv*

@@ -757,11 +757,32 @@ data "aws_iam_policy_document" "iam" {
   }
 }
 
+data "aws_iam_policy_document" "codepipeline" {
+  statement {
+    actions = [
+      "codepipeline:GetPipelineState",
+      "codepipeline:GetPipelineExecution",
+      "codepipeline:ListPipelineExecutions",
+      "codepipeline:StopPipelineExecution",
+    ]
+    resources = [
+      "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.application}-${var.pipeline_name}-environment-pipeline"
+    ]
+  }
+}
+
 resource "aws_iam_policy" "iam" {
   name        = "${var.application}-${var.pipeline_name}-pipeline-iam"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job to manage roles"
   policy      = data.aws_iam_policy_document.iam.json
+}
+
+resource "aws_iam_policy" "codepipeline" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-codepipeline"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to codepipelines"
+  policy      = data.aws_iam_policy_document.codepipeline.json
 }
 
 # Roles
@@ -777,6 +798,7 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
   managed_policy_arns = [
     aws_iam_policy.iam.arn,
     aws_iam_policy.cloudformation.arn,
+    aws_iam_policy.codepipeline.arn,
     aws_iam_policy.redis.arn,
     aws_iam_policy.postgres.arn,
     aws_iam_policy.opensearch.arn,
@@ -884,4 +906,64 @@ resource "aws_iam_role_policy" "copilot_assume_role_for_environment_codebuild" {
   name   = "${var.application}-${var.pipeline_name}-copilot-assume-role-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.copilot_assume_role.json
+}
+
+########### TRIGGERED PIPELINE RESOURCES ##########
+
+#------PROD-TARGET-ACCOUNT------
+resource "aws_iam_role" "trigger_pipeline" {
+  for_each           = local.set_of_triggering_pipeline_names
+  name               = "${var.application}-${var.pipeline_name}-trigger-pipeline-from-${each.value}"
+  assume_role_policy = data.aws_iam_policy_document.assume_trigger_pipeline.json
+  tags               = local.tags
+}
+
+data "aws_iam_policy_document" "assume_trigger_pipeline" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = local.triggering_pipeline_role_arns
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role_policy" "trigger_pipeline" {
+  for_each = local.set_of_triggering_pipeline_names
+  name     = "${var.application}-${var.pipeline_name}-trigger-pipeline-from-${each.value}"
+  role     = aws_iam_role.trigger_pipeline[each.value].name
+  policy   = data.aws_iam_policy_document.trigger_pipeline[each.value].json
+}
+
+data "aws_iam_policy_document" "trigger_pipeline" {
+  for_each = local.set_of_triggering_pipeline_names
+  statement {
+    actions = [
+      "codepipeline:StartPipelineExecution",
+    ]
+    resources = [
+      aws_codepipeline.environment_pipeline.arn
+    ]
+  }
+}
+
+
+#------NON-PROD-SOURCE-ACCOUNT------
+
+resource "aws_iam_role_policy" "assume_role_to_trigger_pipeline_policy" {
+  for_each = toset(local.triggers_another_pipeline ? [""] : [])
+  name     = "${var.application}-${var.pipeline_name}-assume-role-to-trigger-codepipeline-policy"
+  role     = aws_iam_role.environment_pipeline_codebuild.name
+  policy   = data.aws_iam_policy_document.assume_role_to_trigger_codepipeline_policy_document[""].json
+}
+
+data "aws_iam_policy_document" "assume_role_to_trigger_codepipeline_policy_document" {
+  for_each = toset(local.triggers_another_pipeline ? [""] : [])
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = [local.triggered_pipeline_account_role]
+  }
 }

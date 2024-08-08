@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.1.0](https://github.com/uktrade/terraform-platform-modules/compare/5.0.1...5.1.0) (2024-08-08)
+
+
+### Features
+
+* DBTP-1137 trigger prod pipeline from non-prod pipeline ([#195](https://github.com/uktrade/terraform-platform-modules/issues/195)) ([d350039](https://github.com/uktrade/terraform-platform-modules/commit/d3500394a8035cc94221dee4de0a48e1bccc42b7))
+
+
+### Bug Fixes
+
+* DBTP-1143 Prevent Trigger Being Deleted on TF Plan/Apply ([#193](https://github.com/uktrade/terraform-platform-modules/issues/193)) ([9e7c870](https://github.com/uktrade/terraform-platform-modules/commit/9e7c8703745be0d1221b55b4b8af9567e0240614))
+* DBTP-1149 - Cancel Outstanding Approval Requests before Performing a Terraform Plan ([#196](https://github.com/uktrade/terraform-platform-modules/issues/196)) ([afb1829](https://github.com/uktrade/terraform-platform-modules/commit/afb1829c28d22e01358a388f55de7f457640aadf))
+
 ## [5.0.1](https://github.com/uktrade/terraform-platform-modules/compare/5.0.0...5.0.1) (2024-07-18)
 
 
@@ -216,4 +229,3 @@
 * Add domain provider alias to extensions unit test ([#86](https://github.com/uktrade/terraform-platform-modules/issues/86)) ([4a62675](https://github.com/uktrade/terraform-platform-modules/commit/4a62675df58a522717ec93a16fddcc42c0e8e3df))
 * DBTP-896 - invalid opensearch config ([#73](https://github.com/uktrade/terraform-platform-modules/issues/73)) ([7e30b05](https://github.com/uktrade/terraform-platform-modules/commit/7e30b05036c2b3281ce28f58feaa1957c7c281a2))
 * Parameterised account ID in unit test to allow tests to run in other accounts ([#84](https://github.com/uktrade/terraform-platform-modules/issues/84)) ([cec7852](https://github.com/uktrade/terraform-platform-modules/commit/cec7852be7c7e73393fb34b15a1b53eecb4a5ec5))
-
