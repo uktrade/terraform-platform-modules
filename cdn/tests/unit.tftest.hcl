@@ -73,3 +73,20 @@ run "aws_route53_record_unit_test_prod" {
   }
 
 }
+
+run "domain_length_validation_tests" {
+  command = plan
+
+  variables {
+    application = "app"
+    environment = "env"
+    config = {
+      domain_prefix    = "dom-prefix",
+      cdn_domains_list = { "a-very-long-domain-name-used-to-test-length-validation.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
+    }
+  }
+
+  expect_failures = [
+    var.config.cdn_domains_list
+  ]
+}
