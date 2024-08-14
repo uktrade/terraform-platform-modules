@@ -56,6 +56,10 @@ run "aws_vpc_unit_test" {
     error_message = "Should be: String"
   }
 
+  assert {
+    condition     = aws_ssm_parameter.combined_nat_gateway_eips.tags.Copilot-application == "__all__"
+  }
+
   # aws_ssm_parameter.combined_nat_gateway_eips.value cannot be tested on a plan
 }
 
