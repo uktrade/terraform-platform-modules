@@ -232,7 +232,8 @@ data "aws_iam_policy_document" "load_balancer" {
         "elasticloadbalancing:AddTags",
         "elasticloadbalancing:ModifyLoadBalancerAttributes",
         "elasticloadbalancing:DeleteLoadBalancer",
-        "elasticloadbalancing:CreateListener"
+        "elasticloadbalancing:CreateListener",
+        "elasticloadbalancing:ModifyListener"
       ]
       resources = [
         "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:loadbalancer/app/${var.application}-${statement.value.name}/*"
