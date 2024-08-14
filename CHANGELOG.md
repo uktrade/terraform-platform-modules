@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.1.1](https://github.com/uktrade/terraform-platform-modules/compare/5.1.0...5.1.1) (2024-08-14)
+
+
+### Bug Fixes
+
+* Add elastic load balancer modify permission for pipeline  ([#200](https://github.com/uktrade/terraform-platform-modules/issues/200)) ([936270c](https://github.com/uktrade/terraform-platform-modules/commit/936270ced78bb22a0fb6cc09adfca605fe44b182))
+* DBTP-1169 Added Validation for Domain Name Length ([#198](https://github.com/uktrade/terraform-platform-modules/issues/198)) ([39b33cc](https://github.com/uktrade/terraform-platform-modules/commit/39b33cc261cbc40a82d9548d79e00a2ebdc2e2f6))
+
 ## [5.1.0](https://github.com/uktrade/terraform-platform-modules/compare/5.0.1...5.1.0) (2024-08-08)
 
 
