@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.3](https://github.com/uktrade/terraform-platform-modules/compare/5.1.2...5.1.3) (2024-08-15)
+
+
+### Bug Fixes
+
+* buildspec notify command ADDITIONAL_OPTIONS injection ([#204](https://github.com/uktrade/terraform-platform-modules/issues/204)) ([a9597ba](https://github.com/uktrade/terraform-platform-modules/commit/a9597baf0d7984500fc6c3e0548e4446e59a95eb))
+
 ## [5.1.2](https://github.com/uktrade/terraform-platform-modules/compare/5.1.1...5.1.2) (2024-08-15)
 
 
