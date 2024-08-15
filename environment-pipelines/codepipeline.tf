@@ -8,6 +8,12 @@ resource "aws_codepipeline" "environment_pipeline" {
   depends_on    = [aws_iam_role_policy.artifact_store_access_for_environment_codebuild]
   pipeline_type = "V2"
 
+  variable {
+    name          = "SLACK_THREAD_ID"
+    default_value = "NONE"
+    description   = "This can be set by a triggering pipeline to continue an existing message thread"
+  }
+
   artifact_store {
     location = module.artifact_store.bucket_name
     type     = "S3"
@@ -39,7 +45,7 @@ resource "aws_codepipeline" "environment_pipeline" {
   }
 
   stage {
-    name = "Build"
+    name = "Install-Build-Tools"
 
     action {
       name             = "InstallTools"
@@ -56,8 +62,10 @@ resource "aws_codepipeline" "environment_pipeline" {
         PrimarySource = "project_deployment_source"
         EnvironmentVariables : jsonencode([
           { name : "APPLICATION", value : var.application },
+          { name : "PIPELINE_NAME", value : var.pipeline_name },
           { name : "REPOSITORY", value : var.repository },
           { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
+          { name : "SLACK_THREAD_ID", value : "#{variables.SLACK_THREAD_ID}" },
         ])
       }
     }
@@ -83,6 +91,12 @@ resource "aws_codepipeline" "environment_pipeline" {
   }
 
   tags = local.tags
+
+  lifecycle {
+    ignore_changes = [
+      trigger
+    ]
+  }
 }
 
 module "artifact_store" {

@@ -1,5 +1,48 @@
 # Changelog
 
+## [5.1.3](https://github.com/uktrade/terraform-platform-modules/compare/5.1.2...5.1.3) (2024-08-15)
+
+
+### Bug Fixes
+
+* buildspec notify command ADDITIONAL_OPTIONS injection ([#204](https://github.com/uktrade/terraform-platform-modules/issues/204)) ([a9597ba](https://github.com/uktrade/terraform-platform-modules/commit/a9597baf0d7984500fc6c3e0548e4446e59a95eb))
+
+## [5.1.2](https://github.com/uktrade/terraform-platform-modules/compare/5.1.1...5.1.2) (2024-08-15)
+
+
+### Bug Fixes
+
+* cdn and application-load-balancer modules "null value cannot be used as the collection in a 'for' expression" error ([#202](https://github.com/uktrade/terraform-platform-modules/issues/202)) ([690f030](https://github.com/uktrade/terraform-platform-modules/commit/690f03039d8a0d0631360acbcd36856865b8efa4))
+
+## [5.1.1](https://github.com/uktrade/terraform-platform-modules/compare/5.1.0...5.1.1) (2024-08-14)
+
+
+### Bug Fixes
+
+* Add elastic load balancer modify permission for pipeline  ([#200](https://github.com/uktrade/terraform-platform-modules/issues/200)) ([936270c](https://github.com/uktrade/terraform-platform-modules/commit/936270ced78bb22a0fb6cc09adfca605fe44b182))
+* DBTP-1169 Added Validation for Domain Name Length ([#198](https://github.com/uktrade/terraform-platform-modules/issues/198)) ([39b33cc](https://github.com/uktrade/terraform-platform-modules/commit/39b33cc261cbc40a82d9548d79e00a2ebdc2e2f6))
+
+## [5.1.0](https://github.com/uktrade/terraform-platform-modules/compare/5.0.1...5.1.0) (2024-08-08)
+
+
+### Features
+
+* DBTP-1137 trigger prod pipeline from non-prod pipeline ([#195](https://github.com/uktrade/terraform-platform-modules/issues/195)) ([d350039](https://github.com/uktrade/terraform-platform-modules/commit/d3500394a8035cc94221dee4de0a48e1bccc42b7))
+
+
+### Bug Fixes
+
+* DBTP-1143 Prevent Trigger Being Deleted on TF Plan/Apply ([#193](https://github.com/uktrade/terraform-platform-modules/issues/193)) ([9e7c870](https://github.com/uktrade/terraform-platform-modules/commit/9e7c8703745be0d1221b55b4b8af9567e0240614))
+* DBTP-1149 - Cancel Outstanding Approval Requests before Performing a Terraform Plan ([#196](https://github.com/uktrade/terraform-platform-modules/issues/196)) ([afb1829](https://github.com/uktrade/terraform-platform-modules/commit/afb1829c28d22e01358a388f55de7f457640aadf))
+
+## [5.0.1](https://github.com/uktrade/terraform-platform-modules/compare/5.0.0...5.0.1) (2024-07-18)
+
+
+### Bug Fixes
+
+* DBTP-1128 - Connection Error when trying to connect to Redis via Conduit ([#184](https://github.com/uktrade/terraform-platform-modules/issues/184)) ([65cc75d](https://github.com/uktrade/terraform-platform-modules/commit/65cc75deae092f0287a32daa7119069c880dffc4))
+* DBTP-1128 Allow Pipeline Account to Create IAM Roles ([#189](https://github.com/uktrade/terraform-platform-modules/issues/189)) ([f95d923](https://github.com/uktrade/terraform-platform-modules/commit/f95d923dcf950350dda822b097f5ff25783f0adf))
+
 ## [5.0.0](https://github.com/uktrade/terraform-platform-modules/compare/4.2.0...5.0.0) (2024-07-12)
 
 
