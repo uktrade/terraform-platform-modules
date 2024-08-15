@@ -269,3 +269,18 @@ run "domain_length_validation_tests" {
     var.config.cdn_domains_list
   ]
 }
+
+run "domain_length_validation_tests_succeed_with_empty_config" {
+  command = plan
+
+  variables {
+    application = "app"
+    environment = "env"
+    config = {}
+  }
+
+  assert {
+    condition     = var.config.cdn_domains_list == null
+    error_message = "Should be: null"
+  }
+}
