@@ -97,7 +97,7 @@ run "domain_length_validation_tests_succeed_with_empty_config" {
   variables {
     application = "app"
     environment = "env"
-    config = {}
+    config      = {}
   }
 
   assert {
