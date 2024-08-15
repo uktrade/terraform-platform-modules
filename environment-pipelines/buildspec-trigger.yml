@@ -46,7 +46,7 @@ phases:
           MESSAGE=":alert: @here FAILED to trigger ${TRIGGERED_PIPELINE_NAME}"
           ADDITIONAL_OPTIONS="--send-to-main-channel true"
         fi
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} in the ${ACCOUNT_NAME} account." ${ADDITIONAL_OPTIONS}
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} in the ${ACCOUNT_NAME} account." $ADDITIONAL_OPTIONS
 
 artifacts:
   files: []
