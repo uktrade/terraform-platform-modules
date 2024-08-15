@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.2](https://github.com/uktrade/terraform-platform-modules/compare/5.1.1...5.1.2) (2024-08-15)
+
+
+### Bug Fixes
+
+* cdn and application-load-balancer modules "null value cannot be used as the collection in a 'for' expression" error ([#202](https://github.com/uktrade/terraform-platform-modules/issues/202)) ([690f030](https://github.com/uktrade/terraform-platform-modules/commit/690f03039d8a0d0631360acbcd36856865b8efa4))
+
 ## [5.1.1](https://github.com/uktrade/terraform-platform-modules/compare/5.1.0...5.1.1) (2024-08-14)
 
 

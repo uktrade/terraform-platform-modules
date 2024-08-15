@@ -34,7 +34,7 @@ variable "config" {
   })
 
   validation {
-    condition = alltrue([
+    condition = var.config.cdn_domains_list == null ? true : alltrue([
       for k, v in var.config.cdn_domains_list : ((length(k) <= 63) && (length(k) >= 3))
     ])
     error_message = "Items in cdn_domains_list should be between 3 and 63 characters long."
