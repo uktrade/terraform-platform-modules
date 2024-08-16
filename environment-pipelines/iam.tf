@@ -253,7 +253,8 @@ data "aws_iam_policy_document" "load_balancer" {
     for_each = local.environment_config
     content {
       actions = [
-        "elasticloadbalancing:AddTags"
+        "elasticloadbalancing:AddTags",
+        "elasticloadbalancing:ModifyListener"
       ]
       resources = [
         "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:listener/app/${var.application}-${statement.value.name}/*"
