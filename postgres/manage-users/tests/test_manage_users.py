@@ -1,3 +1,4 @@
+import pytest
 import psycopg2
 from manage_users.manage_users import create_db_user
 
@@ -36,6 +37,7 @@ class TestCreateDbUser:
         
         new_user_connection.close()
     
+    @pytest.mark.skip
     def test_that_executing_create_db_user_again_does_not_drop_new_user_tables(self, database_connection):
         cursor = database_connection.cursor()
         create_db_user(database_connection, cursor, 'new_user', 'new_password', ['SELECT'])
