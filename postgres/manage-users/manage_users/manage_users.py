@@ -4,7 +4,7 @@ import psycopg2
 from botocore.exceptions import ClientError
 
 
-def create_or_update_user(conn, cursor, username, password, permissions):
+def create_or_update_db_user(conn, cursor, username, password, permissions):
     cursor.execute(f"SELECT * FROM pg_catalog.pg_user WHERE usename = '{username}'")
 
     if cursor.fetchone() is not None:
@@ -101,7 +101,7 @@ def handler(event, context):
 
     cursor = conn.cursor()
     
-    create_or_update_user(conn, cursor, username, user_password, user_permissions)
+    create_or_update_db_user(conn, cursor, username, user_password, user_permissions)
     create_or_update_user_secret(ssm, user_secret_name, user_secret_string, event)
 
     cursor.close()
