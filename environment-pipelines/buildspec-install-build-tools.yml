@@ -24,11 +24,9 @@ phases:
       - git config --global credential.UseHttpPath true
       - git clone -b DBTP-1153-main-branch-tools "${GIT_CLONE_BASE_URL}/platform-tools.git"
       - export PYTHONPATH=$PYTHONPATH:platform-tools
-      - yum -y install python-pip
       - pip install click requests jinja2 pyyaml boto3 schema
-      - REQUIRED_VERSION=$(python -c "from dbt_platform_helper.utils.versioning import get_desired_platform_helper_version; print(get_desired_platform_helper_version(pipeline='${PIPELINE_NAME}'))")
+      - REQUIRED_VERSION=$(python -c "from dbt_platform_helper.utils.versioning import get_required_platform_helper_version; print(get_required_platform_helper_version(pipeline='${PIPELINE_NAME}'))")
       - COMMIT_TYPE=$(python -c "import re, sys; print('tag' if re.match(r'\\d+\\.\\d+\\.\\d+', '${REQUIRED_VERSION}') else 'commit')")
-      - echo "Required Version - ${REQUIRED_VERSION}; Type - ${COMMIT_TYPE}"
       - echo "Installing build tools"
       - mkdir ./build-tools
       - |
@@ -38,25 +36,20 @@ phases:
             cd ./build-tools
             pip install --target . --quiet dbt-platform-helper==${REQUIRED_VERSION}
           else
-            pip install poetry
             echo "Installing platform-helper from branch/commit ${REQUIRED_VERSION}"
             cd platform-tools
             git checkout "${REQUIRED_VERSION}"
-            poetry build --no-interaction --format sdist --no-ansi
+            pip install poetry
+            poetry build --no-interaction --format sdist --no-ansi | tee build-log.txt
+            ARTIFACT=$(grep "Built dbt_platform_helper-.*tar.gz" build-log.txt | sed "s/.*Built //")
+            echo "Art: $ARTIFACT"
             cd "${CODEBUILD_SRC_DIR}/build-tools"
-            pip install --target . --quiet "../platform-tools/dist/$(ls -t1 dist | head -1)"
+            pip install --target . --quiet "${CODEBUILD_SRC_DIR}/platform-tools/dist/${ARTIFACT}"
           fi
-      - platform-helper --version
-      - exit 1
       - VERSION_OUTPUT=""
-      - |
-        if [ ! -f .platform-helper-version ]; then
-          echo "Cannot find .platform-helper-version file"
-          exit 1
-        fi
-      - pip install --target . --quiet dbt-platform-helper==$PLATFORM_HELPER_VERSION
       - export "PATH=$(pwd)/bin:$PATH"
       - export PYTHONPATH=$(pwd)
+      - platform-helper --version
       - | 
           if [ "${SLACK_THREAD_ID}" == "NONE" ]
           then
@@ -77,6 +70,7 @@ phases:
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting install phase"
       - VERSION_OUTPUT+="\n$(terraform --version)"
       - VERSION_OUTPUT+="\n$(platform-helper --version)"
+      - if [ "${COMMIT_TYPE}" != "tag" ]; then VERSION_OUTPUT+=" (from git ref ${REQUIRED_VERSION})"; fi
       - VERSION_OUTPUT+="\n$(python3 --version)"
       - VERSION_OUTPUT+="\n$(pip --version)"
       - echo -e "=============\nTool Versions\n-------------\n$VERSION_OUTPUT"
