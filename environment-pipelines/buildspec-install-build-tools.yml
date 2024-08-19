@@ -14,7 +14,7 @@ phases:
       - set -e
       - echo "Deploying ${APPLICATION} environments"
       - cd "${CODEBUILD_SRC_DIR}"
-      - echo -e "\nGet CodeStar connection details"
+      - echo "Installing latest version of platform-helper to get required version for the project.
       - pip install dbt-platform-helper
       - REQUIRED_VERSION=$(platform-helper version get-platform-helper-for-project --pipeline "${PIPELINE_NAME}")
       - COMMIT_TYPE=$(python -c "import re, sys; print('tag' if re.match(r'\\d+\\.\\d+\\.\\d+', '${REQUIRED_VERSION}') else 'commit')")
@@ -28,6 +28,7 @@ phases:
             pip install --target . --quiet dbt-platform-helper==${REQUIRED_VERSION}
           else
             echo "Installing platform-helper from branch/commit ${REQUIRED_VERSION}"
+            echo -e "\nGet CodeStar connection details"
             codestar_connections=$(aws codestar-connections list-connections --provider-type GitHub --query "Connections[? ConnectionStatus == 'AVAILABLE']")
             aws_account=$(echo "$codestar_connections" | jq -r ".[0].OwnerAccountId")
             codestar_arn=$(echo "$codestar_connections" | jq -r ".[0].ConnectionArn")
