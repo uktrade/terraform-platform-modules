@@ -40,12 +40,12 @@ class TestCreateOrUpdateDbUser:
     
     def test_executing_create_or_update_db_user_again_does_not_drop_new_user_tables(self, database_connection):
         cursor = database_connection.cursor()
-        create_or_update_db_user(database_connection, cursor, 'new_user', 'new_password', ['SELECT'])
+        create_or_update_db_user(database_connection, cursor, 'new_user', 'another_new_password', ['SELECT'])
         
         new_user_connection = psycopg2.connect(
             dbname='test_db',
             user='new_user',
-            password='new_password',
+            password='another_new_password',
             host='postgres-unittest',
             port=5432
         )
