@@ -135,8 +135,8 @@ run "aws_kms_key_unit_test" {
   }
 
   assert {
-    condition     = aws_kms_key.default.enable_key_rotation == false
-    error_message = "Should be: false"
+    condition     = aws_kms_key.default.enable_key_rotation == true
+    error_message = "Should be: true"
   }
 
   assert {
@@ -522,6 +522,11 @@ run "aws_lambda_invocation_unit_test" {
   assert {
     condition     = aws_lambda_invocation.create-readonly-user.terraform_key == "tf"
     error_message = "Should be: tf"
+  }
+
+  assert {
+    condition     = aws_lambda_function.lambda.reserved_concurrent_executions == -1
+    error_message = "Should be: -1"
   }
 }
 

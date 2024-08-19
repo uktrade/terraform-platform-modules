@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.4](https://github.com/uktrade/terraform-platform-modules/compare/5.1.3...5.1.4) (2024-08-19)
+
+
+### Bug Fixes
+
+* DBTP-972 Ignored by Checkov baseline ([#190](https://github.com/uktrade/terraform-platform-modules/issues/190)) ([1564260](https://github.com/uktrade/terraform-platform-modules/commit/15642606a89adc2ef9a9c9df7fc9b55bf61f951e))
+
 ## [5.1.3](https://github.com/uktrade/terraform-platform-modules/compare/5.1.2...5.1.3) (2024-08-15)
 
 

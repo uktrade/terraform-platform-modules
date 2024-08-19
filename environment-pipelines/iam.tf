@@ -15,6 +15,8 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
 }
 
 data "aws_iam_policy_document" "access_artifact_store" {
+  # checkov:skip=CKV_AWS_111:Permissions required to change ACLs on uploaded artifacts
+  # checkov:skip=CKV_AWS_356:Permissions required to upload artifacts
   statement {
     effect = "Allow"
 
@@ -291,6 +293,7 @@ data "aws_iam_policy_document" "security_group" {
       "ec2:CreateSecurityGroup",
       "ec2:CreateTags",
       "ec2:RevokeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupIngress",
       "ec2:DeleteSecurityGroup",
       "ec2:AuthorizeSecurityGroupIngress",
       "ec2:AuthorizeSecurityGroupEgress"
@@ -411,7 +414,8 @@ data "aws_iam_policy_document" "logs" {
       "logs:PutSubscriptionFilter",
       "logs:DescribeSubscriptionFilters",
       "logs:DeleteSubscriptionFilter",
-      "logs:TagResource"
+      "logs:TagResource",
+      "logs:AssociateKmsKey"
     ]
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*",
@@ -541,6 +545,7 @@ data "aws_iam_policy_document" "postgres" {
         "lambda:ListVersionsByFunction",
         "lambda:GetFunctionCodeSigningConfig",
         "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
         "lambda:CreateFunction"
       ]
       resources = [
