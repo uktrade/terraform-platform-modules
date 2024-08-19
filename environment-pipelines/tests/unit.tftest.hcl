@@ -1258,6 +1258,24 @@ run "test_stages" {
   }
 }
 
+run "aws_kms_key_unit_test" {
+  command = plan
+
+  assert {
+    condition     = aws_kms_key.codebuild_kms_key.description == "KMS Key for my-app-my-pipeline CodeBuild encryption"
+    error_message = "Should be: KMS Key for my-app-my-pipeline CodeBuild encryption"
+  }
+
+  assert {
+    condition     = aws_kms_key.codebuild_kms_key.enable_key_rotation == true
+    error_message = "Should be: true"
+  }
+
+  assert {
+    condition     = jsonencode(aws_kms_key.codebuild_kms_key.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+}
 
 
 
