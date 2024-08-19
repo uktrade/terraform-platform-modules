@@ -293,6 +293,7 @@ data "aws_iam_policy_document" "security_group" {
       "ec2:CreateSecurityGroup",
       "ec2:CreateTags",
       "ec2:RevokeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupIngress",
       "ec2:DeleteSecurityGroup",
       "ec2:AuthorizeSecurityGroupIngress",
       "ec2:AuthorizeSecurityGroupEgress"
@@ -413,7 +414,8 @@ data "aws_iam_policy_document" "logs" {
       "logs:PutSubscriptionFilter",
       "logs:DescribeSubscriptionFilters",
       "logs:DeleteSubscriptionFilter",
-      "logs:TagResource"
+      "logs:TagResource",
+      "logs:AssociateKmsKey"
     ]
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*",
@@ -543,6 +545,7 @@ data "aws_iam_policy_document" "postgres" {
         "lambda:ListVersionsByFunction",
         "lambda:GetFunctionCodeSigningConfig",
         "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
         "lambda:CreateFunction"
       ]
       resources = [
