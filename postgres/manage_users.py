@@ -19,10 +19,12 @@ def update_db_user_password(conn, cursor, username, password):
     
 
 def create_db_user(conn, cursor, username, password, permissions):
+    MASTER_USERNAME = "postgres"
+    APP_USERNAME = "application_user"
     cursor.execute(f"CREATE USER {username} WITH ENCRYPTED PASSWORD '%s'" % password)
-    cursor.execute(f"GRANT {username} to postgres;")
+    cursor.execute(f"GRANT {username} to {MASTER_USERNAME};")
     cursor.execute(f"GRANT {', '.join(permissions)} ON ALL TABLES IN SCHEMA public TO {username};")
-    cursor.execute(f"ALTER DEFAULT PRIVILEGES FOR USER application_user IN SCHEMA public GRANT {', '.join(permissions)} ON TABLES TO {username};")
+    cursor.execute(f"ALTER DEFAULT PRIVILEGES FOR USER {APP_USERNAME} IN SCHEMA public GRANT {', '.join(permissions)} ON TABLES TO {username};")
 
     if 'INSERT' in permissions:
         cursor.execute(f"GRANT CREATE ON SCHEMA public TO {username};")
