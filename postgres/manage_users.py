@@ -4,6 +4,10 @@ import psycopg2
 from botocore.exceptions import ClientError
 
 
+MASTER_USERNAME = "postgres"
+APP_USERNAME = "application_user"
+
+
 def create_or_update_db_user(conn, cursor, username, password, permissions):
     cursor.execute(f"SELECT * FROM pg_catalog.pg_user WHERE usename = '{username}'")
 
@@ -19,8 +23,6 @@ def update_db_user_password(conn, cursor, username, password):
     
 
 def create_db_user(conn, cursor, username, password, permissions):
-    MASTER_USERNAME = "postgres"
-    APP_USERNAME = "application_user"
     cursor.execute(f"CREATE USER {username} WITH ENCRYPTED PASSWORD '%s'" % password)
     cursor.execute(f"GRANT {username} to {MASTER_USERNAME};")
     cursor.execute(f"GRANT {', '.join(permissions)} ON ALL TABLES IN SCHEMA public TO {username};")
