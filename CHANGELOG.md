@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.6](https://github.com/uktrade/terraform-platform-modules/compare/5.1.5...5.1.6) (2024-08-20)
+
+
+### Bug Fixes
+
+* DBTP-1304 - manage users lambda does not drop tables ([#207](https://github.com/uktrade/terraform-platform-modules/issues/207)) ([aa3b567](https://github.com/uktrade/terraform-platform-modules/commit/aa3b5676adc119bf0d4dfad925cf0855422bee44))
+
 ## [5.1.5](https://github.com/uktrade/terraform-platform-modules/compare/5.1.4...5.1.5) (2024-08-19)
 
 
