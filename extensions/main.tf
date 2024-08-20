@@ -1,6 +1,11 @@
 module "s3" {
   source = "../s3"
 
+  providers = {
+    aws.domain = aws.domain
+    aws.domain-cdn = aws.domain-cdn
+  }
+
   for_each = local.s3
 
   application = var.args.application
