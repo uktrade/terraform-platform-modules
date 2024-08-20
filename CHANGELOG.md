@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.5](https://github.com/uktrade/terraform-platform-modules/compare/5.1.4...5.1.5) (2024-08-19)
+
+
+### Bug Fixes
+
+* DBTP-972 Add IAM Permissions for Pipeline Changes ([#209](https://github.com/uktrade/terraform-platform-modules/issues/209)) ([71992ac](https://github.com/uktrade/terraform-platform-modules/commit/71992acb579c29ebfb59de37308b0b556847b56c))
+
 ## [5.1.4](https://github.com/uktrade/terraform-platform-modules/compare/5.1.3...5.1.4) (2024-08-19)
 
 
