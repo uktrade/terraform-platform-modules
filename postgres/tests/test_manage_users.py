@@ -116,56 +116,7 @@ class TestAppUserCustomResource(unittest.TestCase):
 
         assert parameter["Version"] == 2
         assert parameter["Value"] == json.dumps(user_secret_string)
-
-    # @patch("urllib.request.urlopen", return_value=None)
-    # def test_send(self, urlopen):
-    #     test_url = "https://test.url"
-    #     event = {"ResponseURL": test_url}
-    #     body = {"some": "test data"}
-    #     logger = logging.getLogger(app_user.__name__)
-    #     headers = {"Test": "header"}
-
-    #     send(event, body, logger, headers)
-
-    #     sent_request = urlopen.call_args_list[0].args[0]
-    #     urlopen.assert_called_once()
-    #     assert sent_request.headers == headers
-    #     assert sent_request.full_url == "https://test.url"
-    #     assert sent_request.data == body
-    #     assert sent_request.get_method() == "PUT"
-
-    # @patch("time.sleep", return_value=None)
-    # @patch(
-    #     "urllib.request.urlopen",
-    #     side_effect=HTTPError("https://example.com", 404, "Not Found", None, BytesIO(b"Some Data")),
-    # )
-    # def test_send_failure_retries_5_times(self, urlopen, sleep):
-    #     logger = logging.getLogger(app_user.__name__)
-    #     logger.warning = MagicMock(logger.warning)
-    #     logger.error = MagicMock(logger.error)
-
-    #     event = {"ResponseURL": "https://test.url"}
-
-    #     send(event, {}, logger, {})
-
-    #     self.assertEqual(5, urlopen.call_count)
-    #     logger.warning.assert_has_calls(
-    #         [
-    #             call("HTTP Error 404: Not Found [https://example.com] - Retry 1"),
-    #             call("HTTP Error 404: Not Found [https://example.com] - Retry 2"),
-    #             call("HTTP Error 404: Not Found [https://example.com] - Retry 3"),
-    #             call("HTTP Error 404: Not Found [https://example.com] - Retry 4"),
-    #         ]
-    #     )
-    #     logger.error.assert_called_with("HTTP Error 404: Not Found [https://example.com]")
-    #     sleep.assert_has_calls(
-    #         [
-    #             call(5),
-    #             call(10),
-    #             call(15),
-    #             call(20),
-    #         ]
-    #     )
+    
 
     # @parameterized.expand(["Create", "Update"])
     # @patch("dbt_platform_helper.custom_resources.app_user.create_db_user")
