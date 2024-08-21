@@ -184,6 +184,14 @@ resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
   })
 }
 
+resource "aws_acm_certificate" "certificate" {
+  count = var.config.serve_static ? 1 : 0
+  domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+  validation_method = "DNS"
+
+  tags = local.tags
+}
+
 data "aws_cloudfront_cache_policy" "example" {
   name = "Managed-CachingOptimized"
 }
@@ -212,7 +220,9 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true  # Use the default CloudFront certificate (HTTPS)
+    acm_certificate_arn             = aws_acm_certificate.certificate.certificate_arn
+    ssl_support_method              = "sni-only"
+    minimum_protocol_version        = "TLSv1.2_2021"
   }
 
   restrictions {
