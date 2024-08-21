@@ -187,7 +187,6 @@ data "aws_cloudfront_cache_policy" "example" {
   name = "Managed-CachingOptimized"
 }
 
-Create a CloudFront distribution
 resource "aws_cloudfront_distribution" "s3_distribution" {
   count = var.config.serve_static ? 1 : 0
   provider = aws.domain-cdn
