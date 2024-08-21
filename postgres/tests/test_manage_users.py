@@ -1,3 +1,4 @@
+import os
 import json
 import boto3
 import unittest
@@ -11,6 +12,7 @@ from postgres.manage_users import create_or_update_db_user, create_or_update_use
 
 class TestManageUsers(unittest.TestCase):
     def setUp(self):
+        os.environ["AWS_REGION"] = "eu-west-2"
         self.cursor = MagicMock()
 
 
