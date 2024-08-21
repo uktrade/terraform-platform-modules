@@ -41,6 +41,12 @@ data "aws_iam_policy_document" "access_artifact_store" {
   }
 
   statement {
+    effect    = "Allow"
+    actions   = ["codestar-connections:ListConnections"]
+    resources = ["arn:aws:codestar-connections:eu-west-2:${data.aws_caller_identity.current.account_id}:*"]
+  }
+
+  statement {
     effect = "Allow"
 
     actions = [
@@ -247,7 +253,8 @@ data "aws_iam_policy_document" "load_balancer" {
     for_each = local.environment_config
     content {
       actions = [
-        "elasticloadbalancing:AddTags"
+        "elasticloadbalancing:AddTags",
+        "elasticloadbalancing:ModifyListener"
       ]
       resources = [
         "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:listener/app/${var.application}-${statement.value.name}/*"
