@@ -190,6 +190,7 @@ data "aws_cloudfront_cache_policy" "example" {
 resource "aws_cloudfront_distribution" "s3_distribution" {
   count = var.config.serve_static ? 1 : 0
   provider = aws.domain-cdn
+  aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
 
   origin {
     domain_name = aws_s3_bucket.this.bucket_regional_domain_name
