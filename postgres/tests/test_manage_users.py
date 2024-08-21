@@ -1,7 +1,5 @@
-import sys
 import json
 import boto3
-import pytest
 import unittest
 
 from unittest.mock import MagicMock
@@ -9,9 +7,6 @@ from unittest.mock import patch
 from moto import mock_aws
 
 from postgres.manage_users import create_or_update_db_user, create_or_update_user_secret, handler
-
-# if sys.version_info != (3, 11):
-#     pytest.skip("Lambda uses 3.11 at runtime", allow_module_level=True)
 
 
 class TestManageUsers(unittest.TestCase):
