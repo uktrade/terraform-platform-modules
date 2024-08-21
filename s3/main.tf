@@ -170,7 +170,7 @@ resource "aws_cloudfront_origin_access_identity" "oai" {
 # Attach a bucket policy to allow CloudFront to access the bucket
 resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
   count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
+  provider = aws.domain
 
   bucket = aws_s3_bucket.this.id
 
