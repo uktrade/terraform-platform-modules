@@ -102,8 +102,8 @@ resource "aws_kms_key" "kms-key" {
 }
 
 resource "aws_kms_alias" "s3-bucket" {
-  provider = aws.domain
   depends_on    = [aws_kms_key.kms-key]
+  provider = aws.domain
   name          = "alias/${local.kms_alias_name}"
   target_key_id = aws_kms_key.kms-key.id
 }
