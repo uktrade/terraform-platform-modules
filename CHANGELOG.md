@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.0](https://github.com/uktrade/terraform-platform-modules/compare/5.1.6...5.2.0) (2024-08-21)
+
+
+### Features
+
+* Changes to buildspec to support changing the version of platform-helper used in the pipeline ([#206](https://github.com/uktrade/terraform-platform-modules/issues/206)) ([1d20161](https://github.com/uktrade/terraform-platform-modules/commit/1d20161752182d47440fe8e0f12be251152516bc))
+
 ## [5.1.6](https://github.com/uktrade/terraform-platform-modules/compare/5.1.5...5.1.6) (2024-08-20)
 
 
