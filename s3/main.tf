@@ -187,7 +187,7 @@ data "aws_cloudfront_cache_policy" "example" {
   name = "Managed-CachingOptimized"
 }
 
-# Create a CloudFront distribution
+Create a CloudFront distribution
 resource "aws_cloudfront_distribution" "s3_distribution" {
   count = var.config.serve_static ? 1 : 0
   provider = aws.domain-cdn
@@ -205,13 +205,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${aws_s3_bucket.this.bucket}"
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
 
     viewer_protocol_policy = "allow-all"
     cache_policy_id = data.aws_cloudfront_cache_policy.example.id
