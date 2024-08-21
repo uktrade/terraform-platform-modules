@@ -118,106 +118,31 @@ class TestAppUserCustomResource(unittest.TestCase):
         assert parameter["Value"] == json.dumps(user_secret_string)
     
 
-    # @parameterized.expand(["Create", "Update"])
-    # @patch("dbt_platform_helper.custom_resources.app_user.create_db_user")
-    # @patch("dbt_platform_helper.custom_resources.app_user.send_response")
-    # @patch("dbt_platform_helper.custom_resources.app_user.psycopg2.connect")
-    # @mock_aws
-    # def test_handler(self, request_type, mock_connect, mock_send_response, mock_create_db_user):
-    #     secretsmanager = boto3.client("secretsmanager")
-    #     secret_id = secretsmanager.create_secret(
-    #         Name=self.secret_name, SecretString=self.secret_string
-    #     )["ARN"]
-    #     self.event["MasterUserSecret"] = secret_id
-    #     self.event["RequestType"] = request_type
-    #     mock_connect.return_value = self.conn
-    #     self.conn.cursor = self.cursor
+    @patch("postgres.manage_users.create_or_update_db_user")
+    @patch("postgres.manage_users.psycopg2.connect")
+    @mock_aws
+    def test_handler(self, mock_connect, mock_create_or_update_db_user):
+        secretsmanager = boto3.client("secretsmanager")
+        secret_id = secretsmanager.create_secret(
+            Name=self.secret_name, SecretString=self.secret_string
+        )["ARN"]
+        
+        self.event["MasterUserSecretArn"] = secret_id
+        self.event["DbEngine"] = "mocked"
+        self.event["DbPort"] = 1234
+        self.event["DbName"] = "mocked"
+        self.event["DbHost"] = "mocked"
+        self.event["dbInstanceIdentifier"] = "mocked"
+        
+        mock_connect.return_value = self.conn
+        self.conn.cursor = self.cursor
 
-    #     handler(self.event, self.context)
+        handler(self.event, self.context)
 
-    #     ssm = boto3.client("ssm")
-    #     user_password = json.loads(ssm.get_parameter(Name=self.secret_name)["Parameter"]["Value"])[
-    #         "password"
-    #     ]
-    #     mock_create_db_user.assert_called_once_with(
-    #         self.conn, self.cursor(), "test-user", user_password, ["SELECT"]
-    #     )
-
-    #     captured = self.capsys.readouterr()
-    #     data = json.loads(captured.out.split("\n")[2])["Data"]
-
-    #     mock_send_response.assert_called_once_with(
-    #         self.event, self.context, "SUCCESS", data, self.event["LogicalResourceId"]
-    #     )
-
-    # @patch("database.manage_users.drop_user")
-    # @patch("database.manage_users.send_response")
-    # @patch("database.manage_users.psycopg2.connect")
-    # @mock_aws
-    # def test_handler_delete(self, mock_connect, mock_send_response, mock_drop_user):
-    #     secretsmanager = boto3.client("secretsmanager")
-    #     secret_id = secretsmanager.create_secret(
-    #         Name=self.secret_name, SecretString=self.secret_string
-    #     )["ARN"]
-    #     ssm = boto3.client("ssm")
-    #     ssm.put_parameter(Name=self.secret_name, Value="blah", Type="String")
-    #     self.event["MasterUserSecret"] = secret_id
-    #     self.event["RequestType"] = "Delete"
-    #     mock_connect.return_value = self.conn
-    #     self.conn.cursor = self.cursor
-
-    #     handler(self.event, self.context)
-
-    #     captured = self.capsys.readouterr()
-    #     data = json.loads(captured.out.split("\n")[2])["Data"]
-
-    #     mock_drop_user.assert_called_once_with(self.cursor(), "test-user")
-    #     mock_send_response.assert_called_once_with(
-    #         self.event, self.context, "SUCCESS", data, self.event["LogicalResourceId"]
-    #     )
-    #     assert len(ssm.describe_parameters()["Parameters"]) == 0
-
-    # @patch("dbt_platform_helper.custom_resources.app_user.send_response")
-    # @patch("dbt_platform_helper.custom_resources.app_user.psycopg2.connect")
-    # @mock_aws
-    # def test_handler_invalid_request_type(self, mock_connect, mock_send_response):
-    #     secretsmanager = boto3.client("secretsmanager")
-    #     secret_id = secretsmanager.create_secret(
-    #         Name=self.secret_name, SecretString=self.secret_string
-    #     )["ARN"]
-    #     self.event["MasterUserSecret"] = secret_id
-    #     self.event["RequestType"] = "Patch"
-    #     mock_connect.return_value = self.conn
-    #     self.conn.cursor = self.cursor
-
-    #     handler(self.event, self.context)
-
-    #     captured = self.capsys.readouterr()
-    #     data = json.loads(captured.out.split("\n")[2])["Data"]
-
-    #     mock_send_response.assert_called_once_with(
-    #         self.event, self.context, "FAILED", data, self.event["LogicalResourceId"]
-    #     )
-
-    # @patch("dbt_platform_helper.custom_resources.app_user.create_db_user", side_effect=Exception())
-    # @patch("dbt_platform_helper.custom_resources.app_user.send_response")
-    # @patch("dbt_platform_helper.custom_resources.app_user.psycopg2.connect")
-    # @mock_aws
-    # def test_handler_exception(self, mock_connect, mock_send_response, mock_create_db_user):
-    #     secretsmanager = boto3.client("secretsmanager")
-    #     secret_id = secretsmanager.create_secret(
-    #         Name=self.secret_name, SecretString=self.secret_string
-    #     )["ARN"]
-    #     self.event["MasterUserSecret"] = secret_id
-    #     self.event["RequestType"] = "Create"
-    #     mock_connect.return_value = self.conn
-    #     self.conn.cursor = self.cursor
-
-    #     handler(self.event, self.context)
-
-    #     captured = self.capsys.readouterr()
-    #     data = json.loads(captured.out.split("\n")[2])["Data"]
-
-    #     mock_send_response.assert_called_once_with(
-    #         self.event, self.context, "FAILED", data, self.event["LogicalResourceId"]
-    #     )
+        user_password = json.loads(boto3.client("ssm").get_parameter(Name=self.secret_name, WithDecryption=True)["Parameter"]["Value"])[
+            "password"
+        ]
+        
+        mock_create_or_update_db_user.assert_called_once_with(
+            self.conn, self.cursor(), "test-user", user_password, ["SELECT"]
+        )
