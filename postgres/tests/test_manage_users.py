@@ -77,7 +77,7 @@ class TestManageUsers(unittest.TestCase):
 
     @mock_aws
     def test_create_or_update_user_secret(self):
-        ssm = boto3.client("ssm")
+        ssm = boto3.client("ssm", region_name='eu-west-2')
         user_secret_name = "/test/secret"
         user_secret_string = {"username": "test_user", "password": "test_password"}
         
@@ -96,7 +96,7 @@ class TestManageUsers(unittest.TestCase):
 
     @mock_aws
     def test_create_or_update_user_secret_overwrites(self):
-        ssm = boto3.client("ssm")
+        ssm = boto3.client("ssm", region_name='eu-west-2')
         user_secret_name = "/test/secret"
         user_secret_string = {"username": "test_user", "password": "test_password"}
         ssm.put_parameter(Name=user_secret_name, Value="blah", Type="String")
@@ -113,7 +113,7 @@ class TestManageUsers(unittest.TestCase):
     @patch("postgres.manage_users.psycopg2.connect")
     @mock_aws
     def test_handler(self, mock_connect, mock_create_or_update_db_user):
-        secretsmanager = boto3.client("secretsmanager")
+        secretsmanager = boto3.client("secretsmanager", region_name='eu-west-2')
         secret_id = secretsmanager.create_secret(
             Name=self.secret_name, SecretString=self.secret_string
         )["ARN"]
@@ -125,7 +125,7 @@ class TestManageUsers(unittest.TestCase):
 
         handler(self.event, self.context)
 
-        user_password = json.loads(boto3.client("ssm").get_parameter(Name=self.secret_name, WithDecryption=True)["Parameter"]["Value"])[
+        user_password = json.loads(boto3.client("ssm", region_name='eu-west-2').get_parameter(Name=self.secret_name, WithDecryption=True)["Parameter"]["Value"])[
             "password"
         ]
         
