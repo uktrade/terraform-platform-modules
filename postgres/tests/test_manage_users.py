@@ -1,3 +1,4 @@
+import sys
 import json
 import boto3
 import pytest
@@ -13,7 +14,7 @@ from postgres.manage_users import create_or_update_db_user, create_or_update_use
 #     pytest.skip("Lambda uses 3.11 at runtime", allow_module_level=True)
 
 
-class TestAppUserCustomResource(unittest.TestCase):
+class TestManageUsers(unittest.TestCase):
     def setUp(self):
         self.cursor = MagicMock()
 
@@ -21,7 +22,7 @@ class TestAppUserCustomResource(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.secret_name = "test-secret-name"
-        cls.secret_string = '{"engine": "postgres", "port": 5432, "dbname": "main", "host": "test-host", "username": "random-user", "password": "password123"}'
+        cls.secret_string = '{"engine": "mocked", "port": 1234, "dbname": "mocked", "host": "mocked", "username": "mocked", "password": "password123"}'
         cls.event = {
             "SecretName": cls.secret_name,
             "SecretDescription": "used for testing",
@@ -29,20 +30,15 @@ class TestAppUserCustomResource(unittest.TestCase):
             "Permissions": ["SELECT"],
             "CopilotApplication": "test-app",
             "CopilotEnvironment": "test",
-            "LogicalResourceId": "123LogicalResourceId",
-            "StackId": "123/TestStackId",
-            "ResponseURL": "https://test.url",
-            "RequestId": "test-id-123",
+            "DbEngine": "mocked",
+            "DbPort": 1234,
+            "DbName": "mocked",
+            "DbHost": "mocked",
+            "dbInstanceIdentifier": "mocked",
         }
         cls.context = MagicMock()
-        cls.context.log_stream_name = "test-log-stream"
         cls.conn = MagicMock()
         cls.cursor = MagicMock()
-
-
-    @pytest.fixture(autouse=True)
-    def capsys(self, capsys):
-        self.capsys = capsys
 
 
     def test_create_or_update_db_user(self):
@@ -128,11 +124,6 @@ class TestAppUserCustomResource(unittest.TestCase):
         )["ARN"]
         
         self.event["MasterUserSecretArn"] = secret_id
-        self.event["DbEngine"] = "mocked"
-        self.event["DbPort"] = 1234
-        self.event["DbName"] = "mocked"
-        self.event["DbHost"] = "mocked"
-        self.event["dbInstanceIdentifier"] = "mocked"
         
         mock_connect.return_value = self.conn
         self.conn.cursor = self.cursor
