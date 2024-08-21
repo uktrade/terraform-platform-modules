@@ -42,5 +42,12 @@ variable "config" {
       body = string
       key  = string
     })))
+
+    # Cross account access
+    cross_account_access = optional(object({
+      role_arn       = string
+      bucket_actions = list(string)
+      })
+    )
   })
 }

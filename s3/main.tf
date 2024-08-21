@@ -148,3 +148,45 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# ------------ Cross account access resources -----------------
+
+# assume role
+resource "aws_iam_role" "external_service_access_role" {
+  count              = var.config.cross_account_access != null ? 1 : 0
+  name               = "ExternalServiceAccessRole"
+  assume_role_policy = data.aws_iam_policy_document.assume_s3_role[0].json
+}
+
+data "aws_iam_policy_document" "assume_s3_role" {
+  count = var.config.cross_account_access != null ? 1 : 0
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [var.config.cross_account_access.role_arn]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy_document" "permissions_s3" {
+  count      = var.config.cross_account_access != null ? 1 : 0
+  depends_on = [aws_s3_bucket.this]
+  statement {
+    sid    = "S3BucketAllowActions"
+    effect = "Allow"
+
+    actions = var.config.cross_account_access.bucket_actions
+
+    resources = [aws_s3_bucket.this.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "permissions_s3_policy" {
+  name   = "${var.application}-${var.environment}-permissions-s3-policy"
+  role   = aws_iam_role.external_service_access_role[0].name
+  policy = data.aws_iam_policy_document.permissions_s3[0].json
+}
