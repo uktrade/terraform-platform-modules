@@ -59,7 +59,7 @@ data "aws_security_group" "rds-endpoint" {
 # tflint-ignore: terraform_unused_declarations
 data "archive_file" "lambda" {
   type        = "zip"
-  source_file = "${path.module}/manage_users.py"
+  source_file = "${path.module}/database/manage_users.py"
   output_path = "${path.module}/manage_users.zip"
   depends_on = [
     aws_iam_role.lambda-execution-role

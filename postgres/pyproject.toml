@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "database"
+version = "0.1.0"
+description = "Python utilities for managing the postgres database"
+authors = ["Department for Business and Trade Platform Team <sre-team@digital.trade.gov.uk>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
