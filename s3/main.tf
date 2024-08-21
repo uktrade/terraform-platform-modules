@@ -38,6 +38,7 @@ data "aws_iam_policy_document" "bucket-policy" {
 }
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
+  count = var.config.serve_static ? 0 : 1
   bucket = aws_s3_bucket.this.id
   policy = data.aws_iam_policy_document.bucket-policy.json
 }
