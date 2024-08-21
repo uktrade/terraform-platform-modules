@@ -25,8 +25,9 @@ Various quality checks are run in AWS Codebuild in the `platform-tools` account 
 * [terraform validate](https://developer.hashicorp.com/terraform/cli/commands/validate)
 * [tflint](https://github.com/terraform-linters/tflint])
 * [terraform test](https://developer.hashicorp.com/terraform/cli/commands/test) - plan style
+* python tests - unit tests for python code within the terraform modules
+
 * Todo: [terraform test](https://developer.hashicorp.com/terraform/cli/commands/test) - end to end tests which do an apply and actually provision infrastructure
-* Todo: poetry run pytest - unit tests for python code within the terraform modules
 
 ### Running the terraform unit tests locally
 
@@ -51,7 +52,7 @@ terraform test -test-directory e2e-tests
 
 ### Running the python unit tests locally
 
-The Lambda provisioned by the terraform postgres module uses python3.11 at runtime.  Tests should be executed locally, using python 3.11.  From the root directory, check which python version the poetry environment is using:
+The Lambda provisioned by the terraform postgres module uses python 3.11 at runtime.  Tests should be executed locally, using python 3.11.  From the root directory, check which python version the poetry environment is using:
 
 ```shell
 poetry run python --version
