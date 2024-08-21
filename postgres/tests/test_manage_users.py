@@ -17,17 +17,18 @@ class TestAppUserCustomResource(unittest.TestCase):
     def setUp(self):
         self.cursor = MagicMock()
 
+
     @classmethod
     def setUpClass(cls):
         cls.secret_name = "test-secret-name"
         cls.secret_string = '{"engine": "postgres", "port": 5432, "dbname": "main", "host": "test-host", "username": "random-user", "password": "password123"}'
         cls.event = {
-                "SecretName": cls.secret_name,
-                "SecretDescription": "used for testing",
-                "Username": "test-user",
-                "Permissions": ["SELECT"],
-                "CopilotApplication": "test-app",
-                "CopilotEnvironment": "test",
+            "SecretName": cls.secret_name,
+            "SecretDescription": "used for testing",
+            "Username": "test-user",
+            "Permissions": ["SELECT"],
+            "CopilotApplication": "test-app",
+            "CopilotEnvironment": "test",
             "LogicalResourceId": "123LogicalResourceId",
             "StackId": "123/TestStackId",
             "ResponseURL": "https://test.url",
@@ -38,30 +39,11 @@ class TestAppUserCustomResource(unittest.TestCase):
         cls.conn = MagicMock()
         cls.cursor = MagicMock()
 
+
     @pytest.fixture(autouse=True)
     def capsys(self, capsys):
         self.capsys = capsys
 
-    # def test_drop_user(self):
-    #     self.cursor.fetchone.return_value = ("user_info",)
-
-    #     drop_user(self.cursor, "test_user")
-
-    #     self.cursor.execute.assert_any_call(
-    #         "SELECT * FROM pg_catalog.pg_user WHERE usename = 'test_user'"
-    #     )
-    #     self.cursor.execute.assert_any_call("GRANT test_user TO postgres")
-    #     self.cursor.execute.assert_any_call("DROP OWNED BY test_user")
-    #     self.cursor.execute.assert_any_call("DROP USER test_user")
-
-    # def test_drop_user_no_user(self):
-    #     self.cursor.fetchone.return_value = None
-
-    #     drop_user(self.cursor, "nonexistent_user")
-
-    #     self.cursor.execute.assert_called_once_with(
-    #         "SELECT * FROM pg_catalog.pg_user WHERE usename = 'nonexistent_user'"
-    #     )
 
     def test_create_or_update_db_user(self):
         self.cursor.fetchone.return_value = None
