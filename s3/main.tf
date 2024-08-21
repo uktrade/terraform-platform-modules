@@ -198,6 +198,7 @@ data "aws_cloudfront_cache_policy" "example" {
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
   count = var.config.serve_static ? 1 : 0
+  depends_on = aws_acm_certificate.certificate
   provider = aws.domain-cdn
   aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
 
