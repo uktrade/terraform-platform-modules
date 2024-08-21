@@ -4,7 +4,6 @@ resource "aws_s3_bucket" "this" {
   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   bucket = var.config.bucket_name
-  provider = aws.domain
 
   tags = local.tags
 }
@@ -40,13 +39,11 @@ data "aws_iam_policy_document" "bucket-policy" {
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
   bucket = aws_s3_bucket.this.id
-  provider = aws.domain
   policy = data.aws_iam_policy_document.bucket-policy.json
 }
 
 resource "aws_s3_bucket_versioning" "this-versioning" {
   bucket = aws_s3_bucket.this.id
-  provider = aws.domain
 
   versioning_configuration {
     status = coalesce(var.config.versioning, false) ? "Enabled" : "Disabled"
@@ -56,7 +53,6 @@ resource "aws_s3_bucket_versioning" "this-versioning" {
 resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
   count = var.config.lifecycle_rules != null ? 1 : 0
 
-  provider = aws.domain
   bucket = aws_s3_bucket.this.id
 
   # checkov:skip=CKV_AWS_300: Ensure S3 lifecycle configuration sets period for aborting failed uploads
@@ -82,7 +78,6 @@ resource "aws_kms_key" "kms-key" {
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
-  provider = aws.domain
 
   policy = jsonencode({
     Id = "key-default-1"
@@ -102,7 +97,6 @@ resource "aws_kms_key" "kms-key" {
 }
 
 resource "aws_kms_alias" "s3-bucket" {
-  provider = aws.domain
   depends_on    = [aws_kms_key.kms-key]
   name          = "alias/${local.kms_alias_name}"
   target_key_id = aws_kms_key.kms-key.id
@@ -112,7 +106,6 @@ resource "aws_kms_alias" "s3-bucket" {
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
   # checkov:skip=CKV2_AWS_67:We are not currently rotating the keys
   bucket = aws_s3_bucket.this.id
-  provider = aws.domain
 
   rule {
     apply_server_side_encryption_by_default {
@@ -123,7 +116,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
-  provider = aws.domain
   bucket = aws_s3_bucket.this.id
 
   count = var.config.retention_policy != null ? 1 : 0
@@ -139,7 +131,6 @@ resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
 
 // create objects based on the config.objects key
 resource "aws_s3_object" "object" {
-  provider = aws.domain
   for_each = { for item in coalesce(var.config.objects, []) : item.key => item.body }
 
   bucket  = aws_s3_bucket.this.id
@@ -151,7 +142,6 @@ resource "aws_s3_object" "object" {
 }
 
 resource "aws_s3_bucket_public_access_block" "public_access_block" {
-  provider = aws.domain
   bucket                  = aws_s3_bucket.this.id
   block_public_acls       = true
   block_public_policy     = true
@@ -170,7 +160,6 @@ resource "aws_cloudfront_origin_access_identity" "oai" {
 # Attach a bucket policy to allow CloudFront to access the bucket
 resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
   count = var.config.serve_static ? 1 : 0
-  provider = aws.domain
 
   bucket = aws_s3_bucket.this.id
 
