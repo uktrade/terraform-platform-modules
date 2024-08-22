@@ -186,11 +186,38 @@ resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
 
 resource "aws_acm_certificate" "certificate" {
   count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
   domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
   validation_method = "DNS"
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = local.tags
+}
+
+data "aws_route53_zone" "selected" {
+  count = var.config.serve_static ? 1 : 0
+  name         = "${var.environment}.${var.application}.uktrade.digital."
+  private_zone = false
+}
+
+resource "aws_route53_record" "cert_validation" {
+  count = var.config.serve_static ? 1 : 0
+  name    = aws_acm_certificate.certificate[0].domain_validation_options[0].resource_record_name
+  type    = aws_acm_certificate.certificate[0].domain_validation_options[0].resource_record_type
+  zone_id = data.aws_route53_zone.selected[0].zone_id
+  records = [aws_acm_certificate.certificate[0].domain_validation_options[0].resource_record_value]
+  ttl     = 60
+
+  # Make sure the DNS record is created before attempting to validate the certificate
+  depends_on = [aws_acm_certificate.certificate]
+}
+
+resource "aws_acm_certificate_validation" "certificate_validation" {
+  count = var.config.serve_static ? 1 : 0
+  certificate_arn         = aws_acm_certificate.certificate[0].arn
+  validation_record_fqdns = [aws_route53_record.cert_validation[0].fqdn]
 }
 
 data "aws_cloudfront_cache_policy" "example" {
@@ -199,7 +226,6 @@ data "aws_cloudfront_cache_policy" "example" {
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
   count = var.config.serve_static ? 1 : 0
-  depends_on = [aws_acm_certificate.certificate]
   provider = aws.domain-cdn
   aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
 
