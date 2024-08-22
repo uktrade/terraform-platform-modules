@@ -214,6 +214,7 @@ resource "aws_route53_record" "cert_validation" {
   records = [element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_value, 0)]
   ttl     = 60
   depends_on = [aws_acm_certificate.certificate]
+  allow_overwrite = true
 }
 
 resource "aws_acm_certificate_validation" "certificate_validation" {
