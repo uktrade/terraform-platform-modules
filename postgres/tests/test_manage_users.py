@@ -9,10 +9,16 @@ from moto import mock_aws
 
 from postgres.manage_users import create_or_update_db_user, create_or_update_user_secret, handler
 
-print(f'AWS_REGION:{os.getenv("AWS_REGION")}')
+
+os.environ["AWS_ACCESS_KEY_ID"] = "test_access_key_id"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "test_secret_access_key"
+os.environ["AWS_REGION"] = "eu-west-2"
+os.environ["AWS_SECURITY_TOKEN"] = "test_security_token"
+
+
 class TestManageUsers(unittest.TestCase):
     def setUp(self):
-        os.environ["AWS_REGION"] = "eu-west-2"
+        
         self.cursor = MagicMock()
 
 
@@ -39,6 +45,7 @@ class TestManageUsers(unittest.TestCase):
 
 
     def test_create_or_update_db_user(self):
+        print(f'AWS_REGION:{os.getenv("AWS_REGION")}')
         self.cursor.fetchone.return_value = None
         conn = MagicMock()
         username = "test_user"
@@ -111,10 +118,11 @@ class TestManageUsers(unittest.TestCase):
         assert parameter["Value"] == json.dumps(user_secret_string)
     
 
+    @mock_aws
     @patch("postgres.manage_users.create_or_update_db_user")
     @patch("postgres.manage_users.psycopg2.connect")
-    @mock_aws
     def test_handler(self, mock_connect, mock_create_or_update_db_user):
+        print(f'AWS_REGION:{os.getenv("AWS_REGION")}')
         secretsmanager = boto3.client("secretsmanager", region_name='eu-west-2')
         secret_id = secretsmanager.create_secret(
             Name=self.secret_name, SecretString=self.secret_string
