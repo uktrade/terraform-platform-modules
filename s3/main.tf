@@ -203,16 +203,14 @@ data "aws_route53_zone" "selected" {
 }
 
 resource "aws_route53_record" "cert_validation" {
-  count = var.config.serve_static ? 1 : 0
-  for_each = { for option in aws_acm_certificate.certificate[0].domain_validation_options : option.domain_name => option }
+  for_each = { for dvo in aws_acm_certificate.certificate[0].domain_validation_options : dvo.domain_name => dvo }
 
   name    = each.value.resource_record_name
   type    = each.value.resource_record_type
-  zone_id = data.aws_route53_zone.selected[0].zone_id
+  zone_id = var.route53_zone_id
   records = [each.value.resource_record_value]
   ttl     = 60
-
-  depends_on = [aws_acm_certificate.certificate]
+}ws_acm_certificate.certificate]
 }
 
 resource "aws_acm_certificate_validation" "certificate_validation" {
