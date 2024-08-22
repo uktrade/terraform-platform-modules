@@ -205,6 +205,7 @@ data "aws_route53_zone" "selected" {
 
 resource "aws_route53_record" "cert_validation" {
   count = var.config.serve_static ? 1 : 0
+  provider = aws.domain-cdn
 
   name    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
   type    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_type, 0)
