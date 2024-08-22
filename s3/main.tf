@@ -218,6 +218,7 @@ resource "aws_acm_certificate_validation" "certificate_validation" {
   count = var.config.serve_static ? 1 : 0
   certificate_arn         = aws_acm_certificate.certificate[0].arn
   validation_record_fqdns = [aws_route53_record.cert_validation[0].fqdn]
+  depends_on = [aws_route53_record.cert_validation]
 }
 
 data "aws_cloudfront_cache_policy" "example" {
