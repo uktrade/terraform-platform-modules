@@ -207,7 +207,7 @@ resource "aws_route53_record" "cert_validation" {
 
   name    = each.value.resource_record_name
   type    = each.value.resource_record_type
-  zone_id = var.route53_zone_id
+  zone_id = data.aws_route53_zone.selected[0].id
   records = [each.value.resource_record_value]
   ttl     = 60
 }
