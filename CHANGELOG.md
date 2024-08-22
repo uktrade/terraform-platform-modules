@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.1](https://github.com/uktrade/terraform-platform-modules/compare/5.2.0...5.2.1) (2024-08-22)
+
+
+### Bug Fixes
+
+* Fix missing quote and missing permission ([#216](https://github.com/uktrade/terraform-platform-modules/issues/216)) ([9f7992c](https://github.com/uktrade/terraform-platform-modules/commit/9f7992c6790ee54130a865570efcbea2acdb7005))
+
 ## [5.2.0](https://github.com/uktrade/terraform-platform-modules/compare/5.1.6...5.2.0) (2024-08-21)
 
 
