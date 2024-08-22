@@ -9,7 +9,7 @@ from moto import mock_aws
 
 from postgres.manage_users import create_or_update_db_user, create_or_update_user_secret, handler
 
-
+print(f'AWS_REGION:{os.getenv("AWS_REGION")}')
 class TestManageUsers(unittest.TestCase):
     def setUp(self):
         os.environ["AWS_REGION"] = "eu-west-2"
