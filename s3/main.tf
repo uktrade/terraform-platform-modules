@@ -206,10 +206,10 @@ data "aws_route53_zone" "selected" {
 resource "aws_route53_record" "cert_validation" {
   count = var.config.serve_static ? 1 : 0
 
-  name    = aws_acm_certificate.certificate[0].domain_validation_options[0].resource_record_name
-  type    = aws_acm_certificate.certificate[0].domain_validation_options[0].resource_record_type
+  name    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
+  type    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_type, 0)
   zone_id = data.aws_route53_zone.selected[0].id
-  records = [aws_acm_certificate.certificate[0].domain_validation_options[0].resource_record_value]
+  records = [element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_value, 0)]
   ttl     = 60
 }
 
