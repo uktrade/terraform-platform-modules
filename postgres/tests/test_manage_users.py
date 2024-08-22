@@ -118,9 +118,9 @@ class TestManageUsers(unittest.TestCase):
         assert parameter["Value"] == json.dumps(user_secret_string)
     
 
-    @mock_aws
     @patch("postgres.manage_users.create_or_update_db_user")
     @patch("postgres.manage_users.psycopg2.connect")
+    @mock_aws
     def test_handler(self, mock_connect, mock_create_or_update_db_user):
         print(f'AWS_REGION:{os.getenv("AWS_REGION")}')
         secretsmanager = boto3.client("secretsmanager", region_name='eu-west-2')
