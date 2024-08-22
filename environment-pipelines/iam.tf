@@ -534,6 +534,7 @@ data "aws_iam_policy_document" "postgres" {
         "iam:AttachRolePolicy",
         "iam:PutRolePolicy",
         "iam:GetRolePolicy",
+        "iam:DeleteRolePolicy",
         "iam:PassRole"
       ]
       resources = [
