@@ -154,7 +154,7 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 # assume role
 resource "aws_iam_role" "external_service_access_role" {
   count              = var.config.cross_account_access != null ? 1 : 0
-  name               = "ExternalServiceAccessRole"
+  name               = "${var.config.bucket_name}-ExternalServiceAccessRole"
   assume_role_policy = data.aws_iam_policy_document.assume_s3_role[0].json
 }
 
