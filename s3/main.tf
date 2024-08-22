@@ -210,7 +210,6 @@ resource "aws_route53_record" "cert_validation" {
   zone_id = var.route53_zone_id
   records = [each.value.resource_record_value]
   ttl     = 60
-}ws_acm_certificate.certificate]
 }
 
 resource "aws_acm_certificate_validation" "certificate_validation" {
