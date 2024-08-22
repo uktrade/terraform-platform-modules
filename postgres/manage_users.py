@@ -68,8 +68,6 @@ def create_or_update_user_secret(ssm, user_secret_name, user_secret_string, even
 
 def handler(event, context):
     print("REQUEST RECEIVED:\n" + json.dumps(event))
-    print(f"ENVIRONMENT: AWS_REGION={os.getenv("AWS_REGION")}")
-    print(f"ENVIRONMENT: AWS_DEFAULT_REGION={os.getenv("AWS_DEFAULT_REGION")}")
 
     db_master_user_secret_arn = event['MasterUserSecretArn']
     user_secret_name = event['SecretName']
