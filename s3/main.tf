@@ -186,6 +186,7 @@ resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
 
 resource "aws_acm_certificate" "certificate" {
   count = var.config.serve_static ? 1 : 0
+  provider = aws.domain-cdn
   domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
   validation_method = "DNS"
 
