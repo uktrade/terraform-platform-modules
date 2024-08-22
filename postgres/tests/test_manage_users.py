@@ -10,11 +10,6 @@ from moto import mock_aws
 from postgres.manage_users import create_or_update_db_user, create_or_update_user_secret, handler
 
 
-os.environ["AWS_ACCESS_KEY_ID"] = "test_access_key_id"
-os.environ["AWS_SECRET_ACCESS_KEY"] = "test_secret_access_key"
-os.environ["AWS_SECURITY_TOKEN"] = "test_security_token"
-
-
 class TestManageUsers(unittest.TestCase):
     def setUp(self):
         self.cursor = MagicMock()
