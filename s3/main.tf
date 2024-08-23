@@ -1,275 +1,275 @@
-# data "aws_caller_identity" "current" {}
-# resource "aws_s3_bucket" "this" {
-#   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
-#   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-#   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-#   bucket = var.config.serve_static ? "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital" : var.config.bucket_name
+data "aws_caller_identity" "current" {}
+resource "aws_s3_bucket" "this" {
+  # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
+  # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
+  # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
+  bucket = var.config.serve_static ? "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital" : var.config.bucket_name
 
-#   tags = local.tags
-# }
+  tags = local.tags
+}
 
-# data "aws_iam_policy_document" "bucket-policy" {
-#   statement {
-#     principals {
-#       type        = "*"
-#       identifiers = ["*"]
-#     }
+data "aws_iam_policy_document" "bucket-policy" {
+  statement {
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
 
-#     actions = [
-#       "s3:*",
-#     ]
+    actions = [
+      "s3:*",
+    ]
 
-#     effect = "Deny"
+    effect = "Deny"
 
-#     condition {
-#       test     = "Bool"
-#       variable = "aws:SecureTransport"
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
 
-#       values = [
-#         "false",
-#       ]
-#     }
+      values = [
+        "false",
+      ]
+    }
 
-#     resources = [
-#       aws_s3_bucket.this.arn,
-#       "${aws_s3_bucket.this.arn}/*",
-#     ]
-#   }
-# }
+    resources = [
+      aws_s3_bucket.this.arn,
+      "${aws_s3_bucket.this.arn}/*",
+    ]
+  }
+}
 
-# resource "aws_s3_bucket_policy" "bucket-policy" {
-#   count = var.config.serve_static ? 0 : 1
-#   bucket = aws_s3_bucket.this.id
-#   policy = data.aws_iam_policy_document.bucket-policy.json
-# }
+resource "aws_s3_bucket_policy" "bucket-policy" {
+  count = var.config.serve_static ? 0 : 1
+  bucket = aws_s3_bucket.this.id
+  policy = data.aws_iam_policy_document.bucket-policy.json
+}
 
-# resource "aws_s3_bucket_versioning" "this-versioning" {
-#   bucket = aws_s3_bucket.this.id
+resource "aws_s3_bucket_versioning" "this-versioning" {
+  bucket = aws_s3_bucket.this.id
 
-#   versioning_configuration {
-#     status = coalesce(var.config.versioning, false) ? "Enabled" : "Disabled"
-#   }
-# }
+  versioning_configuration {
+    status = coalesce(var.config.versioning, false) ? "Enabled" : "Disabled"
+  }
+}
 
-# resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
-#   count = var.config.lifecycle_rules != null ? 1 : 0
+resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
+  count = var.config.lifecycle_rules != null ? 1 : 0
 
-#   bucket = aws_s3_bucket.this.id
+  bucket = aws_s3_bucket.this.id
 
-#   # checkov:skip=CKV_AWS_300: Ensure S3 lifecycle configuration sets period for aborting failed uploads
-#   dynamic "rule" {
-#     for_each = var.config.lifecycle_rules
-#     content {
-#       id = "rule-${index(var.config.lifecycle_rules, rule.value) + 1}"
-#       abort_incomplete_multipart_upload {
-#         days_after_initiation = 7
-#       }
-#       filter {
-#         prefix = rule.value.filter_prefix
-#       }
-#       expiration {
-#         days = rule.value.expiration_days
-#       }
-#       status = coalesce(rule.value.enabled, false) ? "Enabled" : "Disabled"
-#     }
-#   }
-# }
+  # checkov:skip=CKV_AWS_300: Ensure S3 lifecycle configuration sets period for aborting failed uploads
+  dynamic "rule" {
+    for_each = var.config.lifecycle_rules
+    content {
+      id = "rule-${index(var.config.lifecycle_rules, rule.value) + 1}"
+      abort_incomplete_multipart_upload {
+        days_after_initiation = 7
+      }
+      filter {
+        prefix = rule.value.filter_prefix
+      }
+      expiration {
+        days = rule.value.expiration_days
+      }
+      status = coalesce(rule.value.enabled, false) ? "Enabled" : "Disabled"
+    }
+  }
+}
 
-# resource "aws_kms_key" "kms-key" {
-#   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
-#   description = "KMS Key for S3 encryption"
-#   tags        = local.tags
+resource "aws_kms_key" "kms-key" {
+  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
+  description = "KMS Key for S3 encryption"
+  tags        = local.tags
 
-#   policy = jsonencode({
-#     Id = "key-default-1"
-#     Statement = [
-#       {
-#         "Sid" : "Enable IAM User Permissions",
-#         "Effect" : "Allow",
-#         "Principal" : {
-#           "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-#         },
-#         "Action" : "kms:*",
-#         "Resource" : "*"
-#       }
-#     ]
-#     Version = "2012-10-17"
-#   })
-# }
+  policy = jsonencode({
+    Id = "key-default-1"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
+}
 
-# resource "aws_kms_alias" "s3-bucket" {
-#   depends_on    = [aws_kms_key.kms-key]
-#   name          = "alias/${local.kms_alias_name}"
-#   target_key_id = aws_kms_key.kms-key.id
-# }
+resource "aws_kms_alias" "s3-bucket" {
+  depends_on    = [aws_kms_key.kms-key]
+  name          = "alias/${local.kms_alias_name}"
+  target_key_id = aws_kms_key.kms-key.id
+}
 
-# // require server side encryption
-# resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
-#   # checkov:skip=CKV2_AWS_67:We are not currently rotating the keys
-#   bucket = aws_s3_bucket.this.id
+// require server side encryption
+resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
+  # checkov:skip=CKV2_AWS_67:We are not currently rotating the keys
+  bucket = aws_s3_bucket.this.id
 
-#   rule {
-#     apply_server_side_encryption_by_default {
-#       kms_master_key_id = aws_kms_key.kms-key.arn
-#       sse_algorithm     = "aws:kms"
-#     }
-#   }
-# }
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.kms-key.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
 
-# resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
-#   bucket = aws_s3_bucket.this.id
+resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
+  bucket = aws_s3_bucket.this.id
 
-#   count = var.config.retention_policy != null ? 1 : 0
+  count = var.config.retention_policy != null ? 1 : 0
 
-#   rule {
-#     default_retention {
-#       mode  = var.config.retention_policy.mode
-#       days  = lookup(var.config.retention_policy, "days", null)
-#       years = lookup(var.config.retention_policy, "years", null)
-#     }
-#   }
-# }
+  rule {
+    default_retention {
+      mode  = var.config.retention_policy.mode
+      days  = lookup(var.config.retention_policy, "days", null)
+      years = lookup(var.config.retention_policy, "years", null)
+    }
+  }
+}
 
-# // create objects based on the config.objects key
-# resource "aws_s3_object" "object" {
-#   for_each = { for item in coalesce(var.config.objects, []) : item.key => item.body }
+// create objects based on the config.objects key
+resource "aws_s3_object" "object" {
+  for_each = { for item in coalesce(var.config.objects, []) : item.key => item.body }
 
-#   bucket  = aws_s3_bucket.this.id
-#   key     = each.key
-#   content = each.value
+  bucket  = aws_s3_bucket.this.id
+  key     = each.key
+  content = each.value
 
-#   kms_key_id             = aws_kms_key.kms-key.arn
-#   server_side_encryption = "aws:kms"
-# }
+  kms_key_id             = aws_kms_key.kms-key.arn
+  server_side_encryption = "aws:kms"
+}
 
-# resource "aws_s3_bucket_public_access_block" "public_access_block" {
-#   bucket                  = aws_s3_bucket.this.id
-#   block_public_acls       = true
-#   block_public_policy     = true
-#   ignore_public_acls      = true
-#   restrict_public_buckets = true
-# }
+resource "aws_s3_bucket_public_access_block" "public_access_block" {
+  bucket                  = aws_s3_bucket.this.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
 
 // Cloudfront resources for serving static content
 # Create a CloudFront Origin Access Identity (OAI)
-# resource "aws_cloudfront_origin_access_identity" "oai" {
-#   count  = var.config.serve_static ? 1 : 0
-#   provider = aws.domain-cdn
-#   comment = "OAI for S3 bucket"
-# }
+resource "aws_cloudfront_origin_access_identity" "oai" {
+  count  = var.config.serve_static ? 1 : 0
+  provider = aws.domain-cdn
+  comment = "OAI for S3 bucket"
+}
 
-# # Attach a bucket policy to allow CloudFront to access the bucket
-# resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
-#   count = var.config.serve_static ? 1 : 0
+# Attach a bucket policy to allow CloudFront to access the bucket
+resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
+  count = var.config.serve_static ? 1 : 0
 
-#   bucket = aws_s3_bucket.this.id
+  bucket = aws_s3_bucket.this.id
 
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Effect    = "Allow"
-#         Principal = {
-#           AWS = aws_cloudfront_origin_access_identity.oai[0].iam_arn
-#         }
-#         Action    = "s3:GetObject"
-#         Resource  = "${aws_s3_bucket.this.arn}/*"
-#         Condition = {
-#           StringEquals = {
-#             "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution[0].arn
-#           }
-#         }
-#       }
-#     ]
-#   })
-# }
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = {
+          AWS = aws_cloudfront_origin_access_identity.oai[0].iam_arn
+        }
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.this.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution[0].arn
+          }
+        }
+      }
+    ]
+  })
+}
 
-# resource "aws_acm_certificate" "certificate" {
-#   count = var.config.serve_static ? 1 : 0
-#   provider = aws.domain-cdn
-#   domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
-#   validation_method = "DNS"
+resource "aws_acm_certificate" "certificate" {
+  count = var.config.serve_static ? 1 : 0
+  provider = aws.domain-cdn
+  domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+  validation_method = "DNS"
 
-#   lifecycle {
-#     create_before_destroy = true
-#   }
+  lifecycle {
+    create_before_destroy = true
+  }
 
-#   tags = local.tags
-# }
+  tags = local.tags
+}
 
-# data "aws_route53_zone" "selected" {
-#   count = var.config.serve_static ? 1 : 0
-#   provider = aws.domain-cdn
-#   name         = "${var.application}.uktrade.digital"
-#   private_zone = false
-# }
+data "aws_route53_zone" "selected" {
+  count = var.config.serve_static ? 1 : 0
+  provider = aws.domain-cdn
+  name         = "${var.application}.uktrade.digital"
+  private_zone = false
+}
 
-# resource "aws_route53_record" "cert_validation" {
-#   count = var.config.serve_static ? 1 : 0
-#   provider = aws.domain-cdn
+resource "aws_route53_record" "cert_validation" {
+  count = var.config.serve_static ? 1 : 0
+  provider = aws.domain-cdn
 
-#   name    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
-#   type    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_type, 0)
-#   zone_id = data.aws_route53_zone.selected[0].id
-#   records = [element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_value, 0)]
-#   ttl     = 60
-#   depends_on = [aws_acm_certificate.certificate]
-#   allow_overwrite = true
-# }
+  name    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
+  type    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_type, 0)
+  zone_id = data.aws_route53_zone.selected[0].id
+  records = [element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_value, 0)]
+  ttl     = 60
+  depends_on = [aws_acm_certificate.certificate]
+  allow_overwrite = true
+}
 
-# resource "aws_acm_certificate_validation" "certificate_validation" {
-#   count = var.config.serve_static ? 1 : 0
-#   provider = aws.domain-cdn
-#   certificate_arn         = aws_acm_certificate.certificate[0].arn
-#   validation_record_fqdns = [aws_route53_record.cert_validation[0].fqdn]
-#   depends_on = [aws_route53_record.cert_validation]
-# }
+resource "aws_acm_certificate_validation" "certificate_validation" {
+  count = var.config.serve_static ? 1 : 0
+  provider = aws.domain-cdn
+  certificate_arn         = aws_acm_certificate.certificate[0].arn
+  validation_record_fqdns = [aws_route53_record.cert_validation[0].fqdn]
+  depends_on = [aws_route53_record.cert_validation]
+}
 
-# data "aws_cloudfront_cache_policy" "example" {
-#   name = "Managed-CachingOptimized"
-# }
+data "aws_cloudfront_cache_policy" "example" {
+  name = "Managed-CachingOptimized"
+}
 
-# resource "aws_cloudfront_distribution" "s3_distribution" {
-#   count = var.config.serve_static ? 1 : 0
-#   provider = aws.domain-cdn
-#   aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
+resource "aws_cloudfront_distribution" "s3_distribution" {
+  count = var.config.serve_static ? 1 : 0
+  provider = aws.domain-cdn
+  aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
 
-#   origin {
-#     domain_name = aws_s3_bucket.this.bucket_regional_domain_name
-#     origin_id   = "S3-${aws_s3_bucket.this.bucket}"
+  origin {
+    domain_name = aws_s3_bucket.this.bucket_regional_domain_name
+    origin_id   = "S3-${aws_s3_bucket.this.bucket}"
 
-#     s3_origin_config {
-#       origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
-#     }
-#   }
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
+    }
+  }
 
-#   default_cache_behavior {
-#     allowed_methods  = ["GET", "HEAD"]
-#     cached_methods   = ["GET", "HEAD"]
-#     target_origin_id = "S3-${aws_s3_bucket.this.bucket}"
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-${aws_s3_bucket.this.bucket}"
 
-#     viewer_protocol_policy = "allow-all"
-#     cache_policy_id = data.aws_cloudfront_cache_policy.example.id
-#   }
+    viewer_protocol_policy = "allow-all"
+    cache_policy_id = data.aws_cloudfront_cache_policy.example.id
+  }
 
-#   viewer_certificate {
-#     acm_certificate_arn             = aws_acm_certificate.certificate[0].arn
-#     ssl_support_method              = "sni-only"
-#     minimum_protocol_version        = "TLSv1.2_2021"
-#   }
+  viewer_certificate {
+    acm_certificate_arn             = aws_acm_certificate.certificate[0].arn
+    ssl_support_method              = "sni-only"
+    minimum_protocol_version        = "TLSv1.2_2021"
+  }
 
-#   restrictions {
-#     geo_restriction {
-#       restriction_type = "none"
-#     }
-#   }
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
 
-#   # default_root_object = "index.html" Do we want this set?
+  # default_root_object = "index.html" Do we want this set?
 
-#   enabled = true
+  enabled = true
 
-#   tags = local.tags
-# }
+  tags = local.tags
+}
 
 # Define the content of index.html inline (only if serve_static is true)
 # locals {
