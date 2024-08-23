@@ -107,7 +107,7 @@ locals {
         input_artifacts : ["build_output"],
         output_artifacts : [],
         configuration : {
-          ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-trigger[\"\"]"
+          ProjectName : "${var.application}-${var.pipeline_name}-environment-pipeline-trigger"
           PrimarySource : "build_output"
           EnvironmentVariables : jsonencode([
             { name : "TRIGGERED_ACCOUNT_ROLE_ARN", value : local.triggered_pipeline_account_role },
