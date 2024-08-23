@@ -3,7 +3,7 @@ resource "aws_s3_bucket" "this" {
   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-  bucket = var.config.bucket_name
+  bucket = var.config.serve_static ? "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital" : var.config.bucket_name
 
   tags = local.tags
 }
