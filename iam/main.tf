@@ -1,6 +1,5 @@
 resource "aws_iam_role" "external_service_access_role" {
-  # TODO: Fix role name with a resource identifier other than its ARN
-  name               = "TEST-ExternalServiceAccessRole"
+  name               = "${var.policy_prefix}-ExternalAccess"
   assume_role_policy = data.aws_iam_policy_document.allow_assume_role.json
 }
 
@@ -22,7 +21,7 @@ data "aws_iam_policy_document" "allow_actions" {
     sid    = "AllowActions"
     effect = "Allow"
 
-    actions = var.config.bucket_actions
+    actions = var.config.actions
 
     resources = [var.resource_arn]
   }

@@ -45,8 +45,8 @@ variable "config" {
 
     # Cross account access
     cross_account_access = optional(object({
-      role_arn       = string
-      bucket_actions = list(string)
+      role_arn = string
+      actions  = list(string)
       })
     )
   })

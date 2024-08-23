@@ -5,8 +5,8 @@ variable "application" {
 
 variable "config" {
   type = object({
-    role_arn       = string
-    bucket_actions = list(string)
+    role_arn = string
+    actions  = list(string)
   })
 }
 
@@ -16,6 +16,11 @@ variable "environment" {
 }
 
 variable "resource_arn" {
+  type    = string
+  default = ""
+}
+
+variable "policy_prefix" {
   type    = string
   default = ""
 }

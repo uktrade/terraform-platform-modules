@@ -3,9 +3,10 @@ variables {
   environment = "iam-test-environment"
   config = {
     "role_arn" = "test-role-arn"
-    "bucket_actions" = ["TEST"]
+    "actions"  = ["TEST"]
   }
-  resource_arn = "test-bucket-arn"
+  resource_arn  = "test-bucket-arn"
+  policy_prefix = "test-bucket-name"
 }
 
 
@@ -13,8 +14,8 @@ run "aws_iam_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_iam_role.external_service_access_role.name == "TEST-ExternalServiceAccessRole"
-    error_message = "Should be: TEST-ExternalServiceAccessRole"
+    condition     = aws_iam_role.external_service_access_role.name == "test-bucket-name-ExternalAccess"
+    error_message = "Should be: test-bucket-name-ExternalAccess"
   }
 
   assert {
@@ -28,8 +29,8 @@ run "aws_iam_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role_policy.allow_actions.role == "TEST-ExternalServiceAccessRole"
-    error_message = "Should be: TEST-ExternalServiceAccessRole"
+    condition     = aws_iam_role_policy.allow_actions.role == "test-bucket-name-ExternalAccess"
+    error_message = "Should be: test-bucket-name-ExternalAccess"
   }
 
   assert {
