@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.2](https://github.com/uktrade/terraform-platform-modules/compare/5.2.1...5.2.2) (2024-08-23)
+
+
+### Bug Fixes
+
+* No idea why this was working before but isn't now. ([#218](https://github.com/uktrade/terraform-platform-modules/issues/218)) ([253bab5](https://github.com/uktrade/terraform-platform-modules/commit/253bab587df9d1feb7d0b51604d120937cb5fedf))
+
 ## [5.2.1](https://github.com/uktrade/terraform-platform-modules/compare/5.2.0...5.2.1) (2024-08-22)
 
 
