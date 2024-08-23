@@ -1,10 +1,10 @@
 resource "aws_iam_role" "external_service_access_role" {
   # TODO: Fix role name with a resource identifier other than its ARN
   name               = "TEST-ExternalServiceAccessRole"
-  assume_role_policy = data.aws_iam_policy_document.assume_s3_role.json
+  assume_role_policy = data.aws_iam_policy_document.allow_assume_role.json
 }
 
-data "aws_iam_policy_document" "assume_s3_role" {
+data "aws_iam_policy_document" "allow_assume_role" {
   statement {
     effect = "Allow"
 
@@ -17,9 +17,9 @@ data "aws_iam_policy_document" "assume_s3_role" {
   }
 }
 
-data "aws_iam_policy_document" "permissions_s3" {
+data "aws_iam_policy_document" "allow_actions" {
   statement {
-    sid    = "S3BucketAllowActions"
+    sid    = "AllowActions"
     effect = "Allow"
 
     actions = var.config.bucket_actions
@@ -28,8 +28,8 @@ data "aws_iam_policy_document" "permissions_s3" {
   }
 }
 
-resource "aws_iam_role_policy" "permissions_s3_policy" {
-  name   = "${var.application}-${var.environment}-permissions-s3-policy"
+resource "aws_iam_role_policy" "allow_actions" {
+  name   = "${var.application}-${var.environment}-allow-actions"
   role   = aws_iam_role.external_service_access_role.name
-  policy = data.aws_iam_policy_document.permissions_s3.json
+  policy = data.aws_iam_policy_document.allow_actions.json
 }

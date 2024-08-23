@@ -23,17 +23,17 @@ run "aws_iam_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role_policy.permissions_s3_policy.name == "iam-test-application-iam-test-environment-permissions-s3-policy"
-    error_message = "Should be: iam-test-application-iam-test-environment-permissions-s3-policy"
+    condition     = aws_iam_role_policy.allow_actions.name == "iam-test-application-iam-test-environment-allow-actions"
+    error_message = "Should be: iam-test-application-iam-test-environment-allow-actions"
   }
 
   assert {
-    condition     = aws_iam_role_policy.permissions_s3_policy.role == "TEST-ExternalServiceAccessRole"
+    condition     = aws_iam_role_policy.allow_actions.role == "TEST-ExternalServiceAccessRole"
     error_message = "Should be: TEST-ExternalServiceAccessRole"
   }
 
   assert {
-    condition     = can(regex("test-bucket-arn", aws_iam_role_policy.permissions_s3_policy.policy))
+    condition     = can(regex("test-bucket-arn", aws_iam_role_policy.allow_actions.policy))
     error_message = "Statement should contain resource arn: test-bucket-arn"
   }
 }
