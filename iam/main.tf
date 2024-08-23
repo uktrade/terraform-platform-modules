@@ -1,5 +1,5 @@
 resource "aws_iam_role" "external_service_access_role" {
-  name               = "${var.policy_prefix}-ExternalAccess"
+  name               = local.role_name
   assume_role_policy = data.aws_iam_policy_document.allow_assume_role.json
 }
 

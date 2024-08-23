@@ -20,7 +20,7 @@ variable "resource_arn" {
   default = ""
 }
 
-variable "policy_prefix" {
+variable "resource_name" {
   type    = string
   default = ""
 }

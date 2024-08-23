@@ -6,7 +6,7 @@ variables {
     "actions"  = ["TEST"]
   }
   resource_arn  = "test-bucket-arn"
-  policy_prefix = "test-bucket-name"
+  resource_name = "test-bucket-name"
 }
 
 

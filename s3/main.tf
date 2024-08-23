@@ -156,6 +156,6 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 #   application   = var.application
 #   config        = var.config.cross_account_access
 #   environment   = var.environment
-#   policy_prefix = aws_s3_bucket.this.name
+#   resource_name = aws_s3_bucket.this.name
 #   resource_arn  = aws_s3_bucket.this.arn
 # }
