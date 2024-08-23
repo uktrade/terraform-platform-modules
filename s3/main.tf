@@ -152,124 +152,124 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 
 // Cloudfront resources for serving static content
 # Create a CloudFront Origin Access Identity (OAI)
-resource "aws_cloudfront_origin_access_identity" "oai" {
-  count  = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
-  comment = "OAI for S3 bucket"
-}
+# resource "aws_cloudfront_origin_access_identity" "oai" {
+#   count  = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
+#   comment = "OAI for S3 bucket"
+# }
 
-# Attach a bucket policy to allow CloudFront to access the bucket
-resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
-  count = var.config.serve_static ? 1 : 0
+# # Attach a bucket policy to allow CloudFront to access the bucket
+# resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
+#   count = var.config.serve_static ? 1 : 0
 
-  bucket = aws_s3_bucket.this.id
+#   bucket = aws_s3_bucket.this.id
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect    = "Allow"
-        Principal = {
-          AWS = aws_cloudfront_origin_access_identity.oai[0].iam_arn
-        }
-        Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.this.arn}/*"
-        Condition = {
-          StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution[0].arn
-          }
-        }
-      }
-    ]
-  })
-}
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect    = "Allow"
+#         Principal = {
+#           AWS = aws_cloudfront_origin_access_identity.oai[0].iam_arn
+#         }
+#         Action    = "s3:GetObject"
+#         Resource  = "${aws_s3_bucket.this.arn}/*"
+#         Condition = {
+#           StringEquals = {
+#             "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution[0].arn
+#           }
+#         }
+#       }
+#     ]
+#   })
+# }
 
-resource "aws_acm_certificate" "certificate" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
-  domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
-  validation_method = "DNS"
+# resource "aws_acm_certificate" "certificate" {
+#   count = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
+#   domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+#   validation_method = "DNS"
 
-  lifecycle {
-    create_before_destroy = true
-  }
+#   lifecycle {
+#     create_before_destroy = true
+#   }
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }
 
-data "aws_route53_zone" "selected" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
-  name         = "${var.application}.uktrade.digital"
-  private_zone = false
-}
+# data "aws_route53_zone" "selected" {
+#   count = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
+#   name         = "${var.application}.uktrade.digital"
+#   private_zone = false
+# }
 
-resource "aws_route53_record" "cert_validation" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
+# resource "aws_route53_record" "cert_validation" {
+#   count = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
 
-  name    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
-  type    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_type, 0)
-  zone_id = data.aws_route53_zone.selected[0].id
-  records = [element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_value, 0)]
-  ttl     = 60
-  depends_on = [aws_acm_certificate.certificate]
-  allow_overwrite = true
-}
+#   name    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
+#   type    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_type, 0)
+#   zone_id = data.aws_route53_zone.selected[0].id
+#   records = [element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_value, 0)]
+#   ttl     = 60
+#   depends_on = [aws_acm_certificate.certificate]
+#   allow_overwrite = true
+# }
 
-resource "aws_acm_certificate_validation" "certificate_validation" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
-  certificate_arn         = aws_acm_certificate.certificate[0].arn
-  validation_record_fqdns = [aws_route53_record.cert_validation[0].fqdn]
-  depends_on = [aws_route53_record.cert_validation]
-}
+# resource "aws_acm_certificate_validation" "certificate_validation" {
+#   count = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
+#   certificate_arn         = aws_acm_certificate.certificate[0].arn
+#   validation_record_fqdns = [aws_route53_record.cert_validation[0].fqdn]
+#   depends_on = [aws_route53_record.cert_validation]
+# }
 
-data "aws_cloudfront_cache_policy" "example" {
-  name = "Managed-CachingOptimized"
-}
+# data "aws_cloudfront_cache_policy" "example" {
+#   name = "Managed-CachingOptimized"
+# }
 
-resource "aws_cloudfront_distribution" "s3_distribution" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
-  aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
+# resource "aws_cloudfront_distribution" "s3_distribution" {
+#   count = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
+#   aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
 
-  origin {
-    domain_name = aws_s3_bucket.this.bucket_regional_domain_name
-    origin_id   = "S3-${aws_s3_bucket.this.bucket}"
+#   origin {
+#     domain_name = aws_s3_bucket.this.bucket_regional_domain_name
+#     origin_id   = "S3-${aws_s3_bucket.this.bucket}"
 
-    s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
-    }
-  }
+#     s3_origin_config {
+#       origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
+#     }
+#   }
 
-  default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-${aws_s3_bucket.this.bucket}"
+#   default_cache_behavior {
+#     allowed_methods  = ["GET", "HEAD"]
+#     cached_methods   = ["GET", "HEAD"]
+#     target_origin_id = "S3-${aws_s3_bucket.this.bucket}"
 
-    viewer_protocol_policy = "allow-all"
-    cache_policy_id = data.aws_cloudfront_cache_policy.example.id
-  }
+#     viewer_protocol_policy = "allow-all"
+#     cache_policy_id = data.aws_cloudfront_cache_policy.example.id
+#   }
 
-  viewer_certificate {
-    acm_certificate_arn             = aws_acm_certificate.certificate[0].arn
-    ssl_support_method              = "sni-only"
-    minimum_protocol_version        = "TLSv1.2_2021"
-  }
+#   viewer_certificate {
+#     acm_certificate_arn             = aws_acm_certificate.certificate[0].arn
+#     ssl_support_method              = "sni-only"
+#     minimum_protocol_version        = "TLSv1.2_2021"
+#   }
 
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
+#   restrictions {
+#     geo_restriction {
+#       restriction_type = "none"
+#     }
+#   }
 
-  # default_root_object = "index.html" Do we want this set?
+#   # default_root_object = "index.html" Do we want this set?
 
-  enabled = true
+#   enabled = true
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }
 
 # Define the content of index.html inline (only if serve_static is true)
 # locals {
