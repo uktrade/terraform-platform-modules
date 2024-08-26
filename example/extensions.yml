@@ -41,6 +41,11 @@ dw-s3-bucket:
   environments:
     dev:
       bucket_name: digital-workspace-v2-dev
+      cross_account_access:
+        role_arn: test
+        actions:
+          - test
+        policy_prefix: test
       lifecycle_rules:
         - filter_prefix: "logs/"
           expiration_days: 1
@@ -55,9 +60,10 @@ dw-s3-bucket:
     staging:
       bucket_name: xyz-test-acme-widgets-ltd
       versioning: false
-
     training:
       bucket_name: digital-workspace-v2-training
+    my-environment:
+      bucket_name: digital-workspace-v2-my-environment
   objects:
     - key: healthcheck.txt
       body: S3 Proxy is working.
