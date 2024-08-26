@@ -45,7 +45,6 @@ dw-s3-bucket:
         role_arn: test
         actions:
           - test
-        policy_prefix: test
       lifecycle_rules:
         - filter_prefix: "logs/"
           expiration_days: 1
