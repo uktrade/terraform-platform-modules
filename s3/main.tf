@@ -149,13 +149,13 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
   restrict_public_buckets = true
 }
 
-# module "iam" {
-#   count  = var.config.cross_account_access != null ? 1 : 0
-#   source = "../iam"
+module "iam" {
+  count  = var.config.cross_account_access != null ? 1 : 0
+  source = "../iam"
 
-#   application   = var.application
-#   config        = var.config.cross_account_access
-#   environment   = var.environment
-#   resource_name = aws_s3_bucket.this.name
-#   resource_arn  = aws_s3_bucket.this.arn
-# }
+  application   = var.application
+  config        = var.config.cross_account_access
+  environment   = var.environment
+  resource_name = aws_s3_bucket.this.id
+  resource_arn  = aws_s3_bucket.this.arn
+}
