@@ -122,7 +122,7 @@ resource "aws_kms_key" "kms-key" {
           Sid = "Allow CloudFront to Use Key"
           Effect = "Allow"
           Principal = {
-            AWS = aws_cloudfront_origin_access_identity.oai[0].iam_arn
+            AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.oai[0].id}"
           }
           Action = "kms:Decrypt"
           Resource = "*"
@@ -132,6 +132,39 @@ resource "aws_kms_key" "kms-key" {
     Version = "2012-10-17"
   })
 }
+
+# resource "aws_kms_key" "kms-key" {
+#   description = "KMS Key for S3 encryption"
+#   tags        = local.tags
+
+#   policy = jsonencode({
+#     Id = "key-default-1"
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Sid = "Enable IAM User Permissions"
+#         Effect = "Allow"
+#         Principal = {
+#           AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+#         }
+#         Action = "kms:*"
+#         Resource = "*"
+#       },
+#       dynamic "statement" {
+#         for_each = var.config.serve_static ? [1] : []
+#         content {
+#           Sid = "Allow CloudFront to Use Key"
+#           Effect = "Allow"
+#           Principal = {
+#             AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.oai[0].id}"
+#           }
+#           Action = "kms:Decrypt"
+#           Resource = "*"
+#         }
+#       }
+#     ]
+#   })
+# }
 
 resource "aws_kms_alias" "s3-bucket" {
   depends_on    = [aws_kms_key.kms-key]
