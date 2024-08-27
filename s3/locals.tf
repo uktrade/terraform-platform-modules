@@ -21,7 +21,6 @@ locals {
     }
   ]
 
-  # Conditional CloudFront permissions
   cloudfront_statement = var.config.serve_static ? {
     Sid = "Allow CloudFront to Use Key"
     Effect = "Allow"
