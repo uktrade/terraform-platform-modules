@@ -75,6 +75,30 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
   }
 }
 
+# resource "aws_kms_key" "kms-key" {
+#   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
+#   description = "KMS Key for S3 encryption"
+#   tags        = local.tags
+
+#   count = var.config.serve_static ? 0 : 1
+
+#   policy = jsonencode({
+#     Id = "key-default-1"
+#     Statement = [
+#       {
+#         "Sid" : "Enable IAM User Permissions",
+#         "Effect" : "Allow",
+#         "Principal" : {
+#           "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+#         },
+#         "Action" : "kms:*",
+#         "Resource" : "*"
+#       }
+#     ]
+#     Version = "2012-10-17"
+#   })
+# }
+
 resource "aws_kms_key" "kms-key" {
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
@@ -84,13 +108,25 @@ resource "aws_kms_key" "kms-key" {
     Id = "key-default-1"
     Statement = [
       {
-        "Sid" : "Enable IAM User Permissions",
-        "Effect" : "Allow",
-        "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        },
-        "Action" : "kms:*",
-        "Resource" : "*"
+        Sid = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action = "kms:*"
+        Resource = "*"
+      },
+      dynamic "statement" {
+        for_each = var.config.serve_static ? [1] : []
+        content {
+          Sid = "Allow CloudFront to Use Key"
+          Effect = "Allow"
+          Principal = {
+            AWS = aws_cloudfront_origin_access_identity.oai[0].iam_arn
+          }
+          Action = "kms:Decrypt"
+          Resource = "*"
+        }
       }
     ]
     Version = "2012-10-17"
@@ -187,7 +223,7 @@ resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
 resource "aws_acm_certificate" "certificate" {
   count = var.config.serve_static ? 1 : 0
   provider = aws.domain-cdn
-  domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital.s3.amazonaws.com"
+  domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
   validation_method = "DNS"
 
   lifecycle {
@@ -248,7 +284,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${aws_s3_bucket.this.bucket}"
 
-    viewer_protocol_policy = "allow-all"
+    viewer_protocol_policy = "redirect-to-https"
     cache_policy_id = data.aws_cloudfront_cache_policy.example.id
   }
 
@@ -269,6 +305,30 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   enabled = true
 
   tags = local.tags
+}
+
+resource "aws_kms_key" "kms-key" {
+  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
+  description = "KMS Key for S3 encryption"
+  tags        = local.tags
+
+  count = var.config.serve_static ? 0 : 1
+
+  policy = jsonencode({
+    Id = "key-default-1"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
 }
 
 # Define the content of index.html inline (only if serve_static is true)
