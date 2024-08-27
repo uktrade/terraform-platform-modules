@@ -31,5 +31,8 @@ locals {
     Resource = "*"
   }
 
-  statements = var.config.serve_static ? local.base_statements + [local.cloudfront_statement] : local.base_statements
+  statements = concat(
+    local.base_statements,
+    var.config.serve_static ? local.cloudfront_statement : []
+  )
 }
