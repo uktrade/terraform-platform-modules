@@ -75,130 +75,62 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
   }
 }
 
-# resource "aws_kms_key" "kms-key" {
-#   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
-#   description = "KMS Key for S3 encryption"
-#   tags        = local.tags
-
-#   count = var.config.serve_static ? 0 : 1
-
-#   policy = jsonencode({
-#     Id = "key-default-1"
-#     Statement = [
-#       {
-#         "Sid" : "Enable IAM User Permissions",
-#         "Effect" : "Allow",
-#         "Principal" : {
-#           "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-#         },
-#         "Action" : "kms:*",
-#         "Resource" : "*"
-#       }
-#     ]
-#     Version = "2012-10-17"
-#   })
-# }
-# locals {
-#   # Base statements that are always included
-#   base_statements = [
-#     {
-#       Sid = "Enable IAM User Permissions"
-#       Effect = "Allow"
-#       Principal = {
-#         AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-#       }
-#       Action = "kms:*"
-#       Resource = "*"
-#     }
-#   ]
-
-#   # Conditional CloudFront permissions
-#   cloudfront_statement = var.config.serve_static ? {
-#     Sid = "Allow CloudFront to Use Key"
-#     Effect = "Allow"
-#     Principal = {
-#       AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.oai[0].id}"
-#     }
-#     Action = "kms:Decrypt"
-#     Resource = "*"
-#   } : null
-
-#   # Combine base and conditional statements
-#   statements = var.config.serve_static ? local.base_statements + [local.cloudfront_statement] : local.base_statements
-# }
-locals {
-  base_statements = [
-    {
-      Sid = "Enable IAM User Permissions"
-      Effect = "Allow"
-      Principal = {
-        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      }
-      Action = "kms:*"
-      Resource = "*"
-    }
-  ]
-
-  cloudfront_statement = {
-    Sid = "Allow CloudFront to Use Key"
-    Effect = "Allow"
-    Principal = {
-      AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.oai[0].id}"
-    }
-    Action = "kms:Decrypt"
-    Resource = "*"
-  }
-
-  statements = concat(
-    local.base_statements,
-    var.config.serve_static ? [local.cloudfront_statement] : []
-  )
-}
-
 resource "aws_kms_key" "kms-key" {
+  count = var.config.serve_static ? 0 : 1
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
 
   policy = jsonencode({
     Id = "key-default-1"
-    Statement = local.statements
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
     Version = "2012-10-17"
   })
 }
 
-# resource "aws_kms_key" "kms-key" {
-#   description = "KMS Key for S3 encryption"
-#   tags        = local.tags
+resource "aws_kms_key" "kms-key" {
+  count = var.config.serve_static ? 1 : 0
+  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
+  description = "KMS Key for S3 encryption"
+  tags        = local.tags
 
-#   policy = jsonencode({
-#     Id = "key-default-1"
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Sid = "Enable IAM User Permissions"
-#         Effect = "Allow"
-#         Principal = {
-#           AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-#         }
-#         Action = "kms:*"
-#         Resource = "*"
-#       },
-#       dynamic "statement" {
-#         for_each = var.config.serve_static ? [1] : []
-#         content {
-#           Sid = "Allow CloudFront to Use Key"
-#           Effect = "Allow"
-#           Principal = {
-#             AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.oai[0].id}"
-#           }
-#           Action = "kms:Decrypt"
-#           Resource = "*"
-#         }
-#       }
-#     ]
-#   })
-# }
+  policy = jsonencode({
+    Id = "key-default-1"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      },
+      {
+      Sid = "Allow CloudFront to Use Key"
+      Effect = "Allow"
+      Principal = {
+        AWS = aws_cloudfront_origin_access_identity.oai[0].id
+      }
+      Action = "kms:Decrypt"
+      Resource = "*"
+    }
+    ]
+    Version = "2012-10-17"
+  })
+}
+
+
 
 resource "aws_kms_alias" "s3-bucket" {
   depends_on    = [aws_kms_key.kms-key]
@@ -255,11 +187,11 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 
 // Cloudfront resources for serving static content
 # Create a CloudFront Origin Access Identity (OAI)
-resource "aws_cloudfront_origin_access_identity" "oai" {
-  count  = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
-  comment = "OAI for S3 bucket"
-}
+# resource "aws_cloudfront_origin_access_identity" "oai" {
+#   count  = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
+#   comment = "OAI for S3 bucket"
+# }
 
 # Attach a bucket policy to allow CloudFront to access the bucket
 resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
