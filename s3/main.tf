@@ -126,6 +126,34 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
 #   # Combine base and conditional statements
 #   statements = var.config.serve_static ? local.base_statements + [local.cloudfront_statement] : local.base_statements
 # }
+locals {
+  base_statements = [
+    {
+      Sid = "Enable IAM User Permissions"
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action = "kms:*"
+      Resource = "*"
+    }
+  ]
+
+  cloudfront_statement = {
+    Sid = "Allow CloudFront to Use Key"
+    Effect = "Allow"
+    Principal = {
+      AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.oai[0].id}"
+    }
+    Action = "kms:Decrypt"
+    Resource = "*"
+  }
+
+  statements = concat(
+    local.base_statements,
+    var.config.serve_static ? [local.cloudfront_statement] : []
+  )
+}
 
 resource "aws_kms_key" "kms-key" {
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
