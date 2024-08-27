@@ -98,41 +98,8 @@ resource "aws_kms_key" "kms-key" {
   })
 }
 
-resource "aws_kms_key" "kms-key" {
-  count = var.config.serve_static ? 1 : 0
-  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
-  description = "KMS Key for S3 encryption"
-  tags        = local.tags
-
-  policy = jsonencode({
-    Id = "key-default-1"
-    Statement = [
-      {
-        "Sid" : "Enable IAM User Permissions",
-        "Effect" : "Allow",
-        "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        },
-        "Action" : "kms:*",
-        "Resource" : "*"
-      },
-      {
-      Sid = "Allow CloudFront to Use Key"
-      Effect = "Allow"
-      Principal = {
-        AWS = aws_cloudfront_origin_access_identity.oai[0].id
-      }
-      Action = "kms:Decrypt"
-      Resource = "*"
-    }
-    ]
-    Version = "2012-10-17"
-  })
-}
-
-
-
 resource "aws_kms_alias" "s3-bucket" {
+  count = var.config.serve_static ? 0 : 1
   depends_on    = [aws_kms_key.kms-key]
   name          = "alias/${local.kms_alias_name}"
   target_key_id = aws_kms_key.kms-key.id
@@ -187,11 +154,50 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 
 // Cloudfront resources for serving static content
 # Create a CloudFront Origin Access Identity (OAI)
-# resource "aws_cloudfront_origin_access_identity" "oai" {
-#   count  = var.config.serve_static ? 1 : 0
-#   provider = aws.domain-cdn
-#   comment = "OAI for S3 bucket"
-# }
+resource "aws_cloudfront_origin_access_identity" "oai" {
+  count  = var.config.serve_static ? 1 : 0
+  provider = aws.domain-cdn
+  comment = "OAI for S3 bucket"
+}
+
+resource "aws_kms_key" "cloudfront-kms-key" {
+  count = var.config.serve_static ? 1 : 0
+  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
+  description = "KMS Key for S3 encryption"
+  tags        = local.tags
+
+  policy = jsonencode({
+    Id = "key-default-1"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      },
+      {
+      Sid = "Allow CloudFront to Use Key"
+      Effect = "Allow"
+      Principal = {
+        AWS = aws_cloudfront_origin_access_identity.oai[0].id
+      }
+      Action = "kms:Decrypt"
+      Resource = "*"
+    }
+    ]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_kms_alias" "cloudfront-s3-bucket" {
+  count = var.config.serve_static ? 1 : 0
+  depends_on    = [aws_kms_key.cloudfront-kms-key]
+  name          = "alias/${local.kms_alias_name}"
+  target_key_id = aws_kms_key.kms-key.id
+}
 
 # Attach a bucket policy to allow CloudFront to access the bucket
 resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
