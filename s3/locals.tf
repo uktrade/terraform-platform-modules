@@ -33,6 +33,6 @@ locals {
 
   statements = concat(
     local.base_statements,
-    var.config.serve_static ? local.cloudfront_statement : []
+    var.config.serve_static ? [local.cloudfront_statement] : []
   )
 }
