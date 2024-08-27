@@ -98,6 +98,34 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
 #     Version = "2012-10-17"
 #   })
 # }
+# locals {
+#   # Base statements that are always included
+#   base_statements = [
+#     {
+#       Sid = "Enable IAM User Permissions"
+#       Effect = "Allow"
+#       Principal = {
+#         AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+#       }
+#       Action = "kms:*"
+#       Resource = "*"
+#     }
+#   ]
+
+#   # Conditional CloudFront permissions
+#   cloudfront_statement = var.config.serve_static ? {
+#     Sid = "Allow CloudFront to Use Key"
+#     Effect = "Allow"
+#     Principal = {
+#       AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.oai[0].id}"
+#     }
+#     Action = "kms:Decrypt"
+#     Resource = "*"
+#   } : null
+
+#   # Combine base and conditional statements
+#   statements = var.config.serve_static ? local.base_statements + [local.cloudfront_statement] : local.base_statements
+# }
 
 resource "aws_kms_key" "kms-key" {
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
@@ -106,29 +134,7 @@ resource "aws_kms_key" "kms-key" {
 
   policy = jsonencode({
     Id = "key-default-1"
-    Statement = [
-      {
-        Sid = "Enable IAM User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action = "kms:*"
-        Resource = "*"
-      },
-      dynamic "statement" {
-        for_each = var.config.serve_static ? [1] : []
-        content {
-          Sid = "Allow CloudFront to Use Key"
-          Effect = "Allow"
-          Principal = {
-            AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.oai[0].id}"
-          }
-          Action = "kms:Decrypt"
-          Resource = "*"
-        }
-      }
-    ]
+    Statement = local.statements
     Version = "2012-10-17"
   })
 }
