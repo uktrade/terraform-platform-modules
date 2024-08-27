@@ -21,7 +21,7 @@ locals {
     }
   ]
 
-  cloudfront_statement = var.config.serve_static ? {
+  cloudfront_statement = {
     Sid = "Allow CloudFront to Use Key"
     Effect = "Allow"
     Principal = {
@@ -29,8 +29,7 @@ locals {
     }
     Action = "kms:Decrypt"
     Resource = "*"
-  } : null
+  }
 
-  # Combine base and conditional statements
   statements = var.config.serve_static ? local.base_statements + [local.cloudfront_statement] : local.base_statements
 }
