@@ -307,29 +307,29 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   tags = local.tags
 }
 
-resource "aws_kms_key" "kms-key" {
-  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
-  description = "KMS Key for S3 encryption"
-  tags        = local.tags
+# resource "aws_kms_key" "kms-key" {
+#   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
+#   description = "KMS Key for S3 encryption"
+#   tags        = local.tags
 
-  count = var.config.serve_static ? 0 : 1
+#   count = var.config.serve_static ? 0 : 1
 
-  policy = jsonencode({
-    Id = "key-default-1"
-    Statement = [
-      {
-        "Sid" : "Enable IAM User Permissions",
-        "Effect" : "Allow",
-        "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        },
-        "Action" : "kms:*",
-        "Resource" : "*"
-      }
-    ]
-    Version = "2012-10-17"
-  })
-}
+#   policy = jsonencode({
+#     Id = "key-default-1"
+#     Statement = [
+#       {
+#         "Sid" : "Enable IAM User Permissions",
+#         "Effect" : "Allow",
+#         "Principal" : {
+#           "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+#         },
+#         "Action" : "kms:*",
+#         "Resource" : "*"
+#       }
+#     ]
+#     Version = "2012-10-17"
+#   })
+# }
 
 # Define the content of index.html inline (only if serve_static is true)
 # locals {
