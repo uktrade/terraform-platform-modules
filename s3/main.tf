@@ -154,8 +154,9 @@ module "iam" {
   source = "../iam"
 
   application   = var.application
-  config        = var.config.cross_account_access
   environment   = var.environment
-  resource_name = aws_s3_bucket.this.id
+  role_arn      = var.config.cross_account_access.role_arn
+  permission_set = local.cross_account_access_permissions
   resource_arn  = aws_s3_bucket.this.arn
+  resource_identifier = aws_s3_bucket.this.id
 }

@@ -47,6 +47,7 @@ variable "config" {
     cross_account_access = optional(object({
       role_arn = string
       actions  = list(string)
+      access_type = optional(list(string))
       })
     )
   })
