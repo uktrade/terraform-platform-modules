@@ -74,26 +74,51 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
   }
 }
 
+data "aws_iam_policy_document" "kms_key_policy_base" {
+  depends_on = [module.iam]
+  statement {
+    sid       = "Enable IAM User Permissions"
+    effect    = "Allow"
+    actions   = ["kms:*"]
+    resources = ["*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.config.cross_account_access != null ? [var.config.cross_account_access] : []
+
+    content {
+      sid    = "AllowActions"
+      effect = "Allow"
+
+      actions = [
+        "kms:Decrypt",
+        "kms:Encrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*", # Needed for object decryption
+        "kms:DescribeKey"       # Allow describing the key
+      ]
+
+      principals {
+        type        = "AWS"
+        identifiers = [module.iam[0].external_service_access_role]
+      }
+
+      resources = ["*"]
+    }
+  }
+}
+
 resource "aws_kms_key" "kms-key" {
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
 
-  policy = jsonencode({
-    Id = "key-default-1"
-    Statement = [
-      {
-        "Sid" : "Enable IAM User Permissions",
-        "Effect" : "Allow",
-        "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        },
-        "Action" : "kms:*",
-        "Resource" : "*"
-      }
-    ]
-    Version = "2012-10-17"
-  })
+  policy = data.aws_iam_policy_document.kms_key_policy_base.json
 }
 
 resource "aws_kms_alias" "s3-bucket" {

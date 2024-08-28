@@ -23,7 +23,9 @@ data "aws_iam_policy_document" "allow_actions" {
 
     actions = var.config.actions
 
-    resources = [var.resource_arn]
+    resources = [
+      var.resource_arn,
+    "${var.resource_arn}/*"]
   }
 }
 
