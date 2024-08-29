@@ -35,6 +35,27 @@ data "aws_iam_policy_document" "bucket-policy" {
       "${aws_s3_bucket.this.arn}/*",
     ]
   }
+
+  dynamic "statement" {
+    for_each = var.config.cross_account_access != null ? [var.config.cross_account_access] : []
+
+    content {
+      sid    = "AllowCrossAccountS3Actions"
+      effect = "Allow"
+
+      actions = var.config.cross_account_access.actions
+
+      principals {
+        type        = "AWS"
+        identifiers = [var.config.cross_account_access.role_arn]
+      }
+
+      resources = [
+        aws_s3_bucket.this.arn,
+        "${aws_s3_bucket.this.arn}/*",
+      ]
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
@@ -75,7 +96,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
 }
 
 data "aws_iam_policy_document" "kms_key_policy_base" {
-  depends_on = [module.iam]
   statement {
     sid       = "Enable IAM User Permissions"
     effect    = "Allow"
@@ -105,20 +125,23 @@ data "aws_iam_policy_document" "kms_key_policy_base" {
 
       principals {
         type        = "AWS"
-        identifiers = [module.iam[0].external_service_access_role]
+        identifiers = [var.config.cross_account_access.role_arn]
       }
 
-      resources = ["*"]
+      resources = [aws_kms_key.kms-key.arn]
     }
   }
+}
+
+resource "aws_kms_key_policy" "kms_key" {
+  key_id = aws_kms_key.kms-key.id
+  policy = data.aws_iam_policy_document.kms_key_policy_base.json
 }
 
 resource "aws_kms_key" "kms-key" {
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
-
-  policy = data.aws_iam_policy_document.kms_key_policy_base.json
 }
 
 resource "aws_kms_alias" "s3-bucket" {
