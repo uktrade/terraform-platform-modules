@@ -33,4 +33,9 @@ run "aws_iam_unit_test" {
     condition     = aws_iam_role_policy.s3_external_import_policy.role == "test-bucket-name-ExternalImport"
     error_message = "Should be: test-bucket-name-ExternalImport"
   }
+
+  assert {
+    condition     = can(regex("test-bucket-arn", aws_iam_role_policy.s3_external_import_policy.policy))
+    error_message = "Statement should contain resource arn: test-bucket-arn"
+  }
 }

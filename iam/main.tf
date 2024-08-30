@@ -65,11 +65,6 @@ data "aws_iam_policy_document" "s3_external_import" {
       "kms:DescribeKey"       # Allow describing the key
     ]
 
-    principals {
-      type        = "AWS"
-      identifiers = [aws_iam_role.external_service_access_role.arn]
-    }
-
     resources = ["*"] # Required to be passed in in the config
   }
 }
