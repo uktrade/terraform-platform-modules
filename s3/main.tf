@@ -76,7 +76,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
 }
 
 resource "aws_kms_key" "kms-key" {
-  count = var.config.serve_static ? 0 : 1
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
