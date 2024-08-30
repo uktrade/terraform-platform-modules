@@ -223,14 +223,14 @@ run "aws_s3_bucket_lifecycle_configuration_no_prefix_unit_test" {
   }
 }
 
-run "aws_s3_bucket_cross_account_access_unit_test" {
+run "aws_s3_bucket_data_migration_unit_test" {
   command = plan
 
   variables {
     config = {
       "bucket_name" = "dbt-terraform-test-s3-x-account",
       "type"        = "s3",
-      "cross_account_access" = {
+      "data_migration" = {
         "import" = {
           "importing_role_arn" = "arn:aws:iam::1234:role/service-role/my-privileged-arn",
           "source_kms_key_arn" = "arn:aws:iam::1234:my-external-kms-key-arn",
@@ -246,7 +246,7 @@ run "aws_s3_bucket_cross_account_access_unit_test" {
   }
 }
 
-run "aws_s3_bucket_not_cross_account_access_unit_test" {
+run "aws_s3_bucket_not_data_migration_unit_test" {
   command = plan
 
   variables {

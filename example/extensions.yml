@@ -41,7 +41,7 @@ dw-s3-bucket:
   environments:
     dev:
       bucket_name: digital-workspace-v2-dev
-      cross_account_access:
+      data_migration:
         role_arn: test
         actions:
           - test

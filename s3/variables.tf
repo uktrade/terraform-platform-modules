@@ -43,8 +43,8 @@ variable "config" {
       key  = string
     })))
 
-    # Cross account access
-    cross_account_access = optional(object({
+    # S3 to S3 data migration
+    data_migration = optional(object({
       import = optional(object({
         importing_role_arn = string
         source_kms_key_arn = string

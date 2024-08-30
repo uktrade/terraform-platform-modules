@@ -37,17 +37,17 @@ data "aws_iam_policy_document" "bucket-policy" {
   }
 
   # dynamic "statement" {
-  #   for_each = var.config.cross_account_access != null ? [var.config.cross_account_access] : []
+  #   for_each = var.config.data_migration != null ? [var.config.data_migration] : []
 
   #   content {
   #     sid    = "AllowCrossAccountS3Actions"
   #     effect = "Allow"
 
-  #     actions = var.config.cross_account_access.actions
+  #     actions = var.config.data_migration.actions
 
   #     principals {
   #       type        = "AWS"
-  #       identifiers = [var.config.cross_account_access.role_arn]
+  #       identifiers = [var.config.data_migration.role_arn]
   #     }
 
   #     resources = [
@@ -109,7 +109,7 @@ data "aws_iam_policy_document" "kms_key_policy_base" {
   }
 
   # dynamic "statement" {
-  #   for_each = local.has_cross_account_import_enabled ? [var.config.cross_account_access.import] : []
+  #   for_each = local.has_cross_account_import_enabled ? [var.config.data_migration.import] : []
 
   #   content {
   #     sid    = "AllowActions"
@@ -203,7 +203,7 @@ module "iam" {
 
   application = var.application
   environment = var.environment
-  config      = var.config.cross_account_access.import
+  config      = var.config.data_migration.import
 
   bucket_name = aws_s3_bucket.this.id
   bucket_arn  = aws_s3_bucket.this.arn

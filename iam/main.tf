@@ -65,7 +65,7 @@ data "aws_iam_policy_document" "s3_external_import" {
       "kms:DescribeKey"       # Allow describing the key
     ]
 
-    resources = ["*"] # Required to be passed in in the config
+    resources = [var.config.source_kms_key_arn]
   }
 }
 
