@@ -109,7 +109,7 @@ data "aws_iam_policy_document" "kms_key_policy_base" {
   }
 
   # dynamic "statement" {
-  #   for_each = local.has_cross_account_import_enabled ? [var.config.data_migration.import] : []
+  #   for_each = local.has_data_migration_import_enabled ? [var.config.data_migration.import] : []
 
   #   content {
   #     sid    = "AllowActions"
@@ -198,7 +198,7 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 }
 
 module "iam" {
-  count  = local.has_cross_account_import_enabled ? 1 : 0
+  count  = local.has_data_migration_import_enabled ? 1 : 0
   source = "../iam"
 
   application = var.application
@@ -206,6 +206,7 @@ module "iam" {
   config      = var.config.data_migration.import
 
   bucket_name = aws_s3_bucket.this.id
+  kms_key_arn = aws_kms_key.kms-key.id
   bucket_arn  = aws_s3_bucket.this.arn
 
 }
