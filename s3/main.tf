@@ -200,6 +200,8 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 
 
 resource "aws_cloudfront_origin_access_control" "oac" {
+  name = "oac"
+  description = "Origin access control for Cloudfront distribution and ${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital static s3 bucket."
   count = var.config.serve_static ? 1 : 0
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -286,9 +288,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     domain_name = aws_s3_bucket.this.bucket_regional_domain_name
     origin_id   = "S3-${aws_s3_bucket.this.bucket}"
 
-    s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.oai[0].cloudfront_access_identity_path
-    }
+    origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
   }
 
   default_cache_behavior {
