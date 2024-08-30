@@ -45,8 +45,15 @@ variable "config" {
 
     # Cross account access
     cross_account_access = optional(object({
-      role_arn = string
-      actions  = list(string)
+      import = optional(object({
+        importing_role_arn = string
+        source_bucket_arn  = string
+      }))
+      export = optional(object({
+        external_role_arn = string
+      }))
+      # role_arn = string
+      # actions  = list(string)
       })
     )
   })

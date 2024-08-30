@@ -9,28 +9,73 @@ data "aws_iam_policy_document" "allow_assume_role" {
 
     principals {
       type        = "AWS"
-      identifiers = [var.config.role_arn, "arn:aws:iam::763451185160:role/service-role/test-cross-account-s3-access-role-oybqycoa"]
+      identifiers = [var.config.importing_role_arn]
     }
 
     actions = ["sts:AssumeRole"]
   }
 }
 
-data "aws_iam_policy_document" "allow_actions" {
+data "aws_iam_policy_document" "s3_external_import" {
+  statement {
+    sid    = "ReadOnSourceBucket"
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging"
+    ]
+
+    resources = [
+      var.config.source_bucket_arn,
+    "${var.config.source_bucket_arn}/*"]
+  }
+
+  statement {
+    sid    = "WriteOnDestinationBucket"
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+      "s3:PutObjectTagging",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging"
+    ]
+
+    resources = [
+      var.bucket_arn,
+    "${var.bucket_arn}/*"]
+  }
+
   statement {
     sid    = "AllowActions"
     effect = "Allow"
 
-    actions = var.config.actions
+    actions = [
+      "kms:Decrypt",
+      "kms:Encrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*", # Needed for object decryption
+      "kms:DescribeKey"       # Allow describing the key
+    ]
 
-    resources = [
-      var.resource_arn,
-    "${var.resource_arn}/*"]
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.external_service_access_role.arn]
+    }
+
+    resources = ["*"] # Required to be passed in in the config
   }
 }
 
-resource "aws_iam_role_policy" "allow_actions" {
-  name   = "${var.application}-${var.environment}-allow-actions"
+resource "aws_iam_role_policy" "s3_external_import_policy" {
+  name   = "${var.application}-${var.environment}-allow-s3-external-import-actions"
   role   = aws_iam_role.external_service_access_role.name
-  policy = data.aws_iam_policy_document.allow_actions.json
+  policy = data.aws_iam_policy_document.s3_external_import.json
 }

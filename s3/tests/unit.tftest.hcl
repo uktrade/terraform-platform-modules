@@ -228,9 +228,14 @@ run "aws_s3_bucket_cross_account_access_unit_test" {
 
   variables {
     config = {
-      "bucket_name"          = "dbt-terraform-test-s3-x-account",
-      "type"                 = "s3",
-      "cross_account_access" = { "actions" = ["s3:DoSomething"], "role_arn" = "arn:aws:iam::1234:role/service-role/my-privileged-arn" },
+      "bucket_name" = "dbt-terraform-test-s3-x-account",
+      "type"        = "s3",
+      "cross_account_access" = {
+        "import" = {
+          "importing_role_arn" = "arn:aws:iam::1234:role/service-role/my-privileged-arn",
+          "source_bucket_arn"  = "12345"
+        }
+      }
     }
   }
 

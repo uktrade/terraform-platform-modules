@@ -2,11 +2,11 @@ variables {
   application = "iam-test-application"
   environment = "iam-test-environment"
   config = {
-    "role_arn" = "test-role-arn"
-    "actions"  = ["TEST"]
+    "source_bucket_arn"  = "test-source-bucket-arn"
+    "importing_role_arn" = "test-role-arn"
   }
-  resource_arn  = "test-bucket-arn"
-  resource_name = "test-bucket-name"
+  bucket_arn  = "test-bucket-arn"
+  bucket_name = "test-bucket-name"
 }
 
 
@@ -14,8 +14,8 @@ run "aws_iam_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_iam_role.external_service_access_role.name == "test-bucket-name-ExternalAccess"
-    error_message = "Should be: test-bucket-name-ExternalAccess"
+    condition     = aws_iam_role.external_service_access_role.name == "test-bucket-name-ExternalImport"
+    error_message = "Should be: test-bucket-name-ExternalImport"
   }
 
   assert {
@@ -24,17 +24,12 @@ run "aws_iam_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role_policy.allow_actions.name == "iam-test-application-iam-test-environment-allow-actions"
-    error_message = "Should be: iam-test-application-iam-test-environment-allow-actions"
+    condition     = aws_iam_role_policy.s3_external_import_policy.name == "iam-test-application-iam-test-environment-allow-s3-external-import-actions"
+    error_message = "Should be: iam-test-application-iam-test-environment-allow-s3-external-import-actions"
   }
 
   assert {
-    condition     = aws_iam_role_policy.allow_actions.role == "test-bucket-name-ExternalAccess"
-    error_message = "Should be: test-bucket-name-ExternalAccess"
-  }
-
-  assert {
-    condition     = can(regex("test-bucket-arn", aws_iam_role_policy.allow_actions.policy))
-    error_message = "Statement should contain resource arn: test-bucket-arn"
+    condition     = aws_iam_role_policy.s3_external_import_policy.role == "test-bucket-name-ExternalImport"
+    error_message = "Should be: test-bucket-name-ExternalImport"
   }
 }

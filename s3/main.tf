@@ -36,26 +36,26 @@ data "aws_iam_policy_document" "bucket-policy" {
     ]
   }
 
-  dynamic "statement" {
-    for_each = var.config.cross_account_access != null ? [var.config.cross_account_access] : []
+  # dynamic "statement" {
+  #   for_each = var.config.cross_account_access != null ? [var.config.cross_account_access] : []
 
-    content {
-      sid    = "AllowCrossAccountS3Actions"
-      effect = "Allow"
+  #   content {
+  #     sid    = "AllowCrossAccountS3Actions"
+  #     effect = "Allow"
 
-      actions = var.config.cross_account_access.actions
+  #     actions = var.config.cross_account_access.actions
 
-      principals {
-        type        = "AWS"
-        identifiers = [var.config.cross_account_access.role_arn]
-      }
+  #     principals {
+  #       type        = "AWS"
+  #       identifiers = [var.config.cross_account_access.role_arn]
+  #     }
 
-      resources = [
-        aws_s3_bucket.this.arn,
-        "${aws_s3_bucket.this.arn}/*",
-      ]
-    }
-  }
+  #     resources = [
+  #       aws_s3_bucket.this.arn,
+  #       "${aws_s3_bucket.this.arn}/*",
+  #     ]
+  #   }
+  # }
 }
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
@@ -108,29 +108,29 @@ data "aws_iam_policy_document" "kms_key_policy_base" {
     }
   }
 
-  dynamic "statement" {
-    for_each = var.config.cross_account_access != null ? [var.config.cross_account_access] : []
+  # dynamic "statement" {
+  #   for_each = local.has_cross_account_import_enabled ? [var.config.cross_account_access.import] : []
 
-    content {
-      sid    = "AllowActions"
-      effect = "Allow"
+  #   content {
+  #     sid    = "AllowActions"
+  #     effect = "Allow"
 
-      actions = [
-        "kms:Decrypt",
-        "kms:Encrypt",
-        "kms:ReEncrypt*",
-        "kms:GenerateDataKey*", # Needed for object decryption
-        "kms:DescribeKey"       # Allow describing the key
-      ]
+  #     actions = [
+  #       "kms:Decrypt",
+  #       "kms:Encrypt",
+  #       "kms:ReEncrypt*",
+  #       "kms:GenerateDataKey*", # Needed for object decryption
+  #       "kms:DescribeKey"       # Allow describing the key
+  #     ]
 
-      principals {
-        type        = "AWS"
-        identifiers = [var.config.cross_account_access.role_arn]
-      }
+  #     principals {
+  #       type        = "AWS"
+  #       identifiers = [module.iam.external_service_access_role]
+  #     }
 
-      resources = [aws_kms_key.kms-key.arn]
-    }
-  }
+  #     resources = [aws_kms_key.kms-key.arn]
+  #   }
+  # }
 }
 
 resource "aws_kms_key_policy" "kms_key" {
@@ -198,12 +198,14 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 }
 
 module "iam" {
-  count  = var.config.cross_account_access != null ? 1 : 0
+  count  = local.has_cross_account_import_enabled ? 1 : 0
   source = "../iam"
 
-  application   = var.application
-  config        = var.config.cross_account_access
-  environment   = var.environment
-  resource_name = aws_s3_bucket.this.id
-  resource_arn  = aws_s3_bucket.this.arn
+  application = var.application
+  environment = var.environment
+  config      = var.config.cross_account_access.import
+
+  bucket_name = aws_s3_bucket.this.id
+  bucket_arn  = aws_s3_bucket.this.arn
+
 }

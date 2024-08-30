@@ -8,4 +8,6 @@ locals {
   }
 
   kms_alias_name = strcontains(var.config.bucket_name, "pipeline") ? "${var.config.bucket_name}-key" : "${var.application}-${var.environment}-${var.config.bucket_name}-key"
+
+  has_cross_account_import_enabled = try(var.config.cross_account_access.import != null, false)
 }
