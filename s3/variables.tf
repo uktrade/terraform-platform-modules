@@ -47,6 +47,7 @@ variable "config" {
     cross_account_access = optional(object({
       import = optional(object({
         importing_role_arn = string
+        source_kms_key_arn = string
         source_bucket_arn  = string
       }))
       export = optional(object({

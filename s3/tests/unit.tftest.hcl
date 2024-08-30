@@ -233,6 +233,7 @@ run "aws_s3_bucket_cross_account_access_unit_test" {
       "cross_account_access" = {
         "import" = {
           "importing_role_arn" = "arn:aws:iam::1234:role/service-role/my-privileged-arn",
+          "source_kms_key_arn" = "arn:aws:iam::1234:my-external-kms-key-arn",
           "source_bucket_arn"  = "12345"
         }
       }

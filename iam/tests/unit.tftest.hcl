@@ -3,6 +3,7 @@ variables {
   environment = "iam-test-environment"
   config = {
     "source_bucket_arn"  = "test-source-bucket-arn"
+    "source_kms_key_arn" = "test-kms-key-arn"
     "importing_role_arn" = "test-role-arn"
   }
   bucket_arn  = "test-bucket-arn"
