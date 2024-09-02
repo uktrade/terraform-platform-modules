@@ -1,6 +1,4 @@
 variables {
-  application = "iam-test-application"
-  environment = "iam-test-environment"
   config = {
     "source_bucket_arn"         = "test-source-bucket-arn"
     "source_kms_key_arn"        = "test-kms-key-arn"
@@ -11,7 +9,7 @@ variables {
 }
 
 
-run "aws_iam_unit_test" {
+run "data_migration_unit_test" {
   command = plan
 
   assert {
@@ -37,5 +35,28 @@ run "aws_iam_unit_test" {
   assert {
     condition     = can(regex("test-bucket-arn", aws_iam_role_policy.s3_external_import_policy.policy))
     error_message = "Statement should contain resource arn: test-bucket-arn"
+  }
+
+  assert {
+    condition     = strcontains(aws_iam_role_policy.s3_external_import_policy.policy, "kms:Decrypt")
+    error_message = "Statement should contain kms:Decrypt"
+  }
+}
+
+run "data_migration_without_source_kms_key" {
+  command = plan
+
+  variables {
+    config = {
+      "source_bucket_arn"         = "test-source-bucket-arn"
+      "migration_worker_role_arn" = "test-role-arn"
+    }
+    destination_bucket_arn        = "test-bucket-arn"
+    destination_bucket_identifier = "test-bucket-name"
+  }
+
+  assert {
+    condition     = strcontains(aws_iam_role_policy.s3_external_import_policy.policy, "kms:Decrypt") == false
+    error_message = "Statement should not contain kms:Decrypt"
   }
 }
