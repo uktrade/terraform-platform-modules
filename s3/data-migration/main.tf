@@ -54,7 +54,7 @@ data "aws_iam_policy_document" "s3_external_import" {
   }
 
   statement {
-    sid    = "AllowKMSDestinationEncryption"
+    sid    = "AllowDestinationKMSEncryption"
     effect = "Allow"
 
     actions = [
@@ -70,7 +70,7 @@ data "aws_iam_policy_document" "s3_external_import" {
     for_each = var.config.source_kms_key_arn != null ? [var.config.source_kms_key_arn] : []
 
     content {
-      sid    = "AllowKMSSourceDecryption"
+      sid    = "AllowSourceKMSDecryption"
       effect = "Allow"
 
       actions = [
