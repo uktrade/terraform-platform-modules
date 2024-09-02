@@ -99,12 +99,6 @@ resource "aws_kms_key" "kms-key" {
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
-}
-
-resource "aws_kms_key" "kms-key" {
-  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
-  description = "KMS Key for S3 encryption"
-  tags        = local.tags
 
   policy = jsonencode({
     Id = "key-default-1"
