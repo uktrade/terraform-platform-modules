@@ -192,46 +192,46 @@ resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
   })
 }
 
-resource "aws_acm_certificate" "certificate" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
-  domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
-  validation_method = "DNS"
+# resource "aws_acm_certificate" "certificate" {
+#   count = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
+#   domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+#   validation_method = "DNS"
 
-  lifecycle {
-    create_before_destroy = true
-  }
+#   lifecycle {
+#     create_before_destroy = true
+#   }
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }
 
-data "aws_route53_zone" "selected" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
-  name         = "${var.application}.uktrade.digital"
-  private_zone = false
-}
+# data "aws_route53_zone" "selected" {
+#   count = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
+#   name         = "${var.application}.uktrade.digital"
+#   private_zone = false
+# }
 
-resource "aws_route53_record" "cert_validation" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
+# resource "aws_route53_record" "cert_validation" {
+#   count = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
 
-  name    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
-  type    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_type, 0)
-  zone_id = data.aws_route53_zone.selected[0].id
-  records = [element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_value, 0)]
-  ttl     = 60
-  depends_on = [aws_acm_certificate.certificate]
-  allow_overwrite = true
-}
+#   name    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
+#   type    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_type, 0)
+#   zone_id = data.aws_route53_zone.selected[0].id
+#   records = [element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_value, 0)]
+#   ttl     = 60
+#   depends_on = [aws_acm_certificate.certificate]
+#   allow_overwrite = true
+# }
 
-resource "aws_acm_certificate_validation" "certificate_validation" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
-  certificate_arn         = aws_acm_certificate.certificate[0].arn
-  validation_record_fqdns = [aws_route53_record.cert_validation[0].fqdn]
-  depends_on = [aws_route53_record.cert_validation]
-}
+# resource "aws_acm_certificate_validation" "certificate_validation" {
+#   count = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
+#   certificate_arn         = aws_acm_certificate.certificate[0].arn
+#   validation_record_fqdns = [aws_route53_record.cert_validation[0].fqdn]
+#   depends_on = [aws_route53_record.cert_validation]
+# }
 
 data "aws_cloudfront_cache_policy" "example" {
   name = "Managed-CachingOptimized"
