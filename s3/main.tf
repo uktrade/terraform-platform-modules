@@ -125,7 +125,7 @@ data "aws_iam_policy_document" "kms_key_policy_base" {
 
   #     principals {
   #       type        = "AWS"
-  #       identifiers = [module.iam.external_service_access_role]
+  #       identifiers = [module.data_migration.external_service_access_role]
   #     }
 
   #     resources = [aws_kms_key.kms-key.arn]
@@ -206,7 +206,6 @@ module "iam" {
   config      = var.config.data_migration.import
 
   bucket_name = aws_s3_bucket.this.id
-  kms_key_arn = aws_kms_key.kms-key.id
+  destination_kms_key_arn = aws_kms_key.kms-key.arn
   bucket_arn  = aws_s3_bucket.this.arn
-
 }
