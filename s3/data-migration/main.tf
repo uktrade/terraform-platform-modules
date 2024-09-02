@@ -30,8 +30,8 @@ data "aws_iam_policy_document" "s3_external_import" {
     ]
 
     resources = [
-      var.config.source_destination_bucket_arn,
-    "${var.config.source_destination_bucket_arn}/*"]
+      var.config.source_bucket_arn,
+    "${var.config.source_bucket_arn}/*"]
   }
 
   statement {
