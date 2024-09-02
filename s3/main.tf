@@ -95,8 +95,17 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
   }
 }
 
-resource "aws_kms_key_policy" "kms_key" {
-  key_id = aws_kms_key.kms-key.id
+resource "aws_kms_key" "kms-key" {
+  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
+  description = "KMS Key for S3 encryption"
+  tags        = local.tags
+}
+
+resource "aws_kms_key" "kms-key" {
+  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
+  description = "KMS Key for S3 encryption"
+  tags        = local.tags
+
   policy = jsonencode({
     Id = "key-default-1"
     Statement = [
@@ -112,12 +121,6 @@ resource "aws_kms_key_policy" "kms_key" {
     ]
     Version = "2012-10-17"
   })
-}
-
-resource "aws_kms_key" "kms-key" {
-  # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
-  description = "KMS Key for S3 encryption"
-  tags        = local.tags
 }
 
 resource "aws_kms_alias" "s3-bucket" {
