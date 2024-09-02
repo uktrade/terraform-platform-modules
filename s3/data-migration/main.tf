@@ -66,6 +66,7 @@ data "aws_iam_policy_document" "s3_external_import" {
     resources = [var.destination_kms_key_arn]
   }
 
+  # I think this needs to be dynamic statement as source encryption is optional
   statement {
     sid    = "AllowSourceDecryption"
     effect = "Allow"

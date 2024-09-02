@@ -241,7 +241,7 @@ run "aws_s3_bucket_data_migration_unit_test" {
   }
 
   assert {
-    condition     = length(module.iam) == 1
+    condition     = length(module.data_migration) == 1
     error_message = "iam module should be created"
   }
 }
@@ -257,7 +257,7 @@ run "aws_s3_bucket_not_data_migration_unit_test" {
   }
 
   assert {
-    condition     = length(module.iam) == 0
+    condition     = length(module.data_migration) == 0
     error_message = "iam module should not be created"
   }
 }

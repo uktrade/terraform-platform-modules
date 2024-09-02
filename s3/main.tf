@@ -197,15 +197,15 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
   restrict_public_buckets = true
 }
 
-module "iam" {
+module "data_migration" {
   count  = local.has_data_migration_import_enabled ? 1 : 0
-  source = "../iam"
+  source = "./data-migration"
 
   application = var.application
   environment = var.environment
   config      = var.config.data_migration.import
 
-  bucket_name = aws_s3_bucket.this.id
+  bucket_name             = aws_s3_bucket.this.id
   destination_kms_key_arn = aws_kms_key.kms-key.arn
-  bucket_arn  = aws_s3_bucket.this.arn
+  bucket_arn              = aws_s3_bucket.this.arn
 }
