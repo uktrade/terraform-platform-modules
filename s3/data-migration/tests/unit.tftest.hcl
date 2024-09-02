@@ -15,12 +15,12 @@ run "aws_iam_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_iam_role.external_service_access_role.name == "test-bucket-name-ExternalImport"
+    condition     = aws_iam_role.s3_data_migration_role.name == "test-bucket-name-ExternalImport"
     error_message = "Should be: test-bucket-name-ExternalImport"
   }
 
   assert {
-    condition     = aws_iam_role.external_service_access_role.assume_role_policy != null
+    condition     = aws_iam_role.s3_data_migration_role.assume_role_policy != null
     error_message = "Role should have an assume role policy"
   }
 

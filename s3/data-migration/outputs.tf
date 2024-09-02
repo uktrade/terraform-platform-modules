@@ -1,3 +1,3 @@
-output "external_service_access_role" {
-  value = aws_iam_role.external_service_access_role.arn
+output "s3_data_migration_role" {
+  value = aws_iam_role.s3_data_migration_role.arn
 }

@@ -125,7 +125,7 @@ data "aws_iam_policy_document" "kms_key_policy_base" {
 
   #     principals {
   #       type        = "AWS"
-  #       identifiers = [module.data_migration.external_service_access_role]
+  #       identifiers = [module.data_migration.s3_data_migration_role]
   #     }
 
   #     resources = [aws_kms_key.kms-key.arn]
