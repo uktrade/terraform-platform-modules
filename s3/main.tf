@@ -243,7 +243,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
 
   origin {
-    domain_name = aws_s3_bucket.this.bucket
+    domain_name = aws_s3_bucket.this.bucket_regional_domain_name
     origin_id   = "S3-${aws_s3_bucket.this.bucket}"
 
     origin_access_control_id = aws_cloudfront_origin_access_control.oac[0].id
