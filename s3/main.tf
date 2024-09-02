@@ -135,7 +135,6 @@ resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
 
 // create objects based on the config.objects key
 resource "aws_s3_object" "object" {
-  count = var.config.serve_static ? 0 : 1
   for_each = { for item in coalesce(var.config.objects, []) : item.key => item.body }
 
   bucket  = aws_s3_bucket.this.id
