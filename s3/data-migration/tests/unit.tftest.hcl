@@ -15,8 +15,8 @@ run "aws_iam_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_iam_role.s3_data_migration_role.name == "test-bucket-name-ExternalImport"
-    error_message = "Should be: test-bucket-name-ExternalImport"
+    condition     = aws_iam_role.s3_data_migration_role.name == "test-bucket-name-S3DataMigration"
+    error_message = "Should be: test-bucket-name-S3DataMigration"
   }
 
   assert {
@@ -25,13 +25,13 @@ run "aws_iam_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role_policy.s3_external_import_policy.name == "iam-test-application-iam-test-environment-allow-s3-external-import-actions"
-    error_message = "Should be: iam-test-application-iam-test-environment-allow-s3-external-import-actions"
+    condition     = aws_iam_role_policy.s3_external_import_policy.name == "test-bucket-name-ExternalImport"
+    error_message = "Should be: test-bucket-name-ExternalImport"
   }
 
   assert {
-    condition     = aws_iam_role_policy.s3_external_import_policy.role == "test-bucket-name-ExternalImport"
-    error_message = "Should be: test-bucket-name-ExternalImport"
+    condition     = aws_iam_role_policy.s3_external_import_policy.role == "test-bucket-name-S3DataMigration"
+    error_message = "Should be: test-bucket-name-S3DataMigration"
   }
 
   assert {

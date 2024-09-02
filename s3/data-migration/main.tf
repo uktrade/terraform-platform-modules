@@ -81,7 +81,7 @@ data "aws_iam_policy_document" "s3_external_import" {
 }
 
 resource "aws_iam_role_policy" "s3_external_import_policy" {
-  name   = "${var.application}-${var.environment}-allow-s3-external-import-actions"
+  name   = local.policy_name
   role   = aws_iam_role.s3_data_migration_role.name
   policy = data.aws_iam_policy_document.s3_external_import.json
 }
