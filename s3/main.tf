@@ -102,7 +102,7 @@ resource "aws_kms_alias" "s3-bucket" {
   count = var.config.serve_static ? 0 : 1
   depends_on    = [aws_kms_key.kms-key]
   name          = "alias/${local.kms_alias_name}"
-  target_key_id = aws_kms_key.kms-key.id
+  target_key_id = aws_kms_key.kms-key[0].id
 }
 
 // require server side encryption
@@ -113,7 +113,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config
 
   rule {
     apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.kms-key.arn
+      kms_master_key_id = aws_kms_key.kms-key[0].arn
       sse_algorithm     = "aws:kms"
     }
   }
@@ -141,7 +141,7 @@ resource "aws_s3_object" "object" {
   key     = each.key
   content = each.value
 
-  kms_key_id             = aws_kms_key.kms-key.arn
+  kms_key_id             = aws_kms_key.kms-key[0].arn
   server_side_encryption = "aws:kms"
 }
 
