@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.3](https://github.com/uktrade/terraform-platform-modules/compare/5.2.2...5.2.3) (2024-09-02)
+
+
+### Bug Fixes
+
+* hardcoded 'demodjango' ([#221](https://github.com/uktrade/terraform-platform-modules/issues/221)) ([d0910aa](https://github.com/uktrade/terraform-platform-modules/commit/d0910aaa52738f6e3c855eb54c8e81cc45866f13))
+
 ## [5.2.2](https://github.com/uktrade/terraform-platform-modules/compare/5.2.1...5.2.2) (2024-08-23)
 
 
