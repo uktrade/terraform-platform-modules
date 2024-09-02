@@ -156,6 +156,7 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 
 resource "aws_cloudfront_origin_access_control" "oac" {
   name = "oac"
+  provider = aws.domain-cdn
   description = "Origin access control for Cloudfront distribution and ${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital static s3 bucket."
   count = var.config.serve_static ? 1 : 0
   origin_access_control_origin_type = "s3"
