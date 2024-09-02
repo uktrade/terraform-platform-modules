@@ -14,7 +14,7 @@ phases:
       - set -e
       - echo "Deploying ${APPLICATION} environments"
       - cd "${CODEBUILD_SRC_DIR}"
-      - echo "Installing latest version of platform-helper to get required version for the project.
+      - echo "Installing latest version of platform-helper to get required version for the project."
       - pip install dbt-platform-helper
       - REQUIRED_VERSION=$(platform-helper version get-platform-helper-for-project --pipeline "${PIPELINE_NAME}")
       - COMMIT_TYPE=$(python -c "import re, sys; print('tag' if re.match(r'\\d+\\.\\d+\\.\\d+', '${REQUIRED_VERSION}') else 'commit')")
