@@ -2,7 +2,7 @@
 variable "config" {
   type = object({
     source_bucket_arn         = string
-    source_kms_key_arn        = string
+    source_kms_key_arn        = optional(string)
     migration_worker_role_arn = string
   })
 }
