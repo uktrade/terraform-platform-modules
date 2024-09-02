@@ -5,9 +5,9 @@ variable "application" {
 
 variable "config" {
   type = object({
-    source_bucket_arn  = string
-    source_kms_key_arn = string
-    importing_role_arn = string
+    source_destination_bucket_arn = string
+    source_kms_key_arn            = string
+    importing_role_arn            = string
   })
 }
 
@@ -16,7 +16,7 @@ variable "environment" {
   default = ""
 }
 
-variable "bucket_arn" {
+variable "destination_bucket_arn" {
   type    = string
   default = ""
 }
