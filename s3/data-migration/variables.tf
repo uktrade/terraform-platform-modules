@@ -21,7 +21,7 @@ variable "destination_bucket_arn" {
   default = ""
 }
 
-variable "destination_bucket_name" {
+variable "destination_bucket_identifier" {
   type    = string
   default = ""
 }
