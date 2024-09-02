@@ -2,9 +2,9 @@ variables {
   application = "iam-test-application"
   environment = "iam-test-environment"
   config = {
-    "source_bucket_arn"  = "test-source-bucket-arn"
-    "source_kms_key_arn" = "test-kms-key-arn"
-    "importing_role_arn" = "test-role-arn"
+    "source_bucket_arn"         = "test-source-bucket-arn"
+    "source_kms_key_arn"        = "test-kms-key-arn"
+    "migration_worker_role_arn" = "test-role-arn"
   }
   destination_bucket_arn  = "test-bucket-arn"
   destination_bucket_name = "test-bucket-name"
