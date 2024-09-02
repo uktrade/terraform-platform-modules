@@ -144,7 +144,6 @@ resource "aws_s3_object" "object" {
 }
 
 resource "aws_s3_bucket_public_access_block" "public_access_block" {
-  count = var.config.serve_static ? 0 : 1
   bucket                  = aws_s3_bucket.this.id
   block_public_acls       = true
   block_public_policy     = true
@@ -178,7 +177,7 @@ resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
           Service = "cloudfront.amazonaws.com"
         }
         Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.this.arn}/*"
+        Resource  = ["${aws_s3_bucket.this.arn}/*", "${aws_s3_bucket.this.arn}"]
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution[0].arn
