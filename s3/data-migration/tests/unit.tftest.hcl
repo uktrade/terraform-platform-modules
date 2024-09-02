@@ -6,7 +6,7 @@ variables {
     "source_kms_key_arn" = "test-kms-key-arn"
     "importing_role_arn" = "test-role-arn"
   }
-  bucket_arn  = "test-bucket-arn"
+  bucket_arn              = "test-bucket-arn"
   destination_bucket_name = "test-bucket-name"
 }
 
