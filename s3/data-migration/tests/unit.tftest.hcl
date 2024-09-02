@@ -7,7 +7,7 @@ variables {
     "importing_role_arn" = "test-role-arn"
   }
   bucket_arn  = "test-bucket-arn"
-  bucket_name = "test-bucket-name"
+  destination_bucket_name = "test-bucket-name"
 }
 
 
