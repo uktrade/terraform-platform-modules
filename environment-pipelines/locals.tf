@@ -30,7 +30,7 @@ locals {
   list_of_triggering_pipelines     = [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name]
   set_of_triggering_pipeline_names = toset([for pipeline in local.list_of_triggering_pipelines : pipeline.name])
 
-  triggering_pipeline_role_arns = [for name in local.set_of_triggering_pipeline_names : "arn:aws:iam::${local.account_map[var.all_pipelines[name].account]}:role/demodjango-${name}-environment-pipeline-codebuild"]
+  triggering_pipeline_role_arns = [for name in local.set_of_triggering_pipeline_names : "arn:aws:iam::${local.account_map[var.all_pipelines[name].account]}:role/${var.application}-${name}-environment-pipeline-codebuild"]
 
 
   initial_stages = [for env in local.environment_config : [

@@ -968,7 +968,7 @@ run "test_triggered_pipelines" {
   }
 
   assert {
-    condition     = local.triggering_pipeline_role_arns == ["arn:aws:iam::000123456789:role/demodjango-my-pipeline-environment-pipeline-codebuild"]
+    condition     = local.triggering_pipeline_role_arns == ["arn:aws:iam::000123456789:role/my-app-my-pipeline-environment-pipeline-codebuild"]
     error_message = "ARN for triggering role is incorrect"
   }
 }
