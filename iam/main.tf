@@ -54,15 +54,25 @@ data "aws_iam_policy_document" "s3_external_import" {
   }
 
   statement {
-    sid    = "AllowActions"
+    sid    = "AllowDestinationEncryption"
+    effect = "Allow"
+
+    actions = [
+      "kms:Encrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+    ]
+
+    resources = [var.destination_kms_key_arn]
+  }
+
+  statement {
+    sid    = "AllowSourceDecryption"
     effect = "Allow"
 
     actions = [
       "kms:Decrypt",
-      "kms:Encrypt",
-      "kms:ReEncrypt*",
-      "kms:GenerateDataKey*", # Needed for object decryption
-      "kms:DescribeKey"       # Allow describing the key
+      "kms:DescribeKey"
     ]
 
     resources = [var.config.source_kms_key_arn]

@@ -26,7 +26,7 @@ variable "bucket_name" {
   default = ""
 }
 
-variable "kms_key_arn" {
+variable "destination_kms_key_arn" {
   type    = string
   default = ""
 }
