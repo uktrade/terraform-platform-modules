@@ -46,9 +46,9 @@ variable "config" {
     # S3 to S3 data migration
     data_migration = optional(object({
       import = optional(object({
-        importing_role_arn = string
-        source_kms_key_arn = string
-        source_bucket_arn  = string
+        migration_worker_role_arn = string
+        source_kms_key_arn        = string
+        source_bucket_arn         = string
       }))
       export = optional(object({
         external_role_arn = string
