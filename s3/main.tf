@@ -156,41 +156,41 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 
 // Cloudfront resources for serving static content
 
-resource "aws_cloudfront_origin_access_control" "oac" {
-  name = "oac"
-  provider = aws.domain-cdn
-  description = "Origin access control for Cloudfront distribution and ${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital static s3 bucket."
-  count = var.config.serve_static ? 1 : 0
-  origin_access_control_origin_type = "s3"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
-}
+# resource "aws_cloudfront_origin_access_control" "oac" {
+#   name = "oac"
+#   provider = aws.domain-cdn
+#   description = "Origin access control for Cloudfront distribution and ${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital static s3 bucket."
+#   count = var.config.serve_static ? 1 : 0
+#   origin_access_control_origin_type = "s3"
+#   signing_behavior                  = "always"
+#   signing_protocol                  = "sigv4"
+# }
 
-# # Attach a bucket policy to allow CloudFront to access the bucket
-resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
-  count = var.config.serve_static ? 1 : 0
+# # # Attach a bucket policy to allow CloudFront to access the bucket
+# resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
+#   count = var.config.serve_static ? 1 : 0
 
-  bucket = aws_s3_bucket.this.id
+#   bucket = aws_s3_bucket.this.id
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect    = "Allow"
-        Principal = {
-          Service = "cloudfront.amazonaws.com"
-        }
-        Action    = "s3:GetObject"
-        Resource  = ["${aws_s3_bucket.this.arn}/*", "${aws_s3_bucket.this.arn}"]
-        Condition = {
-          StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution[0].arn
-          }
-        }
-      }
-    ]
-  })
-}
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect    = "Allow"
+#         Principal = {
+#           Service = "cloudfront.amazonaws.com"
+#         }
+#         Action    = "s3:GetObject"
+#         Resource  = ["${aws_s3_bucket.this.arn}/*", "${aws_s3_bucket.this.arn}"]
+#         Condition = {
+#           StringEquals = {
+#             "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution[0].arn
+#           }
+#         }
+#       }
+#     ]
+#   })
+# }
 
 # resource "aws_acm_certificate" "certificate" {
 #   count = var.config.serve_static ? 1 : 0
@@ -233,49 +233,49 @@ resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
 #   depends_on = [aws_route53_record.cert_validation]
 # }
 
-data "aws_cloudfront_cache_policy" "example" {
-  name = "Managed-CachingOptimized"
-}
+# data "aws_cloudfront_cache_policy" "example" {
+#   name = "Managed-CachingOptimized"
+# }
 
-resource "aws_cloudfront_distribution" "s3_distribution" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
-  aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
+# resource "aws_cloudfront_distribution" "s3_distribution" {
+#   count = var.config.serve_static ? 1 : 0
+#   provider = aws.domain-cdn
+#   aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
 
-  origin {
-    domain_name = aws_s3_bucket.this.bucket_regional_domain_name
-    origin_id   = "S3-${aws_s3_bucket.this.bucket}"
+#   origin {
+#     domain_name = aws_s3_bucket.this.bucket_regional_domain_name
+#     origin_id   = "S3-${aws_s3_bucket.this.bucket}"
 
-    origin_access_control_id = aws_cloudfront_origin_access_control.oac[0].id
-  }
+#     origin_access_control_id = aws_cloudfront_origin_access_control.oac[0].id
+#   }
 
-  default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-${aws_s3_bucket.this.bucket}"
+#   default_cache_behavior {
+#     allowed_methods  = ["GET", "HEAD"]
+#     cached_methods   = ["GET", "HEAD"]
+#     target_origin_id = "S3-${aws_s3_bucket.this.bucket}"
 
-    viewer_protocol_policy = "redirect-to-https"
-    cache_policy_id = data.aws_cloudfront_cache_policy.example.id
-  }
+#     viewer_protocol_policy = "redirect-to-https"
+#     cache_policy_id = data.aws_cloudfront_cache_policy.example.id
+#   }
 
-  viewer_certificate {
-    acm_certificate_arn             = aws_acm_certificate.certificate[0].arn
-    ssl_support_method              = "sni-only"
-    minimum_protocol_version        = "TLSv1.2_2021"
-  }
+#   viewer_certificate {
+#     acm_certificate_arn             = aws_acm_certificate.certificate[0].arn
+#     ssl_support_method              = "sni-only"
+#     minimum_protocol_version        = "TLSv1.2_2021"
+#   }
 
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
+#   restrictions {
+#     geo_restriction {
+#       restriction_type = "none"
+#     }
+#   }
 
-  # default_root_object = "index.html" Do we want this set?
+#   # default_root_object = "index.html" Do we want this set?
 
-  enabled = true
+#   enabled = true
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }
 
 # Define the content of index.html inline (only if serve_static is true)
 # locals {
