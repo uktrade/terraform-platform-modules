@@ -95,47 +95,23 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
   }
 }
 
-data "aws_iam_policy_document" "kms_key_policy_base" {
-  statement {
-    sid       = "Enable IAM User Permissions"
-    effect    = "Allow"
-    actions   = ["kms:*"]
-    resources = ["*"]
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
-    }
-  }
-
-  # dynamic "statement" {
-  #   for_each = local.has_data_migration_import_enabled ? [var.config.data_migration.import] : []
-
-  #   content {
-  #     sid    = "AllowActions"
-  #     effect = "Allow"
-
-  #     actions = [
-  #       "kms:Decrypt",
-  #       "kms:Encrypt",
-  #       "kms:ReEncrypt*",
-  #       "kms:GenerateDataKey*", # Needed for object decryption
-  #       "kms:DescribeKey"       # Allow describing the key
-  #     ]
-
-  #     principals {
-  #       type        = "AWS"
-  #       identifiers = [module.data_migration.s3_data_migration_role]
-  #     }
-
-  #     resources = [aws_kms_key.kms-key.arn]
-  #   }
-  # }
-}
-
 resource "aws_kms_key_policy" "kms_key" {
   key_id = aws_kms_key.kms-key.id
-  policy = data.aws_iam_policy_document.kms_key_policy_base.json
+  policy = jsonencode({
+    Id = "key-default-1"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
 }
 
 resource "aws_kms_key" "kms-key" {

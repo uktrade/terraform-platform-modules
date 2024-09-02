@@ -1,7 +1,3 @@
-variable "application" {
-  type    = string
-  default = ""
-}
 
 variable "config" {
   type = object({
@@ -9,11 +5,6 @@ variable "config" {
     source_kms_key_arn        = string
     migration_worker_role_arn = string
   })
-}
-
-variable "environment" {
-  type    = string
-  default = ""
 }
 
 variable "destination_bucket_arn" {
