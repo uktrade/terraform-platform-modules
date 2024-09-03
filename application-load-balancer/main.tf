@@ -13,6 +13,7 @@ data "aws_subnets" "public-subnets" {
 }
 
 resource "aws_lb" "this" {
+  # checkov:skip=CKV2_AWS_20:Redirects for HTTP requests into HTTPS happens on the CDN
   # checkov:skip=CKV2_AWS_28: WAF is outside of terraform-platform-modules
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
@@ -53,6 +54,7 @@ resource "aws_lb_listener" "alb-listener" {
 
 resource "aws_security_group" "alb-security-group" {
   # checkov:skip=CKV2_AWS_5: False Positive in Checkov - https://github.com/bridgecrewio/checkov/issues/3010
+  # checkov:skip=CKV_AWS_260: ingress traffic from 0.0.0.0:0 is necessary to enable connecting to web services
   for_each    = local.protocols
   name        = "${var.application}-${var.environment}-alb-${each.key}"
   description = "Managed by Terraform"
