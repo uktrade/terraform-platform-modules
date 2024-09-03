@@ -234,7 +234,7 @@ run "aws_s3_bucket_data_migration_unit_test" {
         "import" = {
           "worker_role_arn"    = "arn:aws:iam::1234:role/service-role/my-privileged-arn",
           "source_kms_key_arn" = "arn:aws:iam::1234:my-external-kms-key-arn",
-          "source_bucket_arn"  = "12345"
+          "source_bucket_arn"  = "arn:aws:s3::1234:my-source-bucket"
         }
       }
     }
@@ -242,7 +242,7 @@ run "aws_s3_bucket_data_migration_unit_test" {
 
   assert {
     condition     = length(module.data_migration) == 1
-    error_message = "iam module should be created"
+    error_message = "data migration module should be created"
   }
 }
 
@@ -258,7 +258,7 @@ run "aws_s3_bucket_not_data_migration_unit_test" {
 
   assert {
     condition     = length(module.data_migration) == 0
-    error_message = "iam module should not be created"
+    error_message = "data migration module should not be created"
   }
 }
 

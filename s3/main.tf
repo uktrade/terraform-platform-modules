@@ -35,27 +35,6 @@ data "aws_iam_policy_document" "bucket-policy" {
       "${aws_s3_bucket.this.arn}/*",
     ]
   }
-
-  # dynamic "statement" {
-  #   for_each = var.config.data_migration != null ? [var.config.data_migration] : []
-
-  #   content {
-  #     sid    = "AllowCrossAccountS3Actions"
-  #     effect = "Allow"
-
-  #     actions = var.config.data_migration.actions
-
-  #     principals {
-  #       type        = "AWS"
-  #       identifiers = [var.config.data_migration.role_arn]
-  #     }
-
-  #     resources = [
-  #       aws_s3_bucket.this.arn,
-  #       "${aws_s3_bucket.this.arn}/*",
-  #     ]
-  #   }
-  # }
 }
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
