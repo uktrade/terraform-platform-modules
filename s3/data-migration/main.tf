@@ -78,7 +78,6 @@ data "aws_iam_policy_document" "s3_migration_policy_document" {
         "kms:DescribeKey"
       ]
 
-
       resources = [var.config.source_kms_key_arn]
     }
   }
