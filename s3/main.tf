@@ -236,11 +236,10 @@ resource "aws_acm_certificate_validation" "certificate_validation" {
 resource "aws_route53_record" "cloudfront_domain" {
   count = var.config.serve_static ? 1 : 0
   provider = aws.domain-cdn
-  name = aws_s3_bucket.this.name
+  name = aws_s3_bucket.this.bucket
   type = "A"
   zone_id = data.aws_route53_zone.selected[0].id
-  records = [aws_cloudfront_distribution.s3_distribution[0].origin.domain_name]
-}
+  records = [aws_cloudfront_distribution.s3_distribution[0].origin[0].domain_name]
 
 data "aws_cloudfront_cache_policy" "example" {
   name = "Managed-CachingOptimized"
