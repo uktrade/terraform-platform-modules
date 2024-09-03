@@ -2,7 +2,7 @@ variables {
   config = {
     "source_bucket_arn"         = "test-source-bucket-arn"
     "source_kms_key_arn"        = "test-kms-key-arn"
-    "migration_worker_role_arn" = "test-role-arn"
+    "worker_role_arn" = "test-role-arn"
   }
   destination_bucket_arn        = "test-bucket-arn"
   destination_bucket_identifier = "test-bucket-name"
@@ -49,7 +49,7 @@ run "data_migration_without_source_kms_key" {
   variables {
     config = {
       "source_bucket_arn"         = "test-source-bucket-arn"
-      "migration_worker_role_arn" = "test-role-arn"
+      "worker_role_arn" = "test-role-arn"
     }
     destination_bucket_arn        = "test-bucket-arn"
     destination_bucket_identifier = "test-bucket-name"

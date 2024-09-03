@@ -232,7 +232,7 @@ run "aws_s3_bucket_data_migration_unit_test" {
       "type"        = "s3",
       "data_migration" = {
         "import" = {
-          "migration_worker_role_arn" = "arn:aws:iam::1234:role/service-role/my-privileged-arn",
+          "worker_role_arn" = "arn:aws:iam::1234:role/service-role/my-privileged-arn",
           "source_kms_key_arn"        = "arn:aws:iam::1234:my-external-kms-key-arn",
           "source_bucket_arn"         = "12345"
         }

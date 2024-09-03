@@ -9,7 +9,7 @@ data "aws_iam_policy_document" "allow_assume_role" {
 
     principals {
       type        = "AWS"
-      identifiers = [var.config.migration_worker_role_arn]
+      identifiers = [var.config.worker_role_arn]
     }
 
     actions = ["sts:AssumeRole"]
