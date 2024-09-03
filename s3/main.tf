@@ -238,9 +238,14 @@ resource "aws_route53_record" "cloudfront_domain" {
   provider = aws.domain-cdn
   name = aws_s3_bucket.this.bucket
   type = "A"
-  zone_id = data.aws_route53_zone.selected[0].id
-  records = [aws_cloudfront_distribution.s3_distribution[0].domain_name]
-  ttl     = 60
+  alias {
+    name                   = aws_cloudfront_distribution.s3_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.s3_distribution.hosted_zone_id
+    # evaluate_target_health = false
+  }
+  # zone_id = data.aws_route53_zone.selected[0].id
+  # records = [aws_cloudfront_distribution.s3_distribution[0].domain_name]
+  # ttl     = 60
 }
 
 data "aws_cloudfront_cache_policy" "example" {
