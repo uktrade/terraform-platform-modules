@@ -240,6 +240,7 @@ resource "aws_route53_record" "cloudfront_domain" {
   type = "A"
   zone_id = data.aws_route53_zone.selected[0].id
   records = [aws_cloudfront_distribution.s3_distribution[0].origin[0].domain_name]
+}
 
 data "aws_cloudfront_cache_policy" "example" {
   name = "Managed-CachingOptimized"
