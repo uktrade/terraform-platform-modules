@@ -17,6 +17,15 @@ phases:
       - echo -e "\nWorking on environment ${ENVIRONMENT}"
       - cd "terraform/environments/${ENVIRONMENT}"
       - terraform apply plan.tfplan
+      - |
+          if [[ "${COPILOT_PROFILE}" != *"prod"* ]]; then
+            echo -e "\nGenerating manifests and deploying AWS Copilot environment resources"
+            cd "${CODEBUILD_SRC_DIR}"
+            platform-helper environment generate --name "${ENVIRONMENT}"
+            copilot env init --name "${ENVIRONMENT}" --profile "${COPILOT_PROFILE}" --default-config
+            platform-helper copilot make-addons
+            copilot env deploy --name "${ENVIRONMENT}"
+          fi
   post_build:
     commands:
       - |
