@@ -1,8 +1,8 @@
 variables {
   config = {
-    "source_bucket_arn"         = "test-source-bucket-arn"
-    "source_kms_key_arn"        = "test-kms-key-arn"
-    "worker_role_arn" = "test-role-arn"
+    "source_bucket_arn"  = "test-source-bucket-arn"
+    "source_kms_key_arn" = "test-kms-key-arn"
+    "worker_role_arn"    = "test-role-arn"
   }
   destination_bucket_arn        = "test-bucket-arn"
   destination_bucket_identifier = "test-bucket-name"
@@ -33,7 +33,7 @@ run "data_migration_unit_test" {
   }
 
   assert {
-    condition     = can(regex("test-bucket-arn", aws_iam_role_policy.s3_migration_policy.policy))
+    condition     = strcontains(aws_iam_role_policy.s3_migration_policy.policy, "test-bucket-arn")
     error_message = "Statement should contain resource arn: test-bucket-arn"
   }
 
@@ -48,8 +48,8 @@ run "data_migration_without_source_kms_key" {
 
   variables {
     config = {
-      "source_bucket_arn"         = "test-source-bucket-arn"
-      "worker_role_arn" = "test-role-arn"
+      "source_bucket_arn" = "test-source-bucket-arn"
+      "worker_role_arn"   = "test-role-arn"
     }
     destination_bucket_arn        = "test-bucket-arn"
     destination_bucket_identifier = "test-bucket-name"

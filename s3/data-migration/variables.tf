@@ -1,9 +1,9 @@
 
 variable "config" {
   type = object({
-    source_bucket_arn         = string
-    source_kms_key_arn        = optional(string)
-    worker_role_arn = string
+    source_bucket_arn  = string
+    source_kms_key_arn = optional(string)
+    worker_role_arn    = string
   })
 }
 
