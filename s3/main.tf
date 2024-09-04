@@ -303,7 +303,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
     viewer_protocol_policy = "redirect-to-https"
     cache_policy_id = data.aws_cloudfront_cache_policy.example.id
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.forward_content_type.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy[0].forward_content_type.id
   }
 
   viewer_certificate {
