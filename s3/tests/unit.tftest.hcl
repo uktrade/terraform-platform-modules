@@ -228,7 +228,7 @@ run "aws_s3_bucket_data_migration_unit_test" {
 
   variables {
     config = {
-      "bucket_name" = "dbt-terraform-test-s3-x-account",
+      "bucket_name" = "dbt-terraform-test-s3-cross-account",
       "type"        = "s3",
       "data_migration" = {
         "import" = {
