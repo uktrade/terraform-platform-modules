@@ -152,6 +152,10 @@ resource "aws_s3_object" "object" {
   server_side_encryption = var.config.serve_static ? null : "aws:kms"
 }
 
+output "debug_content_type" {
+  value = aws_s3_object.object[*].content_type
+}
+
 resource "aws_s3_bucket_public_access_block" "public_access_block" {
   count = var.config.serve_static ? 0 : 1
   bucket                  = aws_s3_bucket.this.id
