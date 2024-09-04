@@ -4,8 +4,8 @@ variables {
     "source_kms_key_arn" = "test-source-kms-key-arn"
     "worker_role_arn"    = "test-role-arn"
   }
-  destination_bucket_arn        = "test-bucket-arn"
-  destination_bucket_identifier = "test-bucket-name"
+  destination_bucket_arn        = "test-destination-bucket-arn"
+  destination_bucket_identifier = "test-destination-bucket-name"
 }
 
 
