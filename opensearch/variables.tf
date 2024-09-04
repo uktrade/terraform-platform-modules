@@ -27,6 +27,8 @@ variable "config" {
     search_slow_log_retention_in_days = optional(number)
     es_app_log_retention_in_days      = optional(number)
     audit_log_retention_in_days       = optional(number)
+    password_special_characters       = optional(string)
+    urlencode_password                = optional(bool)
   })
 
   validation {
