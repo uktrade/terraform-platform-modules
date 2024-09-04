@@ -10,6 +10,7 @@ output "arn" {
   value = aws_s3_bucket.this.arn
 }
 
-# output "kms_key_arn" {
-#   value = aws_kms_key.kms-key.arn
-# }
+output "kms_key_arn" {
+  count = var.config.serve_static ? 0 : 1
+  value = aws_kms_key.kms-key.arn
+}
