@@ -266,7 +266,7 @@ resource "aws_cloudfront_origin_request_policy" "forward_content_type" {
 
   headers_config {
     header_behavior = "whitelist"
-    headers         = {
+    headers {
       items = ["Content-Type"]
     }
   }
