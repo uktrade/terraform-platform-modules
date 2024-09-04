@@ -138,7 +138,7 @@ resource "aws_s3_object" "object" {
   for_each = {
     for item in coalesce(var.config.objects, []) : item.key => {
       body         = item.body
-      content_type = lookup(item, "content_type", "application/octet-stream")
+      content_type = item.content_type
     }
   }
 
