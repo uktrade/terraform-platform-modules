@@ -135,7 +135,7 @@ resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
 
 // create objects based on the config.objects key
 resource "aws_s3_object" "object" {
-  ffor_each = {
+  for_each = {
     for item in coalesce(var.config.objects, []) : item.key => {
       body         = item.body
       content_type = lookup(item, "content_type", "application/octet-stream")
