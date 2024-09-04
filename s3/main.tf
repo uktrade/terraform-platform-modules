@@ -135,13 +135,18 @@ resource "aws_s3_bucket_object_lock_configuration" "object-lock-config" {
 
 // create objects based on the config.objects key
 resource "aws_s3_object" "object" {
-  for_each = { for item in coalesce(var.config.objects, []) : item.key => item.body }
+  ffor_each = {
+    for item in coalesce(var.config.objects, []) : item.key => {
+      body         = item.body
+      content_type = lookup(item, "content_type", "application/octet-stream")
+    }
+  }
 
   bucket  = aws_s3_bucket.this.id
   key     = each.key
   content = each.value
 
-  content_type = lookup(each.value, "content_type", "application/octet-stream")
+  content_type = each.value.content_type
 
   kms_key_id             = var.config.serve_static ? null : aws_kms_key.kms-key[0].arn
   server_side_encryption = var.config.serve_static ? null : "aws:kms"
