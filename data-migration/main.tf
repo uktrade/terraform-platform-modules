@@ -51,7 +51,8 @@ data "aws_iam_policy_document" "s3_migration_policy_document" {
 
     resources = [
       var.destination_bucket_arn,
-    "${var.destination_bucket_arn}/*"]
+      "${var.destination_bucket_arn}/*"
+    ]
   }
 
   statement {
