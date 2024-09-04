@@ -148,9 +148,8 @@ resource "aws_s3_object" "object" {
 
   content_type = each.value.content_type
 
-  kms_key_id             = var.config.serve_static ? null : aws_kms_key.kms-key[0].arn
-  server_side_encryption = var.config.serve_static ? null : "aws:kms"
-  # acl = var.config.serve_static ? "public-read" : null
+  kms_key_id             = aws_kms_key.kms-key[0].arn
+  server_side_encryption ="aws:kms"
 }
 
 
