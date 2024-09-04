@@ -152,6 +152,12 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 module "data_migration" {
   count  = local.has_data_migration_import_enabled ? 1 : 0
   source = "./data-migration"
+  
+  depends_on = [
+    aws_s3_bucket.this,
+    aws_kms_key.kms-key
+  ]
+  
   config = var.config.data_migration.import
 
   destination_bucket_identifier = aws_s3_bucket.this.id
