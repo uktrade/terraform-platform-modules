@@ -144,7 +144,7 @@ resource "aws_s3_object" "object" {
 
   bucket  = aws_s3_bucket.this.id
   key     = each.key
-  content = each.value
+  content = each.value.body
 
   content_type = each.value.content_type
 
