@@ -241,7 +241,7 @@ run "aws_s3_bucket_data_migration_unit_test" {
   }
 
   assert {
-    condition     = module.data_migration[0].test == "hello_1"
+    condition     = module.data_migration[0].module_exists
     error_message = "data migration module should be created"
   }
 }
