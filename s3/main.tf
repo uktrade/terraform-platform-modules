@@ -76,7 +76,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
 }
 
 resource "aws_kms_key" "kms-key" {
-  # count = var.config.serve_static ? 0 : 1
+  count = var.config.serve_static ? 0 : 1
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
@@ -99,21 +99,21 @@ resource "aws_kms_key" "kms-key" {
 }
 
 resource "aws_kms_alias" "s3-bucket" {
-  # count = var.config.serve_static ? 0 : 1
+  count = var.config.serve_static ? 0 : 1
   depends_on    = [aws_kms_key.kms-key]
   name          = "alias/${local.kms_alias_name}"
-  target_key_id = aws_kms_key.kms-key.id
+  target_key_id = aws_kms_key.kms-key[0].id
 }
 
 // require server side encryption
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
-  # count = var.config.serve_static ? 0 : 1
+  count = var.config.serve_static ? 0 : 1
   # checkov:skip=CKV2_AWS_67:We are not currently rotating the keys
   bucket = aws_s3_bucket.this.id
 
   rule {
     apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.kms-key.arn
+      kms_master_key_id = aws_kms_key.kms-key[0].arn
       sse_algorithm     = "aws:kms"
     }
   }
@@ -148,8 +148,8 @@ resource "aws_s3_object" "object" {
 
   content_type = each.value.content_type
 
-  kms_key_id             = aws_kms_key.kms-key.arn
-  server_side_encryption = "aws:kms"
+  kms_key_id             = var.config.serve_static ? null : aws_kms_key.kms-key[0].arn
+  server_side_encryption = var.config.serve_static ? null : "aws:kms"
 }
 
 
