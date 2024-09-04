@@ -141,8 +141,8 @@ resource "aws_s3_object" "object" {
   key     = each.key
   content = each.value
 
-  kms_key_id             = var.serve_static ? null : aws_kms_key.kms-key[0].arn
-  server_side_encryption = var.serve_static ? null : "aws:kms"
+  kms_key_id             = var.config.serve_static ? null : aws_kms_key.kms-key[0].arn
+  server_side_encryption = var.config.serve_static ? null : "aws:kms"
 }
 
 resource "aws_s3_bucket_public_access_block" "public_access_block" {
