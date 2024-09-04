@@ -152,8 +152,8 @@ resource "aws_s3_object" "object" {
   server_side_encryption = var.config.serve_static ? null : "aws:kms"
 }
 
-output "debug_content_type" {
-  value = aws_s3_object.object[*].content_type
+output "debug_s3_objects" {
+  value = { for k, obj in coalesce(var.config.objects, []) : k => obj }
 }
 
 resource "aws_s3_bucket_public_access_block" "public_access_block" {
