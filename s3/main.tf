@@ -165,7 +165,7 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_public_access_block" "public_access_block" {
+resource "aws_s3_bucket_public_access_block" "public_access_allow" {
   count = var.config.serve_static ? 1 : 0
   bucket                  = aws_s3_bucket.this.id
 }
