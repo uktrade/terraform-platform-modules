@@ -150,7 +150,7 @@ resource "aws_s3_object" "object" {
 
   kms_key_id             = var.config.serve_static ? null : aws_kms_key.kms-key[0].arn
   server_side_encryption = var.config.serve_static ? null : "aws:kms"
-  acl = var.config.serve_static ? "public-read" : "private"
+  acl = var.config.serve_static ? "public-read" : null
 }
 
 output "debug_s3_objects" {
