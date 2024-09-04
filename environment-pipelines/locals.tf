@@ -84,6 +84,7 @@ locals {
         PrimarySource : "${env.name}_terraform_plan"
         EnvironmentVariables : jsonencode([
           { name : "ENVIRONMENT", value : env.name },
+          { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
           { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
           { name : "VPC", value : local.base_env_config[env.name].vpc },
