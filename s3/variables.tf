@@ -42,6 +42,7 @@ variable "config" {
     objects = optional(list(object({
       body = string
       key  = string
+      content_type = optional(string)
     })))
   })
 }
