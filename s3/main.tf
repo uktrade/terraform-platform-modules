@@ -150,7 +150,7 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 }
 
 module "data_migration" {
-  count  = local.has_data_migration_import_enabled ? 1 : 0
+  count  = local.has_data_migration_import_enabled ? 0 : 0
   source = "./data-migration"
 
   depends_on = [
