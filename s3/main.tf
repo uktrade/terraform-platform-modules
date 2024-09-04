@@ -165,6 +165,11 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_public_access_block" "public_access_block" {
+  count = var.config.serve_static ? 1 : 0
+  bucket                  = aws_s3_bucket.this.id
+}
+
 // Cloudfront resources for serving static content
 
 resource "aws_cloudfront_origin_access_control" "oac" {
