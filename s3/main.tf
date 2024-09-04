@@ -150,6 +150,7 @@ resource "aws_s3_object" "object" {
 
   kms_key_id             = var.config.serve_static ? null : aws_kms_key.kms-key[0].arn
   server_side_encryption = var.config.serve_static ? null : "aws:kms"
+  acl = var.config.serve_static ? "public-read" : "private"
 }
 
 output "debug_s3_objects" {
@@ -163,11 +164,6 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
-}
-
-resource "aws_s3_bucket_public_access_block" "public_access_allow" {
-  count = var.config.serve_static ? 1 : 0
-  bucket                  = aws_s3_bucket.this.id
 }
 
 // Cloudfront resources for serving static content
@@ -260,9 +256,6 @@ resource "aws_route53_record" "cloudfront_domain" {
     zone_id                = aws_cloudfront_distribution.s3_distribution[0].hosted_zone_id
     evaluate_target_health = false
   }
-  # zone_id = data.aws_route53_zone.selected[0].id
-  # records = [aws_cloudfront_distribution.s3_distribution[0].domain_name]
-  # ttl     = 60
 }
 
 data "aws_cloudfront_cache_policy" "example" {
