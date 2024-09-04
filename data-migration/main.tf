@@ -31,7 +31,8 @@ data "aws_iam_policy_document" "s3_migration_policy_document" {
 
     resources = [
       var.config.source_bucket_arn,
-    "${var.config.source_bucket_arn}/*"]
+      "${var.config.source_bucket_arn}/*"
+    ]
   }
 
   statement {
