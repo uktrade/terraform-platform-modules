@@ -1,0 +1,31 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - set -e
+      - echo "Getting pipeline artifact from S3"
+      - aws s3 cp --quiet s3://${PIPELINE_ARTIFACT_NAME} pipeline_artifact.zip
+      - unzip -q pipeline_artifact.zip
+      - export PATH="build-tools/bin:$PATH"
+      - export PYTHONPATH="build-tools"
+      - assumed_role=$(aws sts assume-role --role-arn "${TRIGGERED_ACCOUNT_ROLE_ARN}" --role-session-name "run-environment-generate-$(date +%s)")
+      - PROD_AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId)
+      - PROD_AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey)
+      - PROD_AWS_SESSION_TOKEN=$(echo $assumed_role | jq -r .Credentials.SessionToken)
+      - export PROFILE_NAME="${TRIGGERED_PIPELINE_AWS_PROFILE}"
+      - aws configure set aws_access_key_id "${PROD_AWS_ACCESS_KEY_ID}" --profile "${PROFILE_NAME}"
+      - aws configure set aws_secret_access_key "${PROD_AWS_SECRET_ACCESS_KEY}" --profile  "${PROFILE_NAME}"
+      - aws configure set aws_session_token "${PROD_AWS_SESSION_TOKEN}" --profile  "${PROFILE_NAME}"
+      - aws configure set region "eu-west-2" --profile  "${PROFILE_NAME}"
+      - aws configure set output "json" --profile  "${PROFILE_NAME}"
+  build:
+    commands:
+      - echo -e "\nGenerating manifests and deploying AWS Copilot environment resources"
+      - platform-helper environment generate --name "${ENVIRONMENT}"
+      - copilot env init --name "${ENVIRONMENT}" --profile "${COPILOT_PROFILE}" --default-config
+      - platform-helper copilot make-addons
+      - copilot env deploy --name "${ENVIRONMENT}"
+
+artifacts:
+  files: []
