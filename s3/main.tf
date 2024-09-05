@@ -320,7 +320,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   tags = local.tags
 }
 
-resource aws_ssm_parameter cloudfront_alias {
+resource "aws_ssm_parameter" "cloudfront_alias" {
   count = var.config.serve_static ? 1 : 0
   name  = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
   type  = "String"
