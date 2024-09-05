@@ -161,7 +161,7 @@ This module will create the CloudFront (CDN) endpoints for the application if en
 
 `cdn_domains_list` is a map of the domain names that will be configured in CloudFront.
 
-- the key is the fully qualified domain name
+- the key is the fully qualified domain name.
 - the value is an array containing the internal prefix and the base domain (the application's Route 53 zone).
 
 ### Optional settings:
