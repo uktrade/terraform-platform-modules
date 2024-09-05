@@ -37,7 +37,7 @@ data "aws_iam_policy_document" "s3_migration_policy_document" {
   }
 
   statement {
-    sid    = "WriteOnDestinationBucket"
+    sid    = "AllowWriteOnDestinationBucket"
     effect = "Allow"
 
     actions = [
