@@ -32,8 +32,7 @@ phases:
       - MESSAGE="Triggering ${TRIGGERED_PIPELINE_NAME} pipeline"
       - echo "${MESSAGE}"
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
-
-      - aws codepipeline start-pipeline-execution --name "${TRIGGERED_PIPELINE_NAME}" --profile  "${PROFILE_NAME}" --variables "name=SLACK_THREAD_ID,value=${SLACK_REF}"
+      - aws codepipeline start-pipeline-execution --name "${TRIGGERED_PIPELINE_NAME}" --profile "${PROFILE_NAME}" --variables name=SLACK_THREAD_ID,value=${SLACK_REF} name=PIPELINE_ARTIFACT_NAME,value=${CODEBUILD_SOURCE_VERSION#*:::} name=TRIGGERING_ACCOUNT_ROLE_ARN,value=${TRIGGERING_ACCOUNT_ROLE_ARN} name=TRIGGERING_ACCOUNT_AWS_PROFILE,value=${TRIGGERING_ACCOUNT_AWS_PROFILE}
 
   post_build:
     commands:
