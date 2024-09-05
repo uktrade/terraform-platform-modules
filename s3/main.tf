@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "bucket-policy" {
 }
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
-  count = var.config.serve_static ? 0 : 1
+  count  = var.config.serve_static ? 0 : 1
   bucket = aws_s3_bucket.this.id
   policy = data.aws_iam_policy_document.bucket-policy.json
 }
@@ -99,7 +99,7 @@ resource "aws_kms_key" "kms-key" {
 }
 
 resource "aws_kms_alias" "s3-bucket" {
-  count = var.config.serve_static ? 0 : 1
+  count         = var.config.serve_static ? 0 : 1
   depends_on    = [aws_kms_key.kms-key]
   name          = "alias/${local.kms_alias_name}"
   target_key_id = aws_kms_key.kms-key[0].id
@@ -164,10 +164,10 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 // Cloudfront resources for serving static content
 
 resource "aws_cloudfront_origin_access_control" "oac" {
-  name = "oac"
-  provider = aws.domain-cdn
-  description = "Origin access control for Cloudfront distribution and ${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital static s3 bucket."
-  count = var.config.serve_static ? 1 : 0
+  name                              = "oac"
+  provider                          = aws.domain-cdn
+  description                       = "Origin access control for Cloudfront distribution and ${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital static s3 bucket."
+  count                             = var.config.serve_static ? 1 : 0
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -183,12 +183,12 @@ resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           Service = "cloudfront.amazonaws.com"
         }
-        Action    = "s3:GetObject"
-        Resource  = ["${aws_s3_bucket.this.arn}/*", "${aws_s3_bucket.this.arn}"]
+        Action   = "s3:GetObject"
+        Resource = ["${aws_s3_bucket.this.arn}/*", aws_s3_bucket.this.arn]
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.s3_distribution[0].arn
@@ -200,8 +200,8 @@ resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
 }
 
 resource "aws_acm_certificate" "certificate" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
+  count             = var.config.serve_static ? 1 : 0
+  provider          = aws.domain-cdn
   domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
   validation_method = "DNS"
 
@@ -213,39 +213,39 @@ resource "aws_acm_certificate" "certificate" {
 }
 
 data "aws_route53_zone" "selected" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
+  count        = var.config.serve_static ? 1 : 0
+  provider     = aws.domain-cdn
   name         = "${var.application}.uktrade.digital"
   private_zone = false
 }
 
 resource "aws_route53_record" "cert_validation" {
-  count = var.config.serve_static ? 1 : 0
+  count    = var.config.serve_static ? 1 : 0
   provider = aws.domain-cdn
 
-  name    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
-  type    = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_type, 0)
-  zone_id = data.aws_route53_zone.selected[0].id
-  records = [element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_value, 0)]
-  ttl     = 60
-  depends_on = [aws_acm_certificate.certificate]
+  name            = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
+  type            = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_type, 0)
+  zone_id         = data.aws_route53_zone.selected[0].id
+  records         = [element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_value, 0)]
+  ttl             = 60
+  depends_on      = [aws_acm_certificate.certificate]
   allow_overwrite = true
 }
 
 resource "aws_acm_certificate_validation" "certificate_validation" {
-  count = var.config.serve_static ? 1 : 0
-  provider = aws.domain-cdn
+  count                   = var.config.serve_static ? 1 : 0
+  provider                = aws.domain-cdn
   certificate_arn         = aws_acm_certificate.certificate[0].arn
   validation_record_fqdns = [aws_route53_record.cert_validation[0].fqdn]
-  depends_on = [aws_route53_record.cert_validation]
+  depends_on              = [aws_route53_record.cert_validation]
 }
 
 resource "aws_route53_record" "cloudfront_domain" {
-  count = var.config.serve_static ? 1 : 0
+  count    = var.config.serve_static ? 1 : 0
   provider = aws.domain-cdn
-  name = aws_s3_bucket.this.bucket
-  type = "A"
-  zone_id = data.aws_route53_zone.selected[0].id
+  name     = aws_s3_bucket.this.bucket
+  type     = "A"
+  zone_id  = data.aws_route53_zone.selected[0].id
   alias {
     name                   = aws_cloudfront_distribution.s3_distribution[0].domain_name
     zone_id                = aws_cloudfront_distribution.s3_distribution[0].hosted_zone_id
@@ -255,9 +255,9 @@ resource "aws_route53_record" "cloudfront_domain" {
 
 
 resource "aws_cloudfront_origin_request_policy" "forward_content_type" {
-  count = var.config.serve_static ? 1 : 0
+  count    = var.config.serve_static ? 1 : 0
   provider = aws.domain-cdn
-  name    = "ForwardContentTypePolicy"
+  name     = "ForwardContentTypePolicy"
 
   headers_config {
     header_behavior = "whitelist"
@@ -280,9 +280,9 @@ data "aws_cloudfront_cache_policy" "example" {
 }
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
-  count = var.config.serve_static ? 1 : 0
+  count    = var.config.serve_static ? 1 : 0
   provider = aws.domain-cdn
-  aliases = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
+  aliases  = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
 
   origin {
     domain_name = aws_s3_bucket.this.bucket_regional_domain_name
@@ -296,15 +296,15 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${aws_s3_bucket.this.bucket}"
 
-    viewer_protocol_policy = "redirect-to-https"
-    cache_policy_id = data.aws_cloudfront_cache_policy.example.id
+    viewer_protocol_policy   = "redirect-to-https"
+    cache_policy_id          = data.aws_cloudfront_cache_policy.example.id
     origin_request_policy_id = aws_cloudfront_origin_request_policy.forward_content_type[0].id
   }
 
   viewer_certificate {
-    acm_certificate_arn             = aws_acm_certificate.certificate[0].arn
-    ssl_support_method              = "sni-only"
-    minimum_protocol_version        = "TLSv1.2_2021"
+    acm_certificate_arn      = aws_acm_certificate.certificate[0].arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   restrictions {
