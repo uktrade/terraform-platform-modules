@@ -259,7 +259,7 @@ my-postgres-db:
 
 ## S3 to S3 data migration module
 
-This module will create cross account permissions to write to your S3 bucket, allowing the copying of files from a source S3 bucket to your destination S3 bucket.  Any cross account data migration **must be approved by cyber**.  Please see the [S3 to S3 data migration documentation](https://platform.readme.trade.gov.uk/reference/terminology/) for further details on using this module.
+This module will create cross account permissions to write to your S3 bucket, allowing the copying of files from a source S3 bucket to your destination S3 bucket.  Any cross account data migration **must be approved by cyber**.  Please see the [S3 to S3 data migration documentation](https://platform.readme.trade.gov.uk/reference/) for further details on using this module.
 
 Most users will not have permissions to apply the following configuration.
 In this case, an SRE team member or someone from the DBT-platform team will be able to help once cyber has approved the request.
