@@ -266,7 +266,7 @@ S3 data migration can be enabled by adding the `data_migration` parameter along 
 
 ```yaml
 extensions:
-  demodjango-s3-bucket:
+  my-s3-bucket:
       type: s3
       services:
         - web
