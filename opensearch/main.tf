@@ -89,16 +89,18 @@ resource "aws_security_group" "opensearch-security-group" {
 }
 
 resource "random_password" "password" {
-  length      = 32
-  upper       = true
-  special     = true
-  lower       = true
-  numeric     = true
-  min_upper   = 1
-  min_special = 1
-  min_lower   = 1
-  min_numeric = 1
+  length           = 32
+  upper            = true
+  special          = true
+  lower            = true
+  numeric          = true
+  min_upper        = 1
+  min_special      = 1
+  min_lower        = 1
+  min_numeric      = 1
+  override_special = coalesce(var.config.password_special_characters, "-_!.~$&'()*+,;=")
 }
+
 resource "aws_opensearch_domain" "this" {
   # checkov:skip=CKV_AWS_247: Enabling CMK Forces Cluster Recreation. To be implemented as a separate breaking change
   # checkov:skip=CKV2_AWS_59: This is a configurable option not picked up by Checkov as it's variablised
@@ -209,7 +211,7 @@ resource "aws_ssm_parameter" "opensearch_endpoint" {
   name        = local.ssm_parameter_name
   description = "opensearch_password"
   type        = "SecureString"
-  value       = "https://${local.master_user}:${urlencode(random_password.password.result)}@${aws_opensearch_domain.this.endpoint}"
+  value       = "https://${local.master_user}:${local.urlencode_password ? urlencode(random_password.password.result) : random_password.password.result}@${aws_opensearch_domain.this.endpoint}"
   key_id      = aws_kms_key.ssm_opensearch_endpoint.arn
 
   tags = local.tags
