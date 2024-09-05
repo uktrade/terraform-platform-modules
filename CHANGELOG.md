@@ -1,5 +1,40 @@
 # Changelog
 
+## [5.2.4](https://github.com/uktrade/terraform-platform-modules/compare/5.2.3...5.2.4) (2024-09-05)
+
+
+### Bug Fixes
+
+* DBTP-1346 Add special characters & urlencode options for OpenSearch passwords ([#225](https://github.com/uktrade/terraform-platform-modules/issues/225)) ([d11bd13](https://github.com/uktrade/terraform-platform-modules/commit/d11bd13cf3f049db5e05e43b43d9fc6b5f839ce3))
+
+## [5.2.3](https://github.com/uktrade/terraform-platform-modules/compare/5.2.2...5.2.3) (2024-09-02)
+
+
+### Bug Fixes
+
+* hardcoded 'demodjango' ([#221](https://github.com/uktrade/terraform-platform-modules/issues/221)) ([d0910aa](https://github.com/uktrade/terraform-platform-modules/commit/d0910aaa52738f6e3c855eb54c8e81cc45866f13))
+
+## [5.2.2](https://github.com/uktrade/terraform-platform-modules/compare/5.2.1...5.2.2) (2024-08-23)
+
+
+### Bug Fixes
+
+* No idea why this was working before but isn't now. ([#218](https://github.com/uktrade/terraform-platform-modules/issues/218)) ([253bab5](https://github.com/uktrade/terraform-platform-modules/commit/253bab587df9d1feb7d0b51604d120937cb5fedf))
+
+## [5.2.1](https://github.com/uktrade/terraform-platform-modules/compare/5.2.0...5.2.1) (2024-08-22)
+
+
+### Bug Fixes
+
+* Fix missing quote and missing permission ([#216](https://github.com/uktrade/terraform-platform-modules/issues/216)) ([9f7992c](https://github.com/uktrade/terraform-platform-modules/commit/9f7992c6790ee54130a865570efcbea2acdb7005))
+
+## [5.2.0](https://github.com/uktrade/terraform-platform-modules/compare/5.1.6...5.2.0) (2024-08-21)
+
+
+### Features
+
+* Changes to buildspec to support changing the version of platform-helper used in the pipeline ([#206](https://github.com/uktrade/terraform-platform-modules/issues/206)) ([1d20161](https://github.com/uktrade/terraform-platform-modules/commit/1d20161752182d47440fe8e0f12be251152516bc))
+
 ## [5.1.6](https://github.com/uktrade/terraform-platform-modules/compare/5.1.5...5.1.6) (2024-08-20)
 
 

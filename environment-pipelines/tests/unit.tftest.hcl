@@ -898,7 +898,7 @@ run "test_triggering_pipelines" {
   }
 
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-trigger[\"\"]"
+    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.ProjectName == "my-app-my-pipeline-environment-pipeline-trigger"
     error_message = "Configuration ProjectName incorrect"
   }
 
@@ -968,7 +968,7 @@ run "test_triggered_pipelines" {
   }
 
   assert {
-    condition     = local.triggering_pipeline_role_arns == ["arn:aws:iam::000123456789:role/demodjango-my-pipeline-environment-pipeline-codebuild"]
+    condition     = local.triggering_pipeline_role_arns == ["arn:aws:iam::000123456789:role/my-app-my-pipeline-environment-pipeline-codebuild"]
     error_message = "ARN for triggering role is incorrect"
   }
 }
