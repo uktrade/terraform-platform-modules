@@ -43,8 +43,7 @@ The faster, but less comprehensive, tests that run against the `terraform plan` 
 terraform test
 ```
 
-To run the longer end-to-end tests that actually deploy the module (via `terraform apply`), perform assertions and tear back down are run from the
-same directory as follows:
+To run the longer end-to-end tests that actually deploy the module (via `terraform apply`), perform assertions and tear back down are run from the same directory as follows:
 
 ```shell
 terraform test -test-directory e2e-tests
