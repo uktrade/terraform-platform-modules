@@ -14,6 +14,24 @@ resource "aws_codepipeline" "environment_pipeline" {
     description   = "This can be set by a triggering pipeline to continue an existing message thread"
   }
 
+  variable {
+    name          = "PIPELINE_ARTIFACT_NAME"
+    default_value = "NONE"
+    description   = "The location of the pipeline artifact in S3 in the triggering non-prod account"
+  }
+
+  variable {
+    name          = "TRIGGERING_ACCOUNT_ROLE_ARN"
+    default_value = "NONE"
+    description   = "The role of the triggering pipeline"
+  }
+
+  variable {
+    name          = "TRIGGERING_ACCOUNT_AWS_PROFILE"
+    default_value = "NONE"
+    description   = "The account of the triggering pipeline"
+  }
+
   artifact_store {
     location = module.artifact_store.bucket_name
     type     = "S3"

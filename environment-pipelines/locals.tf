@@ -89,6 +89,9 @@ locals {
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
           { name : "VPC", value : local.base_env_config[env.name].vpc },
           { name : "SLACK_THREAD_ID", value : "#{variables.SLACK_THREAD_ID}" },
+          { name : "PIPELINE_ARTIFACT_NAME", value : "#{variables.PIPELINE_ARTIFACT_NAME}" },
+          { name : "TRIGGERING_ACCOUNT_ROLE_ARN", value : "#{variables.TRIGGERING_ACCOUNT_ROLE_ARN}" },
+          { name : "TRIGGERING_ACCOUNT_AWS_PROFILE", value : "#{variables.TRIGGERING_ACCOUNT_AWS_PROFILE}" },
         ])
       },
       namespace : null
@@ -99,6 +102,9 @@ locals {
   triggered_pipeline_account_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_to_trigger}-trigger-pipeline-from-${var.pipeline_name}" : null
   target_pipeline                 = local.triggers_another_pipeline ? "${var.application}-${var.pipeline_to_trigger}-environment-pipeline" : null
 
+  triggering_pipeline_account_name = local.triggers_another_pipeline ? var.all_pipelines[var.pipeline_name].account : null
+  triggering_pipeline_account_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.account_map[var.all_pipelines[var.pipeline_name].account]}:role/${var.application}-${var.pipeline_name}-environment-pipeline-codebuild" : null
+  triggered_pipeline_codebuild_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_to_trigger}-environment-pipeline-codebuild" : null
 
   all_stages = flatten(
     concat(local.initial_stages, local.triggers_another_pipeline ? [
@@ -118,6 +124,8 @@ locals {
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
             { name : "ACCOUNT_NAME", value : local.triggered_pipeline_account_name },
+            { name : "TRIGGERING_ACCOUNT_ROLE_ARN", value : local.triggering_pipeline_account_role },
+            { name : "TRIGGERING_ACCOUNT_AWS_PROFILE", value : local.triggering_pipeline_account_name }
           ])
         },
         namespace : null

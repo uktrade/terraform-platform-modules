@@ -80,6 +80,20 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
 
     actions = ["sts:AssumeRole"]
   }
+
+  dynamic "statement" {
+    for_each = toset(local.triggers_another_pipeline ? [""] : [])
+    content {
+      effect = "Allow"
+
+      principals {
+        type        = "AWS"
+        identifiers = [local.triggered_pipeline_codebuild_role]
+      }
+
+      actions = ["sts:AssumeRole"]
+    }
+  }
 }
 
 data "aws_iam_policy_document" "write_environment_pipeline_codebuild_logs" {
@@ -817,7 +831,7 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
     aws_iam_policy.postgres.arn,
     aws_iam_policy.opensearch.arn,
     aws_iam_policy.load_balancer.arn,
-    aws_iam_policy.s3.arn
+    aws_iam_policy.s3.arn,
   ]
   tags = local.tags
 }
@@ -959,6 +973,22 @@ data "aws_iam_policy_document" "trigger_pipeline" {
     resources = [
       aws_codepipeline.environment_pipeline.arn
     ]
+  }
+}
+
+resource "aws_iam_role_policy" "assume_role_to_trigger_copilot_codebuild" {
+  for_each = local.set_of_triggering_pipeline_names
+  name     = "${var.application}-${var.pipeline_name}-assume-role-to-trigger-copilot-codebuild"
+  role     = aws_iam_role.environment_pipeline_codebuild.name
+  policy   = data.aws_iam_policy_document.assume_role_to_trigger_copilot_codebuild.json
+}
+
+data "aws_iam_policy_document" "assume_role_to_trigger_copilot_codebuild" {
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = local.triggering_pipeline_role_arns
   }
 }
 
