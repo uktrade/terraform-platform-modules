@@ -322,7 +322,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
 resource aws_ssm_parameter cloudfront_alias {
   count = var.config.serve_static ? 1 : 0
-  name  = "/copilot/${var.application}/${var.environment}/secrets/${var.config.bucket_name}_DOMAIN_NAME"
+  name  = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
   type  = "String"
   value = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
 
