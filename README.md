@@ -259,14 +259,12 @@ my-postgres-db:
 
 ## S3 to S3 data migration module
 
-This module will create cross account permissions to write to your S3 bucket, allowing the copying of files from a source S3 bucket to a destination S3 bucket.
-Resources created include a bucket specific migration role within your environment, on the destination bucket.
+This module will create cross account permissions to write to your S3 bucket, allowing the copying of files from a source S3 bucket to your destination S3 bucket.  Any cross account data migration **must be approved by cyber**.  Please see the [S3 to S3 data migration documentation](https://platform.readme.trade.gov.uk/reference/terminology/) for further details on using this module.
 
-Any cross account data migration **must be approved by cyber**.
 Most users will not have permissions to apply the following configuration.
 In this case, an SRE team member or someone from the DBT-platform team will be able to help once cyber has approved the request.
 
-S3 data migration can be enable be adding the `data_migration` parameter along with the `import` parameter and it's mandatory configuration to the `<application>-s3-bucket` extension in your `platform-config.yml` file. The `source_kms_key_arn` is optional as it depends on whether the source bucket has KMS key encryption on it.
+S3 data migration can be enabled by adding the `data_migration` parameter along with the `import` parameter and its mandatory configuration to the `<application>-s3-bucket` extension in your `platform-config.yml` file. The `source_kms_key_arn` is optional as it depends on whether the source bucket has KMS key encryption on it.
 
 ```yaml
 extensions:
@@ -277,8 +275,6 @@ extensions:
       environments:
         "*":
           bucket_name: bucket_name: my-bucket-dev # Mandatory
-          versioning: true # Optional
-          retention_policy: # Optional
           data_migration: # Optional
               import: # Mandatory if data_migration is present
                   source_kms_key_arn: arn:aws:kms::123456789:my-source-key # Optional
