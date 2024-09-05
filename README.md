@@ -262,7 +262,7 @@ This module will create cross account permissions to write to your S3 bucket, al
 
 Most users will not have permissions to apply the following configuration.  In this case, an SRE team member or someone from the DBT-platform team will be able to help once cyber has approved the request.
 
-S3 data migration can be enabled by adding the `data_migration` parameter along with the `import` parameter and its mandatory configuration to the `<application>-s3-bucket` extension in your `platform-config.yml` file. The `source_kms_key_arn` is optional as it depends on whether the source bucket has KMS key encryption on it.
+S3 data migration can be enabled by adding the `data_migration` parameter along with the `import` parameter and its mandatory configuration to the S3 extension in your `platform-config.yml` file. The `source_kms_key_arn` is optional as it depends on whether the source bucket has KMS key encryption on it.
 
 ```yaml
 extensions:
