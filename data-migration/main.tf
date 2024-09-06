@@ -6,6 +6,7 @@ resource "aws_iam_role" "s3_migration_role" {
 data "aws_iam_policy_document" "allow_assume_role" {
   statement {
     sid    = "AllowAssumeWorkerRole"
+    sid    = "AllowAssumeWorkerRole"
     effect = "Allow"
 
     principals {
