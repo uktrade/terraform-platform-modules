@@ -50,10 +50,6 @@ variable "config" {
         source_kms_key_arn = optional(string)
         worker_role_arn    = string
       }))
-      # todo: support the export side of data migration - replaces manual steps on source bucket side
-      # export = optional(object({
-      #   s3_migration_role_arn = string
-      # }))
       })
     )
   })
