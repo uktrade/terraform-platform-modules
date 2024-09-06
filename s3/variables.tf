@@ -20,7 +20,7 @@ variable "vpc_name" {
   default = "not-used"
 }
 
-variable "config" {
+variable "config_test" {
   type = object({
     bucket_name = string
     versioning  = optional(bool)

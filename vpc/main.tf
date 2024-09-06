@@ -241,7 +241,7 @@ resource "aws_security_group" "rds-vpc-endpoint-sg" {
   tags = merge(
     local.tags,
     {
-      Name = "${var.arg_name}-rds-endpoint-sg"
+      Name = "${var.arg_name_test}-rds-endpoint-sg"
     }
   )
 }
