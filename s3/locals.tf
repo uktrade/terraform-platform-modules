@@ -8,5 +8,4 @@ locals {
   }
 
   kms_alias_name = strcontains(var.config.bucket_name, "pipeline") ? "${var.config.bucket_name}-key" : "${var.application}-${var.environment}-${var.config.bucket_name}-key"
-
 }
