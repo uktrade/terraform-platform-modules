@@ -2,7 +2,7 @@ module "s3" {
   source = "../s3"
 
   for_each = local.s3
-  
+
   providers = {
     aws.domain-cdn = aws.domain-cdn
   }
