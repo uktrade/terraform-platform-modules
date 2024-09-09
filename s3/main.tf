@@ -333,7 +333,8 @@ resource "aws_kms_key" "s3-ssm-kms-key" {
 }
 
 resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
-  key_id = aws_kms_key.s3-ssm-kms-key.id
+  count  = var.config.serve_static ? 1 : 0
+  key_id = aws_kms_key.s3-ssm-kms-key[0].id
   policy = jsonencode({
     Statement = [
       {
