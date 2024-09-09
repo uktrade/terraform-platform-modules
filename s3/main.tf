@@ -346,7 +346,7 @@ resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
         Principal = {
           Service = "ssm.amazonaws.com"
         }
-        Resource = aws_kms_key.s3-ssm-kms-key.arn
+        Resource = aws_kms_key.s3-ssm-kms-key[0].arn
         Condition = {
           StringEquals = {
             "kms:EncryptionContext:aws:ssm:parameterName" = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
