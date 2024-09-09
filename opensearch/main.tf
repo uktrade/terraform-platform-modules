@@ -4,11 +4,6 @@ data "aws_region" "current" {}
 resource "aws_kms_key" "cloudwatch_log_group_kms_key" {
   description         = "KMS Key for ${var.name}-${var.environment} CloudWatch Log encryption"
   enable_key_rotation = true
-  tags                = local.tags
-}
-
-resource "aws_kms_key_policy" "opensearch_to_cloudwatch" {
-  key_id = aws_kms_key.cloudwatch_log_group_kms_key.key_id
   policy = jsonencode({
     Id = "OpenSearchToCloudWatch"
     Statement = [
@@ -32,6 +27,7 @@ resource "aws_kms_key_policy" "opensearch_to_cloudwatch" {
     ]
     Version = "2012-10-17"
   })
+  tags = local.tags
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
