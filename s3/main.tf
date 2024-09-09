@@ -351,15 +351,15 @@ resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
             "kms:EncryptionContext:aws:ssm:parameterName" = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
           }
         }
-        Sid      = "Enable SSM Permissions"
+        Sid = "Enable SSM Permissions"
       },
       {
-        Sid      = "AllowKeyAdminByRoot",
-        Effect   = "Allow",
+        Sid    = "AllowKeyAdminByRoot",
+        Effect = "Allow",
         Principal = {
-          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         },
-        Action = "kms:*",
+        Action   = "kms:*",
         Resource = "*"
       }
     ]
