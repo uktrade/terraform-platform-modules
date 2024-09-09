@@ -332,6 +332,41 @@ resource "aws_kms_key" "s3-ssm-kms-key" {
   tags                = local.tags
 }
 
+resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
+  key_id = aws_kms_key.s3-ssm-kms-key.id
+  policy = jsonencode({
+    Statement = [
+      {
+        Action = [
+          "kms:GenerateDataKey*",
+          "kms:Decrypt"
+        ]
+        Effect = "Allow"
+        Principal = {
+          Service = "ssm.amazonaws.com"
+        }
+        Resource = aws_kms_key.s3-ssm-kms-key.arn
+        Condition = {
+          StringEquals = {
+            "kms:EncryptionContext:aws:ssm:parameterName" = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
+          }
+        }
+        Sid      = "Enable SSM Permissions"
+      },
+      {
+        Sid      = "AllowKeyAdminByRoot",
+        Effect   = "Allow",
+        Principal = {
+          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action = "kms:*",
+        Resource = "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
+}
+
 resource "aws_ssm_parameter" "cloudfront_alias" {
   count  = var.config.serve_static ? 1 : 0
   name   = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
