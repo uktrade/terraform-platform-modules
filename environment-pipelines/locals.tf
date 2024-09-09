@@ -105,10 +105,10 @@ locals {
   triggered_pipeline_account_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_to_trigger}-trigger-pipeline-from-${var.pipeline_name}" : null
   target_pipeline                 = local.triggers_another_pipeline ? "${var.application}-${var.pipeline_to_trigger}-environment-pipeline" : null
 
-  triggering_pipeline_account = local.triggered_by_another_pipeline ? [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name][0].account: null
   triggering_pipeline_name = local.triggered_by_another_pipeline ? [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name][0].name : null
-  triggering_pipeline_account_role = local.triggered_by_another_pipeline ? "arn:aws:iam::${local.account_map[local.triggering_pipeline_account]}:role/${var.application}-${local.triggering_pipeline_name}-environment-pipeline-codebuild" : null
-  prod_copilot_codebuild_name = local.triggered_by_another_pipeline ? "${var.application}-${var.pipeline_name}-environment-prod-copilot" : null
+  triggering_pipeline_account = local.triggered_by_another_pipeline ? [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name][0].account: ""
+  triggering_pipeline_account_role = local.triggered_by_another_pipeline ? "arn:aws:iam::${local.account_map[local.triggering_pipeline_account]}:role/${var.application}-${local.triggering_pipeline_name}-environment-pipeline-codebuild" : ""
+  prod_copilot_codebuild_name = local.triggered_by_another_pipeline ? "${var.application}-${local.triggering_pipeline_name}-environment-prod-copilot" : ""
 
   all_stages = flatten(
     concat(local.initial_stages, local.triggers_another_pipeline ? [
