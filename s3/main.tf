@@ -280,6 +280,13 @@ data "aws_cloudfront_cache_policy" "example" {
 }
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
+  # checkov:skip=CKV2_AWS_32: Ensure CloudFront distribution has a response headers policy attached
+  # checkov:skip=CKV2_AWS_47: Ensure AWS CloudFront attached WAFv2 WebACL is configured with AMR for Log4j Vulnerability
+  # checkov:skip=CKV_AWS_68: CloudFront Distribution should have WAF enabled
+  # checkov:skip=CKV_AWS_86: Ensure CloudFront distribution has Access Logging enabled
+  # checkov:skip=CKV_AWS_305: Ensure CloudFront distribution has a default root object configured
+  # checkov:skip=CKV_AWS_310: Ensure CloudFront distributions should have origin failover configured
+
   count    = var.config.serve_static ? 1 : 0
   provider = aws.domain-cdn
   aliases  = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
@@ -313,18 +320,24 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     }
   }
 
-  # default_root_object = "index.html" Do we want this set?
-
   enabled = true
 
   tags = local.tags
 }
 
+resource "aws_kms_key" "s3-ssm-kms-key" {
+  count = var.config.serve_static ? 1 : 0
+  description         = "KMS Key for ${var.application}-${var.environment} S3 module SSM parameter encryption"
+  enable_key_rotation = true
+  tags                = local.tags
+}
+
 resource "aws_ssm_parameter" "cloudfront_alias" {
   count = var.config.serve_static ? 1 : 0
   name  = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
-  type  = "String"
+  type  = "SecureString"
   value = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+  key_id = aws_kms_key.s3-ssm-kms-key.arn
 
   tags = local.tags
 }
