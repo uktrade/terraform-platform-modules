@@ -326,17 +326,17 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 
 resource "aws_kms_key" "s3-ssm-kms-key" {
-  count = var.config.serve_static ? 1 : 0
+  count               = var.config.serve_static ? 1 : 0
   description         = "KMS Key for ${var.application}-${var.environment} S3 module SSM parameter encryption"
   enable_key_rotation = true
   tags                = local.tags
 }
 
 resource "aws_ssm_parameter" "cloudfront_alias" {
-  count = var.config.serve_static ? 1 : 0
-  name  = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
-  type  = "SecureString"
-  value = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+  count  = var.config.serve_static ? 1 : 0
+  name   = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
+  type   = "SecureString"
+  value  = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
   key_id = aws_kms_key.s3-ssm-kms-key.arn
 
   tags = local.tags
