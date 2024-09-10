@@ -38,8 +38,11 @@ phases:
             aws configure set aws_session_token "${NON_PROD_AWS_SESSION_TOKEN}" --profile  "${PROFILE_NAME}"
             aws configure set region "eu-west-2" --profile  "${PROFILE_NAME}"
             aws configure set output "json" --profile  "${PROFILE_NAME}"
-   
-            aws codebuild start-build --project-name "${PROD_COPILOT_CODEBUILD_NAME}" --profile "${TRIGGERING_ACCOUNT_AWS_PROFILE}" --environment-variables-override name=PIPELINE_ARTIFACT_NAME,value=${PIPELINE_ARTIFACT_NAME} name=ENVIRONMENT,value=${ENVIRONMENT}
+            cd "${CODEBUILD_SRC_DIR}"
+            platform-helper environment generate --name "${ENVIRONMENT}"
+            platform-helper copilot make-addons
+            AWS_PROFILE=platform-sandbox copilot env init --name "${ENVIRONMENT}" --profile platform-prod --default-config
+            AWS_PROFILE=platform-sandbox copilot env deploy --name "${ENVIRONMENT}" --force
           fi
   post_build:
     commands:
