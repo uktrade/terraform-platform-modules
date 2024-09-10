@@ -223,6 +223,45 @@ run "aws_s3_bucket_lifecycle_configuration_no_prefix_unit_test" {
   }
 }
 
+run "aws_s3_bucket_data_migration_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-cross-account",
+      "type"        = "s3",
+      "data_migration" = {
+        "import" = {
+          "worker_role_arn"    = "arn:aws:iam::1234:role/service-role/my-privileged-arn",
+          "source_kms_key_arn" = "arn:aws:iam::1234:my-external-kms-key-arn",
+          "source_bucket_arn"  = "arn:aws:s3::1234:my-source-bucket"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = module.data_migration[0].module_exists
+    error_message = "data migration module should be created"
+  }
+}
+
+run "aws_s3_bucket_not_data_migration_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-not-x-account",
+      "type"        = "s3",
+    }
+  }
+
+  assert {
+    condition     = length(module.data_migration) == 0
+    error_message = "data migration module should not be created"
+  }
+}
+
 run "aws_s3_bucket_object_lock_configuration_governance_unit_test" {
   command = plan
 
