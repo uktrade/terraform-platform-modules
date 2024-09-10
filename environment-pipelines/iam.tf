@@ -976,6 +976,68 @@ data "aws_iam_policy_document" "trigger_pipeline" {
   }
 }
 
+resource "aws_iam_role_policy" "run_copilot_env_commands" {
+  for_each = local.set_of_triggering_pipeline_names
+  name     = "${var.application}-${var.pipeline_name}-run-copilot-env-commands-${each.value}"
+  role     = aws_iam_role.trigger_pipeline[each.value].name
+  policy   = data.aws_iam_policy_document.run_copilot_env_commands[each.value].json
+}
+
+data "aws_iam_policy_document" "run_copilot_env_commands" {
+  for_each = local.set_of_triggering_pipeline_names
+  statement {
+    actions = [
+      "iam:ListAccountAliases",
+    ]
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "acm:ListCertificates"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "cloudformation:DescribeStacks"
+    ]
+    resources = [
+      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.application}-*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "kms:GenerateDataKey"
+    ]
+    resources = [
+      "arn:aws:kms:${data.aws_region.current.name}:${local.triggering_account_id}:key/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:GetParametersByPath"
+    ]
+    resources = [
+      data.aws_ssm_parameter.central_log_group_parameter.arn,
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/*"
+    ]
+  }
+}
+
 resource "aws_iam_role_policy" "assume_role_to_trigger_copilot_codebuild" {
   for_each = local.set_of_triggering_pipeline_names
   name     = "${var.application}-${var.pipeline_name}-assume-role-to-trigger-copilot-codebuild"

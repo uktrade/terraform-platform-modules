@@ -23,8 +23,9 @@ phases:
     commands:
       - echo -e "\nGenerating manifests and deploying AWS Copilot environment resources"
       - AWS_PROFILE=${PROFILE_NAME} platform-helper environment generate --name "${ENVIRONMENT}"
-      - copilot env init --name "${ENVIRONMENT}" --profile "${COPILOT_PROFILE}" --default-config
-      - platform-helper copilot make-addons
+      - AWS_PROFILE=${PROFILE_NAME} platform-helper copilot make-addons
+      - echo $AWS_PROFILE
+      - copilot env init --name "${ENVIRONMENT}" --profile "${PROFILE_NAME}" --default-config
       - copilot env deploy --name "${ENVIRONMENT}"
 
 artifacts:
