@@ -732,7 +732,7 @@ data "aws_iam_policy_document" "copilot_assume_role" {
   }
 
   dynamic "statement" {
-    for_each = toset(local.triggers_another_pipeline ? local.triggered_pipeline_environment_config : [])
+    for_each = toset(local.triggers_another_pipeline ? local.triggered_pipeline_environments : [])
     content {
       actions = [
         "sts:AssumeRole"
