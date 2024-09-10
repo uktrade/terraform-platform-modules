@@ -732,7 +732,7 @@ data "aws_iam_policy_document" "copilot_assume_role" {
   }
 
   dynamic "statement" {
-    for_each = local.triggered_pipeline_environment_config
+    for_each = toset(local.triggers_another_pipeline ? local.triggered_pipeline_environment_config : [])
     content {
       actions = [
         "sts:AssumeRole"
@@ -997,6 +997,13 @@ resource "aws_iam_role_policy" "copilot_env_commands" {
 
 data "aws_iam_policy_document" "copilot_env_commands" {
   for_each = toset(local.triggered_by_another_pipeline ? [""] : [])
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = local.triggering_pipeline_role_arns
+  }
+
   statement {
     actions = [
       "kms:GenerateDataKey",

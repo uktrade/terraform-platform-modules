@@ -17,17 +17,16 @@ phases:
       - echo -e "\nWorking on environment ${ENVIRONMENT}"
       - cd "terraform/environments/${ENVIRONMENT}"
       - terraform apply plan.tfplan
+      - echo -e "\nGenerating manifests and deploying AWS Copilot environment resources"
       - |
           if [[ "${COPILOT_PROFILE}" != *"prod"* ]]
           then
-            echo -e "\nGenerating manifests and deploying AWS Copilot environment resources"
             cd "${CODEBUILD_SRC_DIR}"
             platform-helper environment generate --name "${ENVIRONMENT}"
             copilot env init --name "${ENVIRONMENT}" --profile "${COPILOT_PROFILE}" --default-config
             platform-helper copilot make-addons
             copilot env deploy --name "${ENVIRONMENT}"
           else
-            echo -e "\nTriggering CodeBuild in non-prod to generate manifests and deploy AWS Copilot environment resources"
             assumed_role=$(aws sts assume-role --role-arn "${TRIGGERING_ACCOUNT_CODEBUILD_ROLE}" --role-session-name "trigger-copilot-env-deploy-$(date +%s)")    
             NON_PROD_AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId)
             NON_PROD_AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey)
