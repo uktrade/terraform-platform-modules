@@ -28,21 +28,21 @@ phases:
             copilot env deploy --name "${ENVIRONMENT}"
           else
             echo -e "\nTriggering CodeBuild in non-prod to generate manifests and deploy AWS Copilot environment resources"
-            assumed_role=$(aws sts assume-role --role-arn "${TRIGGERING_ACCOUNT_ROLE_ARN}" --role-session-name "trigger-copilot-env-deploy-$(date +%s)")    
+            assumed_role=$(aws sts assume-role --role-arn "${TRIGGERING_ACCOUNT_CODEBUILD_ROLE}" --role-session-name "trigger-copilot-env-deploy-$(date +%s)")    
             NON_PROD_AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId)
             NON_PROD_AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey)
             NON_PROD_AWS_SESSION_TOKEN=$(echo $assumed_role | jq -r .Credentials.SessionToken)
             export PROFILE_NAME="${TRIGGERING_ACCOUNT_AWS_PROFILE}"
             aws configure set aws_access_key_id "${NON_PROD_AWS_ACCESS_KEY_ID}" --profile "${PROFILE_NAME}"
-            aws configure set aws_secret_access_key "${NON_PROD_AWS_SECRET_ACCESS_KEY}" --profile  "${PROFILE_NAME}"
-            aws configure set aws_session_token "${NON_PROD_AWS_SESSION_TOKEN}" --profile  "${PROFILE_NAME}"
-            aws configure set region "eu-west-2" --profile  "${PROFILE_NAME}"
-            aws configure set output "json" --profile  "${PROFILE_NAME}"
+            aws configure set aws_secret_access_key "${NON_PROD_AWS_SECRET_ACCESS_KEY}" --profile "${PROFILE_NAME}"
+            aws configure set aws_session_token "${NON_PROD_AWS_SESSION_TOKEN}" --profile "${PROFILE_NAME}"
+            aws configure set region "eu-west-2" --profile "${PROFILE_NAME}"
+            aws configure set output "json" --profile "${PROFILE_NAME}"
             cd "${CODEBUILD_SRC_DIR}"
             platform-helper environment generate --name "${ENVIRONMENT}"
             platform-helper copilot make-addons
-            AWS_PROFILE=platform-sandbox copilot env init --name "${ENVIRONMENT}" --profile platform-prod --default-config
-            AWS_PROFILE=platform-sandbox copilot env deploy --name "${ENVIRONMENT}" --force
+            AWS_PROFILE="${PROFILE_NAME}" copilot env init --name "${ENVIRONMENT}" --profile "${COPILOT_PROFILE}" --default-config
+            AWS_PROFILE="${PROFILE_NAME}" copilot env deploy --name "${ENVIRONMENT}"
           fi
   post_build:
     commands:

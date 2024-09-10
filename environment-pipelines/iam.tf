@@ -730,6 +730,18 @@ data "aws_iam_policy_document" "copilot_assume_role" {
       ]
     }
   }
+
+  dynamic "statement" {
+    for_each = local.triggered_pipeline_environment_config
+    content {
+      actions = [
+        "sts:AssumeRole"
+      ]
+      resources = [
+        "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
+      ]
+    }
+  }
 }
 
 data "aws_iam_policy_document" "cloudformation" {
@@ -831,7 +843,7 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
     aws_iam_policy.postgres.arn,
     aws_iam_policy.opensearch.arn,
     aws_iam_policy.load_balancer.arn,
-    aws_iam_policy.s3.arn,
+    aws_iam_policy.s3.arn
   ]
   tags = local.tags
 }
@@ -976,48 +988,18 @@ data "aws_iam_policy_document" "trigger_pipeline" {
   }
 }
 
-resource "aws_iam_role_policy" "run_copilot_env_commands" {
-  for_each = local.set_of_triggering_pipeline_names
-  name     = "${var.application}-${var.pipeline_name}-run-copilot-env-commands-${each.value}"
-  role     = aws_iam_role.trigger_pipeline[each.value].name
-  policy   = data.aws_iam_policy_document.run_copilot_env_commands[each.value].json
+resource "aws_iam_role_policy" "copilot_env_commands" {
+  for_each = toset(local.triggered_by_another_pipeline ? [""] : [])
+  name     = "${var.application}-${var.pipeline_name}-copilot-env-commands"
+  role     = aws_iam_role.environment_pipeline_codebuild.name
+  policy   = data.aws_iam_policy_document.copilot_env_commands[""].json
 }
 
-data "aws_iam_policy_document" "run_copilot_env_commands" {
-  for_each = local.set_of_triggering_pipeline_names
+data "aws_iam_policy_document" "copilot_env_commands" {
+  for_each = toset(local.triggered_by_another_pipeline ? [""] : [])
   statement {
     actions = [
-      "iam:ListAccountAliases",
-    ]
-    resources = [
-      "*"
-    ]
-  }
-
-  statement {
-    actions = [
-      "ec2:DescribeVpcs",
-      "ec2:DescribeSubnets",
-      "acm:ListCertificates"
-    ]
-    resources = [
-      "*"
-    ]
-  }
-
-  statement {
-    actions = [
-      "cloudformation:DescribeStacks"
-    ]
-    resources = [
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.application}-*"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "kms:GenerateDataKey"
+      "kms:GenerateDataKey",
     ]
     resources = [
       "arn:aws:kms:${data.aws_region.current.name}:${local.triggering_account_id}:key/*"
@@ -1026,34 +1008,13 @@ data "aws_iam_policy_document" "run_copilot_env_commands" {
 
   statement {
     actions = [
-      "ssm:GetParameter",
-      "ssm:GetParameters",
-      "ssm:GetParametersByPath"
+      "s3:PutObject",
     ]
     resources = [
-      data.aws_ssm_parameter.central_log_group_parameter.arn,
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}",
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/*"
+      "arn:aws:s3:::stackset-${var.application}-*-pipelinebuiltartifactbuc-*"
     ]
   }
 }
-
-resource "aws_iam_role_policy" "assume_role_to_trigger_copilot_codebuild" {
-  for_each = local.set_of_triggering_pipeline_names
-  name     = "${var.application}-${var.pipeline_name}-assume-role-to-trigger-copilot-codebuild"
-  role     = aws_iam_role.environment_pipeline_codebuild.name
-  policy   = data.aws_iam_policy_document.assume_role_to_trigger_copilot_codebuild.json
-}
-
-data "aws_iam_policy_document" "assume_role_to_trigger_copilot_codebuild" {
-  statement {
-    actions = [
-      "sts:AssumeRole"
-    ]
-    resources = local.triggering_pipeline_role_arns
-  }
-}
-
 
 #------NON-PROD-SOURCE-ACCOUNT------
 

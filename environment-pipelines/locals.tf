@@ -21,18 +21,23 @@ locals {
   account_map = { for account in local.extracted_account_names_and_ids : account["name"] => account["id"] }
 
   # Convert the env config into a list and add env name and vpc / requires_approval from the environments config.
-  environment_config            = [for name, env in var.environments : merge(lookup(local.base_env_config, name, {}), env, { "name" = name })]
-  triggers_another_pipeline     = var.pipeline_to_trigger != null
-  triggered_by_another_pipeline = length([for config in var.all_pipelines : true if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name]) > 0
+  environment_config                    = [for name, env in var.environments : merge(lookup(local.base_env_config, name, {}), env, { "name" = name })]
+  triggered_pipeline_environment_config = [for name, env in var.environments : merge(lookup(local.base_env_config, name, {}), env, { "name" = var.pipeline_to_trigger })]
 
-  triggered_pipeline_account_name = local.triggers_another_pipeline ? var.all_pipelines[var.pipeline_to_trigger].account : null
-  triggered_account_id            = local.triggers_another_pipeline ? local.account_map[local.triggered_pipeline_account_name] : null
+  triggers_another_pipeline         = var.pipeline_to_trigger != null
+  triggered_pipeline_account_name   = local.triggers_another_pipeline ? var.all_pipelines[var.pipeline_to_trigger].account : null
+  triggered_account_id              = local.triggers_another_pipeline ? local.account_map[local.triggered_pipeline_account_name] : null
   triggered_pipeline_codebuild_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_to_trigger}-environment-pipeline-codebuild" : null
 
   list_of_triggering_pipelines     = [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name]
   set_of_triggering_pipeline_names = toset([for pipeline in local.list_of_triggering_pipelines : pipeline.name])
+  triggering_pipeline_role_arns    = [for name in local.set_of_triggering_pipeline_names : "arn:aws:iam::${local.account_map[var.all_pipelines[name].account]}:role/${var.application}-${name}-environment-pipeline-codebuild"]
 
-  triggering_pipeline_role_arns = [for name in local.set_of_triggering_pipeline_names : "arn:aws:iam::${local.account_map[var.all_pipelines[name].account]}:role/${var.application}-${name}-environment-pipeline-codebuild"]
+  triggered_by_another_pipeline      = length([for config in var.all_pipelines : true if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name]) > 0
+  triggering_pipeline_account_name   = local.triggered_by_another_pipeline ? [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name][0].account : null
+  triggering_account_id              = local.triggered_by_another_pipeline ? local.account_map[local.triggering_pipeline_account_name] : null
+  triggering_pipeline_name           = local.triggered_by_another_pipeline ? [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name][0].name : null
+  triggering_pipeline_codebuild_role = local.triggered_by_another_pipeline ? "arn:aws:iam::${local.triggering_account_id}:role/${var.application}-${local.triggering_pipeline_name}-environment-pipeline-codebuild" : null
 
 
   initial_stages = [for env in local.environment_config : [
@@ -91,10 +96,8 @@ locals {
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
           { name : "VPC", value : local.base_env_config[env.name].vpc },
           { name : "SLACK_THREAD_ID", value : "#{variables.SLACK_THREAD_ID}" },
-          { name : "PIPELINE_ARTIFACT_NAME", value : "#{variables.PIPELINE_ARTIFACT_NAME}" },
-          { name : "TRIGGERING_ACCOUNT_ROLE_ARN", value : local.triggering_pipeline_account_role },
-          { name : "TRIGGERING_ACCOUNT_AWS_PROFILE", value : local.triggering_pipeline_account },
-          { name : "PROD_COPILOT_CODEBUILD_NAME", value : local.prod_copilot_codebuild_name },
+          local.triggered_by_another_pipeline ? { name : "TRIGGERING_ACCOUNT_CODEBUILD_ROLE", value : local.triggering_pipeline_codebuild_role } : null,
+          local.triggered_by_another_pipeline ? { name : "TRIGGERING_ACCOUNT_AWS_PROFILE", value : local.triggering_pipeline_account_name } : null,
         ])
       },
       namespace : null
@@ -104,12 +107,6 @@ locals {
 
   triggered_pipeline_account_role = local.triggers_another_pipeline ? "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${var.pipeline_to_trigger}-trigger-pipeline-from-${var.pipeline_name}" : null
   target_pipeline                 = local.triggers_another_pipeline ? "${var.application}-${var.pipeline_to_trigger}-environment-pipeline" : null
-
-  triggering_pipeline_name = local.triggered_by_another_pipeline ? [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name][0].name : null
-  triggering_pipeline_account = local.triggered_by_another_pipeline ? [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name][0].account: ""
-  triggering_account_id     = local.triggered_by_another_pipeline ? local.account_map[local.triggering_pipeline_account] : null
-  triggering_pipeline_account_role = local.triggered_by_another_pipeline ? "arn:aws:iam::${local.account_map[local.triggering_pipeline_account]}:role/${var.application}-${local.triggering_pipeline_name}-environment-pipeline-codebuild" : ""
-  prod_copilot_codebuild_name = local.triggered_by_another_pipeline ? "${var.application}-${local.triggering_pipeline_name}-environment-prod-copilot" : ""
 
   all_stages = flatten(
     concat(local.initial_stages, local.triggers_another_pipeline ? [
