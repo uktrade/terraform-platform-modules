@@ -34,9 +34,9 @@ locals {
   triggering_pipeline_role_arns    = [for name in local.set_of_triggering_pipeline_names : "arn:aws:iam::${local.account_map[var.all_pipelines[name].account]}:role/${var.application}-${name}-environment-pipeline-codebuild"]
 
   triggered_by_another_pipeline      = length([for config in var.all_pipelines : true if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name]) > 0
-  triggering_pipeline_account_name   = local.triggered_by_another_pipeline ? [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name][0].account : null
+  triggering_pipeline_account_name   = local.triggered_by_another_pipeline ? one(local.list_of_triggering_pipelines).account : null
   triggering_account_id              = local.triggered_by_another_pipeline ? local.account_map[local.triggering_pipeline_account_name] : null
-  triggering_pipeline_name           = local.triggered_by_another_pipeline ? [for pipeline, config in var.all_pipelines : merge(config, { name = pipeline }) if lookup(config, "pipeline_to_trigger", null) == var.pipeline_name][0].name : null
+  triggering_pipeline_name           = local.triggered_by_another_pipeline ? one(local.list_of_triggering_pipelines).name : null
   triggering_pipeline_codebuild_role = local.triggered_by_another_pipeline ? "arn:aws:iam::${local.triggering_account_id}:role/${var.application}-${local.triggering_pipeline_name}-environment-pipeline-codebuild" : null
 
 

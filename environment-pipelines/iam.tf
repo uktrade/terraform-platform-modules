@@ -988,14 +988,14 @@ data "aws_iam_policy_document" "trigger_pipeline" {
   }
 }
 
-resource "aws_iam_role_policy" "copilot_env_commands" {
+resource "aws_iam_role_policy" "assume_role_for_copilot_env_commands" {
   for_each = toset(local.triggered_by_another_pipeline ? [""] : [])
-  name     = "${var.application}-${var.pipeline_name}-copilot-env-commands"
+  name     = "${var.application}-${var.pipeline_name}-assume-role-for-copilot-env-commands"
   role     = aws_iam_role.environment_pipeline_codebuild.name
-  policy   = data.aws_iam_policy_document.copilot_env_commands[""].json
+  policy   = data.aws_iam_policy_document.assume_role_for_copilot_env_commands_policy_document[""].json
 }
 
-data "aws_iam_policy_document" "copilot_env_commands" {
+data "aws_iam_policy_document" "assume_role_for_copilot_env_commands_policy_document" {
   for_each = toset(local.triggered_by_another_pipeline ? [""] : [])
   statement {
     actions = [
