@@ -390,6 +390,6 @@ module "data_migration" {
   config = var.config.data_migration.import
 
   destination_bucket_identifier = aws_s3_bucket.this.id
-  destination_kms_key_arn       = aws_kms_key.kms-key.arn
+  destination_kms_key_arn       = aws_kms_key.kms-key[0].arn
   destination_bucket_arn        = aws_s3_bucket.this.arn
 }
