@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.3.0](https://github.com/uktrade/terraform-platform-modules/compare/5.2.4...5.3.0) (2024-09-10)
+
+
+### Features
+
+* DBTP-1301 - provide cross account s3 to s3 migration permissions ([#220](https://github.com/uktrade/terraform-platform-modules/issues/220)) ([85c7f46](https://github.com/uktrade/terraform-platform-modules/commit/85c7f467b560d5140eccc68f325ddbe14465df05))
+
+## [5.2.4](https://github.com/uktrade/terraform-platform-modules/compare/5.2.3...5.2.4) (2024-09-05)
+
+
+### Bug Fixes
+
+* DBTP-1346 Add special characters & urlencode options for OpenSearch passwords ([#225](https://github.com/uktrade/terraform-platform-modules/issues/225)) ([d11bd13](https://github.com/uktrade/terraform-platform-modules/commit/d11bd13cf3f049db5e05e43b43d9fc6b5f839ce3))
+
 ## [5.2.3](https://github.com/uktrade/terraform-platform-modules/compare/5.2.2...5.2.3) (2024-09-02)
 
 

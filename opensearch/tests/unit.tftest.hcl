@@ -30,11 +30,13 @@ run "test_create_opensearch" {
     vpc_name    = "terraform-tests-vpc"
 
     config = {
-      engine      = "2.5"
-      instance    = "t3.small.search"
-      instances   = 1
-      volume_size = 80
-      master      = false
+      engine                      = "2.5"
+      instance                    = "t3.small.search"
+      instances                   = 1
+      volume_size                 = 80
+      master                      = false
+      password_special_characters = "-_.,()"
+      urlencode_password          = false
     }
   }
 
