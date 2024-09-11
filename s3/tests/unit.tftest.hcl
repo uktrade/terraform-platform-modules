@@ -101,37 +101,37 @@ run "aws_kms_key_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_kms_key.kms-key.bypass_policy_lockout_safety_check == false
+    condition     = aws_kms_key.kms-key[0].bypass_policy_lockout_safety_check == false
     error_message = "Should be: false"
   }
 
   assert {
-    condition     = aws_kms_key.kms-key.customer_master_key_spec == "SYMMETRIC_DEFAULT"
+    condition     = aws_kms_key.kms-key[0].customer_master_key_spec == "SYMMETRIC_DEFAULT"
     error_message = "Should be: SYMMETRIC_DEFAULT"
   }
 
   assert {
-    condition     = aws_kms_key.kms-key.enable_key_rotation == false
+    condition     = aws_kms_key.kms-key[0].enable_key_rotation == false
     error_message = "Should be: false"
   }
 
   assert {
-    condition     = aws_kms_key.kms-key.is_enabled == true
+    condition     = aws_kms_key.kms-key[0].is_enabled == true
     error_message = "Should be: true"
   }
 
   assert {
-    condition     = aws_kms_key.kms-key.key_usage == "ENCRYPT_DECRYPT"
+    condition     = aws_kms_key.kms-key[0].key_usage == "ENCRYPT_DECRYPT"
     error_message = "Should be: ENCRYPT_DECRYPT"
   }
 
   assert {
-    condition     = aws_kms_key.kms-key.tags["application"] == "s3-test-application"
+    condition     = aws_kms_key.kms-key[0].tags["application"] == "s3-test-application"
     error_message = "Invalid value for aws_kms_key tags parameter."
   }
 
   assert {
-    condition     = aws_kms_key.kms-key.tags["environment"] == "s3-test-environment"
+    condition     = aws_kms_key.kms-key[0].tags["environment"] == "s3-test-environment"
     error_message = "Invalid value for aws_kms_key tags parameter."
   }
 }
@@ -140,7 +140,7 @@ run "aws_kms_alias_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_kms_alias.s3-bucket.name == "alias/s3-test-application-s3-test-environment-dbt-terraform-test-s3-module-key"
+    condition     = aws_kms_alias.s3-bucket[0].name == "alias/s3-test-application-s3-test-environment-dbt-terraform-test-s3-module-key"
     error_message = "Should be: alias/s3-test-application-s3-test-environment-dbt-terraform-test-s3-module-key"
   }
 }
@@ -149,7 +149,7 @@ run "aws_s3_bucket_server_side_encryption_configuration_unit_test" {
   command = plan
 
   assert {
-    condition     = [for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule : true if[for el2 in el.apply_server_side_encryption_by_default : true if el2.sse_algorithm == "aws:kms"][0] == true][0] == true
+    condition     = [for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config[0].rule : true if[for el2 in el.apply_server_side_encryption_by_default : true if el2.sse_algorithm == "aws:kms"][0] == true][0] == true
     error_message = "Invalid value for aws_s3_bucket_server_side_encryption_configuration tags parameter."
   }
 }
