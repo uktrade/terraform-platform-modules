@@ -3,7 +3,7 @@ resource "aws_s3_bucket" "this" {
   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-  bucket = var.config.serve_static ? "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital" : var.config.bucket_name
+  bucket = var.config.serve_static_content ? "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital" : var.config.bucket_name
 
   tags = local.tags
 }
@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "bucket-policy" {
 }
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
-  count  = var.config.serve_static ? 0 : 1
+  count  = var.config.serve_static_content ? 0 : 1
   bucket = aws_s3_bucket.this.id
   policy = data.aws_iam_policy_document.bucket-policy.json
 }
@@ -76,7 +76,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
 }
 
 resource "aws_kms_key" "kms-key" {
-  count = var.config.serve_static ? 0 : 1
+  count = var.config.serve_static_content ? 0 : 1
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
@@ -99,7 +99,7 @@ resource "aws_kms_key" "kms-key" {
 }
 
 resource "aws_kms_alias" "s3-bucket" {
-  count         = var.config.serve_static ? 0 : 1
+  count         = var.config.serve_static_content ? 0 : 1
   depends_on    = [aws_kms_key.kms-key]
   name          = "alias/${local.kms_alias_name}"
   target_key_id = aws_kms_key.kms-key[0].id
@@ -107,7 +107,7 @@ resource "aws_kms_alias" "s3-bucket" {
 
 // require server side encryption
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
-  count = var.config.serve_static ? 0 : 1
+  count = var.config.serve_static_content ? 0 : 1
   # checkov:skip=CKV2_AWS_67:We are not currently rotating the keys
   bucket = aws_s3_bucket.this.id
 
@@ -148,8 +148,8 @@ resource "aws_s3_object" "object" {
 
   content_type = each.value.content_type
 
-  kms_key_id             = var.config.serve_static ? null : aws_kms_key.kms-key[0].arn
-  server_side_encryption = var.config.serve_static ? null : "aws:kms"
+  kms_key_id             = var.config.serve_static_content ? null : aws_kms_key.kms-key[0].arn
+  server_side_encryption = var.config.serve_static_content ? null : "aws:kms"
 }
 
 
@@ -167,7 +167,7 @@ resource "aws_cloudfront_origin_access_control" "oac" {
   name                              = "oac"
   provider                          = aws.domain-cdn
   description                       = "Origin access control for Cloudfront distribution and ${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital static s3 bucket."
-  count                             = var.config.serve_static ? 1 : 0
+  count                             = var.config.serve_static_content ? 1 : 0
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -175,7 +175,7 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 
 # # Attach a bucket policy to allow CloudFront to access the bucket
 resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
-  count = var.config.serve_static ? 1 : 0
+  count = var.config.serve_static_content ? 1 : 0
 
   bucket = aws_s3_bucket.this.id
 
@@ -200,7 +200,7 @@ resource "aws_s3_bucket_policy" "cloudfront_bucket_policy" {
 }
 
 resource "aws_acm_certificate" "certificate" {
-  count             = var.config.serve_static ? 1 : 0
+  count             = var.config.serve_static_content ? 1 : 0
   provider          = aws.domain-cdn
   domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
   validation_method = "DNS"
@@ -213,14 +213,14 @@ resource "aws_acm_certificate" "certificate" {
 }
 
 data "aws_route53_zone" "selected" {
-  count        = var.config.serve_static ? 1 : 0
+  count        = var.config.serve_static_content ? 1 : 0
   provider     = aws.domain-cdn
   name         = "${var.application}.uktrade.digital"
   private_zone = false
 }
 
 resource "aws_route53_record" "cert_validation" {
-  count    = var.config.serve_static ? 1 : 0
+  count    = var.config.serve_static_content ? 1 : 0
   provider = aws.domain-cdn
 
   name            = element(aws_acm_certificate.certificate[0].domain_validation_options[*].resource_record_name, 0)
@@ -233,7 +233,7 @@ resource "aws_route53_record" "cert_validation" {
 }
 
 resource "aws_acm_certificate_validation" "certificate_validation" {
-  count                   = var.config.serve_static ? 1 : 0
+  count                   = var.config.serve_static_content ? 1 : 0
   provider                = aws.domain-cdn
   certificate_arn         = aws_acm_certificate.certificate[0].arn
   validation_record_fqdns = [aws_route53_record.cert_validation[0].fqdn]
@@ -241,7 +241,7 @@ resource "aws_acm_certificate_validation" "certificate_validation" {
 }
 
 resource "aws_route53_record" "cloudfront_domain" {
-  count    = var.config.serve_static ? 1 : 0
+  count    = var.config.serve_static_content ? 1 : 0
   provider = aws.domain-cdn
   name     = aws_s3_bucket.this.bucket
   type     = "A"
@@ -255,7 +255,7 @@ resource "aws_route53_record" "cloudfront_domain" {
 
 
 resource "aws_cloudfront_origin_request_policy" "forward_content_type" {
-  count    = var.config.serve_static ? 1 : 0
+  count    = var.config.serve_static_content ? 1 : 0
   provider = aws.domain-cdn
   name     = "ForwardContentTypePolicy"
 
@@ -287,7 +287,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   # checkov:skip=CKV_AWS_305: Ensure CloudFront distribution has a default root object configured
   # checkov:skip=CKV_AWS_310: Ensure CloudFront distributions should have origin failover configured
 
-  count    = var.config.serve_static ? 1 : 0
+  count    = var.config.serve_static_content ? 1 : 0
   provider = aws.domain-cdn
   aliases  = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
 
@@ -326,14 +326,14 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 
 resource "aws_kms_key" "s3-ssm-kms-key" {
-  count               = var.config.serve_static ? 1 : 0
+  count               = var.config.serve_static_content ? 1 : 0
   description         = "KMS Key for ${var.application}-${var.environment} S3 module SSM parameter encryption"
   enable_key_rotation = true
   tags                = local.tags
 }
 
 resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
-  count  = var.config.serve_static ? 1 : 0
+  count  = var.config.serve_static_content ? 1 : 0
   key_id = aws_kms_key.s3-ssm-kms-key[0].id
   policy = jsonencode({
     Statement = [
@@ -369,7 +369,7 @@ resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
 }
 
 resource "aws_ssm_parameter" "cloudfront_alias" {
-  count  = var.config.serve_static ? 1 : 0
+  count  = var.config.serve_static_content ? 1 : 0
   name   = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
   type   = "SecureString"
   value  = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"

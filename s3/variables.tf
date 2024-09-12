@@ -38,7 +38,7 @@ variable "config" {
     )
     # NOTE: readonly access is managed by Copilot server addon s3 policy.
     readonly     = optional(bool)
-    serve_static = optional(bool, false)
+    serve_static_content = optional(bool, false)
     objects = optional(list(object({
       body         = string
       key          = string

@@ -11,5 +11,5 @@ output "arn" {
 }
 
 output "kms_key_arn" {
-  value = var.config.serve_static ? null : aws_kms_key.kms-key[0].arn
+  value = var.config.serve_static_content ? null : aws_kms_key.kms-key[0].arn
 }

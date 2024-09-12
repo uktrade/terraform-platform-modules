@@ -145,7 +145,7 @@ run "aws_s3_object_e2e_test" {
 #       "type"        = "string",
 #       "versioning"  = false,
 #       "objects"     = [],
-#       "serve_static" = true,
+#       "serve_static_content" = true,
 #       "lifecycle_rules" = [{
 #           "filter_prefix" = "test-prefix",
 #           "expiration_days" = 99,
