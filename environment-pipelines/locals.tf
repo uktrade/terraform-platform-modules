@@ -56,7 +56,6 @@ locals {
           { name : "APPLICATION", value : var.application },
           { name : "ENVIRONMENT", value : env.name },
           { name : "PIPELINE_NAME", value : var.pipeline_name },
-          { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
           { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
           { name : "NEEDS_APPROVAL", value : lookup(env, "requires_approval", false) ? "yes" : "no" },
@@ -91,10 +90,9 @@ locals {
         PrimarySource : "${env.name}_terraform_plan"
         EnvironmentVariables : jsonencode([
           { name : "ENVIRONMENT", value : env.name },
-          { name : "COPILOT_PROFILE", value : env.accounts.deploy.name },
+          { name : "AWS_PROFILE_FOR_COPILOT", value : env.accounts.deploy.name },
           { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
-          { name : "VPC", value : local.base_env_config[env.name].vpc },
           { name : "SLACK_THREAD_ID", value : "#{variables.SLACK_THREAD_ID}" },
           local.triggered_by_another_pipeline ? { name : "TRIGGERING_ACCOUNT_CODEBUILD_ROLE", value : local.triggering_pipeline_codebuild_role } : null,
           local.triggered_by_another_pipeline ? { name : "TRIGGERING_ACCOUNT_AWS_PROFILE", value : local.triggering_pipeline_account_name } : null,
@@ -125,7 +123,6 @@ locals {
             { name : "SLACK_THREAD_ID", value : "#{variables.SLACK_THREAD_ID}" },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
-            { name : "ACCOUNT_NAME", value : local.triggered_pipeline_account_name }
           ])
         },
         namespace : null

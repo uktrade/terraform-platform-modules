@@ -36,6 +36,7 @@ phases:
 
   post_build:
     commands:
+      - export ACCOUNT_NAME="${TRIGGERED_PIPELINE_AWS_PROFILE}"
       - |
         if [ "${CODEBUILD_BUILD_SUCCEEDING}" == "1" ]
         then
