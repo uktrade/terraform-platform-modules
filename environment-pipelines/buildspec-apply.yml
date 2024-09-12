@@ -17,15 +17,10 @@ phases:
       - echo -e "\nWorking on environment ${ENVIRONMENT}"
       - cd "terraform/environments/${ENVIRONMENT}"
       - terraform apply plan.tfplan
-      - echo -e "\nGenerating manifests and deploying AWS Copilot environment resources"
       - |
-          if [[ "${AWS_PROFILE_FOR_COPILOT}" != *"prod"* ]]
+          if [[ "${AWS_PROFILE_FOR_COPILOT}" == *"prod"* ]]
           then
-            cd "${CODEBUILD_SRC_DIR}"
-            platform-helper environment generate --name "${ENVIRONMENT}"
-            copilot env init --name "${ENVIRONMENT}" --profile "${AWS_PROFILE_FOR_COPILOT}" --default-config
-            copilot env deploy --name "${ENVIRONMENT}"
-          else
+            echo -e "\nAssuming role to deploy AWS Copilot environment resources in prod account"
             assumed_role=$(aws sts assume-role --role-arn "${TRIGGERING_ACCOUNT_CODEBUILD_ROLE}" --role-session-name "trigger-copilot-env-deploy-$(date +%s)")    
             NON_PROD_AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId)
             NON_PROD_AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey)
@@ -36,11 +31,12 @@ phases:
             aws configure set aws_session_token "${NON_PROD_AWS_SESSION_TOKEN}" --profile "${PROFILE_NAME}"
             aws configure set region "eu-west-2" --profile "${PROFILE_NAME}"
             aws configure set output "json" --profile "${PROFILE_NAME}"
-            cd "${CODEBUILD_SRC_DIR}"
-            platform-helper environment generate --name "${ENVIRONMENT}"
-            AWS_PROFILE="${PROFILE_NAME}" copilot env init --name "${ENVIRONMENT}" --profile "${AWS_PROFILE_FOR_COPILOT}" --default-config
-            AWS_PROFILE="${PROFILE_NAME}" copilot env deploy --name "${ENVIRONMENT}"
           fi
+        - echo -e "\nGenerating manifests and deploying AWS Copilot environment resources"
+        - cd "${CODEBUILD_SRC_DIR}"
+        - platform-helper environment generate --name "${ENVIRONMENT}"
+        - copilot env init --name "${ENVIRONMENT}" --profile "${AWS_PROFILE_FOR_COPILOT}" --default-config
+        - copilot env deploy --name "${ENVIRONMENT}"
   post_build:
     commands:
       - |
