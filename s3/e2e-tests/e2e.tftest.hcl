@@ -8,6 +8,11 @@ variables {
     "type"        = "string",
     "versioning"  = false,
     "objects"     = [],
+    "lifecycle_rules" = [{
+        "filter_prefix" = "test-prefix",
+        "expiration_days" = 99,
+        "enabled"       = true
+      }]
   }
 }
 
@@ -66,6 +71,30 @@ run "aws_s3_bucket_policy_e2e_test" {
   }
 }
 
+run "aws_s3_bucket_lifecycle_configuration_e2e_test" {
+  command = apply
+
+  assert {
+    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].abort_incomplete_multipart_upload[0].days_after_initiation == 7
+    error_message = "Should be: 7 days for aborting incomplete uploads"
+  }
+
+  assert {
+    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].filter[0].prefix == "test-prefix"
+    error_message = "Should be: empty prefix"
+  }
+
+  assert {
+    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].expiration[0].days == 99
+    error_message = "Should be: 99 days for expiration"
+  }
+
+  assert {
+    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].status == "Enabled"
+    error_message = "Should be: status Enabled"
+  }
+}
+
 run "aws_kms_alias_e2e_test" {
   command = apply
 
@@ -102,3 +131,32 @@ run "aws_s3_object_e2e_test" {
     error_message = "Invalid S3 object etag"
   }
 }
+
+# run "aws_cloudfront_distribution_e2e_test" {
+#   command = apply
+
+#   variables {
+#     vpc_name    = "s3-test-vpc-name"
+#     application = "s3-test-application"
+#     environment = "s3-test-environment"
+#     name        = "s3-test-name"
+#     config = {
+#       "bucket_name" = "test",
+#       "type"        = "string",
+#       "versioning"  = false,
+#       "objects"     = [],
+#       "serve_static" = true,
+#       "lifecycle_rules" = [{
+#           "filter_prefix" = "test-prefix",
+#           "expiration_days" = 99,
+#           "enabled"       = true
+#         }]
+#     }
+# }
+
+#   assert {
+#     condition     = aws_cloudfront_distribution.s3_distribution[0].viewer_certificate[0].acm_certificate_arn == aws_acm_certificate.certificate[0].arn
+#     error_message = "Should match the ACM certificate ARN"
+#   }
+
+# }
