@@ -757,6 +757,8 @@ data "aws_iam_policy_document" "cloudformation" {
       "cloudformation:DescribeChangeSet",
       "cloudformation:CreateChangeSet",
       "cloudformation:ExecuteChangeSet",
+      "cloudformation:DescribeStackEvents",
+      "cloudformation:DeleteStack"
     ]
     resources = [
       "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.application}-*",
@@ -774,26 +776,31 @@ resource "aws_iam_policy" "cloudformation" {
 }
 
 data "aws_iam_policy_document" "iam" {
-  statement {
-    actions = [
-      "iam:AttachRolePolicy",
-      "iam:DetachRolePolicy",
-      "iam:CreatePolicy",
-      "iam:DeletePolicy",
-      "iam:CreateRole",
-      "iam:DeleteRole",
-      "iam:TagRole",
-      "iam:PutRolePolicy",
-      "iam:GetRole",
-      "iam:ListRolePolicies",
-      "iam:GetRolePolicy",
-      "iam:ListAttachedRolePolicies",
-      "iam:ListInstanceProfilesForRole",
-      "iam:DeleteRolePolicy",
-    ]
-    resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
-    ]
+  dynamic "statement" {
+    for_each = local.environment_config
+    content {
+      actions = [
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:CreatePolicy",
+        "iam:DeletePolicy",
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:TagRole",
+        "iam:PutRolePolicy",
+        "iam:GetRole",
+        "iam:ListRolePolicies",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfilesForRole",
+        "iam:DeleteRolePolicy",
+      ]
+      resources = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-CFNExecutionRole",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
+      ]
+    }
   }
 }
 
@@ -1006,7 +1013,7 @@ data "aws_iam_policy_document" "assume_role_for_copilot_env_commands_policy_docu
 
   statement {
     actions = [
-      "kms:GenerateDataKey",
+      "kms:*",
     ]
     resources = [
       "arn:aws:kms:${data.aws_region.current.name}:${local.triggering_account_id}:key/*"
@@ -1015,7 +1022,7 @@ data "aws_iam_policy_document" "assume_role_for_copilot_env_commands_policy_docu
 
   statement {
     actions = [
-      "s3:PutObject",
+      "s3:*",
     ]
     resources = [
       "arn:aws:s3:::stackset-${var.application}-*-pipelinebuiltartifactbuc-*"
