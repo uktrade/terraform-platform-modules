@@ -342,10 +342,10 @@ run "aws_cloudfront_origin_access_control_unit_test" {
 
   variables {
     config = {
-      "bucket_name" = "test",
-      "type"        = "string",
+      "bucket_name"  = "test",
+      "type"         = "string",
       "serve_static" = true,
-      "objects"     = [],
+      "objects"      = [],
     }
   }
 
@@ -380,10 +380,10 @@ run "aws_acm_certificate_unit_test" {
 
   variables {
     config = {
-      "bucket_name" = "test",
+      "bucket_name"  = "test",
       "serve_static" = true,
-      "type"        = "string",
-      "objects"     = [],
+      "type"         = "string",
+      "objects"      = [],
     }
   }
 
@@ -433,10 +433,10 @@ run "aws_route53_record_cert_validation_unit_test" {
 
   variables {
     config = {
-      "bucket_name" = "test",
+      "bucket_name"  = "test",
       "serve_static" = true,
-      "type"        = "string",
-      "objects"     = [],
+      "type"         = "string",
+      "objects"      = [],
     }
   }
 
@@ -458,10 +458,10 @@ run "aws_route53_record_cloudfront_domain_unit_test" {
 
   variables {
     config = {
-      "bucket_name" = "test",
+      "bucket_name"  = "test",
       "serve_static" = true,
-      "type"        = "string",
-      "objects"     = [],
+      "type"         = "string",
+      "objects"      = [],
     }
   }
 
@@ -499,14 +499,14 @@ run "aws_route53_record_cloudfront_domain_unit_test" {
 
 
 run "aws_cloudfront_origin_request_policy_unit_test" {
-  command = plan 
+  command = plan
 
   variables {
     config = {
-      "bucket_name" = "test",
+      "bucket_name"  = "test",
       "serve_static" = true,
-      "type"        = "string",
-      "objects"     = [],
+      "type"         = "string",
+      "objects"      = [],
     }
   }
 
@@ -539,10 +539,10 @@ run "aws_cloudfront_distribution_unit_test" {
 
   variables {
     config = {
-      "bucket_name" = "test",
+      "bucket_name"  = "test",
       "serve_static" = true,
-      "type"        = "string",
-      "objects"     = [],
+      "type"         = "string",
+      "objects"      = [],
     }
   }
 
@@ -680,10 +680,10 @@ run "aws_ssm_parameter_cloudfront_alias_unit_test" {
 
   variables {
     config = {
-      "bucket_name" = "test",
+      "bucket_name"  = "test",
       "serve_static" = true,
-      "type"        = "string",
-      "objects"     = [],
+      "type"         = "string",
+      "objects"      = [],
     }
   }
 

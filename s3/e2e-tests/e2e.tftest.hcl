@@ -9,10 +9,10 @@ variables {
     "versioning"  = false,
     "objects"     = [],
     "lifecycle_rules" = [{
-        "filter_prefix" = "test-prefix",
-        "expiration_days" = 99,
-        "enabled"       = true
-      }]
+      "filter_prefix"   = "test-prefix",
+      "expiration_days" = 99,
+      "enabled"         = true
+    }]
   }
 }
 
