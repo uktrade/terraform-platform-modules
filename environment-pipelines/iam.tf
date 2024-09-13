@@ -80,6 +80,20 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
 
     actions = ["sts:AssumeRole"]
   }
+
+  dynamic "statement" {
+    for_each = toset(local.triggers_another_pipeline ? [""] : [])
+    content {
+      effect = "Allow"
+
+      principals {
+        type        = "AWS"
+        identifiers = [local.triggered_pipeline_codebuild_role]
+      }
+
+      actions = ["sts:AssumeRole"]
+    }
+  }
 }
 
 data "aws_iam_policy_document" "write_environment_pipeline_codebuild_logs" {
@@ -716,6 +730,18 @@ data "aws_iam_policy_document" "copilot_assume_role" {
       ]
     }
   }
+
+  dynamic "statement" {
+    for_each = toset(local.triggers_another_pipeline ? local.triggered_pipeline_environments : [])
+    content {
+      actions = [
+        "sts:AssumeRole"
+      ]
+      resources = [
+        "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
+      ]
+    }
+  }
 }
 
 data "aws_iam_policy_document" "cloudformation" {
@@ -731,6 +757,8 @@ data "aws_iam_policy_document" "cloudformation" {
       "cloudformation:DescribeChangeSet",
       "cloudformation:CreateChangeSet",
       "cloudformation:ExecuteChangeSet",
+      "cloudformation:DescribeStackEvents",
+      "cloudformation:DeleteStack"
     ]
     resources = [
       "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.application}-*",
@@ -748,26 +776,31 @@ resource "aws_iam_policy" "cloudformation" {
 }
 
 data "aws_iam_policy_document" "iam" {
-  statement {
-    actions = [
-      "iam:AttachRolePolicy",
-      "iam:DetachRolePolicy",
-      "iam:CreatePolicy",
-      "iam:DeletePolicy",
-      "iam:CreateRole",
-      "iam:DeleteRole",
-      "iam:TagRole",
-      "iam:PutRolePolicy",
-      "iam:GetRole",
-      "iam:ListRolePolicies",
-      "iam:GetRolePolicy",
-      "iam:ListAttachedRolePolicies",
-      "iam:ListInstanceProfilesForRole",
-      "iam:DeleteRolePolicy",
-    ]
-    resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
-    ]
+  dynamic "statement" {
+    for_each = local.environment_config
+    content {
+      actions = [
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:CreatePolicy",
+        "iam:DeletePolicy",
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:TagRole",
+        "iam:PutRolePolicy",
+        "iam:GetRole",
+        "iam:ListRolePolicies",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfilesForRole",
+        "iam:DeleteRolePolicy",
+      ]
+      resources = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-CFNExecutionRole",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
+      ]
+    }
   }
 }
 
@@ -962,6 +995,40 @@ data "aws_iam_policy_document" "trigger_pipeline" {
   }
 }
 
+resource "aws_iam_role_policy" "assume_role_for_copilot_env_commands" {
+  for_each = toset(local.triggered_by_another_pipeline ? [""] : [])
+  name     = "${var.application}-${var.pipeline_name}-assume-role-for-copilot-env-commands"
+  role     = aws_iam_role.environment_pipeline_codebuild.name
+  policy   = data.aws_iam_policy_document.assume_role_for_copilot_env_commands_policy_document[""].json
+}
+
+data "aws_iam_policy_document" "assume_role_for_copilot_env_commands_policy_document" {
+  for_each = toset(local.triggered_by_another_pipeline ? [""] : [])
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = local.triggering_pipeline_role_arns
+  }
+
+  statement {
+    actions = [
+      "kms:*",
+    ]
+    resources = [
+      "arn:aws:kms:${data.aws_region.current.name}:${local.triggering_account_id}:key/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "s3:*",
+    ]
+    resources = [
+      "arn:aws:s3:::stackset-${var.application}-*-pipelinebuiltartifactbuc-*"
+    ]
+  }
+}
 
 #------NON-PROD-SOURCE-ACCOUNT------
 
