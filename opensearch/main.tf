@@ -54,6 +54,35 @@ resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
   kms_key_id        = aws_kms_key.cloudwatch_log_group_kms_key.arn
 }
 
+data "aws_iam_policy_document" "opensearch_log_groups_resource_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "logs:CreateLogStream",
+      #      "logs:PutLogEvents",
+      #      "logs:PutLogEventsBatch",
+    ]
+
+    resources = ["arn:aws:logs:*"]
+    principals {
+      identifiers = [
+        aws_cloudwatch_log_group.opensearch_log_group_audit_logs.arn,
+        aws_cloudwatch_log_group.opensearch_log_group_es_application_logs.arn,
+        aws_cloudwatch_log_group.opensearch_log_group_search_slow_logs.arn,
+        aws_cloudwatch_log_group.opensearch_log_group_index_slow_logs.arn,
+      ]
+      type = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "opensearch_log_publishing_policy" {
+  policy_name     = "opensearch-log-publishing-policy"
+  policy_document = data.aws_iam_policy_document.opensearch_log_groups_resource_policy.json
+}
+
+
 resource "aws_security_group" "opensearch-security-group" {
   # checkov:skip=CKV2_AWS_5: False Positive in Checkov - https://github.com/bridgecrewio/checkov/issues/3010
   name        = local.domain_name
