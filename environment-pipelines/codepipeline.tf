@@ -24,18 +24,15 @@ resource "aws_codepipeline" "environment_pipeline" {
     }
   }
 
-  dynamic "trigger" {
-    for_each = var.trigger_on_push ? [1] : []
-    content {
-      provider_type = "CodeStarSourceConnection"
-      git_configuration {
-        source_action_name = "GitCheckout"
-        push {
-          branches {
-            includes = [
-              var.branch
-            ]
-          }
+  trigger {
+    provider_type = "CodeStarSourceConnection"
+    git_configuration {
+      source_action_name = "GitCheckout"
+      push {
+        branches {
+          includes = [
+            var.trigger_on_push ? var.branch : "NO_TRIGGER"
+          ]
         }
       }
     }
