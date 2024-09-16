@@ -281,8 +281,8 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${aws_s3_bucket.this.bucket}"
 
-    viewer_protocol_policy   = "redirect-to-https"
-    cache_policy_id          = data.aws_cloudfront_cache_policy.example.id
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.example.id
   }
 
   viewer_certificate {
