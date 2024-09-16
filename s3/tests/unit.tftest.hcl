@@ -350,7 +350,7 @@ run "aws_cloudfront_origin_access_control_unit_test" {
   }
 
   assert {
-    condition     = aws_cloudfront_origin_access_control.oac[0].name == "oac"
+    condition     = aws_cloudfront_origin_access_control.oac[0].name == "test.s3-test-environment.s3-test-application-oac"
     error_message = "Invalid value for aws_cloudfront_origin_access_control name."
   }
 
