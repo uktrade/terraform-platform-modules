@@ -445,7 +445,7 @@ run "test_pipeline_trigger_branch" {
 
   assert {
     condition     = contains(aws_codepipeline.environment_pipeline.trigger[0].git_configuration[0].push[0].branches[0].includes, "my-branch")
-    error_message = "Should be: true"
+    error_message = "Should be: my-branch"
   }
 
   assert {
