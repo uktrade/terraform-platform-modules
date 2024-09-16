@@ -416,7 +416,7 @@ run "test_pipeline_trigger_setup" {
 
   assert {
     condition     = length(aws_codepipeline.environment_pipeline.trigger[0].git_configuration[0].push[0].branches[0].includes) == 1
-    error_message = "Should be: true"
+    error_message = "The pipeline trigger should only have one push branch listed"
   }
 }
 
@@ -450,7 +450,7 @@ run "test_pipeline_trigger_branch" {
 
   assert {
     condition     = length(aws_codepipeline.environment_pipeline.trigger[0].git_configuration[0].push[0].branches[0].includes) == 1
-    error_message = "Should be: true"
+    error_message = "The pipeline trigger should only have one push branch listed"
   }
 }
 
