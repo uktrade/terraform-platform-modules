@@ -424,7 +424,7 @@ run "test_pipeline_trigger_branch" {
   command = plan
 
   variables {
-    branch = "my-branch"
+    branch          = "my-branch"
     trigger_on_push = true
   }
 
