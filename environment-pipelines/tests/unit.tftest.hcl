@@ -406,7 +406,7 @@ run "test_pipeline_trigger_setup" {
 
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[0].action[0].configuration.DetectChanges == "false"
-    error_message = "Should be: true"
+    error_message = "Should be: false"
   }
 
   assert {
