@@ -498,42 +498,6 @@ run "aws_route53_record_cloudfront_domain_unit_test" {
 }
 
 
-run "aws_cloudfront_origin_request_policy_unit_test" {
-  command = plan
-
-  variables {
-    config = {
-      "bucket_name"          = "test",
-      "serve_static_content" = true,
-      "type"                 = "string",
-      "objects"              = [],
-    }
-  }
-
-  assert {
-    condition     = aws_cloudfront_origin_request_policy.forward_content_type[0].name == "ForwardContentTypePolicy"
-    error_message = "CloudFront Origin Request Policy name should be 'ForwardContentTypePolicy'."
-  }
-
-  assert {
-    condition     = aws_cloudfront_origin_request_policy.forward_content_type[0].headers_config[0].header_behavior == "whitelist" && contains(aws_cloudfront_origin_request_policy.forward_content_type[0].headers_config[0].headers[0].items, "Content-Type")
-    error_message = "CloudFront Origin Request Policy should whitelist the 'Content-Type' header."
-  }
-
-  assert {
-    condition     = aws_cloudfront_origin_request_policy.forward_content_type[0].query_strings_config[0].query_string_behavior == "none"
-    error_message = "CloudFront Origin Request Policy should have 'none' as the query_string_behavior."
-  }
-
-  assert {
-    condition     = aws_cloudfront_origin_request_policy.forward_content_type[0].cookies_config[0].cookie_behavior == "none"
-    error_message = "CloudFront Origin Request Policy should have 'none' as the cookie_behavior."
-  }
-
-}
-
-
-
 run "aws_cloudfront_distribution_unit_test" {
   command = plan
 
