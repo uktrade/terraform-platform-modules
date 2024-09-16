@@ -164,7 +164,7 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 // Cloudfront resources for serving static content
 
 resource "aws_cloudfront_origin_access_control" "oac" {
-  name                              = "oac"
+  name                              = "${var.config.bucket_name}.${var.environment}.${var.application}-oac"
   provider                          = aws.domain-cdn
   description                       = "Origin access control for Cloudfront distribution and ${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital static s3 bucket."
   count                             = var.config.serve_static_content ? 1 : 0
