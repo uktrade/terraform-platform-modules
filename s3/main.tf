@@ -253,28 +253,6 @@ resource "aws_route53_record" "cloudfront_domain" {
   }
 }
 
-
-resource "aws_cloudfront_origin_request_policy" "forward_content_type" {
-  count    = var.config.serve_static_content ? 1 : 0
-  provider = aws.domain-cdn
-  name     = "ForwardContentTypePolicy"
-
-  headers_config {
-    header_behavior = "whitelist"
-    headers {
-      items = ["Content-Type"]
-    }
-  }
-
-  query_strings_config {
-    query_string_behavior = "none"
-  }
-
-  cookies_config {
-    cookie_behavior = "none"
-  }
-}
-
 data "aws_cloudfront_cache_policy" "example" {
   name = "Managed-CachingOptimized"
 }
