@@ -3,6 +3,10 @@ module "s3" {
 
   for_each = local.s3
 
+  providers = {
+    aws.domain-cdn = aws.domain-cdn
+  }
+
   application = var.args.application
   environment = var.environment
   name        = each.key
