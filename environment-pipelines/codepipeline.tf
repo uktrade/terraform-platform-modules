@@ -24,6 +24,20 @@ resource "aws_codepipeline" "environment_pipeline" {
     }
   }
 
+  trigger {
+    provider_type = "CodeStarSourceConnection"
+    git_configuration {
+      source_action_name = "GitCheckout"
+      push {
+        branches {
+          includes = [
+            var.trigger_on_push ? var.branch : "NO_TRIGGER"
+          ]
+        }
+      }
+    }
+  }
+
   stage {
     name = "Source"
 
@@ -91,12 +105,6 @@ resource "aws_codepipeline" "environment_pipeline" {
   }
 
   tags = local.tags
-
-  lifecycle {
-    ignore_changes = [
-      trigger
-    ]
-  }
 }
 
 module "artifact_store" {

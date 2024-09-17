@@ -343,6 +343,11 @@ run "test_code_pipeline" {
     error_message = "Should be: main"
   }
 
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[0].action[0].configuration.DetectChanges == "true"
+    error_message = "Should be: true"
+  }
+
   # Build stage
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[1].name == "Install-Build-Tools"
@@ -389,6 +394,63 @@ run "test_code_pipeline" {
   assert {
     condition     = jsonencode(aws_codepipeline.environment_pipeline.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+}
+
+run "test_pipeline_trigger_setup" {
+  command = plan
+
+  variables {
+    trigger_on_push = false
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[0].action[0].configuration.DetectChanges == "false"
+    error_message = "Should be: false"
+  }
+
+  assert {
+    condition     = contains(aws_codepipeline.environment_pipeline.trigger[0].git_configuration[0].push[0].branches[0].includes, "NO_TRIGGER")
+    error_message = "Should be: NO_TRIGGER"
+  }
+
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.trigger[0].git_configuration[0].push[0].branches[0].includes) == 1
+    error_message = "The pipeline trigger should only have one push branch listed"
+  }
+}
+
+run "test_pipeline_trigger_branch" {
+  command = plan
+
+  variables {
+    branch          = "my-branch"
+    trigger_on_push = true
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.stage[0].action[0].configuration.BranchName == "my-branch"
+    error_message = "Should be: my-branch"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.trigger[0].provider_type == "CodeStarSourceConnection"
+    error_message = "Should be: CodeStarSourceConnection"
+  }
+
+  assert {
+    condition     = aws_codepipeline.environment_pipeline.trigger[0].git_configuration[0].source_action_name == "GitCheckout"
+    error_message = "Should be: GitCheckout"
+  }
+
+  assert {
+    condition     = contains(aws_codepipeline.environment_pipeline.trigger[0].git_configuration[0].push[0].branches[0].includes, "my-branch")
+    error_message = "Should be: my-branch"
+  }
+
+  assert {
+    condition     = length(aws_codepipeline.environment_pipeline.trigger[0].git_configuration[0].push[0].branches[0].includes) == 1
+    error_message = "The pipeline trigger should only have one push branch listed"
   }
 }
 
