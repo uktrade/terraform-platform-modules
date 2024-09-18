@@ -832,6 +832,25 @@ resource "aws_iam_policy" "codepipeline" {
   policy      = data.aws_iam_policy_document.codepipeline.json
 }
 
+data "aws_iam_policy_document" "cloudfront" {
+  statement {
+    actions = [
+      "cloudfront:ListCachePolicies",
+      "cloudfront:GetCachePolicy"
+    ]
+    resources = [
+      "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:cache-policy/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "cloudfront" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-cloudfront"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job access to cloudfront cache policies"
+  policy      = data.aws_iam_policy_document.cloudfront.json
+}
+
 # Roles
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
   name               = "${var.application}-${var.pipeline_name}-environment-pipeline-codepipeline"
@@ -845,6 +864,7 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
   managed_policy_arns = [
     aws_iam_policy.iam.arn,
     aws_iam_policy.cloudformation.arn,
+    aws_iam_policy.cloudfront.arn,
     aws_iam_policy.codepipeline.arn,
     aws_iam_policy.redis.arn,
     aws_iam_policy.postgres.arn,

@@ -1,4 +1,6 @@
-mock_provider "aws" {}
+mock_provider "aws" {
+  alias = "domain-cdn"
+}
 
 override_data {
   target = data.aws_iam_policy_document.assume_codepipeline_role
