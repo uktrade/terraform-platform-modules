@@ -864,7 +864,7 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
   managed_policy_arns = [
     aws_iam_policy.iam.arn,
     aws_iam_policy.cloudformation.arn,
-    aws_iam_policy.cloudfront.arn
+    aws_iam_policy.cloudfront.arn,
     aws_iam_policy.codepipeline.arn,
     aws_iam_policy.redis.arn,
     aws_iam_policy.postgres.arn,
