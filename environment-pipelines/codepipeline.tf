@@ -109,11 +109,11 @@ resource "aws_codepipeline" "environment_pipeline" {
 
 module "artifact_store" {
   source = "../s3"
-  
+
   providers = {
     aws.domain-cdn = aws.domain-cdn
   }
-  
+
   application = var.application
   environment = "not-applicable"
   name        = "${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store"
