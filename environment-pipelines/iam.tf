@@ -848,7 +848,7 @@ resource "aws_iam_policy" "cloudfront" {
   name        = "${var.application}-${var.pipeline_name}-pipeline-cloudfront"
   path        = "/${var.application}/codebuild/"
   description = "Allow ${var.application} codebuild job access to cloudfront cache policies"
-  policy      - data.aws_iam_policy_document.cloudfront.json
+  policy      = data.aws_iam_policy_document.cloudfront.json
 }
 
 # Roles
