@@ -208,6 +208,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_ssm_parameter.log-destination-arn
+  values = {
+    value = "{\"prod\":\"arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_prod\", \"dev\":\"arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev\"}"
+  }
+}
+
 variables {
   application   = "my-app"
   repository    = "my-repository"
