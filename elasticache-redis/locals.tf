@@ -13,6 +13,6 @@ locals {
     copilot-environment = var.environment
   }
 
-  central_log_group_arns = jsondecode(data.aws_ssm_parameter.log-destination-arn.value)
+  central_log_group_arns        = jsondecode(data.aws_ssm_parameter.log-destination-arn.value)
   central_log_group_destination = var.environment == "prod" ? local.central_log_group_arns["prod"] : local.central_log_group_arns["dev"]
 }
