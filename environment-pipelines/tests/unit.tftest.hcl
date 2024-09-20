@@ -1,4 +1,7 @@
 mock_provider "aws" {
+}
+
+mock_provider "aws" {
   alias = "domain-cdn"
 }
 
@@ -195,6 +198,13 @@ override_data {
   target = data.aws_iam_policy_document.assume_role_for_copilot_env_commands_policy_document
   values = {
     json = "{\"Sid\": \"AssumeRoleCopilotCommands\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.cloudfront
+  values = {
+    json = "{\"Sid\": \"Cloudfront\"}"
   }
 }
 
