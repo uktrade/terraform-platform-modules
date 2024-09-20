@@ -34,4 +34,7 @@ locals {
   rds_master_secret_name       = "${local.secret_prefix}_RDS_MASTER_ARN"
   read_only_secret_name        = "${local.secret_prefix}_READ_ONLY_USER"
   application_user_secret_name = "${local.secret_prefix}_APPLICATION_USER"
+
+  central_log_group_arns = jsondecode(data.aws_ssm_parameter.log-destination-arn.value)
+  central_log_group_destination = var.environment == "prod" ? local.central_log_group_arns["prod"] : local.central_log_group_arns["dev"]
 }
