@@ -108,17 +108,9 @@ resource "aws_codepipeline" "environment_pipeline" {
 }
 
 module "artifact_store" {
-  source = "../s3"
-
-  providers = {
-    aws.domain-cdn = aws.domain-cdn
-  }
+  source = "./s3"
 
   application = var.application
   environment = "not-applicable"
-  name        = "${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store"
-
-  config = {
-    bucket_name = "${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store"
-  }
+  bucket_name = "${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store"
 }
