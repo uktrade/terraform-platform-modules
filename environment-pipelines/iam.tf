@@ -29,8 +29,8 @@ data "aws_iam_policy_document" "access_artifact_store" {
     ]
 
     resources = [
-      module.artifact_store.arn,
-      "${module.artifact_store.arn}/*"
+      aws_s3_bucket.artifact_store.arn,
+      "${aws_s3_bucket.artifact_store.arn}/*"
     ]
   }
 
@@ -64,7 +64,7 @@ data "aws_iam_policy_document" "access_artifact_store" {
       "kms:Decrypt"
     ]
     resources = [
-      module.artifact_store.kms_key_arn
+      aws_kms_key.artifact_store_kms_key.arn
     ]
   }
 }

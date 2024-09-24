@@ -1,11 +1,9 @@
-data "aws_caller_identity" "current" {}
-
 resource "aws_s3_bucket" "artifact_store" {
   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   # checkov:skip=CKV2_AWS_61: This bucket is only used for the TF state, so no requirement for lifecycle configuration
   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-  bucket = var.bucket_name
+  bucket = "${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store"
 
   tags = local.tags
 }
@@ -68,7 +66,7 @@ resource "aws_kms_key" "artifact_store_kms_key" {
 
 resource "aws_kms_alias" "artifact_store_kms_alias" {
   depends_on    = [aws_kms_key.artifact_store_kms_key]
-  name          = "alias/${var.bucket_name}-key"
+  name          = "alias/${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store-key"
   target_key_id = aws_kms_key.artifact_store_kms_key.id
 }
 
@@ -84,7 +82,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config
     }
   }
 }
-
 
 resource "aws_s3_bucket_public_access_block" "public_access_block" {
   bucket                  = aws_s3_bucket.artifact_store.id
