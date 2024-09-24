@@ -71,7 +71,6 @@ resource "aws_kms_alias" "artifact_store_kms_alias" {
   target_key_id = aws_kms_key.artifact_store_kms_key.id
 }
 
-// require server side encryption
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
   # checkov:skip=CKV2_AWS_67:We are not currently rotating the keys
   bucket = aws_s3_bucket.artifact_store.id
