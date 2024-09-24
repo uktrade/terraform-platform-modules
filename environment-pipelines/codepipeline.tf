@@ -15,11 +15,11 @@ resource "aws_codepipeline" "environment_pipeline" {
   }
 
   artifact_store {
-    location = module.artifact_store.bucket_name
+    location = aws_s3_bucket.artifact_store.bucket
     type     = "S3"
 
     encryption_key {
-      id   = module.artifact_store.kms_key_arn
+      id   = aws_kms_key.artifact_store_kms_key.arn
       type = "KMS"
     }
   }
@@ -105,20 +105,4 @@ resource "aws_codepipeline" "environment_pipeline" {
   }
 
   tags = local.tags
-}
-
-module "artifact_store" {
-  source = "../s3"
-
-  providers = {
-    aws.domain-cdn = aws.domain-cdn
-  }
-
-  application = var.application
-  environment = "not-applicable"
-  name        = "${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store"
-
-  config = {
-    bucket_name = "${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store"
-  }
 }

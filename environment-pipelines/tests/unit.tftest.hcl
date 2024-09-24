@@ -1,6 +1,4 @@
-mock_provider "aws" {
-  alias = "domain-cdn"
-}
+mock_provider "aws" {}
 
 override_data {
   target = data.aws_iam_policy_document.assume_codepipeline_role
@@ -195,6 +193,13 @@ override_data {
   target = data.aws_iam_policy_document.assume_role_for_copilot_env_commands_policy_document
   values = {
     json = "{\"Sid\": \"AssumeRoleCopilotCommands\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.cloudfront
+  values = {
+    json = "{\"Sid\": \"Cloudfront\"}"
   }
 }
 
@@ -1104,9 +1109,30 @@ run "test_artifact_store" {
 
   # artifact-store S3 bucket.
   assert {
-    condition     = module.artifact_store.bucket_name == "my-app-my-pipeline-environment-pipeline-artifact-store"
+    condition     = aws_s3_bucket.artifact_store.bucket == "my-app-my-pipeline-environment-pipeline-artifact-store"
     error_message = "Should be: my-app-my-pipeline-environment-pipeline-artifact-store"
   }
+
+  assert {
+    condition     = aws_kms_alias.artifact_store_kms_alias.name == "alias/my-app-my-pipeline-environment-pipeline-artifact-store-key"
+    error_message = "Should be: alias/my-app-my-pipeline-environment-pipeline-artifact-store-key"
+  }
+
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].condition : true if el.variable == "aws:SecureTransport"][0] == true
+    error_message = "Should be: aws:SecureTransport"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].effect == "Deny"
+    error_message = "Should be: Deny"
+  }
+
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].actions : true if el == "s3:*"][0] == true
+    error_message = "Should be: s3:*"
+  }
+
 }
 
 run "test_stages" {
