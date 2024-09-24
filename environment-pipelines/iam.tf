@@ -224,7 +224,8 @@ data "aws_iam_policy_document" "load_balancer" {
       "elasticloadbalancing:DescribeSSLPolicies",
       "elasticloadbalancing:DescribeListeners",
       "elasticloadbalancing:DescribeTargetHealth",
-      "elasticloadbalancing:DescribeRules"
+      "elasticloadbalancing:DescribeRules",
+      "elasticloadbalancing:DescribeListenerCertificates"
     ]
     resources = [
       "*"
