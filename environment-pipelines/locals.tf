@@ -39,6 +39,7 @@ locals {
   triggering_pipeline_name           = local.triggered_by_another_pipeline ? one(local.list_of_triggering_pipelines).name : null
   triggering_pipeline_codebuild_role = local.triggered_by_another_pipeline ? "arn:aws:iam::${local.triggering_account_id}:role/${var.application}-${local.triggering_pipeline_name}-environment-pipeline-codebuild" : null
 
+  current_codebuild_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${var.pipeline_name}-environment-pipeline-codebuild"
 
   initial_stages = [for env in local.environment_config : [
     # The first element of the inner list for an env is the Plan stage.
@@ -94,6 +95,7 @@ locals {
           { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" },
           { name : "SLACK_THREAD_ID", value : "#{variables.SLACK_THREAD_ID}" },
+          { name : "CURRENT_CODEBUILD_ROLE", value : local.current_codebuild_role_arn },
           local.triggered_by_another_pipeline ? { name : "TRIGGERING_ACCOUNT_CODEBUILD_ROLE", value : local.triggering_pipeline_codebuild_role } : null,
           local.triggered_by_another_pipeline ? { name : "TRIGGERING_ACCOUNT_AWS_PROFILE", value : local.triggering_pipeline_account_name } : null,
         ])

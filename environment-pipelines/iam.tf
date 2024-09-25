@@ -81,6 +81,26 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
     actions = ["sts:AssumeRole"]
   }
 
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    actions = ["sts:AssumeRole"]
+
+    condition {
+      test     = "StringLike"
+      variable = "sts:RoleSessionName"
+
+      values = [
+        "environment-pipeline-platform-helper-generate-*"
+      ]
+    }
+  }
+
   dynamic "statement" {
     for_each = toset(local.triggers_another_pipeline ? [""] : [])
     content {
@@ -802,6 +822,13 @@ data "aws_iam_policy_document" "iam" {
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
       ]
     }
+  }
+
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${var.pipeline_name}-environment-pipeline-codebuild"]
   }
 }
 
