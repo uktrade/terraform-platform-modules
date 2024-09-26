@@ -1,9 +1,4 @@
-mock_provider "aws" {
-}
-
-mock_provider "aws" {
-  alias = "domain-cdn"
-}
+mock_provider "aws" {}
 
 override_data {
   target = data.aws_iam_policy_document.assume_codepipeline_role
@@ -1106,12 +1101,12 @@ run "test_triggered_pipelines" {
   }
 
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"TRIGGERING_ACCOUNT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::000123456789:role/my-app-my-pipeline-environment-pipeline-codebuild\"},{\"name\":\"TRIGGERING_ACCOUNT_AWS_PROFILE\",\"value\":\"sandbox\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"CURRENT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-triggered-pipeline-environment-pipeline-codebuild\"},{\"name\":\"TRIGGERING_ACCOUNT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::000123456789:role/my-app-my-pipeline-environment-pipeline-codebuild\"},{\"name\":\"TRIGGERING_ACCOUNT_AWS_PROFILE\",\"value\":\"sandbox\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"TRIGGERING_ACCOUNT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::000123456789:role/my-app-my-pipeline-environment-pipeline-codebuild\"},{\"name\":\"TRIGGERING_ACCOUNT_AWS_PROFILE\",\"value\":\"sandbox\"}]"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"CURRENT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-triggered-pipeline-environment-pipeline-codebuild\"},{\"name\":\"TRIGGERING_ACCOUNT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::000123456789:role/my-app-my-pipeline-environment-pipeline-codebuild\"},{\"name\":\"TRIGGERING_ACCOUNT_AWS_PROFILE\",\"value\":\"sandbox\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 }
@@ -1121,9 +1116,30 @@ run "test_artifact_store" {
 
   # artifact-store S3 bucket.
   assert {
-    condition     = module.artifact_store.bucket_name == "my-app-my-pipeline-environment-pipeline-artifact-store"
+    condition     = aws_s3_bucket.artifact_store.bucket == "my-app-my-pipeline-environment-pipeline-artifact-store"
     error_message = "Should be: my-app-my-pipeline-environment-pipeline-artifact-store"
   }
+
+  assert {
+    condition     = aws_kms_alias.artifact_store_kms_alias.name == "alias/my-app-my-pipeline-environment-pipeline-artifact-store-key"
+    error_message = "Should be: alias/my-app-my-pipeline-environment-pipeline-artifact-store-key"
+  }
+
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].condition : true if el.variable == "aws:SecureTransport"][0] == true
+    error_message = "Should be: aws:SecureTransport"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].effect == "Deny"
+    error_message = "Should be: Deny"
+  }
+
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].actions : true if el == "s3:*"][0] == true
+    error_message = "Should be: s3:*"
+  }
+
 }
 
 run "test_stages" {
@@ -1246,7 +1262,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},null,null]"
+    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"CURRENT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-my-pipeline-environment-pipeline-codebuild\"},null,null]"
     error_message = "Configuration Env Vars incorrect"
   }
 
@@ -1396,7 +1412,7 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},null,null]"
+    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"CURRENT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-my-pipeline-environment-pipeline-codebuild\"},null,null]"
     error_message = "Configuration Env Vars incorrect"
   }
 }

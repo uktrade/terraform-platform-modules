@@ -1,5 +1,27 @@
 # Changelog
 
+## [5.4.1](https://github.com/uktrade/terraform-platform-modules/compare/5.4.0...5.4.1) (2024-09-26)
+
+
+### Bug Fixes
+
+* DBTP-1391 - Create separate pipeline artifact bucket ([#234](https://github.com/uktrade/terraform-platform-modules/issues/234)) ([c3d5bbc](https://github.com/uktrade/terraform-platform-modules/commit/c3d5bbc73d5da2bfb22fe2b601a1b453d1996d15))
+* DBTP-1394 - Fix platform-helper environment generate command in environment pipeline apply stage ([#236](https://github.com/uktrade/terraform-platform-modules/issues/236)) ([f0b7bc1](https://github.com/uktrade/terraform-platform-modules/commit/f0b7bc11c670d21dced8400d4bd8a0e0c8591e6d))
+* DBTP-1396 - Fix S3 domain name for prod environments ([#237](https://github.com/uktrade/terraform-platform-modules/issues/237)) ([0df571a](https://github.com/uktrade/terraform-platform-modules/commit/0df571af24307bd2525445b02b47d0e41ef7e866))
+
+## [5.4.0](https://github.com/uktrade/terraform-platform-modules/compare/5.3.0...5.4.0) (2024-09-18)
+
+
+### Features
+
+* Dbtp 1162 support hosting static sites on s3 ([#212](https://github.com/uktrade/terraform-platform-modules/issues/212)) ([f1976bb](https://github.com/uktrade/terraform-platform-modules/commit/f1976bb694d598bd175003c475e5fa779bd80b65))
+
+
+### Bug Fixes
+
+* DBTP-1338 - Run copilot env deploy in env pipelines ([#224](https://github.com/uktrade/terraform-platform-modules/issues/224)) ([ea3b56d](https://github.com/uktrade/terraform-platform-modules/commit/ea3b56d3f86676eec487dc1b65aba2c387f22594))
+* DBTP-1366 - Force environment pipeline to trigger on correct branch ([#230](https://github.com/uktrade/terraform-platform-modules/issues/230)) ([3a95838](https://github.com/uktrade/terraform-platform-modules/commit/3a958381bae3fc911abfcf124c0df3ab3765ca15))
+
 ## [5.3.0](https://github.com/uktrade/terraform-platform-modules/compare/5.2.4...5.3.0) (2024-09-10)
 
 

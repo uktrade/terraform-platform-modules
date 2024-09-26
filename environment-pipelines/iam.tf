@@ -29,8 +29,8 @@ data "aws_iam_policy_document" "access_artifact_store" {
     ]
 
     resources = [
-      module.artifact_store.arn,
-      "${module.artifact_store.arn}/*"
+      aws_s3_bucket.artifact_store.arn,
+      "${aws_s3_bucket.artifact_store.arn}/*"
     ]
   }
 
@@ -64,7 +64,7 @@ data "aws_iam_policy_document" "access_artifact_store" {
       "kms:Decrypt"
     ]
     resources = [
-      module.artifact_store.kms_key_arn
+      aws_kms_key.artifact_store_kms_key.arn
     ]
   }
 }
@@ -79,6 +79,26 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
     }
 
     actions = ["sts:AssumeRole"]
+  }
+
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    actions = ["sts:AssumeRole"]
+
+    condition {
+      test     = "StringLike"
+      variable = "sts:RoleSessionName"
+
+      values = [
+        "environment-pipeline-platform-helper-generate-*"
+      ]
+    }
   }
 
   dynamic "statement" {
@@ -224,7 +244,8 @@ data "aws_iam_policy_document" "load_balancer" {
       "elasticloadbalancing:DescribeSSLPolicies",
       "elasticloadbalancing:DescribeListeners",
       "elasticloadbalancing:DescribeTargetHealth",
-      "elasticloadbalancing:DescribeRules"
+      "elasticloadbalancing:DescribeRules",
+      "elasticloadbalancing:DescribeListenerCertificates"
     ]
     resources = [
       "*"
@@ -806,6 +827,13 @@ data "aws_iam_policy_document" "iam" {
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
       ]
     }
+  }
+
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${var.pipeline_name}-environment-pipeline-codebuild"]
   }
 }
 
