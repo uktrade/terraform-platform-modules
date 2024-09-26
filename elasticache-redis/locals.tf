@@ -4,7 +4,7 @@ locals {
     "7.0" = "redis7"
     "6.2" = "redis6.x"
   }
-  central_log_destination_arn = "arn:aws:logs:eu-west-2:812359060647:destination:cwl_log_destination"
+
   tags = {
     application         = var.application
     environment         = var.environment
@@ -12,4 +12,7 @@ locals {
     copilot-application = var.application
     copilot-environment = var.environment
   }
+
+  central_log_group_arns        = jsondecode(data.aws_ssm_parameter.log-destination-arn.value)
+  central_log_group_destination = var.environment == "prod" ? local.central_log_group_arns["prod"] : local.central_log_group_arns["dev"]
 }

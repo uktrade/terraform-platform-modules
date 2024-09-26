@@ -25,4 +25,7 @@ locals {
 
   auto_tune_desired_state       = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DISABLED" : "ENABLED"
   auto_tune_rollback_on_disable = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DEFAULT_ROLLBACK" : "NO_ROLLBACK"
+
+  central_log_group_arns        = jsondecode(data.aws_ssm_parameter.log-destination-arn.value)
+  central_log_group_destination = var.environment == "prod" ? local.central_log_group_arns["prod"] : local.central_log_group_arns["dev"]
 }

@@ -424,6 +424,10 @@ data "aws_iam_policy_document" "cloudwatch" {
   }
 }
 
+data "aws_ssm_parameter" "log-destination-arn" {
+  name = "/copilot/tools/central_log_groups"
+}
+
 data "aws_iam_policy_document" "logs" {
   statement {
     actions = [
@@ -442,7 +446,8 @@ data "aws_iam_policy_document" "logs" {
       "logs:PutSubscriptionFilter"
     ]
     resources = [
-      local.central_log_destination_arn
+      jsondecode(data.aws_ssm_parameter.log-destination-arn.value)["dev"],
+      jsondecode(data.aws_ssm_parameter.log-destination-arn.value)["prod"]
     ]
   }
 

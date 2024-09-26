@@ -19,6 +19,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_ssm_parameter.log-destination-arn
+  values = {
+    value = "{\"prod\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod\", \"dev\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev\"}"
+  }
+}
+
 variables {
   application = "test-application"
   environment = "test-environment"
@@ -427,6 +434,11 @@ run "aws_cloudwatch_log_rds_subscription_filter_unit_test" {
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.rds.distribution == "ByLogStream"
     error_message = "Should be: ByLogStream"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.rds.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
+    error_message = "Should be: arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
   }
 }
 

@@ -221,12 +221,16 @@ resource "aws_cloudwatch_log_group" "redis-engine-log-group" {
   kms_key_id        = aws_kms_key.redis-log-group-kms-key.arn
 }
 
+data "aws_ssm_parameter" "log-destination-arn" {
+  name = "/copilot/tools/central_log_groups"
+}
+
 resource "aws_cloudwatch_log_subscription_filter" "redis-subscription-filter-engine" {
   name            = "/aws/elasticache/${var.name}/${var.environment}/engine"
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
   log_group_name  = aws_cloudwatch_log_group.redis-engine-log-group.name
   filter_pattern  = ""
-  destination_arn = local.central_log_destination_arn
+  destination_arn = local.central_log_group_destination
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "redis-subscription-filter-slow" {
@@ -234,6 +238,5 @@ resource "aws_cloudwatch_log_subscription_filter" "redis-subscription-filter-slo
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
   log_group_name  = aws_cloudwatch_log_group.redis-slow-log-group.name
   filter_pattern  = ""
-  destination_arn = local.central_log_destination_arn
+  destination_arn = local.central_log_group_destination
 }
-

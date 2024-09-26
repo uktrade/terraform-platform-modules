@@ -31,6 +31,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_ssm_parameter.log-destination-arn
+  values = {
+    value = "{\"prod\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod\", \"dev\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev\"}"
+  }
+}
+
 run "aws_elasticache_replication_group_unit_test" {
   command = plan
 
@@ -348,7 +355,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.destination_arn == "arn:aws:logs:eu-west-2:812359060647:destination:cwl_log_destination"
+    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter destination_arn"
   }
 
@@ -369,7 +376,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.destination_arn == "arn:aws:logs:eu-west-2:812359060647:destination:cwl_log_destination"
+    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter destination_arn"
   }
 
@@ -381,6 +388,24 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.role_arn == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter role_arn"
+  }
+}
+
+run "aws_cloudwatch_log_subscription_filter_destination_prod_unit_test" {
+  command = plan
+
+  variables {
+    environment = "prod"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod"
+    error_message = "Invalid config for aws_cloudwatch_log_subscription_filter destination_arn"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod"
+    error_message = "Invalid config for aws_cloudwatch_log_subscription_filter destination_arn"
   }
 }
 

@@ -137,6 +137,4 @@ locals {
 
   # Merge in the stage specific config from the stage_config.yml file:
   stages = [for stage in local.all_stages : merge(stage, local.stage_config[stage["type"]])]
-
-  central_log_destination_arn = "arn:aws:logs:eu-west-2:812359060647:destination:cwl_log_destination"
 }
