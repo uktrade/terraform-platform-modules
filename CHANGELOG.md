@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.4.2](https://github.com/uktrade/terraform-platform-modules/compare/5.4.1...5.4.2) (2024-09-26)
+
+
+### Bug Fixes
+
+* DBTP-1383 - Set correct central log subscription filter destinations ([#233](https://github.com/uktrade/terraform-platform-modules/issues/233)) ([2b57276](https://github.com/uktrade/terraform-platform-modules/commit/2b5727604f40cce9c109e6d6f62d3eda256b38e9))
+
 ## [5.4.1](https://github.com/uktrade/terraform-platform-modules/compare/5.4.0...5.4.1) (2024-09-26)
 
 
