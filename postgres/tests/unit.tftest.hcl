@@ -22,7 +22,7 @@ override_data {
 override_data {
   target = data.aws_ssm_parameter.log-destination-arn
   values = {
-    value = "{\"prod\":\"arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_prod\", \"dev\":\"arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev\"}"
+    value = "{\"prod\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod\", \"dev\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev\"}"
   }
 }
 
@@ -437,8 +437,8 @@ run "aws_cloudwatch_log_rds_subscription_filter_unit_test" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.rds.destination_arn == "arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev"
-    error_message = "Should be: arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev"
+    condition     = aws_cloudwatch_log_subscription_filter.rds.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
+    error_message = "Should be: arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
   }
 }
 

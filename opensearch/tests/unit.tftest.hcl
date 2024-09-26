@@ -16,7 +16,7 @@ override_data {
 override_data {
   target = data.aws_ssm_parameter.log-destination-arn
   values = {
-    value = "{\"prod\":\"arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_prod\", \"dev\":\"arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev\"}"
+    value = "{\"prod\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod\", \"dev\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev\"}"
   }
 }
 
@@ -338,8 +338,8 @@ run "test_create_cloudwatch_subscription_filters" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_index_slow_logs.destination_arn == "arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev"
-    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_index_slow_logs'Should be: 'arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev'"
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_index_slow_logs.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
+    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_index_slow_logs'Should be: 'arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev'"
   }
 
   assert {
@@ -348,8 +348,8 @@ run "test_create_cloudwatch_subscription_filters" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_search_slow_logs.destination_arn == "arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev"
-    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_search_slow_logs'Should be: 'arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev'"
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_search_slow_logs.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
+    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_search_slow_logs'Should be: 'arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev'"
   }
 
   assert {
@@ -358,8 +358,8 @@ run "test_create_cloudwatch_subscription_filters" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_es_application_logs.destination_arn == "arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev"
-    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_es_application_logs'Should be: 'arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev'"
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_es_application_logs.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
+    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_es_application_logs'Should be: 'arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev'"
   }
 
   assert {
@@ -368,8 +368,8 @@ run "test_create_cloudwatch_subscription_filters" {
   }
 
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_audit_logs.destination_arn == "arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev"
-    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_audit_logs'Should be: 'arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups_dev'"
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_audit_logs.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
+    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_audit_logs'Should be: 'arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev'"
   }
 
   assert {
