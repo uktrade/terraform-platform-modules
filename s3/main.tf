@@ -215,7 +215,7 @@ resource "aws_acm_certificate" "certificate" {
 data "aws_route53_zone" "selected" {
   count        = var.config.serve_static_content ? 1 : 0
   provider     = aws.domain-cdn
-  name         = "${var.application}.uktrade.digital"
+  name         = var.environment == "prod" ? "${var.application}.prod.uktrade.digital" : "${var.application}.uktrade.digital"
   private_zone = false
 }
 
