@@ -26,6 +26,7 @@ variable "config" {
     instance              = optional(string)
     storage_type          = optional(string)
     backup_retention_days = optional(number)
+    data_migration        = optional(any)
   })
 }
 
