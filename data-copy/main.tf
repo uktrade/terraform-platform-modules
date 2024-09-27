@@ -2,9 +2,9 @@ resource "aws_ecs_task_definition" "service" {
   family = "${var.application}-${var.environment}-${var.name}-data-dump"
   container_definitions = jsonencode([
     {
-      name      = "data-dump"
-      image     = "public.ecr.aws/uktrade/database-copy:latest"
-      essential = true
+      name        = "data-dump"
+      image       = "public.ecr.aws/uktrade/database-copy:latest"
+      essential   = true
       environment = [
         {
           name  = "DB_CONNECTION_STRING"
@@ -19,7 +19,7 @@ resource "aws_ecs_task_definition" "service" {
       ]
       log_configuration = {
         log_driver = "awslogs",
-        options = {
+        options   = {
           awslogs_group         = "/ecs/${var.application}-${var.environment}-${var.name}-data-copy"
           mode                  = "non-blocking"
           awslogs_create_group  = "true"
@@ -30,7 +30,7 @@ resource "aws_ecs_task_definition" "service" {
     }
   ])
 
-  cpu    = 1024
+  cpu  = 1024
   memory = 3072
 
   volume {
@@ -38,14 +38,14 @@ resource "aws_ecs_task_definition" "service" {
     host_path = "/ecs/service-storage"
   }
 
-  requires_compatibilities = ["FARGATE"]
+  requires_compatibilities = [ "FARGATE" ]
 
-  task_role_arn      = "arn:aws:iam::891377058512:role/data-copy-poc-ant-s3-access"
+  task_role_arn = "arn:aws:iam::891377058512:role/data-copy-poc-ant-s3-access"
   execution_role_arn = "arn:aws:iam::891377058512:role/ecsTaskExecutionRole"
-  network_mode       = "awsvpc"
+  network_mode = "awsvpc"
 
   runtime_platform = {
-    cpu_architecture        = "ARM64"
+    cpu_architecture = "ARM64"
     operating_system_family = "LINUX"
   }
 }
@@ -176,6 +176,53 @@ data "aws_iam_policy_document" "data_upload" {
     ]
 
     resources = [var.destination_kms_key_arn]
+  }
+}
+
+data "aws_iam_policy_document" "data_download" {
+  # checkov:skip=CKV_AWS_356:Permissions required to upload
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging"
+    ]
+
+    resources = [
+      aws_s3_bucket.data_copy_bucket.arn,
+      "${aws_s3_bucket.data_copy_bucket.arn}/*"
+    ]
+  }
+
+  statement {
+      sid    = "AllowKMSDecryption"
+      effect = "Allow"
+
+      actions = [
+        "kms:Decrypt",
+        "kms:DescribeKey"
+      ]
+
+      resources = [var.config.source_kms_key_arn]
+  }
+}
+
+data "aws_iam_policy_document" "allow_task_creation" {
+  statement {
+    effect = "Allow"
+    action = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = "*"
   }
 }
 
