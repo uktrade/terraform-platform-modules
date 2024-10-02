@@ -671,7 +671,7 @@ run "aws_ssm_parameter_cloudfront_alias_unit_test" {
 
   assert {
     condition     = aws_ssm_parameter.cloudfront_alias[0].value == "test.non-prod-environmnent.s3-test-application.uktrade.digital"
-    error_message = "Invalid  value for aws_ssm_parameter cloudfront alias."
+    error_message = "Invalid value for aws_ssm_parameter cloudfront alias."
   }
 
   assert {
@@ -698,5 +698,23 @@ run "aws_ssm_parameter_cloudfront_alias_unit_test" {
     condition     = aws_ssm_parameter.cloudfront_alias[0].tags["managed-by"] == "DBT Platform - Terraform"
     error_message = "Invalid value for aws_s3_bucket tags parameter."
   }
+}
 
+run "aws_ssm_parameter_cloudfront_alias_prod_domain_name_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name"          = "test",
+      "serve_static_content" = true,
+      "type"                 = "string",
+      "objects"              = [],
+    }
+    environment = "prod"
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.cloudfront_alias[0].value == "test.s3-test-application.prod.uktrade.digital"
+    error_message = "Invalid value for aws_ssm_parameter cloudfront alias."
+  }
 }
