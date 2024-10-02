@@ -368,7 +368,7 @@ resource "aws_ssm_parameter" "cloudfront_alias" {
 
   name   = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
   type   = "SecureString"
-  value  = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+  value  = var.environment == "prod" ? "${var.config.bucket_name}.${var.application}.prod.uktrade.digital" : "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
   key_id = aws_kms_key.s3-ssm-kms-key[0].arn
 
   tags = local.tags
