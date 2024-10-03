@@ -3,8 +3,7 @@ resource "aws_s3_bucket" "this" {
   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-  bucket        = var.config.serve_static_content ? "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital" : var.config.bucket_name
-  force_destroy = false
+  bucket = var.config.serve_static_content ? "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital" : var.config.bucket_name
 
   tags = local.tags
 }
@@ -79,13 +78,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
 resource "aws_kms_key" "kms-key" {
   count = var.config.serve_static_content ? 0 : 1
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
-  description                        = "KMS Key for S3 encryption"
-  bypass_policy_lockout_safety_check = false
-  enable_key_rotation                = false
-  is_enabled                         = true
-  key_usage                          = "ENCRYPT_DECRYPT"
-  customer_master_key_spec           = "SYMMETRIC_DEFAULT"
-  tags                               = local.tags
+  description = "KMS Key for S3 encryption"
+  tags        = local.tags
 
   policy = jsonencode({
     Id = "key-default-1"
@@ -274,7 +268,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   # checkov:skip=CKV_AWS_305: Ensure CloudFront distribution has a default root object configured
   # we want individual service teams to decide what objects each bucket contains
   # checkov:skip=CKV_AWS_310: Ensure CloudFront distributions should have origin failover configured
-  # we don't enable origin failover for s3 buckets and it means maintaining another bucket
+  # we don't enable origin failover for s3 buckets and it means maintaining another bucket 
 
   count    = var.config.serve_static_content ? 1 : 0
   provider = aws.domain-cdn
@@ -357,8 +351,7 @@ resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
 }
 
 resource "aws_ssm_parameter" "cloudfront_alias" {
-  count = var.config.serve_static_content ? 1 : 0
-
+  count  = var.config.serve_static_content ? 1 : 0
   name   = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
   type   = "SecureString"
   value  = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
@@ -368,8 +361,7 @@ resource "aws_ssm_parameter" "cloudfront_alias" {
 }
 
 module "data_migration" {
-  count = local.has_data_migration_import_enabled ? 1 : 0
-
+  count  = local.has_data_migration_import_enabled ? 1 : 0
   source = "../data-migration"
 
   depends_on = [
