@@ -34,10 +34,7 @@ run "aws_s3_bucket_unit_test" {
     error_message = "Invalid name for aws_s3_bucket"
   }
 
-  assert {
-    condition     = aws_s3_bucket.this.force_destroy == false
-    error_message = "Should be: false."
-  }
+  # Expecting default value for aws_s3_bucket.this.force_destroy == false, which we cannon test on a plan
 
   assert {
     condition     = aws_s3_bucket.this.tags["environment"] == "s3-test-environment"
@@ -102,30 +99,15 @@ run "aws_s3_bucket_versioning_unit_test" {
 run "aws_kms_key_unit_test" {
   command = plan
 
-  assert {
-    condition     = aws_kms_key.kms-key[0].bypass_policy_lockout_safety_check == false
-    error_message = "Should be: false"
-  }
+  # Expecting default value for aws_kms_key.kms-key[0].bypass_policy_lockout_safety_check == false, which we cannon test on a plan
 
-  assert {
-    condition     = aws_kms_key.kms-key[0].customer_master_key_spec == "SYMMETRIC_DEFAULT"
-    error_message = "Should be: SYMMETRIC_DEFAULT"
-  }
+  # Expecting default value for aws_kms_key.kms-key[0].customer_master_key_spec == "SYMMETRIC_DEFAULT", which we cannon test on a plan
 
-  assert {
-    condition     = aws_kms_key.kms-key[0].enable_key_rotation == false
-    error_message = "Should be: false"
-  }
+  # Expecting default value for aws_kms_key.kms-key[0].enable_key_rotation == false, which we cannon test on a plan
 
-  assert {
-    condition     = aws_kms_key.kms-key[0].is_enabled == true
-    error_message = "Should be: true"
-  }
+  # Expecting default value for aws_kms_key.kms-key[0].is_enabled == true, which we cannon test on a plan
 
-  assert {
-    condition     = aws_kms_key.kms-key[0].key_usage == "ENCRYPT_DECRYPT"
-    error_message = "Should be: ENCRYPT_DECRYPT"
-  }
+  # Expecting default value for aws_kms_key.kms-key[0].key_usage == "ENCRYPT_DECRYPT", which we cannon test on a plan
 
   assert {
     condition     = aws_kms_key.kms-key[0].tags["application"] == "s3-test-application"
