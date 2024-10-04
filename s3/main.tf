@@ -1,9 +1,14 @@
 data "aws_caller_identity" "current" {}
+
+locals {
+  serve_static_domain = var.environment == "prod" ? "${var.config.bucket_name}.${var.application}.prod.uktrade.digital" : "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+}
+
 resource "aws_s3_bucket" "this" {
   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-  bucket = var.config.serve_static_content ? "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital" : var.config.bucket_name
+  bucket = var.config.serve_static_content ? local.serve_static_domain : var.config.bucket_name
 
   tags = local.tags
 }
@@ -172,7 +177,7 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 
   name                              = "${var.config.bucket_name}.${var.environment}.${var.application}-oac"
   provider                          = aws.domain-cdn
-  description                       = "Origin access control for Cloudfront distribution and ${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital static s3 bucket."
+  description                       = "Origin access control for Cloudfront distribution and ${local.serve_static_domain} static s3 bucket."
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -208,7 +213,7 @@ resource "aws_acm_certificate" "certificate" {
   count = var.config.serve_static_content ? 1 : 0
 
   provider          = aws.domain-cdn
-  domain_name       = "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+  domain_name       = local.serve_static_domain
   validation_method = "DNS"
 
   lifecycle {
@@ -283,7 +288,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   count = var.config.serve_static_content ? 1 : 0
 
   provider = aws.domain-cdn
-  aliases  = ["${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"]
+  aliases  = [local.serve_static_domain]
 
   origin {
     domain_name = aws_s3_bucket.this.bucket_regional_domain_name
@@ -368,7 +373,7 @@ resource "aws_ssm_parameter" "cloudfront_alias" {
 
   name   = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
   type   = "SecureString"
-  value  = var.environment == "prod" ? "${var.config.bucket_name}.${var.application}.prod.uktrade.digital" : "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+  value  = local.serve_static_domain
   key_id = aws_kms_key.s3-ssm-kms-key[0].arn
 
   tags = local.tags
