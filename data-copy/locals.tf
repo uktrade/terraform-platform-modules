@@ -8,9 +8,13 @@ locals {
   }
 
   is_data_dump = var.task.from == var.environment
+  
+  dump_task_name = "${var.database_name}-dump-from-${var.task.from}"
+  restore_task_name = "${var.database_name}-restore-to-${var.task.to}"
+  
   task_type    = "${local.is_data_dump ? "dump-from" : "restore-to"}-${local.is_data_dump ? var.task.from : var.task.to}"
   task_name    = "${var.database_name}-${local.task_type}"
-  task_family  = "${var.application}-${var.environment}-${var.task.name}"
+  task_family  = "${var.application}-${var.environment}-${local.dump_task_name}"
 
 
   s3_permissions = local.is_data_dump ? [

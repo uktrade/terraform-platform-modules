@@ -33,7 +33,7 @@ data "aws_iam_policy_document" "assume_ecstask_role" {
 }
 
 resource "aws_iam_role" "start_ecs_task_role" {
-  name               = "${var.task.name}-${var.application}-${var.environment}-data-copy-ecs-task"
+  name               = "${var.application}-${var.environment}-${local.dump_task_name}-task-role"
   assume_role_policy = data.aws_iam_policy_document.assume_ecstask_role.json
 
   inline_policy {
@@ -52,8 +52,8 @@ data "aws_iam_policy_document" "data_copy" {
     actions = local.s3_permissions
 
     resources = [
-      "arn:aws:s3:::${var.application}-${var.task.name}-data-copy",
-      "arn:aws:s3:::${var.application}-${var.task.name}-data-copy/*"
+      "arn:aws:s3:::${var.application}-${local.dump_task_name}",
+      "arn:aws:s3:::${var.application}-${local.dump_task_name}/*"
     ]
   }
 
@@ -67,14 +67,48 @@ data "aws_iam_policy_document" "data_copy" {
       "kms:GenerateDataKey*",
     ]
 
-    resources = [
-      "alias/${var.application}-${var.task.name}-data-copy-key"
-    ]
+    resources = [aws_kms_key.data_copy_kms_key.arn]
   }
 }
 
+
+# data "aws_iam_policy_document" "data_restore" {
+#   depends_on = [aws_kms_key.data_copy_kms_key]
+  
+#   # checkov:skip=CKV_AWS_356:Permissions required to upload
+#   statement {
+#     effect = "Allow"
+
+#     actions = local.s3_permissions
+
+#     resources = [
+#       "arn:aws:s3:::${var.application}-${local.dump_task_name}",
+#       "arn:aws:s3:::${var.application}-${local.dump_task_name}/*"
+#     ]
+#   }
+
+#   statement {
+#     sid    = "AllowKMSEncryption"
+#     effect = "Allow"
+
+#     actions = [
+#       "kms:Decrypt",
+#     ]
+
+#     resources = [
+#       data.aws_kms_key.data_copy_kms_key.arn
+#     ]
+#   }
+# }
+
+
+# data "aws_kms_key" "data_copy_kms_key" {
+#   key_id = "alias/${var.application}-${local.dump_task_name}-key"
+# }
+
+
 resource "aws_iam_role" "data_copy" {
-  name               = "${var.task.name}-${var.application}-${var.environment}-data-upload"
+  name               = "${var.application}-${var.environment}-${local.dump_task_name}-data-copy"
   assume_role_policy = data.aws_iam_policy_document.assume_ecstask_role.json
 
   inline_policy {
@@ -125,10 +159,6 @@ resource "aws_ecs_task_definition" "service" {
   cpu    = 1024
   memory = 3072
 
-  volume {
-    name      = "service-storage"
-    host_path = "/ecs/service-storage"
-  }
 
   requires_compatibilities = ["FARGATE"]
 
@@ -152,14 +182,14 @@ resource "aws_s3_bucket" "data_copy_bucket" {
   # checkov:skip=CKV2_AWS_61: This bucket is used for ephemeral data transfer - we do not need lifecycle configuration
   # checkov:skip=CKV_AWS_21: This bucket is used for ephemeral data transfer - we do not want versioning
   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-  count  = local.is_data_dump ? 1 : 0
-  bucket = "${var.application}-${var.task.name}-data-copy"
+  # count  = local.is_data_dump ? 1 : 0
+  bucket = "${var.application}-${local.dump_task_name}"
 
   tags = local.tags
 }
 
 data "aws_iam_policy_document" "data_copy_bucket_policy" {
-  count = local.is_data_dump ? 1 : 0
+  # count = local.is_data_dump ? 1 : 0
   statement {
     principals {
       type        = "*"
@@ -182,20 +212,20 @@ data "aws_iam_policy_document" "data_copy_bucket_policy" {
     }
 
     resources = [
-      aws_s3_bucket.data_copy_bucket[0].arn,
-      "${aws_s3_bucket.data_copy_bucket[0].arn}/*",
+      aws_s3_bucket.data_copy_bucket.arn,
+      "${aws_s3_bucket.data_copy_bucket.arn}/*",
     ]
   }
 }
 
 resource "aws_s3_bucket_policy" "data_copy_bucket_policy" {
-  count  = local.is_data_dump ? 1 : 0
-  bucket = aws_s3_bucket.data_copy_bucket[0].id
-  policy = data.aws_iam_policy_document.data_copy_bucket_policy[0].json
+  # count  = local.is_data_dump ? 1 : 0
+  bucket = aws_s3_bucket.data_copy_bucket.id
+  policy = data.aws_iam_policy_document.data_copy_bucket_policy.json
 }
 
 resource "aws_kms_key" "data_copy_kms_key" {
-  count = local.is_data_dump ? 1 : 0
+  # count = local.is_data_dump ? 1 : 0
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
@@ -218,28 +248,28 @@ resource "aws_kms_key" "data_copy_kms_key" {
 }
 
 resource "aws_kms_alias" "data_copy_kms_alias" {
-  count         = local.is_data_dump ? 1 : 0
+  # count         = local.is_data_dump ? 1 : 0
   depends_on    = [aws_kms_key.data_copy_kms_key]
-  name          = "alias/${var.application}-${var.task.name}-data-copy-key"
-  target_key_id = aws_kms_key.data_copy_kms_key[0].id
+  name          = "alias/${var.application}-${local.dump_task_name}"
+  target_key_id = aws_kms_key.data_copy_kms_key.id
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
   # checkov:skip=CKV2_AWS_67:We are not currently rotating the keys
-  count  = local.is_data_dump ? 1 : 0
-  bucket = aws_s3_bucket.data_copy_bucket[0].id
+  # count  = local.is_data_dump ? 1 : 0
+  bucket = aws_s3_bucket.data_copy_bucket.id
 
   rule {
     apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.data_copy_kms_key[0].arn
+      kms_master_key_id = aws_kms_key.data_copy_kms_key.arn
       sse_algorithm     = "aws:kms"
     }
   }
 }
 
 resource "aws_s3_bucket_public_access_block" "public_access_block" {
-  count                   = local.is_data_dump ? 1 : 0
-  bucket                  = aws_s3_bucket.data_copy_bucket[0].id
+  # count                   = local.is_data_dump ? 1 : 0
+  bucket                  = aws_s3_bucket.data_copy_bucket.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
