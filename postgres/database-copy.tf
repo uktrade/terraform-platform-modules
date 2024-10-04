@@ -1,6 +1,6 @@
-module "data-copy" {
+module "database-copy" {
   count = length(local.data_copy_tasks)
-  source   = "../data-copy"
+  source   = "../database-copy"
 
   application   = var.application
   environment   = var.environment
