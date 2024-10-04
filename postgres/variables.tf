@@ -29,4 +29,3 @@ variable "config" {
     data_migration        = optional(any)
   })
 }
-

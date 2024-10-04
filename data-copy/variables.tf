@@ -6,11 +6,11 @@ variable "environment" {
   type = string
 }
 
-variable "job_name" {
+variable "database_name" {
   type = string
 }
 
-variable "config" {
+variable "task" {
   type = object({
     from = string
     to   = string
