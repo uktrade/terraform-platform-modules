@@ -1,4 +1,3 @@
-data "aws_caller_identity" "current" {}
 
 
 data "aws_kms_key" "data_dump_kms_key" {
@@ -92,7 +91,7 @@ resource "aws_ecs_task_definition" "service" {
   family = local.task_name
   container_definitions = jsonencode([
     {
-      name      = "${local.task_name}"
+      name      = local.task_name
       image     = "public.ecr.aws/uktrade/database-copy:latest"
       essential = true
       environment = [

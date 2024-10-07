@@ -8,6 +8,7 @@ data "aws_iam_policy_document" "allow_task_creation" {
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
+      "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
@@ -68,7 +69,6 @@ data "aws_iam_policy_document" "data_dump" {
   }
 }
 
-
 resource "aws_iam_role" "data_dump" {
   name               = "${local.task_name}-data-dump"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
@@ -86,7 +86,7 @@ resource "aws_ecs_task_definition" "service" {
   family = local.task_name
   container_definitions = jsonencode([
     {
-      name      = "${local.task_name}"
+      name      = local.task_name
       image     = "public.ecr.aws/uktrade/database-copy:latest"
       essential = true
       environment = [
@@ -97,24 +97,31 @@ resource "aws_ecs_task_definition" "service" {
         {
           name  = "DATA_COPY_OPERATION"
           value = "DUMP"
+        },
+        {
+          name  = "S3_BUCKET_NAME"
+          value = aws_s3_bucket.data_dump_bucket.bucket
         }
       ],
-      port_mappings = [
+      portMappings = [
         {
-          container_port = 80
-          host_port      = 80
+          containerPort = 80
+          hostPort      = 80
         }
       ]
-      log_configuration = {
-        log_driver = "awslogs",
+      logConfiguration = {
+        logDriver = "awslogs",
         options = {
-          awslogs_group         = "/ecs/${local.task_name}"
+          awslogs-group         = "/ecs/${local.task_name}"
+          awslogs-region        = "eu-west-2"
           mode                  = "non-blocking"
-          awslogs_create_group  = "true"
-          max_buffer_size       = "25m"
-          awslogs_stream_prefix = "ecs"
+          awslogs-create-group  = "true"
+          max-buffer-size       = "25m"
+          awslogs-stream-prefix = "ecs"
         }
       }
+
+
     }
   ])
 
@@ -142,7 +149,7 @@ resource "aws_s3_bucket" "data_dump_bucket" {
   # checkov:skip=CKV_AWS_21: This bucket is used for ephemeral data transfer - we do not want versioning
   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
   bucket = local.dump_bucket_name
-  tags = local.tags
+  tags   = local.tags
 }
 
 data "aws_iam_policy_document" "data_dump_bucket_policy" {

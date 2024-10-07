@@ -39,7 +39,7 @@ locals {
   central_log_group_destination = var.environment == "prod" ? local.central_log_group_arns["prod"] : local.central_log_group_arns["dev"]
 
   data_copy_tasks = coalesce(var.config.database_copy, [])
-  
-  data_dump_tasks = [for task in local.data_copy_tasks: task if task.from == var.environment]
-  data_restore_tasks = [for task in local.data_copy_tasks: task if task.to == var.environment]
+
+  data_dump_tasks    = [for task in local.data_copy_tasks : task if task.from == var.environment]
+  data_restore_tasks = [for task in local.data_copy_tasks : task if task.to == var.environment]
 }
