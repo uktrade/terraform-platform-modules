@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "assume_ecs_task_role" {
 }
 
 resource "aws_iam_role" "data_restore_task_execution_role" {
-  name               = "${var.application}-${var.environment}-${local.restore_task_name}-task-role"
+  name               = "${var.application}-${var.environment}-${local.task_name}-task-role"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
   inline_policy {
@@ -77,7 +77,7 @@ data "aws_iam_policy_document" "data_restore" {
 
 
 resource "aws_iam_role" "data_restore" {
-  name               = "${local.task_family}-data-restore"
+  name               = "${local.task_name}-data-restore"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
   inline_policy {
@@ -89,10 +89,10 @@ resource "aws_iam_role" "data_restore" {
 }
 
 resource "aws_ecs_task_definition" "service" {
-  family = local.task_family
+  family = local.task_name
   container_definitions = jsonencode([
     {
-      name      = "${local.task_family}"
+      name      = "${local.task_name}"
       image     = "public.ecr.aws/uktrade/database-copy:latest"
       essential = true
       environment = [
@@ -114,7 +114,7 @@ resource "aws_ecs_task_definition" "service" {
       log_configuration = {
         log_driver = "awslogs",
         options = {
-          awslogs_group         = "/ecs/${local.task_family}"
+          awslogs_group         = "/ecs/${local.task_name}"
           mode                  = "non-blocking"
           awslogs_create_group  = "true"
           max_buffer_size       = "25m"

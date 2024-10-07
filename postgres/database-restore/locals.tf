@@ -7,13 +7,11 @@ locals {
     copilot-environment = var.environment
   }
 
-  restore_task_name = "${var.database_name}-restore-to-${var.environment}"
-  task_family  = "${var.application}-${var.environment}-${local.restore_task_name}"
+  task_name = "${var.environment}-${var.database_name}-restore"
   
-  dump_task_name =  "${var.database_name}-dump-from-${var.task.from}"
-  dump_task_family = "${var.application}-${var.task.from}-${local.dump_task_name}"
-  dump_kms_key_alias = "alias/${local.task_family}"
-  dump_bucket_name = local.task_family
+  dump_task_name =  "${var.task.from}-${var.database_name}-dump"
+  dump_kms_key_alias = "alias/${local.dump_task_name}"
+  dump_bucket_name = local.dump_task_name
 
   s3_permissions = [
     "s3:ListBucket",

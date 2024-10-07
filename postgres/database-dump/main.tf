@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "assume_ecs_task_role" {
 }
 
 resource "aws_iam_role" "data_dump_task_execution_role" {
-  name               = "${local.task_family}-task-exec"
+  name               = "${local.task_name}-exec"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
   inline_policy {
@@ -70,7 +70,7 @@ data "aws_iam_policy_document" "data_dump" {
 
 
 resource "aws_iam_role" "data_dump" {
-  name               = "${local.task_family}-data-dump"
+  name               = "${local.task_name}-data-dump"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
   inline_policy {
@@ -83,10 +83,10 @@ resource "aws_iam_role" "data_dump" {
 
 
 resource "aws_ecs_task_definition" "service" {
-  family = local.task_family
+  family = local.task_name
   container_definitions = jsonencode([
     {
-      name      = "${local.dump_task_name}"
+      name      = "${local.task_name}"
       image     = "public.ecr.aws/uktrade/database-copy:latest"
       essential = true
       environment = [
@@ -108,7 +108,7 @@ resource "aws_ecs_task_definition" "service" {
       log_configuration = {
         log_driver = "awslogs",
         options = {
-          awslogs_group         = "/ecs/${local.task_family}"
+          awslogs_group         = "/ecs/${local.task_name}"
           mode                  = "non-blocking"
           awslogs_create_group  = "true"
           max_buffer_size       = "25m"

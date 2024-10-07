@@ -7,10 +7,9 @@ locals {
     copilot-environment = var.environment
   }
 
-  dump_task_name = "${var.database_name}-dump-from-${var.environment}"
-  task_family  = "${var.application}-${var.environment}-${local.dump_task_name}"
-  dump_kms_key_alias = "alias/${local.task_family}"
-  dump_bucket_name = local.task_family
+  task_name = "${var.environment}-${var.database_name}-dump"
+  dump_kms_key_alias = "alias/${local.task_name}"
+  dump_bucket_name = local.task_name
 
   s3_permissions = [
     "s3:ListBucket",
