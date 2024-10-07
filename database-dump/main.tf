@@ -141,7 +141,7 @@ resource "aws_s3_bucket" "data_dump_bucket" {
   # checkov:skip=CKV2_AWS_61: This bucket is used for ephemeral data transfer - we do not need lifecycle configuration
   # checkov:skip=CKV_AWS_21: This bucket is used for ephemeral data transfer - we do not want versioning
   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-  bucket = local.task_family
+  bucket = local.dump_bucket_name
   tags = local.tags
 }
 
@@ -203,7 +203,7 @@ resource "aws_kms_key" "data_dump_kms_key" {
 
 resource "aws_kms_alias" "data_dump_kms_alias" {
   depends_on    = [aws_kms_key.data_dump_kms_key]
-  name          = "alias/${var.application}-${local.dump_task_name}"
+  name          = local.dump_kms_key_alias
   target_key_id = aws_kms_key.data_dump_kms_key.id
 }
 

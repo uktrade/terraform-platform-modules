@@ -1,5 +1,14 @@
 data "aws_caller_identity" "current" {}
 
+
+data "aws_kms_key" "data_dump_kms_key" {
+  key_id = local.dump_kms_key_alias
+}
+
+data "aws_s3_bucket" "data_dump_bucket" {
+  bucket = local.dump_bucket_name
+}
+
 data "aws_iam_policy_document" "allow_task_creation" {
   statement {
     effect = "Allow"
@@ -49,8 +58,8 @@ data "aws_iam_policy_document" "data_restore" {
     actions = local.s3_permissions
 
     resources = [
-      var.data_dump_bucket_arn,
-      "${var.data_dump_bucket_arn}/*"
+      data.aws_s3_bucket.data_dump_bucket.arn,
+      "${data.aws_s3_bucket.data_dump_bucket.arn}/*"
     ]
   }
 
@@ -62,7 +71,7 @@ data "aws_iam_policy_document" "data_restore" {
       "kms:Decrypt",
     ]
 
-    resources = [var.data_dump_kms_key_arn]
+    resources = [data.aws_kms_key.data_dump_kms_key.arn]
   }
 }
 

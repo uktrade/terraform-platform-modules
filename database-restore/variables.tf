@@ -10,10 +10,9 @@ variable "database_name" {
   type = string
 }
 
-variable "data_dump_kms_key_arn" {
-  type = string
-}
-
-variable "data_dump_bucket_arn" {
-  type = string
+variable "task" {
+  type = object({
+    from = string
+    to   = string
+  })
 }
