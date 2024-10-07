@@ -16,6 +16,7 @@ data "aws_iam_policy_document" "allow_task_creation" {
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
+      "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
@@ -102,22 +103,27 @@ resource "aws_ecs_task_definition" "service" {
         {
           name  = "DATA_COPY_OPERATION"
           value = "RESTORE"
+        },
+        {
+          name  = "S3_BUCKET_NAME"
+          value = data.aws_s3_bucket.data_dump_bucket.bucket
         }
       ],
-      port_mappings = [
+      portMappings = [
         {
-          container_port = 80
-          host_port      = 80
+          containerPort = 80
+          hostPort      = 80
         }
       ]
-      log_configuration = {
-        log_driver = "awslogs",
+      logConfiguration = {
+        logDriver = "awslogs",
         options = {
-          awslogs_group         = "/ecs/${local.task_name}"
+          awslogs-group         = "/ecs/${local.task_name}"
+          awslogs-region        = "eu-west-2"
           mode                  = "non-blocking"
-          awslogs_create_group  = "true"
-          max_buffer_size       = "25m"
-          awslogs_stream_prefix = "ecs"
+          awslogs-create-group  = "true"
+          max-buffer-size       = "25m"
+          awslogs-stream-prefix = "ecs"
         }
       }
     }
