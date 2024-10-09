@@ -216,157 +216,62 @@ run "data_dump_unit_test" {
     error_message = "OS family should be LINUX"
   }
 
-  # resource "aws_ecs_task_definition" "service" {
-  #   family = local.task_name
-  #   container_definitions = jsonencode([
-  #     {
-  #       name      = local.task_name
-  #       image     = "public.ecr.aws/uktrade/database-copy:latest"
-  #       essential = true
-  #       environment = [
-  #         {
-  #           name  = "DB_CONNECTION_STRING"
-  #           value = "provided during task creation"
-  #         },
-  #         {
-  #           name  = "DATA_COPY_OPERATION"
-  #           value = "DUMP"
-  #         },
-  #         {
-  #           name  = "S3_BUCKET_NAME"
-  #           value = aws_s3_bucket.data_dump_bucket.bucket
-  #         }
-  #       ],
-  #       portMappings = [
-  #         {
-  #           containerPort = 80
-  #           hostPort      = 80
-  #         }
-  #       ]
-  #       logConfiguration = {
-  #         logDriver = "awslogs",
-  #         options = {
-  #           awslogs-group         = "/ecs/${local.task_name}"
-  #           awslogs-region        = "eu-west-2"
-  #           mode                  = "non-blocking"
-  #           awslogs-create-group  = "true"
-  #           max-buffer-size       = "25m"
-  #           awslogs-stream-prefix = "ecs"
-  #         }
-  #       }
+  assert {
+    condition = aws_s3_bucket.data_dump_bucket.bucket == "test-env-test-db-dump"
+    error_message = "Bucket name should be: test-env-test-db-dump"
+  }
 
+  assert {
+    condition = (
+      aws_s3_bucket.data_dump_bucket.tags.application == "test-app" &&
+      aws_s3_bucket.data_dump_bucket.tags.environment == "test-env" &&
+      aws_s3_bucket.data_dump_bucket.tags.managed-by == "DBT Platform - Terraform" &&
+      aws_s3_bucket.data_dump_bucket.tags.copilot-application == "test-app" &&
+      aws_s3_bucket.data_dump_bucket.tags.copilot-environment == "test-env"
+    )
+    error_message = "Tags should be as expected"
+  }
 
-  #     }
-  #   ])
+  # data.aws_iam_policy_document.data_dump_bucket_policy.json).Statement[0].Action cannot be tested using plan
 
-  #   cpu    = 1024
-  #   memory = 3072
+  # data.aws_iam_policy_document.data_dump_bucket_policy.json).Statement[0].Effect cannot be tested using plan
 
+  assert {
+    condition     = length(data.aws_iam_policy_document.data_dump_bucket_policy.statement[0].condition) == 1 
+    error_message = "Statement should have a single condition"
+  }
 
-  #   requires_compatibilities = ["FARGATE"]
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[0].condition : true if (el.variable == "aws:SecureTransport" && contains(el.values,"false"))] == [true]
+    error_message = "Should be denied if not aws:SecureTransport"
+  }
 
-  #   task_role_arn      = aws_iam_role.data_dump.arn
-  #   execution_role_arn = aws_iam_role.data_dump_task_execution_role.arn
-  #   network_mode       = "awsvpc"
+  # aws_s3_bucket_policy.data_dump_bucket_policy.policy cannot be tested with plan
+  
+  # aws_kms_key.data_dump_kms_key policy cannot be tested with plan
 
-  #   runtime_platform {
-  #     cpu_architecture        = "ARM64"
-  #     operating_system_family = "LINUX"
-  #   }
-  # }
+  assert {
+    condition = aws_kms_alias.data_dump_kms_alias.name == "alias/test-env-test-db-dump"
+    error_message = "Kms key alias should be: alias/test-env-test-db-dump"
+  }
 
+  assert {
+    condition = length(aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule) == 1
+    error_message = "Server side encryption config with 1 rule should exist for bucket "
+  }
 
-  # resource "aws_s3_bucket" "data_dump_bucket" {
-  #   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
-  #   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-  #   # checkov:skip=CKV2_AWS_61: This bucket is used for ephemeral data transfer - we do not need lifecycle configuration
-  #   # checkov:skip=CKV_AWS_21: This bucket is used for ephemeral data transfer - we do not want versioning
-  #   # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-  #   bucket = local.dump_bucket_name
-  #   tags   = local.tags
-  # }
+  assert {
+    condition = [for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule: el.apply_server_side_encryption_by_default[0].sse_algorithm] == ["aws:kms"]
+    error_message = "Server side encryption algorithm should be: aws:kms"
+  } 
 
-  # data "aws_iam_policy_document" "data_dump_bucket_policy" {
-  #   statement {
-  #     principals {
-  #       type        = "*"
-  #       identifiers = ["*"]
-  #     }
-
-  #     actions = [
-  #       "s3:*",
-  #     ]
-
-  #     effect = "Deny"
-
-  #     condition {
-  #       test     = "Bool"
-  #       variable = "aws:SecureTransport"
-
-  #       values = [
-  #         "false",
-  #       ]
-  #     }
-
-  #     resources = [
-  #       aws_s3_bucket.data_dump_bucket.arn,
-  #       "${aws_s3_bucket.data_dump_bucket.arn}/*",
-  #     ]
-  #   }
-  # }
-
-  # resource "aws_s3_bucket_policy" "data_dump_bucket_policy" {
-  #   bucket = aws_s3_bucket.data_dump_bucket.id
-  #   policy = data.aws_iam_policy_document.data_dump_bucket_policy.json
-  # }
-
-  # resource "aws_kms_key" "data_dump_kms_key" {
-  #   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
-  #   description = "KMS Key for S3 encryption"
-  #   tags        = local.tags
-
-  #   policy = jsonencode({
-  #     Id = "key-default-1"
-  #     Statement = [
-  #       {
-  #         "Sid" : "Enable IAM User Permissions",
-  #         "Effect" : "Allow",
-  #         "Principal" : {
-  #           "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-  #         },
-  #         "Action" : "kms:*",
-  #         "Resource" : "*"
-  #       }
-  #     ]
-  #     Version = "2012-10-17"
-  #   })
-  # }
-
-  # resource "aws_kms_alias" "data_dump_kms_alias" {
-  #   depends_on    = [aws_kms_key.data_dump_kms_key]
-  #   name          = local.dump_kms_key_alias
-  #   target_key_id = aws_kms_key.data_dump_kms_key.id
-  # }
-
-  # resource "aws_s3_bucket_server_side_encryption_configuration" "encryption-config" {
-  #   # checkov:skip=CKV2_AWS_67:We are not currently rotating the keys
-  #   bucket = aws_s3_bucket.data_dump_bucket.id
-
-  #   rule {
-  #     apply_server_side_encryption_by_default {
-  #       kms_master_key_id = aws_kms_key.data_dump_kms_key.arn
-  #       sse_algorithm     = "aws:kms"
-  #     }
-  #   }
-  # }
-
-  # resource "aws_s3_bucket_public_access_block" "public_access_block" {
-  #   bucket                  = aws_s3_bucket.data_dump_bucket.id
-  #   block_public_acls       = true
-  #   block_public_policy     = true
-  #   ignore_public_acls      = true
-  #   restrict_public_buckets = true
-  # }
-
-
+  assert {
+    condition = (
+      aws_s3_bucket_public_access_block.public_access_block.block_public_acls == true &&
+      aws_s3_bucket_public_access_block.public_access_block.block_public_policy == true &&
+      aws_s3_bucket_public_access_block.public_access_block.ignore_public_acls == true &&
+      aws_s3_bucket_public_access_block.public_access_block.restrict_public_buckets == true
+    )
+    error_message = "Public access block has expected conditions"
+  } 
 }
