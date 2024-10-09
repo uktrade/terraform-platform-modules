@@ -310,15 +310,15 @@ run "aws_db_instance_unit_test_database_restore_created" {
   override_data {
     target = module.database-restore[0].data.aws_s3_bucket.data_dump_bucket
     values = {
-      bucket = "some-other-environment-test-name-dump"
-      arn    = "arn://some-other-environment-test-name-dump"
+      bucket = "mock-dump-bucket"
+      arn    = "arn://mock-dump-bucket"
     }
   }
 
   override_data {
     target = module.database-restore[0].data.aws_kms_key.data_dump_kms_key
     values = {
-      arn = "arn://kms-key"
+      arn = "arn://mock-dump-bucket-kms-key"
     }
   }
 
