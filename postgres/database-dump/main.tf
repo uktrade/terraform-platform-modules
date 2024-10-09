@@ -160,7 +160,7 @@ resource "aws_s3_bucket" "data_dump_bucket" {
 
 data "aws_iam_policy_document" "data_dump_bucket_policy" {
   policy_id = "data_dump_bucket_policy"
-  
+
   statement {
     principals {
       type        = "*"
