@@ -180,6 +180,41 @@ run "data_dump_unit_test" {
     error_message = "Family should be 'test-env-test-db-dump'"
   }
 
+  assert {
+    condition     = aws_ecs_task_definition.service.cpu == "1024"
+    error_message = "CPU should be '1024'"
+  }
+
+  assert {
+    condition     = aws_ecs_task_definition.service.memory == "3072"
+    error_message = "CPU should be '3072'"
+  }
+
+  assert {
+    condition = (
+      length(aws_ecs_task_definition.service.requires_compatibilities) == 1 &&
+      contains(aws_ecs_task_definition.service.requires_compatibilities, "FARGATE")
+    )
+    error_message = "Requires compatibilities should be ['FARGATE']"
+  }
+
+  # task_role_arn cannot be tested using plan
+  # execution_role_arn cannot be tested using plan
+
+  assert {
+    condition     = aws_ecs_task_definition.service.network_mode == "awsvpc"
+    error_message = "Network modes should be awsvpc"
+  }
+
+  assert {
+    condition     = aws_ecs_task_definition.service.runtime_platform[0].cpu_architecture == "ARM64"
+    error_message = "CPU Arch should be ARM64"
+  }
+
+  assert {
+    condition     = aws_ecs_task_definition.service.runtime_platform[0].operating_system_family == "LINUX"
+    error_message = "OS family should be LINUX"
+  }
 
   # resource "aws_ecs_task_definition" "service" {
   #   family = local.task_name
