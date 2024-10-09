@@ -2,6 +2,7 @@ data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "allow_task_creation" {
   statement {
+    sid = "AllowTaskCreation"
     effect = "Allow"
     actions = [
       "ecr:GetAuthorizationToken",
@@ -18,6 +19,7 @@ data "aws_iam_policy_document" "allow_task_creation" {
 
 data "aws_iam_policy_document" "assume_ecs_task_role" {
   statement {
+    sid = "AllowECSAssumeRole"
     effect = "Allow"
 
     principals {
@@ -33,18 +35,20 @@ resource "aws_iam_role" "data_dump_task_execution_role" {
   name               = "${local.task_name}-exec"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
-  inline_policy {
-    name   = "AllowTaskCreation"
-    policy = data.aws_iam_policy_document.allow_task_creation.json
-  }
-
   tags = local.tags
+}
+
+resource "aws_iam_role_policy" "allow_task_creation" {
+  name   = "AllowTaskCreation"
+  role   = aws_iam_role.data_dump_task_execution_role.name
+  policy = data.aws_iam_policy_document.allow_task_creation.json
 }
 
 
 data "aws_iam_policy_document" "data_dump" {
   # checkov:skip=CKV_AWS_356:Permissions required to upload
   statement {
+    sid = "AllowWriteToS3"
     effect = "Allow"
 
     actions = local.s3_permissions
@@ -73,14 +77,14 @@ resource "aws_iam_role" "data_dump" {
   name               = "${local.task_name}-data-dump"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
-  inline_policy {
-    name   = "AllowDataUpload"
-    policy = data.aws_iam_policy_document.data_dump.json
-  }
-
   tags = local.tags
 }
 
+resource "aws_iam_role_policy" "allow_data_dump" {
+  name   = "AllowDataDump"
+  role   = aws_iam_role.data_dump.name
+  policy = data.aws_iam_policy_document.data_dump.json
+}
 
 resource "aws_ecs_task_definition" "service" {
   family = local.task_name
