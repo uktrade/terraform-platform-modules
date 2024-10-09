@@ -2,7 +2,7 @@ data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "allow_task_creation" {
   statement {
-    sid = "AllowTaskCreation"
+    sid    = "AllowTaskCreation"
     effect = "Allow"
     actions = [
       "ecr:GetAuthorizationToken",
@@ -18,8 +18,9 @@ data "aws_iam_policy_document" "allow_task_creation" {
 }
 
 data "aws_iam_policy_document" "assume_ecs_task_role" {
+  policy_id = "assume_ecs_task_role"
   statement {
-    sid = "AllowECSAssumeRole"
+    sid    = "AllowECSAssumeRole"
     effect = "Allow"
 
     principals {
@@ -47,8 +48,9 @@ resource "aws_iam_role_policy" "allow_task_creation" {
 
 data "aws_iam_policy_document" "data_dump" {
   # checkov:skip=CKV_AWS_356:Permissions required to upload
+  policy_id = "data_dump"
   statement {
-    sid = "AllowWriteToS3"
+    sid    = "AllowWriteToS3"
     effect = "Allow"
 
     actions = local.s3_permissions
@@ -74,7 +76,7 @@ data "aws_iam_policy_document" "data_dump" {
 }
 
 resource "aws_iam_role" "data_dump" {
-  name               = "${local.task_name}-data-dump"
+  name               = "${local.task_name}-task"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
   tags = local.tags
