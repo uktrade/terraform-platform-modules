@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "assume_ecs_task_role" {
 }
 
 resource "aws_iam_role" "data_restore_task_execution_role" {
-  name               = "${var.application}-${var.environment}-${local.task_name}-task-role"
+  name               = "${local.task_name}-exec"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
   inline_policy {

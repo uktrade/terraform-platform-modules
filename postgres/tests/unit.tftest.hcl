@@ -12,6 +12,7 @@ override_data {
     cidr_block = "10.0.0.0/16"
   }
 }
+
 override_data {
   target = data.aws_subnets.private-subnets
   values = {
@@ -35,6 +36,12 @@ variables {
     version             = 14,
     deletion_protection = true,
     multi_az            = false,
+    database_copy = [
+      {
+        from = "test-environment"
+        to   = "some-other-environment"
+      }
+    ]
   }
 }
 
@@ -285,6 +292,57 @@ run "aws_db_instance_unit_test" {
   }
 
   # aws_db_instance.default.iops cannot be tested on a plan
+
+  assert {
+    condition     = length(module.database-dump) == 1
+    error_message = "database-dump module should be created"
+  }
+
+  assert {
+    condition     = length(module.database-restore) == 0
+    error_message = "database-restore module should not be created"
+  }
+}
+
+run "aws_db_instance_unit_test_database_restore_created" {
+  command = plan
+
+  override_data {
+    target = module.database-restore[0].data.aws_s3_bucket.data_dump_bucket
+    values = {
+      bucket = "some-other-environment-test-name-dump"
+      arn    = "arn://some-other-environment-test-name-dump"
+    }
+  }
+
+  override_data {
+    target = module.database-restore[0].data.aws_kms_key.data_dump_kms_key
+    values = {
+      arn = "arn://kms-key"
+    }
+  }
+
+  variables {
+    config = {
+      version = 14,
+      database_copy = [
+        {
+          from = "some-other-environment"
+          to   = "test-environment"
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = length(module.database-dump) == 0
+    error_message = "database-dump module should be not created"
+  }
+
+  assert {
+    condition     = length(module.database-restore) == 1
+    error_message = "database-restore module should be created"
+  }
 }
 
 run "aws_db_instance_unit_test_set_to_non_defaults" {
