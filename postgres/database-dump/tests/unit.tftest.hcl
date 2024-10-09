@@ -217,7 +217,7 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition = aws_s3_bucket.data_dump_bucket.bucket == "test-env-test-db-dump"
+    condition     = aws_s3_bucket.data_dump_bucket.bucket == "test-env-test-db-dump"
     error_message = "Bucket name should be: test-env-test-db-dump"
   }
 
@@ -237,33 +237,33 @@ run "data_dump_unit_test" {
   # data.aws_iam_policy_document.data_dump_bucket_policy.json).Statement[0].Effect cannot be tested using plan
 
   assert {
-    condition     = length(data.aws_iam_policy_document.data_dump_bucket_policy.statement[0].condition) == 1 
+    condition     = length(data.aws_iam_policy_document.data_dump_bucket_policy.statement[0].condition) == 1
     error_message = "Statement should have a single condition"
   }
 
   assert {
-    condition     = [for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[0].condition : true if (el.variable == "aws:SecureTransport" && contains(el.values,"false"))] == [true]
+    condition     = [for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[0].condition : true if(el.variable == "aws:SecureTransport" && contains(el.values, "false"))] == [true]
     error_message = "Should be denied if not aws:SecureTransport"
   }
 
   # aws_s3_bucket_policy.data_dump_bucket_policy.policy cannot be tested with plan
-  
+
   # aws_kms_key.data_dump_kms_key policy cannot be tested with plan
 
   assert {
-    condition = aws_kms_alias.data_dump_kms_alias.name == "alias/test-env-test-db-dump"
+    condition     = aws_kms_alias.data_dump_kms_alias.name == "alias/test-env-test-db-dump"
     error_message = "Kms key alias should be: alias/test-env-test-db-dump"
   }
 
   assert {
-    condition = length(aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule) == 1
+    condition     = length(aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule) == 1
     error_message = "Server side encryption config with 1 rule should exist for bucket "
   }
 
   assert {
-    condition = [for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule: el.apply_server_side_encryption_by_default[0].sse_algorithm] == ["aws:kms"]
+    condition     = [for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule : el.apply_server_side_encryption_by_default[0].sse_algorithm] == ["aws:kms"]
     error_message = "Server side encryption algorithm should be: aws:kms"
-  } 
+  }
 
   assert {
     condition = (
@@ -273,5 +273,5 @@ run "data_dump_unit_test" {
       aws_s3_bucket_public_access_block.public_access_block.restrict_public_buckets == true
     )
     error_message = "Public access block has expected conditions"
-  } 
+  }
 }

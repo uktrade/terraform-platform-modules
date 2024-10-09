@@ -292,7 +292,7 @@ run "aws_db_instance_unit_test" {
   }
 
   # aws_db_instance.default.iops cannot be tested on a plan
-  
+
   # Uncomment the assertions below once DBTP-1427 is solved
 
   # assert {
@@ -337,7 +337,7 @@ run "aws_db_instance_unit_test_database_restore_created" {
   }
 
   # Uncomment the assertions below once DBTP-1427 is solved
-  
+
   # assert {
   #   condition     = length(module.database-dump) == 0
   #   error_message = "database-dump module should be not created"
