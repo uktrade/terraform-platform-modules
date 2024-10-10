@@ -105,7 +105,7 @@ resource "aws_ecs_task_definition" "service" {
         },
         {
           name  = "DATA_COPY_OPERATION"
-          value = "RESTORE"
+          value = "LOAD"
         },
         {
           name  = "S3_BUCKET_NAME"

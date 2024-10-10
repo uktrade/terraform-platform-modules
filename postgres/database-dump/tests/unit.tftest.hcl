@@ -121,6 +121,11 @@ run "data_dump_unit_test" {
   }
 
   assert {
+    condition     = contains(data.aws_iam_policy_document.data_dump.statement[1].actions, "kms:Decrypt")
+    error_message = "Permission not found: kms:Encrypt"
+  }
+
+  assert {
     condition     = contains(data.aws_iam_policy_document.data_dump.statement[1].actions, "kms:ReEncrypt*")
     error_message = "Permission not found: kms:ReEncrypt*"
   }
@@ -131,8 +136,8 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = length(data.aws_iam_policy_document.data_dump.statement[1].actions) == 3
-    error_message = "Should be 3 permissions on policy statement"
+    condition     = length(data.aws_iam_policy_document.data_dump.statement[1].actions) == 4
+    error_message = "Should be 4 permissions on policy statement"
   }
 
   #  data.aws_iam_policy_document.data_dump.statement[1].resources cannot be tested on a 'plan'
