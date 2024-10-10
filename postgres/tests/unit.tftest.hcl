@@ -301,16 +301,16 @@ run "aws_db_instance_unit_test" {
   # }
 
   # assert {
-  #   condition     = length(module.database-restore) == 0
-  #   error_message = "database-restore module should not be created"
+  #   condition     = length(module.database-load) == 0
+  #   error_message = "database-load module should not be created"
   # }
 }
 
-run "aws_db_instance_unit_test_database_restore_created" {
+run "aws_db_instance_unit_test_database_load_created" {
   command = plan
 
   override_data {
-    target = module.database-restore[0].data.aws_s3_bucket.data_dump_bucket
+    target = module.database-load[0].data.aws_s3_bucket.data_dump_bucket
     values = {
       bucket = "mock-dump-bucket"
       arn    = "arn://mock-dump-bucket"
@@ -318,7 +318,7 @@ run "aws_db_instance_unit_test_database_restore_created" {
   }
 
   override_data {
-    target = module.database-restore[0].data.aws_kms_key.data_dump_kms_key
+    target = module.database-load[0].data.aws_kms_key.data_dump_kms_key
     values = {
       arn = "arn://mock-dump-bucket-kms-key"
     }
@@ -344,8 +344,8 @@ run "aws_db_instance_unit_test_database_restore_created" {
   # }
 
   # assert {
-  #   condition     = length(module.database-restore) == 1
-  #   error_message = "database-restore module should be created"
+  #   condition     = length(module.database-load) == 1
+  #   error_message = "database-load module should be created"
   # }
 }
 

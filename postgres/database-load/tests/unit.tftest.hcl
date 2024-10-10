@@ -23,7 +23,7 @@ override_data {
   }
 }
 
-run "data_restore_unit_test" {
+run "data_load_unit_test" {
   command = plan
 
   assert {
@@ -82,12 +82,12 @@ run "data_restore_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role.data_restore_task_execution_role.name == "test-env-test-db-restore-exec"
-    error_message = "Task execution role name should be: 'test-env-test-db-restore-exec'"
+    condition     = aws_iam_role.data_load_task_execution_role.name == "test-env-test-db-load-exec"
+    error_message = "Task execution role name should be: 'test-env-test-db-load-exec'"
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.data_restore_task_execution_role.assume_role_policy).Statement[0].Sid == "AllowECSAssumeRole"
+    condition     = jsondecode(aws_iam_role.data_load_task_execution_role.assume_role_policy).Statement[0].Sid == "AllowECSAssumeRole"
     error_message = "Statement Sid should be: 'AllowECSAssumeRole'"
   }
 
@@ -97,100 +97,100 @@ run "data_restore_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role_policy.allow_task_creation.role == "test-env-test-db-restore-exec"
-    error_message = "Role name should be: 'test-env-test-db-restore-exec'"
+    condition     = aws_iam_role_policy.allow_task_creation.role == "test-env-test-db-load-exec"
+    error_message = "Role name should be: 'test-env-test-db-load-exec'"
   }
 
   assert {
-    condition     = data.aws_iam_policy_document.data_restore.statement[0].sid == "AllowReadFromS3"
+    condition     = data.aws_iam_policy_document.data_load.statement[0].sid == "AllowReadFromS3"
     error_message = "Should be 'AllowReadFromS3'"
   }
 
   assert {
-    condition     = length(data.aws_iam_policy_document.data_restore.statement) == 2
+    condition     = length(data.aws_iam_policy_document.data_load.statement) == 2
     error_message = "Should be 1 policy statement"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_restore.statement[0].actions, "s3:ListBucket")
+    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:ListBucket")
     error_message = "Permission not found: s3:ListBucket"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_restore.statement[0].actions, "s3:GetObject")
+    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObject")
     error_message = "Permission not found: s3:GetObject"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_restore.statement[0].actions, "s3:GetObjectTagging")
+    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObjectTagging")
     error_message = "Permission not found: s3:GetObjectTagging"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_restore.statement[0].actions, "s3:GetObjectVersion")
+    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObjectVersion")
     error_message = "Permission not found: s3:GetObjectVersion"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_restore.statement[0].actions, "s3:GetObjectVersionTagging")
+    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObjectVersionTagging")
     error_message = "Permission not found: s3:GetObjectVersionTagging"
   }
 
   assert {
-    condition     = length(data.aws_iam_policy_document.data_restore.statement[0].actions) == 5
+    condition     = length(data.aws_iam_policy_document.data_load.statement[0].actions) == 5
     error_message = "Should be 7 permissions on policy statement"
   }
 
-  #  data.aws_iam_policy_document.data_restore.statement[0].resources cannot be tested on a 'plan'
+  #  data.aws_iam_policy_document.data_load.statement[0].resources cannot be tested on a 'plan'
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_restore.statement[1].actions, "kms:Decrypt")
+    condition     = contains(data.aws_iam_policy_document.data_load.statement[1].actions, "kms:Decrypt")
     error_message = "Permission not found: kms:Decrypt"
   }
 
   assert {
-    condition     = length(data.aws_iam_policy_document.data_restore.statement[1].actions) == 1
+    condition     = length(data.aws_iam_policy_document.data_load.statement[1].actions) == 1
     error_message = "Should be 1 permissions on policy statement"
   }
 
-  # data.aws_iam_policy_document.data_restore.statement[1].resources cannot be tested on a 'plan'
+  # data.aws_iam_policy_document.data_load.statement[1].resources cannot be tested on a 'plan'
 
   assert {
-    condition     = aws_iam_role.data_restore.name == "test-env-test-db-restore-task"
-    error_message = "Name should be test-env-test-db-restore-task"
+    condition     = aws_iam_role.data_load.name == "test-env-test-db-load-task"
+    error_message = "Name should be test-env-test-db-load-task"
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.data_restore.assume_role_policy).Id == "assume_ecs_task_role"
+    condition     = jsondecode(aws_iam_role.data_load.assume_role_policy).Id == "assume_ecs_task_role"
     error_message = "Assume role policy id should be assume_ecs_task_role"
   }
 
   assert {
     condition = (
-      aws_iam_role.data_restore.tags.application == "test-app" &&
-      aws_iam_role.data_restore.tags.environment == "test-env" &&
-      aws_iam_role.data_restore.tags.managed-by == "DBT Platform - Terraform" &&
-      aws_iam_role.data_restore.tags.copilot-application == "test-app" &&
-      aws_iam_role.data_restore.tags.copilot-environment == "test-env"
+      aws_iam_role.data_load.tags.application == "test-app" &&
+      aws_iam_role.data_load.tags.environment == "test-env" &&
+      aws_iam_role.data_load.tags.managed-by == "DBT Platform - Terraform" &&
+      aws_iam_role.data_load.tags.copilot-application == "test-app" &&
+      aws_iam_role.data_load.tags.copilot-environment == "test-env"
     )
     error_message = "Tags should be as expected"
   }
 
   assert {
-    condition     = aws_iam_role_policy.allow_data_restore.name == "AllowDataRestore"
-    error_message = "Name should be 'AllowDataRestore'"
+    condition     = aws_iam_role_policy.allow_data_load.name == "AllowDataLoad"
+    error_message = "Name should be 'AllowDataLoad'"
   }
 
   assert {
-    condition     = aws_iam_role_policy.allow_data_restore.role == "test-env-test-db-restore-task"
-    error_message = "Role should be 'test-env-test-db-restore-task'"
+    condition     = aws_iam_role_policy.allow_data_load.role == "test-env-test-db-load-task"
+    error_message = "Role should be 'test-env-test-db-load-task'"
   }
 
-  #  aws_iam_role_policy.allow_data_restore.policy cannot be tested on a 'plan'
+  #  aws_iam_role_policy.allow_data_load.policy cannot be tested on a 'plan'
 
   assert {
-    condition     = aws_ecs_task_definition.service.family == "test-env-test-db-restore"
-    error_message = "Family should be 'test-env-test-db-restore'"
+    condition     = aws_ecs_task_definition.service.family == "test-env-test-db-load"
+    error_message = "Family should be 'test-env-test-db-load'"
   }
 
   assert {

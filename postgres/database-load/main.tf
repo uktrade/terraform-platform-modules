@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "assume_ecs_task_role" {
   }
 }
 
-resource "aws_iam_role" "data_restore_task_execution_role" {
+resource "aws_iam_role" "data_load_task_execution_role" {
   name               = "${local.task_name}-exec"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
@@ -47,13 +47,13 @@ resource "aws_iam_role" "data_restore_task_execution_role" {
 
 resource "aws_iam_role_policy" "allow_task_creation" {
   name   = "AllowTaskCreation"
-  role   = aws_iam_role.data_restore_task_execution_role.name
+  role   = aws_iam_role.data_load_task_execution_role.name
   policy = data.aws_iam_policy_document.allow_task_creation.json
 }
 
-data "aws_iam_policy_document" "data_restore" {
+data "aws_iam_policy_document" "data_load" {
   # checkov:skip=CKV_AWS_356:Permissions required to upload
-  policy_id = "data_restore"
+  policy_id = "data_load"
   statement {
     sid    = "AllowReadFromS3"
     effect = "Allow"
@@ -78,17 +78,17 @@ data "aws_iam_policy_document" "data_restore" {
   }
 }
 
-resource "aws_iam_role" "data_restore" {
+resource "aws_iam_role" "data_load" {
   name               = "${local.task_name}-task"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
   tags = local.tags
 }
 
-resource "aws_iam_role_policy" "allow_data_restore" {
-  name   = "AllowDataRestore"
-  role   = aws_iam_role.data_restore.name
-  policy = data.aws_iam_policy_document.data_restore.json
+resource "aws_iam_role_policy" "allow_data_load" {
+  name   = "AllowDataLoad"
+  role   = aws_iam_role.data_load.name
+  policy = data.aws_iam_policy_document.data_load.json
 }
 
 resource "aws_ecs_task_definition" "service" {
@@ -138,8 +138,8 @@ resource "aws_ecs_task_definition" "service" {
 
   requires_compatibilities = ["FARGATE"]
 
-  task_role_arn      = aws_iam_role.data_restore.arn
-  execution_role_arn = aws_iam_role.data_restore_task_execution_role.arn
+  task_role_arn      = aws_iam_role.data_load.arn
+  execution_role_arn = aws_iam_role.data_load_task_execution_role.arn
   network_mode       = "awsvpc"
 
   runtime_platform {

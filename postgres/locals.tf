@@ -41,5 +41,5 @@ locals {
   data_copy_tasks = coalesce(var.config.database_copy, [])
 
   data_dump_tasks    = [for task in local.data_copy_tasks : task if task.from == var.environment]
-  data_restore_tasks = [for task in local.data_copy_tasks : task if task.to == var.environment]
+  data_load_tasks = [for task in local.data_copy_tasks : task if task.to == var.environment]
 }
