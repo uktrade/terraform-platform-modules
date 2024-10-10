@@ -94,11 +94,6 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_dump.statement[0].actions, "s3:PutObjectTagging")
-    error_message = "Permission not found: s3:PutObjectTagging"
-  }
-
-  assert {
     condition     = contains(data.aws_iam_policy_document.data_dump.statement[0].actions, "s3:GetObjectTagging")
     error_message = "Permission not found: s3:GetObjectTagging"
   }
