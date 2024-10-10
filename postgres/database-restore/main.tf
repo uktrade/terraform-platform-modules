@@ -1,5 +1,3 @@
-
-
 data "aws_kms_key" "data_dump_kms_key" {
   key_id = local.dump_kms_key_alias
 }
@@ -10,6 +8,7 @@ data "aws_s3_bucket" "data_dump_bucket" {
 
 data "aws_iam_policy_document" "allow_task_creation" {
   statement {
+    sid    = "AllowTaskCreation"
     effect = "Allow"
     actions = [
       "ecr:GetAuthorizationToken",
@@ -25,7 +24,9 @@ data "aws_iam_policy_document" "allow_task_creation" {
 }
 
 data "aws_iam_policy_document" "assume_ecs_task_role" {
+  policy_id = "assume_ecs_task_role"
   statement {
+    sid    = "AllowECSAssumeRole"
     effect = "Allow"
 
     principals {
@@ -41,18 +42,20 @@ resource "aws_iam_role" "data_restore_task_execution_role" {
   name               = "${local.task_name}-exec"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
-  inline_policy {
-    name   = "AllowTaskCreation"
-    policy = data.aws_iam_policy_document.allow_task_creation.json
-  }
-
   tags = local.tags
 }
 
+resource "aws_iam_role_policy" "allow_task_creation" {
+  name   = "AllowTaskCreation"
+  role   = aws_iam_role.data_restore_task_execution_role.name
+  policy = data.aws_iam_policy_document.allow_task_creation.json
+}
 
 data "aws_iam_policy_document" "data_restore" {
   # checkov:skip=CKV_AWS_356:Permissions required to upload
+  policy_id = "data_restore"
   statement {
+    sid    = "AllowReadFromS3"
     effect = "Allow"
 
     actions = local.s3_permissions
@@ -75,17 +78,17 @@ data "aws_iam_policy_document" "data_restore" {
   }
 }
 
-
 resource "aws_iam_role" "data_restore" {
-  name               = "${local.task_name}-data-restore"
+  name               = "${local.task_name}-task"
   assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
 
-  inline_policy {
-    name   = "AllowDataDownload"
-    policy = data.aws_iam_policy_document.data_restore.json
-  }
-
   tags = local.tags
+}
+
+resource "aws_iam_role_policy" "allow_data_restore" {
+  name   = "AllowDataRestore"
+  role   = aws_iam_role.data_restore.name
+  policy = data.aws_iam_policy_document.data_restore.json
 }
 
 resource "aws_ecs_task_definition" "service" {
