@@ -8,13 +8,21 @@ data "aws_s3_bucket" "data_dump_bucket" {
 
 data "aws_iam_policy_document" "allow_task_creation" {
   statement {
-    sid    = "AllowTaskCreation"
+    sid    = "AllowPullFromEcr"
     effect = "Allow"
     actions = [
       "ecr:GetAuthorizationToken",
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
+    ]
+    resources = [local.ecr_respository_arn]
+  }
+
+    statement {
+    sid    = "AllowLogs"
+    effect = "Allow"
+    actions = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"

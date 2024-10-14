@@ -2,13 +2,21 @@ data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "allow_task_creation" {
   statement {
-    sid    = "AllowTaskCreation"
+    sid    = "AllowPullFromEcr"
     effect = "Allow"
     actions = [
       "ecr:GetAuthorizationToken",
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
-      "ecr:BatchGetImage",
+      "ecr:BatchGetImage"
+    ]
+    resources = [local.ecr_respository_arn]
+  }
+
+  statement {
+    sid    = "AllowLogs"
+    effect = "Allow"
+    actions = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
