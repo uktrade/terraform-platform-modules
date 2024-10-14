@@ -57,17 +57,17 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "logs:CreateLogGroup")
+    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[1].Action, "logs:CreateLogGroup")
     error_message = "Permission not found: logs:CreateLogGroup"
   }
 
   assert {
-    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "logs:CreateLogStream")
+    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[1].Action, "logs:CreateLogStream")
     error_message = "Permission not found: logs:CreateLogStream"
   }
 
   assert {
-    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "logs:PutLogEvents")
+    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[1].Action, "logs:PutLogEvents")
     error_message = "Permission not found: logs:PutLogEvents"
   }
 
