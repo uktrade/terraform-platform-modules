@@ -27,13 +27,13 @@ run "data_load_unit_test" {
   command = plan
 
   assert {
-    condition     = local.dump_kms_key_alias == "alias/some-other-env-test-db-dump"
-    error_message = "Dump Kms key alias should be: alias/some-other-env-test-db-dump"
+    condition     = local.dump_kms_key_alias == "alias/test-app-some-other-env-test-db-dump"
+    error_message = "Dump Kms key alias should be: alias/test-app-some-other-env-test-db-dump"
   }
 
   assert {
-    condition     = local.dump_bucket_name == "some-other-env-test-db-dump"
-    error_message = "Dump bucket name should be: alias/some-other-env-te"
+    condition     = local.dump_bucket_name == "test-app-some-other-env-test-db-dump"
+    error_message = "Dump bucket name should be: test-app-some-other-env-test-db-dump"
   }
 
   assert {
@@ -82,8 +82,8 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role.data_load_task_execution_role.name == "test-env-test-db-load-exec"
-    error_message = "Task execution role name should be: 'test-env-test-db-load-exec'"
+    condition     = aws_iam_role.data_load_task_execution_role.name == "test-app-test-env-test-db-load-exec"
+    error_message = "Task execution role name should be: 'test-app-test-env-test-db-load-exec'"
   }
 
   assert {
@@ -97,8 +97,8 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role_policy.allow_task_creation.role == "test-env-test-db-load-exec"
-    error_message = "Role name should be: 'test-env-test-db-load-exec'"
+    condition     = aws_iam_role_policy.allow_task_creation.role == "test-app-test-env-test-db-load-exec"
+    error_message = "Role name should be: 'test-app-test-env-test-db-load-exec'"
   }
 
   assert {
@@ -156,8 +156,8 @@ run "data_load_unit_test" {
   # data.aws_iam_policy_document.data_load.statement[1].resources cannot be tested on a 'plan'
 
   assert {
-    condition     = aws_iam_role.data_load.name == "test-env-test-db-load-task"
-    error_message = "Name should be test-env-test-db-load-task"
+    condition     = aws_iam_role.data_load.name == "test-app-test-env-test-db-load-task"
+    error_message = "Name should be test-app-test-env-test-db-load-task"
   }
 
   assert {
@@ -182,15 +182,15 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role_policy.allow_data_load.role == "test-env-test-db-load-task"
-    error_message = "Role should be 'test-env-test-db-load-task'"
+    condition     = aws_iam_role_policy.allow_data_load.role == "test-app-test-env-test-db-load-task"
+    error_message = "Role should be 'test-app-test-env-test-db-load-task'"
   }
 
   #  aws_iam_role_policy.allow_data_load.policy cannot be tested on a 'plan'
 
   assert {
-    condition     = aws_ecs_task_definition.service.family == "test-env-test-db-load"
-    error_message = "Family should be 'test-env-test-db-load'"
+    condition     = aws_ecs_task_definition.service.family == "test-app-test-env-test-db-load"
+    error_message = "Family should be 'test-app-test-env-test-db-load'"
   }
 
   assert {

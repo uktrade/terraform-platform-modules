@@ -54,8 +54,8 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role.data_dump_task_execution_role.name == "test-env-test-db-dump-exec"
-    error_message = "Task execution role name should be: 'test-env-test-db-dump-exec'"
+    condition     = aws_iam_role.data_dump_task_execution_role.name == "test-app-test-env-test-db-dump-exec"
+    error_message = "Task execution role name should be: 'test-app-test-env-test-db-dump-exec'"
   }
 
   assert {
@@ -69,8 +69,8 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role_policy.allow_task_creation.role == "test-env-test-db-dump-exec"
-    error_message = "Role name should be: 'test-env-test-db-dump-exec'"
+    condition     = aws_iam_role_policy.allow_task_creation.role == "test-app-test-env-test-db-dump-exec"
+    error_message = "Role name should be: 'test-app-test-env-test-db-dump-exec'"
   }
 
   assert {
@@ -143,8 +143,8 @@ run "data_dump_unit_test" {
   #  data.aws_iam_policy_document.data_dump.statement[1].resources cannot be tested on a 'plan'
 
   assert {
-    condition     = aws_iam_role.data_dump.name == "test-env-test-db-dump-task"
-    error_message = "Name should be test-env-test-db-dump-task"
+    condition     = aws_iam_role.data_dump.name == "test-app-test-env-test-db-dump-task"
+    error_message = "Name should be test-app-test-env-test-db-dump-task"
   }
 
   assert {
@@ -169,15 +169,15 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role_policy.allow_data_dump.role == "test-env-test-db-dump-task"
-    error_message = "Role should be 'test-env-test-db-dump-task'"
+    condition     = aws_iam_role_policy.allow_data_dump.role == "test-app-test-env-test-db-dump-task"
+    error_message = "Role should be 'test-app-test-env-test-db-dump-task'"
   }
 
   #  aws_iam_role_policy.allow_data_dump.policy cannot be tested on a 'plan'
 
   assert {
-    condition     = aws_ecs_task_definition.service.family == "test-env-test-db-dump"
-    error_message = "Family should be 'test-env-test-db-dump'"
+    condition     = aws_ecs_task_definition.service.family == "test-app-test-env-test-db-dump"
+    error_message = "Family should be 'test-app-test-env-test-db-dump'"
   }
 
   assert {
@@ -217,8 +217,8 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = aws_s3_bucket.data_dump_bucket.bucket == "test-env-test-db-dump"
-    error_message = "Bucket name should be: test-env-test-db-dump"
+    condition     = aws_s3_bucket.data_dump_bucket.bucket == "test-app-test-env-test-db-dump"
+    error_message = "Bucket name should be: test-app-test-env-test-db-dump"
   }
 
   assert {
@@ -251,8 +251,8 @@ run "data_dump_unit_test" {
   # aws_kms_key.data_dump_kms_key policy cannot be tested with plan
 
   assert {
-    condition     = aws_kms_alias.data_dump_kms_alias.name == "alias/test-env-test-db-dump"
-    error_message = "Kms key alias should be: alias/test-env-test-db-dump"
+    condition     = aws_kms_alias.data_dump_kms_alias.name == "alias/test-app-test-env-test-db-dump"
+    error_message = "Kms key alias should be: alias/test-app-test-env-test-db-dump"
   }
 
   assert {
