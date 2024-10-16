@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.0](https://github.com/uktrade/terraform-platform-modules/compare/5.4.3...5.5.0) (2024-10-16)
+
+
+### Features
+
+* Enable data copy between VPCs in a single account ([#239](https://github.com/uktrade/terraform-platform-modules/issues/239)) ([3329381](https://github.com/uktrade/terraform-platform-modules/commit/332938139752b0c46674fcb4abfcc154f6922672))
+
 ## [5.4.3](https://github.com/uktrade/terraform-platform-modules/compare/5.4.2...5.4.3) (2024-10-04)
 
 
