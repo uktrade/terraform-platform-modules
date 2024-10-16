@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.4.3](https://github.com/uktrade/terraform-platform-modules/compare/5.4.2...5.4.3) (2024-10-04)
+
+
+### Bug Fixes
+
+* DBTP-1398 Correct prod domain name for static content S3 buckets ([#241](https://github.com/uktrade/terraform-platform-modules/issues/241)) ([33c6e57](https://github.com/uktrade/terraform-platform-modules/commit/33c6e57fd8264c1225cabcbdb2fd6d4e03a52a06))
+* DBTP-1398 Correct prod domain name for static content S3 buckets (2nd pass) ([#243](https://github.com/uktrade/terraform-platform-modules/issues/243)) ([f711fac](https://github.com/uktrade/terraform-platform-modules/commit/f711fac6c1291638a9847cec3ffef752c101aed2))
+
 ## [5.4.2](https://github.com/uktrade/terraform-platform-modules/compare/5.4.1...5.4.2) (2024-09-26)
 
 
