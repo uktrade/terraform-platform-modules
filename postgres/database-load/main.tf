@@ -65,13 +65,12 @@ resource "aws_iam_role_policy" "allow_task_creation" {
 }
 
 data "aws_iam_policy_document" "data_load" {
-  # checkov:skip=CKV_AWS_356:Permissions required to upload
   policy_id = "data_load"
   statement {
     sid    = "AllowReadFromS3"
     effect = "Allow"
 
-    actions = local.s3_permissions
+    actions = concat(local.s3_permissions, ["s3:DeleteObject"])
 
     resources = [
       data.aws_s3_bucket.data_dump_bucket.arn,
