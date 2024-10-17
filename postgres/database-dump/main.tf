@@ -21,7 +21,10 @@ data "aws_iam_policy_document" "allow_task_creation" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["*"]
+    resources = [
+      "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${local.task_name}",
+      "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${local.task_name}:log-stream:*",
+    ]
   }
 }
 
