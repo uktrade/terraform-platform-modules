@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.1](https://github.com/uktrade/terraform-platform-modules/compare/5.5.0...5.5.1) (2024-10-17)
+
+
+### Bug Fixes
+
+* Tighten ECR permissions ([#247](https://github.com/uktrade/terraform-platform-modules/issues/247)) ([2cbace7](https://github.com/uktrade/terraform-platform-modules/commit/2cbace7723363cba48bf9dd111472603d2be524e))
+
 ## [5.5.0](https://github.com/uktrade/terraform-platform-modules/compare/5.4.3...5.5.0) (2024-10-16)
 
 
