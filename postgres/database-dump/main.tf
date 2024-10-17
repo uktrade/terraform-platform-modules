@@ -58,7 +58,6 @@ resource "aws_iam_role_policy" "allow_task_creation" {
 
 
 data "aws_iam_policy_document" "data_dump" {
-  # checkov:skip=CKV_AWS_356:Permissions required to upload
   policy_id = "data_dump"
   statement {
     sid    = "AllowWriteToS3"
@@ -138,14 +137,11 @@ resource "aws_ecs_task_definition" "service" {
           awslogs-stream-prefix = "ecs"
         }
       }
-
-
     }
   ])
 
   cpu    = 1024
   memory = 3072
-
 
   requires_compatibilities = ["FARGATE"]
 
