@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 data "aws_kms_key" "data_dump_kms_key" {
   key_id = local.dump_kms_key_alias
 }
@@ -7,22 +9,30 @@ data "aws_s3_bucket" "data_dump_bucket" {
 }
 
 data "aws_iam_policy_document" "allow_task_creation" {
-  # TODO: fix these in next iteration of DBTP:1109
-  # checkov:skip=CKV_AWS_111: "Ensure IAM policies does not allow write access without constraints"
-  # checkov:skip=CKV_AWS_356: "Ensure no IAM policies documents allow "*" as a statement's resource for restrictable actions"
   statement {
-    sid    = "AllowTaskCreation"
+    sid    = "AllowPullFromEcr"
     effect = "Allow"
     actions = [
       "ecr:GetAuthorizationToken",
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
+    ]
+    resources = [local.ecr_repository_arn]
+  }
+
+  statement {
+    sid    = "AllowLogs"
+    effect = "Allow"
+    actions = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["*"]
+    resources = [
+      "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${local.task_name}",
+      "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${local.task_name}:log-stream:*",
+    ]
   }
 }
 

@@ -11,6 +11,8 @@ locals {
   dump_kms_key_alias = "alias/${local.task_name}"
   dump_bucket_name   = local.task_name
 
+  ecr_repository_arn = "arn:aws:ecr-public::763451185160:repository/database-copy"
+
   s3_permissions = [
     "s3:ListBucket",
     "s3:PutObject",
