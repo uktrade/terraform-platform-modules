@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.2](https://github.com/uktrade/terraform-platform-modules/compare/5.5.1...5.5.2) (2024-10-18)
+
+
+### Bug Fixes
+
+* DBTP-1435 Allow environment pipeline to update assume role policy on shared s3 role ([#250](https://github.com/uktrade/terraform-platform-modules/issues/250)) ([e9e12dd](https://github.com/uktrade/terraform-platform-modules/commit/e9e12ddb1f36aea1f8f4e7af8efd3230f2efffd1))
+
 ## [5.5.1](https://github.com/uktrade/terraform-platform-modules/compare/5.5.0...5.5.1) (2024-10-17)
 
 
