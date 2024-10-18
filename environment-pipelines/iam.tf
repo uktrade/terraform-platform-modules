@@ -835,6 +835,14 @@ data "aws_iam_policy_document" "iam" {
     ]
     resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${var.pipeline_name}-environment-pipeline-codebuild"]
   }
+
+  statement {
+    sid = "AllowUpdatingSharedS3MigrationRoleTrustPolicy"
+    actions = [
+      "iam:UpdateAssumeRolePolicy"
+    ]
+    resources = [for environment in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${environment.name}-shared-S3MigrationRole"]
+  }
 }
 
 data "aws_iam_policy_document" "codepipeline" {
