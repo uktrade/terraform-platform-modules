@@ -41,25 +41,24 @@ data "aws_iam_policy_document" "bucket-policy" {
     ]
   }
 
-#   dynamic "statement" {
-#      for_each = []
-#
-#     content {
-#       actions = ["s3:PutObject"]
-#       effect  = "Allow"
-#
-#       principals {
-#         type        = "AWS"
-#           identifiers = [
-#             "arn:aws:iam::637423335187:role/cross-account-s3-export"
-#           ]
-#       }
-#     }
-#   }
-}
+  dynamic "statement" {
+    for_each = try(compact([var.config.cross_account_access_role]), [])
 
-output "foo" {
-    value = var.config
+    content {
+      actions = ["s3:PutObject"]
+      effect  = "Allow"
+
+      principals {
+        type        = "AWS"
+        identifiers = [var.config.cross_account_access_role]
+      }
+
+      resources = [
+        aws_s3_bucket.this.arn,
+        "${aws_s3_bucket.this.arn}/*",
+      ]
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
