@@ -40,6 +40,22 @@ data "aws_iam_policy_document" "bucket-policy" {
       "${aws_s3_bucket.this.arn}/*",
     ]
   }
+
+  dynamic "statement" {
+    for_each = var.config.cross_account_access_role_name ? 0 : 1
+
+    content {
+      actions = ["s3:PutObject"]
+      effect  = "Allow"
+
+      principals {
+        type        = "AWS"
+          identifiers = [
+            "arn:aws:iam::637423335187:role/cross-account-s3-export"
+          ]
+      }
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
