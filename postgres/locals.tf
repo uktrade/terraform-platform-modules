@@ -40,6 +40,6 @@ locals {
 
   data_copy_tasks = coalesce(var.config.database_copy, [])
 
-  data_dump_tasks = [for task in local.data_copy_tasks : task if task.from == var.environment]
-  data_load_tasks = [for task in local.data_copy_tasks : task if task.to == var.environment]
+  data_dump_tasks = [for task in local.data_copy_tasks : task if task.from == var.environment && !strcontains(task.to, "prod")]
+  data_load_tasks = [for task in local.data_copy_tasks : task if task.to == var.environment && !strcontains(task.to, "prod")]
 }
