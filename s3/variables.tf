@@ -23,6 +23,7 @@ variable "vpc_name" {
 variable "config" {
   type = object({
     bucket_name = string
+    additional_access_role = optional(string)
     versioning  = optional(bool)
     retention_policy = optional(object({
       mode  = string

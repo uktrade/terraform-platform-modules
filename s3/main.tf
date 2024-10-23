@@ -40,11 +40,28 @@ data "aws_iam_policy_document" "bucket-policy" {
       "${aws_s3_bucket.this.arn}/*",
     ]
   }
+
+  dynamic "statement" {
+    for_each = var.config.additional_access_role != null ? [1] : []
+
+    content {
+      actions = ["s3:PutObject"]
+      effect  = "Allow"
+
+      principals {
+        type        = "AWS"
+        identifiers = [var.config.additional_access_role]
+      }
+
+      resources = [
+        aws_s3_bucket.this.arn,
+        "${aws_s3_bucket.this.arn}/*",
+      ]
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
-  count = var.config.serve_static_content ? 0 : 1
-
   bucket = aws_s3_bucket.this.id
   policy = data.aws_iam_policy_document.bucket-policy.json
 }
@@ -82,26 +99,37 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
 }
 
 resource "aws_kms_key" "kms-key" {
-  count = var.config.serve_static_content ? 0 : 1
-
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
+}
 
+resource "aws_kms_key_policy" "kms-key-policy" {
+  count = var.config.additional_access_role && var.config.serve_static_content ? 1 : 0
+
+  key_id = aws_kms_key.kms-key.id
   policy = jsonencode({
-    Id = "key-default-1"
+    Version = "2012-10-17"
+    Id      = "key-default-1"
     Statement = [
       {
-        "Sid" : "Enable IAM User Permissions",
-        "Effect" : "Allow",
-        "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         },
-        "Action" : "kms:*",
-        "Resource" : "*"
-      }
+        Action   = "kms:*"
+        Resource = "*"
+      }, {
+        Sid = "Allow cross account S3 uploads",
+        Effect = "Allow",
+        Principal = {
+            AWS = var.config.additional_access_role
+        },
+        Action = "kms:GenerateDataKey"
+        Resource = "*"
+        }
     ]
-    Version = "2012-10-17"
   })
 }
 
