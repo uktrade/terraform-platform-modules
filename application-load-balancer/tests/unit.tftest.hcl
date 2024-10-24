@@ -133,10 +133,11 @@ run "aws_security_group_http_unit_test" {
     error_message = "Should be: app-env-alb-http"
   }
 
-  assert {
-    condition     = aws_security_group.alb-security-group["http"].revoke_rules_on_delete == false
-    error_message = "Should be: false"
-  }
+  # Can't test for the default on a plan
+  # assert {
+  #   condition     = aws_security_group.alb-security-group["http"].revoke_rules_on_delete == false
+  #   error_message = "Should be: false"
+  # }
 
   assert {
     condition     = aws_security_group.alb-security-group["http"].vpc_id == "vpc-00112233aabbccdef"
@@ -152,10 +153,11 @@ run "aws_security_group_https_unit_test" {
     error_message = "Should be: app-env-alb-https"
   }
 
-  assert {
-    condition     = aws_security_group.alb-security-group["https"].revoke_rules_on_delete == false
-    error_message = "Should be: false"
-  }
+  # Can't test for the default on a plan
+  # assert {
+  #   condition     = aws_security_group.alb-security-group["https"].revoke_rules_on_delete == false
+  #   error_message = "Should be: false"
+  # }
 
   assert {
     condition     = aws_security_group.alb-security-group["https"].vpc_id == "vpc-00112233aabbccdef"
