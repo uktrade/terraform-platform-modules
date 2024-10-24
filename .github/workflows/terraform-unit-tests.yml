@@ -7,24 +7,12 @@ on:
 jobs:
   application-load-balancer-unit-tests:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
-
-      - run: cd ${GITHUB_WORKSPACE}
-
-      - run: pwd
-      - run: ls -al
-
-      - run: |
-          cd application-load-balancer
-          pwd
-
       - run: |
           cd application-load-balancer
           terraform init
-
       - run: |
           cd application-load-balancer
           terraform test
