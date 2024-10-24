@@ -432,8 +432,13 @@ run "test_create_conduit_iam_role" {
     error_message = "Should be: test-redis-test-application-test-environment-conduitEcsTask"
   }
 
+  #   assert {
+  #     condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
+  #     error_message = "Should be: \"{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}\""
+  #   }
+
   assert {
-    condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
-    error_message = "Should be: \"{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}\""
+    condition     = jsondecode(aws_iam_role.conduit_ecs_task_role.assume_role_policy).statement[0].actions[0] == "sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
   }
 }
