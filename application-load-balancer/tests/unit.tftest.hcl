@@ -44,8 +44,8 @@ variables {
   config = {
     domain_prefix = "dom-prefix",
     cdn_domains_list = {
-      "web.dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"]
-      "api.dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"]
+      "web.dev.my-application.uktrade.digital" : ["internal.web", "my-application.uktrade.digital"]
+      "api.dev.my-application.uktrade.digital" : ["internal.api", "my-application.uktrade.digital"]
     }
   }
 }
@@ -219,12 +219,6 @@ run "aws_acm_certificate_unit_test" {
     condition     = [for el in aws_acm_certificate.certificate.subject_alternative_names : true if el == "api.dev.my-application.uktrade.digital"][0] == true
     error_message = "Should be: api.dev.my-application.uktrade.digital"
   }
-
-  # Todo: Understand this
-  # assert {
-  #   condition     = [for el in aws_acm_certificate.certificate.subject_alternative_names : true if el == "dom-prefix.env.app.uktrade.digital"][0] == true
-  #   error_message = "Should be: either: dev.my-application.uktrade.digital or dom-prefix.env.app.uktrade.digital"
-  # }
 
   assert {
     condition     = aws_acm_certificate.certificate.validation_method == "DNS"
