@@ -5,7 +5,8 @@ on:
   # Todo: Add a nightly run
 
 jobs:
-  application-load-balancer-unit-tests:
+  terraform-unit-tests:
+    name: ${{ matrix.module }}-unit-tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
