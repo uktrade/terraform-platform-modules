@@ -14,6 +14,7 @@ jobs:
           - 1.8
           - 1.9
         module:
+          # Todo: I think we may be able to set this dynamically from a previous job
           - application-load-balancer
           - cdn
           - data-migration
