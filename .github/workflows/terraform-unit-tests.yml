@@ -1,0 +1,18 @@
+name: Terraform Unit Tests
+
+on:
+  push:
+    # Todo: Add a nightly run
+
+jobs:
+  application-load-balancer-unit-tests:
+    runs-on: ubuntu-latest
+
+  steps:
+    - uses: hashicorp/setup-terraform@v3
+
+    - run: cd application-load-balancer
+
+    - run: terraform init
+
+    - run: terraform test
