@@ -2,7 +2,6 @@ name: Terraform Unit Tests
 
 on:
   push:
-  workflow_dispatch:
   # Todo: Add a nightly run
 
 jobs:
@@ -11,6 +10,8 @@ jobs:
 
     steps:
       - uses: hashicorp/setup-terraform@v3
+
+      - run: pwd && ls
 
       - run: cd application-load-balancer
 
