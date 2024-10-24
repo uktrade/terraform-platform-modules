@@ -19,6 +19,13 @@ variables {
 }
 
 override_data {
+  target = data.aws_caller_identity.current
+  values = {
+    account_id = "001122334455"
+  }
+}
+
+override_data {
   target = data.aws_vpc.vpc
   values = {
     id         = "vpc-00112233aabbccdef"
@@ -99,10 +106,11 @@ run "aws_elasticache_replication_group_unit_test" {
     error_message = "Invalid config for aws_elasticache_replication_group multi_az_enabled"
   }
 
-  assert {
-    condition     = aws_elasticache_replication_group.redis.auth_token_update_strategy == "ROTATE"
-    error_message = "Invalid config for aws_elasticache_replication_group auth_token_update_strategy"
-  }
+  # Cannot test for the default on a plan
+  # assert {
+  #   condition     = aws_elasticache_replication_group.redis.auth_token_update_strategy == "ROTATE"
+  #   error_message = "Invalid config for aws_elasticache_replication_group auth_token_update_strategy"
+  # }
 
   assert {
     condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "engine-log"][0] == "/aws/elasticache/test-redis/test-environment/test-redisRedis/engine"
@@ -191,10 +199,11 @@ run "aws_security_group_unit_test" {
     error_message = "Invalid config for aws_security_group name"
   }
 
-  assert {
-    condition     = aws_security_group.redis.revoke_rules_on_delete == false
-    error_message = "Invalid config for aws_security_group revoke_rules_on_delete"
-  }
+  # Cannot test for the default on a plan
+  # assert {
+  #   condition     = aws_security_group.redis.revoke_rules_on_delete == false
+  #   error_message = "Invalid config for aws_security_group revoke_rules_on_delete"
+  # }
 
   assert {
     condition     = jsonencode(aws_security_group.redis.tags) == jsonencode(var.expected_tags)
@@ -320,10 +329,11 @@ run "aws_cloudwatch_log_group_unit_test" {
     error_message = "Invalid config for aws_cloudwatch_log_group retention_in_days"
   }
 
-  assert {
-    condition     = aws_cloudwatch_log_group.redis-slow-log-group.skip_destroy == false
-    error_message = "Invalid config for aws_cloudwatch_log_group skip_destroy"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = aws_cloudwatch_log_group.redis-slow-log-group.skip_destroy == false
+  #   error_message = "Invalid config for aws_cloudwatch_log_group skip_destroy"
+  # }
 
   ### Test aws_cloudwatch_log_group engine resource ###
   assert {
@@ -336,10 +346,11 @@ run "aws_cloudwatch_log_group_unit_test" {
     error_message = "Invalid config for aws_cloudwatch_log_group retention_in_days"
   }
 
-  assert {
-    condition     = aws_cloudwatch_log_group.redis-engine-log-group.skip_destroy == false
-    error_message = "Invalid config for aws_cloudwatch_log_group skip_destroy"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = aws_cloudwatch_log_group.redis-engine-log-group.skip_destroy == false
+  #   error_message = "Invalid config for aws_cloudwatch_log_group skip_destroy"
+  # }
 
   assert {
     condition     = jsonencode(aws_cloudwatch_log_group.redis-engine-log-group.tags) == jsonencode(var.expected_tags)
@@ -361,10 +372,11 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter destination_arn"
   }
 
-  assert {
-    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.distribution == "ByLogStream"
-    error_message = "Invalid config for aws_cloudwatch_log_subscription_filter distribution"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.distribution == "ByLogStream"
+  #   error_message = "Invalid config for aws_cloudwatch_log_subscription_filter distribution"
+  # }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.role_arn == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
@@ -382,10 +394,11 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter destination_arn"
   }
 
-  assert {
-    condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.distribution == "ByLogStream"
-    error_message = "Invalid config for aws_cloudwatch_log_subscription_filter distribution"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.distribution == "ByLogStream"
+  #   error_message = "Invalid config for aws_cloudwatch_log_subscription_filter distribution"
+  # }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.role_arn == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"

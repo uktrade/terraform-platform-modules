@@ -56,10 +56,11 @@ run "aws_security_group_unit_test" {
     error_message = "Invalid name for aws_security_group.default"
   }
 
-  assert {
-    condition     = aws_security_group.default.revoke_rules_on_delete == false
-    error_message = "Should be: false."
-  }
+  # Cannot test for the default on a plan
+  # assert {
+  #   condition     = aws_security_group.default.revoke_rules_on_delete == false
+  #   error_message = "Should be: false."
+  # }
 
   assert {
     condition     = aws_security_group.default.tags.application == "test-application"
@@ -495,10 +496,11 @@ run "aws_cloudwatch_log_rds_subscription_filter_unit_test" {
     error_message = "Invalid role_arn for aws_cloudwatch_log_subscription_filter.rds"
   }
 
-  assert {
-    condition     = aws_cloudwatch_log_subscription_filter.rds.distribution == "ByLogStream"
-    error_message = "Should be: ByLogStream"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = aws_cloudwatch_log_subscription_filter.rds.distribution == "ByLogStream"
+  #   error_message = "Should be: ByLogStream"
+  # }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.rds.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
