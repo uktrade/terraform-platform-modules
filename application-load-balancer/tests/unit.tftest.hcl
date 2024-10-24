@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 mock_provider "aws" {
   alias = "sandbox"
 }

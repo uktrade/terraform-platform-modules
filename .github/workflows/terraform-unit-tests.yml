@@ -7,12 +7,32 @@ on:
 jobs:
   application-load-balancer-unit-tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module:
+          - application-load-balancer
+          - cdn
+          - data-migration
+          - domain
+          - elasticache-redis
+          - environment-pipelines
+          - extensions
+          - logs
+          - monitoring
+          - opensearch
+          - postgres
+          - s3
+          - statefile-backend
+          - vpc
+          - vpc-peering
+
+
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
       - run: |
-          cd application-load-balancer
+          cd ${{ matrix.module }}
           terraform init
       - run: |
-          cd application-load-balancer
+          cd ${{ matrix.module }}
           terraform test
