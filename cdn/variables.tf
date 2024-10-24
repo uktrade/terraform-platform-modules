@@ -24,6 +24,7 @@ variable "config" {
     allowed_methods                             = optional(list(string))
     cached_methods                              = optional(list(string))
     default_waf                                 = optional(string)
+    cdn_timeout_seconds                         = optional(number)
     origin_protocol_policy                      = optional(string)
     origin_ssl_protocols                        = optional(list(string))
     cdn_compress                                = optional(bool)

@@ -62,6 +62,7 @@ resource "aws_cloudfront_distribution" "standard" {
       https_port             = 443
       origin_protocol_policy = local.cdn_defaults.origin.custom_origin_config.origin_protocol_policy
       origin_ssl_protocols   = local.cdn_defaults.origin.custom_origin_config.origin_ssl_protocols
+      origin_read_timeout    = local.cdn_defaults.origin.custom_origin_config.cdn_timeout_seconds
     }
   }
 
