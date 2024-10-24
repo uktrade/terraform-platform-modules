@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 variables {
   vpc_name    = "sandbox-elasticache-redis"
   application = "test-application"

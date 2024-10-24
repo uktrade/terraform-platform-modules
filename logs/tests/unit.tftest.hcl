@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 variables {
   name_prefix = "test-name"
 }

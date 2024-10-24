@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 variables {
   aws_account_name = "sandbox-test"
 }

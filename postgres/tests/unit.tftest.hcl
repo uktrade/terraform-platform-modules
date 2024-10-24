@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 override_data {
   target = data.aws_security_group.rds-endpoint
   values = {
