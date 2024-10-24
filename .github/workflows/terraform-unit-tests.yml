@@ -6,7 +6,7 @@ on:
 
 jobs:
   terraform-unit-tests:
-    name: tf-${{ matrix.terraform-version }} ${{ matrix.module }} unit-tests
+    name: ${{ matrix.module }} tf-${{ matrix.terraform-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
