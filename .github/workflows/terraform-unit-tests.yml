@@ -36,6 +36,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ matrix.terraform-version }}
+      - run: terraform --version
       - name: terraform init
         run: |
           cd ${{ matrix.module }}
