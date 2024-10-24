@@ -43,6 +43,8 @@ mock_provider "aws" {
   alias = "domain-cdn"
 }
 
+mock_provider "aws" {}
+
 override_data {
   target = module.opensearch["test-opensearch"].data.aws_vpc.vpc
   values = {
@@ -61,41 +63,39 @@ override_data {
 run "aws_ssm_parameter_unit_test" {
   command = plan
 
+  # Configuration
   assert {
     condition     = aws_ssm_parameter.addons.name == "/copilot/applications/test-application/environments/test-environment/addons"
     error_message = "Invalid config for aws_ssm_parameter name"
   }
-
   assert {
     condition     = aws_ssm_parameter.addons.tier == "Intelligent-Tiering"
     error_message = "Intelligent-Tiering not enabled, parameters > 4096 characters will be rejected"
   }
-
   assert {
     condition     = aws_ssm_parameter.addons.type == "String"
     error_message = "Invalid config for aws_ssm_parameter type"
   }
 
+  # Value
+
+  # Tags
   assert {
     condition     = aws_ssm_parameter.addons.tags["application"] == "test-application"
     error_message = ""
   }
-
   assert {
     condition     = aws_ssm_parameter.addons.tags["copilot-application"] == "test-application"
     error_message = ""
   }
-
   assert {
     condition     = aws_ssm_parameter.addons.tags["environment"] == "test-environment"
     error_message = ""
   }
-
   assert {
     condition     = aws_ssm_parameter.addons.tags["copilot-environment"] == "test-environment"
     error_message = ""
   }
-
   assert {
     condition     = aws_ssm_parameter.addons.tags["managed-by"] == "DBT Platform - Terraform"
     error_message = ""
