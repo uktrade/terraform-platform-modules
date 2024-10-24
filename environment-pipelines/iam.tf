@@ -12,17 +12,6 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
 
     actions = ["sts:AssumeRole"]
   }
-
-  # statement {
-  #   effect = "Allow"
-
-  #   principals {
-  #     type        = "AWS"
-  #     identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/platform-tony2-regression-tests-role"]
-  #   }
-
-  #   actions = ["sts:AssumeRole"]
-  # }
 }
 
 data "aws_iam_policy_document" "access_artifact_store" {
