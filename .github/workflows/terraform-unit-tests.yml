@@ -2,7 +2,8 @@ name: Terraform Unit Tests
 
 on:
   push:
-    # Todo: Add a nightly run
+  workflow_dispatch:
+  # Todo: Add a nightly run
 
 jobs:
   application-load-balancer-unit-tests:
