@@ -432,13 +432,23 @@ run "test_create_conduit_iam_role" {
     error_message = "Should be: test-redis-test-application-test-environment-conduitEcsTask"
   }
 
-  #   assert {
-  #     condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
-  #     error_message = "Should be: \"{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}\""
-  #   }
-
   assert {
     condition     = jsondecode(aws_iam_role.conduit_ecs_task_role.assume_role_policy).statement[0].actions[0] == "sts:AssumeRole"
     error_message = "Should be: sts:AssumeRole"
+  }
+
+  assert {
+    condition     = jsondecode(aws_iam_role.conduit_ecs_task_role.assume_role_policy).statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = [
+      for el in jsondecode(aws_iam_role.conduit_ecs_task_role.assume_role_policy).statement[0].principals :
+      true if el.type == "Service" && [
+        for identifier in el.identifiers : true if identifier == "ecs-tasks.amazonaws.com"
+      ][0] == true
+    ][0] == true
+    error_message = "Should be: Service ecs-tasks.amazonaws.com"
   }
 }
