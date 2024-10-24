@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 variables {
   config = {
     "source_bucket_arn"  = "test-source-bucket-arn"

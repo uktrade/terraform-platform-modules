@@ -1,0 +1,48 @@
+name: Terraform Unit Tests
+
+on:
+  push:
+  # Todo: Add a nightly run
+
+jobs:
+  terraform-unit-tests:
+    name: ${{ matrix.module }} tf-${{ matrix.terraform-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        terraform-version:
+          - 1.8
+          - 1.9
+        module:
+          # Todo: I think we may be able to set this dynamically from a previous job
+          - application-load-balancer
+          - cdn
+          - data-migration
+          - domain
+          - elasticache-redis
+          - environment-pipelines
+          - extensions
+          - logs
+          - monitoring
+          - opensearch
+          - postgres
+          - s3
+          - statefile-backend
+          - vpc
+          - vpc-peering
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ matrix.terraform-version }}
+      - run: terraform --version
+      - name: terraform init
+        run: |
+          cd ${{ matrix.module }}
+          terraform init
+      - name: terraform test
+        run: |
+          cd ${{ matrix.module }}
+          terraform test

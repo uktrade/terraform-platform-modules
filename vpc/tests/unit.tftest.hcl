@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 variables {
   arg_name = "vpc-test-name"
   arg_config = {

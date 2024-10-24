@@ -78,6 +78,6 @@ data "aws_iam_policy_document" "log-resource-policy" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "log-resource-policy" {
-  policy_document = data.aws_iam_policy_document.log-resource-policy.json
+  policy_document = jsonencode(data.aws_iam_policy_document.log-resource-policy)
   policy_name     = "${var.name_prefix}-LogResourcePolicy"
 }
