@@ -6,10 +6,13 @@ on:
 
 jobs:
   terraform-unit-tests:
-    name: ${{ matrix.module }}-unit-tests
+    name: tf-${{ matrix.terraform-version }}-${{ matrix.module }}-unit-tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        terraform-version:
+          - 1.8
+          - 1.9
         module:
           - application-load-balancer
           - cdn
@@ -31,6 +34,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ matrix.terraform-version }}
       - run: |
           cd ${{ matrix.module }}
           terraform init
