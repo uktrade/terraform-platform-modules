@@ -11,7 +11,9 @@ jobs:
     steps:
       - uses: hashicorp/setup-terraform@v3
 
-      - run: pwd && ls
+      - run:
+        - pwd
+        - ls -al
 
       - run: cd application-load-balancer
 
