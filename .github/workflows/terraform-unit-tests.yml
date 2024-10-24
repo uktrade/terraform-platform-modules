@@ -17,8 +17,14 @@ jobs:
       - run: pwd
       - run: ls -al
 
-      - run: cd application-load-balancer
+      - run: |
+          cd application-load-balancer
+          pwd
 
-      - run: terraform init
+      - run: |
+          cd application-load-balancer
+          terraform init
 
-      - run: terraform test
+      - run: |
+          cd application-load-balancer
+          terraform test
