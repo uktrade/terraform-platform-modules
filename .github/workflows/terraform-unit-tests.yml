@@ -8,46 +8,42 @@ on:
 permissions: read-all
 
 jobs:
-  modules-to-test:
+  find-modules-to-test:
     runs-on: ubuntu-latest
 
     outputs:
       modules: ${{ steps.find-modules.outputs.modules }}
 
     steps:
-      - name: Find modules to test
+      - uses: actions/checkout@v4
+      - name: Find modules
         id: find-modules
         run: |
-          echo 'modules=["application-load-balancer","cdn","data-migration","domain","elasticache-redis","environment-pipelines","extensions","logs","monitoring","opensearch","postgres","postgres/database-dump","postgres/database-load","s3","statefile-backend","vpc","vpc-peering"]' >> "$GITHUB_OUTPUT"
+          unit_test_files=$(find . -name "*tftest.hcl" | grep -v e2e-tests | sort)
+          modules=""
+          IFS=$'\n'
+          for file in $unit_test_files
+          do
+            # Lose leading ./ and select the part before the tests directory
+            module=$(echo "${file#./}" | awk -F "/tests/" '{print $1}')
+            # In case we separate the test files, only include each module once
+            if [[ ${modules} != *"$module"* ]]; then
+              echo "Found module $module"
+              modules+="\"$module\","
+            fi
+          done
+          echo "modules=[${modules%,}]" >> "$GITHUB_OUTPUT"
 
   terraform-unit-tests:
     name: ${{ matrix.module }} tf-${{ matrix.terraform-version }}
     runs-on: ubuntu-latest
-    needs: modules-to-test
+    needs: find-modules-to-test
     strategy:
       matrix:
         terraform-version:
           - 1.8
           - 1.9
-        module: ${{ fromJSON(needs.modules-to-test.outputs.modules) }}
-#          # Todo: I think we may be able to set this dynamically from a previous job
-#          - application-load-balancer
-#          - cdn
-#          - data-migration
-#          - domain
-#          - elasticache-redis
-#          - environment-pipelines
-#          - extensions
-#          - logs
-#          - monitoring
-#          - opensearch
-#          - postgres
-#          - postgres/database-dump
-#          - postgres/database-load
-#          - s3
-#          - statefile-backend
-#          - vpc
-#          - vpc-peering
+        module: ${{ fromJSON(needs.find-modules-to-test.outputs.modules) }}
       fail-fast: false
 
     steps:
