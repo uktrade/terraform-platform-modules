@@ -108,7 +108,7 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = jsonencode([
     {
       name      = local.task_name
-      image     = "public.ecr.aws/uktrade/database-copy:latest"
+      image     = "public.ecr.aws/uktrade/database-copy:tag-latest"
       essential = true
       environment = [
         {
