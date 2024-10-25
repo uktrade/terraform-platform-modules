@@ -27,6 +27,8 @@ jobs:
           - monitoring
           - opensearch
           - postgres
+          - postgres/database-dump
+          - postgres/database-load
           - s3
           - statefile-backend
           - vpc
