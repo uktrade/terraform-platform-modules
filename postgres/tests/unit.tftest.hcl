@@ -148,13 +148,13 @@ run "aws_kms_key_unit_test" {
     error_message = "Invalid description for aws_kms_key.default"
   }
 
-  # cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_kms_key.default.is_enabled == true
   #   error_message = "Should be: true"
   # }
 
-  # cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_kms_key.default.bypass_policy_lockout_safety_check == false
   #   error_message = "Should be: false"
@@ -165,13 +165,13 @@ run "aws_kms_key_unit_test" {
     error_message = "Should be: true"
   }
 
-  # cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_kms_key.default.key_usage == "ENCRYPT_DECRYPT"
   #   error_message = "Should be: ENCRYPT_DECRYPT"
   # }
 
-  # cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_kms_key.default.customer_master_key_spec == "SYMMETRIC_DEFAULT"
   #   error_message = "Should be: SYMMETRIC_DEFAULT"
@@ -431,7 +431,7 @@ run "aws_iam_role_unit_test" {
     error_message = "Invalid name_prefix for aws_iam_role.enhanced-monitoring"
   }
 
-  # cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_iam_role.enhanced-monitoring.max_session_duration == 3600
   #   error_message = "Should be: 3600"
@@ -475,7 +475,7 @@ run "aws_iam_role_unit_test" {
     error_message = "Invalid name for aws_iam_role.lambda-execution-role"
   }
 
-  # cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_iam_role.lambda-execution-role.max_session_duration == 3600
   #   error_message = "Should be: 3600"
@@ -510,7 +510,7 @@ run "aws_cloudwatch_log_rds_subscription_filter_unit_test" {
     error_message = "Invalid role_arn for aws_cloudwatch_log_subscription_filter.rds"
   }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_cloudwatch_log_subscription_filter.rds.distribution == "ByLogStream"
   #   error_message = "Should be: ByLogStream"
@@ -565,7 +565,7 @@ run "aws_lambda_function_unit_test" {
     error_message = "Should be: end with layer:python-postgres:1"
   }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = [for el in aws_lambda_function.lambda.vpc_config : true if el.ipv6_allowed_for_dual_stack == false][0] == true
   #   error_message = "Should be: false"
@@ -581,19 +581,19 @@ run "aws_lambda_invocation_unit_test" {
     error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
   }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_lambda_invocation.create-application-user.lifecycle_scope == "CREATE_ONLY"
   #   error_message = "Should be: CREATE_ONLY"
   # }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_lambda_invocation.create-application-user.qualifier == "$LATEST"
   #   error_message = "Should be: $LATEST"
   # }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #  condition     = aws_lambda_invocation.create-application-user.terraform_key == "tf"
   #  error_message = "Should be: tf"
@@ -605,19 +605,19 @@ run "aws_lambda_invocation_unit_test" {
     error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
   }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_lambda_invocation.create-readonly-user.lifecycle_scope == "CREATE_ONLY"
   #   error_message = "Should be: CREATE_ONLY"
   # }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_lambda_invocation.create-readonly-user.qualifier == "$LATEST"
   #   error_message = "Should be: $LATEST"
   # }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_lambda_invocation.create-readonly-user.terraform_key == "tf"
   #   error_message = "Should be: tf"

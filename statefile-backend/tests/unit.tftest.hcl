@@ -12,10 +12,11 @@ run "aws_s3_bucket_unit_test" {
     error_message = "Should be: terraform-platform-state-sandbox-test"
   }
 
-  assert {
-    condition     = aws_s3_bucket.terraform-state.force_destroy == false
-    error_message = "Should be: false"
-  }
+  # Cannot test for the default on a plan
+  # assert {
+  #   condition     = aws_s3_bucket.terraform-state.force_destroy == false
+  #   error_message = "Should be: false"
+  # }
 
   assert {
     condition     = aws_s3_bucket.terraform-state.tags["managed-by"] == "Terraform"
@@ -95,10 +96,11 @@ run "aws_s3_bucket_server_side_encryption_configuration_unit_test" {
 run "aws_kms_alias_unit_test" {
   command = plan
 
-  assert {
-    condition     = aws_kms_key.terraform-bucket-key.is_enabled == true
-    error_message = "Should be: true"
-  }
+  # Cannot test for the default on a plan
+  # assert {
+  #   condition     = aws_kms_key.terraform-bucket-key.is_enabled == true
+  #   error_message = "Should be: true"
+  # }
 
   assert {
     condition     = aws_kms_alias.key-alias.name == "alias/terraform-platform-state-s3-key-sandbox-test"
@@ -107,14 +109,15 @@ run "aws_kms_alias_unit_test" {
 }
 
 
-run "aws_kms_key_unit_test" {
-  command = plan
-
-  assert {
-    condition     = aws_kms_key.terraform-bucket-key.bypass_policy_lockout_safety_check == false
-    error_message = "Should be: false"
-  }
-}
+# Cannot test for the default on a plan
+# run "aws_kms_key_unit_test" {
+#   command = plan
+#
+#   assert {
+#     condition     = aws_kms_key.terraform-bucket-key.bypass_policy_lockout_safety_check == false
+#     error_message = "Should be: false"
+#   }
+# }
 
 run "aws_dynamodb_table_unit_test" {
   command = plan

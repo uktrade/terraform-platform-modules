@@ -329,7 +329,7 @@ run "aws_cloudwatch_log_group_unit_test" {
     error_message = "Invalid config for aws_cloudwatch_log_group retention_in_days"
   }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_cloudwatch_log_group.redis-slow-log-group.skip_destroy == false
   #   error_message = "Invalid config for aws_cloudwatch_log_group skip_destroy"
@@ -346,7 +346,7 @@ run "aws_cloudwatch_log_group_unit_test" {
     error_message = "Invalid config for aws_cloudwatch_log_group retention_in_days"
   }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_cloudwatch_log_group.redis-engine-log-group.skip_destroy == false
   #   error_message = "Invalid config for aws_cloudwatch_log_group skip_destroy"
@@ -372,7 +372,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter destination_arn"
   }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.distribution == "ByLogStream"
   #   error_message = "Invalid config for aws_cloudwatch_log_subscription_filter distribution"
@@ -394,7 +394,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
     error_message = "Invalid config for aws_cloudwatch_log_subscription_filter destination_arn"
   }
 
-  # Cannot test for default on a plan
+  # Cannot test for the default on a plan
   # assert {
   #   condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.distribution == "ByLogStream"
   #   error_message = "Invalid config for aws_cloudwatch_log_subscription_filter distribution"
