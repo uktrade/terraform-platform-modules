@@ -2,7 +2,8 @@ name: Terraform Unit Tests
 
 on:
   push:
-  # Todo: Add a nightly run
+  schedule:
+    - cron: '30 5 * * *'
 
 jobs:
   terraform-unit-tests:
