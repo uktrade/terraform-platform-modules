@@ -438,24 +438,30 @@ run "aws_iam_role_unit_test" {
   # }
 
   assert {
-    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Statement[0].Action == "sts:AssumeRole"
+    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).statement[0].actions[0] == "sts:AssumeRole"
     error_message = "Should be: sts:AssumeRole"
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Statement[0].Effect == "Allow"
+    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).statement[0].effect == "Allow"
     error_message = "Should be: Allow"
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Statement[0].Principal.Service == "monitoring.rds.amazonaws.com"
-    error_message = "Should be: monitoring.rds.amazonaws.com"
+    condition = [
+      for el in jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).statement[0].principals :
+      true if el.type == "Service" && [
+        for identifier in el.identifiers : true if identifier == "monitoring.rds.amazonaws.com"
+      ][0] == true
+    ][0] == true
+    error_message = "Should be: Service monitoring.rds.amazonaws.com"
   }
 
-  assert {
-    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Version == "2012-10-17"
-    error_message = "Should be: 2012-10-17"
-  }
+  # Cannot test for the default on a plan
+  # assert {
+  #   condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Version == "2012-10-17"
+  #   error_message = "Should be: 2012-10-17"
+  # }
 
   # Test aws_iam_role_policy_attachment.enhanced-monitoring resource
   assert {
@@ -559,10 +565,11 @@ run "aws_lambda_function_unit_test" {
     error_message = "Should be: end with layer:python-postgres:1"
   }
 
-  assert {
-    condition     = [for el in aws_lambda_function.lambda.vpc_config : true if el.ipv6_allowed_for_dual_stack == false][0] == true
-    error_message = "Should be: false"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = [for el in aws_lambda_function.lambda.vpc_config : true if el.ipv6_allowed_for_dual_stack == false][0] == true
+  #   error_message = "Should be: false"
+  # }
 }
 
 run "aws_lambda_invocation_unit_test" {
@@ -574,20 +581,23 @@ run "aws_lambda_invocation_unit_test" {
     error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
   }
 
-  assert {
-    condition     = aws_lambda_invocation.create-application-user.lifecycle_scope == "CREATE_ONLY"
-    error_message = "Should be: CREATE_ONLY"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = aws_lambda_invocation.create-application-user.lifecycle_scope == "CREATE_ONLY"
+  #   error_message = "Should be: CREATE_ONLY"
+  # }
 
-  assert {
-    condition     = aws_lambda_invocation.create-application-user.qualifier == "$LATEST"
-    error_message = "Should be: $LATEST"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = aws_lambda_invocation.create-application-user.qualifier == "$LATEST"
+  #   error_message = "Should be: $LATEST"
+  # }
 
-  assert {
-    condition     = aws_lambda_invocation.create-application-user.terraform_key == "tf"
-    error_message = "Should be: tf"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #  condition     = aws_lambda_invocation.create-application-user.terraform_key == "tf"
+  #  error_message = "Should be: tf"
+  # }
 
   # Test aws_lambda_invocation.create-readonly-user resource
   assert {
@@ -595,20 +605,23 @@ run "aws_lambda_invocation_unit_test" {
     error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
   }
 
-  assert {
-    condition     = aws_lambda_invocation.create-readonly-user.lifecycle_scope == "CREATE_ONLY"
-    error_message = "Should be: CREATE_ONLY"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = aws_lambda_invocation.create-readonly-user.lifecycle_scope == "CREATE_ONLY"
+  #   error_message = "Should be: CREATE_ONLY"
+  # }
 
-  assert {
-    condition     = aws_lambda_invocation.create-readonly-user.qualifier == "$LATEST"
-    error_message = "Should be: $LATEST"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = aws_lambda_invocation.create-readonly-user.qualifier == "$LATEST"
+  #   error_message = "Should be: $LATEST"
+  # }
 
-  assert {
-    condition     = aws_lambda_invocation.create-readonly-user.terraform_key == "tf"
-    error_message = "Should be: tf"
-  }
+  # Cannot test for default on a plan
+  # assert {
+  #   condition     = aws_lambda_invocation.create-readonly-user.terraform_key == "tf"
+  #   error_message = "Should be: tf"
+  # }
 
   assert {
     condition     = aws_lambda_function.lambda.reserved_concurrent_executions == -1
