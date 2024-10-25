@@ -46,6 +46,20 @@ mock_provider "aws" {
 mock_provider "aws" {}
 
 override_data {
+  target = module.opensearch["test-opensearch"].data.aws_caller_identity.current
+  values = {
+    account_id = "001122334455"
+  }
+}
+
+override_data {
+  target = module.opensearch["test-opensearch"].data.aws_ssm_parameter.log-destination-arn
+  values = {
+    value = "{\"dev\":\"arn:aws:logs:eu-west-2:763451185160:log-group:/copilot/tools/central_log_groups_dev\",\"prod\":\"arn:aws:logs:eu-west-2:763451185160:log-group:/copilot/tools/central_log_groups_prod\"}"
+  }
+}
+
+override_data {
   target = module.opensearch["test-opensearch"].data.aws_vpc.vpc
   values = {
     id         = "vpc-00112233aabbccdef"
