@@ -12,11 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      colors: ${{ steps.colors.outputs.colors }}
+      modules: ${{ steps.find-modules.outputs.modules }}
 
     steps:
       - name: Find modules to test
-        id: colors
+        id: find-modules
         run: |
           echo 'modules=["application-load-balancer","cdn","data-migration","domain","elasticache-redis","environment-pipelines","extensions","logs","monitoring","opensearch","postgres","postgres/database-dump","postgres/database-load","s3","statefile-backend","vpc","vpc-peering"]' >> "$GITHUB_OUTPUT"
 
