@@ -245,7 +245,8 @@ data "aws_iam_policy_document" "load_balancer" {
       "elasticloadbalancing:DescribeListeners",
       "elasticloadbalancing:DescribeTargetHealth",
       "elasticloadbalancing:DescribeRules",
-      "elasticloadbalancing:DescribeListenerCertificates"
+      "elasticloadbalancing:DescribeListenerCertificates",
+      "elasticloadbalancing:DescribeListenerAttributes"
     ]
     resources = [
       "*"
