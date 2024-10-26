@@ -22,10 +22,7 @@ run "aws_vpc_unit_test" {
   }
 
   # Cannot test for the default on a plan
-  # assert {
-  #   condition     = aws_vpc.vpc.enable_dns_support == true
-  #   error_message = "Invalid VPC settings"
-  # }
+  # aws_vpc.vpc.enable_dns_support == true
 
   assert {
     condition     = aws_vpc.vpc.tags.Name == "vpc-test-name"
@@ -67,10 +64,7 @@ run "aws_security_group_unit_test" {
 
   ### Test aws_security_group resource ###
   # Cannot test for the default on a plan
-  # assert {
-  #   condition     = aws_security_group.vpc-core-sg.revoke_rules_on_delete == false
-  #   error_message = "Invalid security group settings"
-  # }
+  # aws_security_group.vpc-core-sg.revoke_rules_on_delete == false
 
   ### Test aws_security_group_rule resource ###
   assert {
@@ -149,10 +143,7 @@ run "aws_subnet_unit_test" {
   }
 
   # Cannot test for the default on a plan
-  # assert {
-  #   condition     = aws_subnet.private["a"].map_public_ip_on_launch == false
-  #   error_message = "Invalid private subnet config"
-  # }
+  # aws_subnet.private["a"].map_public_ip_on_launch == false
 
   assert {
     condition     = aws_subnet.private["a"].tags.subnet_type == "private"

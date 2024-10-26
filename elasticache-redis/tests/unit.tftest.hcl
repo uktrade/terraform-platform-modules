@@ -107,10 +107,7 @@ run "aws_elasticache_replication_group_unit_test" {
   }
 
   # Cannot test for the default on a plan
-  # assert {
-  #   condition     = aws_elasticache_replication_group.redis.auth_token_update_strategy == "ROTATE"
-  #   error_message = "Invalid config for aws_elasticache_replication_group auth_token_update_strategy"
-  # }
+  # aws_elasticache_replication_group.redis.auth_token_update_strategy == "ROTATE"
 
   assert {
     condition     = [for el in aws_elasticache_replication_group.redis.log_delivery_configuration : el.destination if el.log_type == "engine-log"][0] == "/aws/elasticache/test-redis/test-environment/test-redisRedis/engine"
@@ -200,10 +197,7 @@ run "aws_security_group_unit_test" {
   }
 
   # Cannot test for the default on a plan
-  # assert {
-  #   condition     = aws_security_group.redis.revoke_rules_on_delete == false
-  #   error_message = "Invalid config for aws_security_group revoke_rules_on_delete"
-  # }
+  # aws_security_group.redis.revoke_rules_on_delete == false
 
   assert {
     condition     = jsonencode(aws_security_group.redis.tags) == jsonencode(var.expected_tags)
@@ -330,10 +324,7 @@ run "aws_cloudwatch_log_group_unit_test" {
   }
 
   # Cannot test for the default on a plan
-  # assert {
-  #   condition     = aws_cloudwatch_log_group.redis-slow-log-group.skip_destroy == false
-  #   error_message = "Invalid config for aws_cloudwatch_log_group skip_destroy"
-  # }
+  # aws_cloudwatch_log_group.redis-slow-log-group.skip_destroy == false
 
   ### Test aws_cloudwatch_log_group engine resource ###
   assert {
@@ -347,10 +338,7 @@ run "aws_cloudwatch_log_group_unit_test" {
   }
 
   # Cannot test for the default on a plan
-  # assert {
-  #   condition     = aws_cloudwatch_log_group.redis-engine-log-group.skip_destroy == false
-  #   error_message = "Invalid config for aws_cloudwatch_log_group skip_destroy"
-  # }
+  # aws_cloudwatch_log_group.redis-engine-log-group.skip_destroy == false
 
   assert {
     condition     = jsonencode(aws_cloudwatch_log_group.redis-engine-log-group.tags) == jsonencode(var.expected_tags)
@@ -373,10 +361,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
   }
 
   # Cannot test for the default on a plan
-  # assert {
-  #   condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.distribution == "ByLogStream"
-  #   error_message = "Invalid config for aws_cloudwatch_log_subscription_filter distribution"
-  # }
+  # aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.distribution == "ByLogStream"
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-engine.role_arn == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
@@ -395,10 +380,7 @@ run "aws_cloudwatch_log_subscription_filter_unit_test" {
   }
 
   # Cannot test for the default on a plan
-  # assert {
-  #   condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.distribution == "ByLogStream"
-  #   error_message = "Invalid config for aws_cloudwatch_log_subscription_filter distribution"
-  # }
+  # aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.distribution == "ByLogStream"
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.redis-subscription-filter-slow.role_arn == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
