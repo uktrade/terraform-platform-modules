@@ -4,59 +4,52 @@ variables {
   database_name = "test-db"
 }
 
-mock_provider "aws" {}
-
 
 run "data_dump_unit_test" {
   command = plan
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[0].actions, "ecr:GetAuthorizationToken")
+    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "ecr:GetAuthorizationToken")
     error_message = "Permission not found: ecr:GetAuthorizationToken"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[0].actions, "ecr:BatchCheckLayerAvailability")
+    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "ecr:BatchCheckLayerAvailability")
     error_message = "Permission not found: ecr:BatchCheckLayerAvailability"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[0].actions, "ecr:GetDownloadUrlForLayer")
+    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "ecr:GetDownloadUrlForLayer")
     error_message = "Permission not found: ecr:GetDownloadUrlForLayer"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[0].actions, "ecr:BatchGetImage")
+    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "ecr:BatchGetImage")
     error_message = "Permission not found: ecr:BatchGetImage"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[1].actions, "logs:CreateLogGroup")
+    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[1].Action, "logs:CreateLogGroup")
     error_message = "Permission not found: logs:CreateLogGroup"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[1].actions, "logs:CreateLogStream")
+    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[1].Action, "logs:CreateLogStream")
     error_message = "Permission not found: logs:CreateLogStream"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[1].actions, "logs:PutLogEvents")
+    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[1].Action, "logs:PutLogEvents")
     error_message = "Permission not found: logs:PutLogEvents"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.assume_ecs_task_role.statement[0].actions, "sts:AssumeRole")
+    condition     = jsondecode(data.aws_iam_policy_document.assume_ecs_task_role.json).Statement[0].Action == "sts:AssumeRole"
     error_message = "Permission not found: sts:AssumeRole"
   }
 
   assert {
-    condition = [
-      for el in data.aws_iam_policy_document.assume_ecs_task_role.statement[0].principals :
-      true if el.type == "Service" && [
-        for identifier in el.identifiers : true if identifier == "ecs-tasks.amazonaws.com"
-      ][0] == true
-    ][0] == true
+    condition     = jsondecode(data.aws_iam_policy_document.assume_ecs_task_role.json).Statement[0].Principal.Service == "ecs-tasks.amazonaws.com"
     error_message = "Principal identifier should be: 'ecs-tasks.amazonaws.com'"
   }
 
@@ -66,7 +59,7 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.data_dump_task_execution_role.assume_role_policy).statement[0].sid == "AllowECSAssumeRole"
+    condition     = jsondecode(aws_iam_role.data_dump_task_execution_role.assume_role_policy).Statement[0].Sid == "AllowECSAssumeRole"
     error_message = "Statement Sid should be: 'AllowECSAssumeRole'"
   }
 
@@ -155,7 +148,7 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.data_dump.assume_role_policy).policy_id == "assume_ecs_task_role"
+    condition     = jsondecode(aws_iam_role.data_dump.assume_role_policy).Id == "assume_ecs_task_role"
     error_message = "Assume role policy id should be assume_ecs_task_role"
   }
 

@@ -1,6 +1,6 @@
 resource "aws_iam_role" "s3_migration_role" {
   name               = local.role_name
-  assume_role_policy = jsonencode(data.aws_iam_policy_document.allow_assume_role)
+  assume_role_policy = data.aws_iam_policy_document.allow_assume_role.json
 }
 
 data "aws_iam_policy_document" "allow_assume_role" {
@@ -89,5 +89,5 @@ data "aws_iam_policy_document" "s3_migration_policy_document" {
 resource "aws_iam_role_policy" "s3_migration_policy" {
   name   = local.policy_name
   role   = aws_iam_role.s3_migration_role.name
-  policy = jsonencode(data.aws_iam_policy_document.s3_migration_policy_document)
+  policy = data.aws_iam_policy_document.s3_migration_policy_document.json
 }

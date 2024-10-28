@@ -87,7 +87,7 @@ resource "aws_kms_key" "ssm_redis_endpoint" {
 
 resource "aws_iam_role" "conduit_ecs_task_role" {
   name               = "${var.name}-${var.application}-${var.environment}-conduitEcsTask"
-  assume_role_policy = jsonencode(data.aws_iam_policy_document.assume_ecstask_role)
+  assume_role_policy = data.aws_iam_policy_document.assume_ecstask_role.json
 
   inline_policy {
     name   = "AllowReadingofCMKSecrets"
