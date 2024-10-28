@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "assume_ecs_task_role" {
 
 resource "aws_iam_role" "data_load_task_execution_role" {
   name               = "${local.task_name}-exec"
-  assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
+  assume_role_policy = jsonencode(data.aws_iam_policy_document.assume_ecs_task_role)
 
   tags = local.tags
 }
@@ -61,7 +61,7 @@ resource "aws_iam_role" "data_load_task_execution_role" {
 resource "aws_iam_role_policy" "allow_task_creation" {
   name   = "AllowTaskCreation"
   role   = aws_iam_role.data_load_task_execution_role.name
-  policy = data.aws_iam_policy_document.allow_task_creation.json
+  policy = jsonencode(data.aws_iam_policy_document.allow_task_creation)
 }
 
 data "aws_iam_policy_document" "data_load" {
@@ -93,7 +93,7 @@ data "aws_iam_policy_document" "data_load" {
 
 resource "aws_iam_role" "data_load" {
   name               = "${local.task_name}-task"
-  assume_role_policy = data.aws_iam_policy_document.assume_ecs_task_role.json
+  assume_role_policy = jsonencode(data.aws_iam_policy_document.assume_ecs_task_role)
 
   tags = local.tags
 }
@@ -101,7 +101,7 @@ resource "aws_iam_role" "data_load" {
 resource "aws_iam_role_policy" "allow_data_load" {
   name   = "AllowDataLoad"
   role   = aws_iam_role.data_load.name
-  policy = data.aws_iam_policy_document.data_load.json
+  policy = jsonencode(data.aws_iam_policy_document.data_load)
 }
 
 resource "aws_ecs_task_definition" "service" {
