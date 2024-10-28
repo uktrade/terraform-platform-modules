@@ -1,12 +1,3 @@
-mock_provider "aws" {}
-
-override_data {
-  target = data.aws_caller_identity.current
-  values = {
-    account_id = "001122334455"
-  }
-}
-
 override_data {
   target = data.aws_security_group.rds-endpoint
   values = {
@@ -63,8 +54,10 @@ run "aws_security_group_unit_test" {
     error_message = "Invalid name for aws_security_group.default"
   }
 
-  # Cannot test for the default on a plan
-  # aws_security_group.default.revoke_rules_on_delete == false
+  assert {
+    condition     = aws_security_group.default.revoke_rules_on_delete == false
+    error_message = "Should be: false."
+  }
 
   assert {
     condition     = aws_security_group.default.tags.application == "test-application"
@@ -145,22 +138,30 @@ run "aws_kms_key_unit_test" {
     error_message = "Invalid description for aws_kms_key.default"
   }
 
-  # Cannot test for the default on a plan
-  # aws_kms_key.default.is_enabled == true
+  assert {
+    condition     = aws_kms_key.default.is_enabled == true
+    error_message = "Should be: true"
+  }
 
-  # Cannot test for the default on a plan
-  # aws_kms_key.default.bypass_policy_lockout_safety_check == false
+  assert {
+    condition     = aws_kms_key.default.bypass_policy_lockout_safety_check == false
+    error_message = "Should be: false"
+  }
 
   assert {
     condition     = aws_kms_key.default.enable_key_rotation == true
     error_message = "Should be: true"
   }
 
-  # Cannot test for the default on a plan
-  # aws_kms_key.default.key_usage == "ENCRYPT_DECRYPT"
+  assert {
+    condition     = aws_kms_key.default.key_usage == "ENCRYPT_DECRYPT"
+    error_message = "Should be: ENCRYPT_DECRYPT"
+  }
 
-  # Cannot test for the default on a plan
-  # aws_kms_key.default.customer_master_key_spec == "SYMMETRIC_DEFAULT"
+  assert {
+    condition     = aws_kms_key.default.customer_master_key_spec == "SYMMETRIC_DEFAULT"
+    error_message = "Should be: SYMMETRIC_DEFAULT"
+  }
 }
 
 run "aws_db_instance_unit_test" {
@@ -276,8 +277,8 @@ run "aws_db_instance_unit_test" {
   }
 
   assert {
-    condition     = aws_db_instance.default.maintenance_window == "Mon:00:00-Mon:03:00"
-    error_message = "Should be: Mon:00:00-Mon:03:00"
+    condition     = aws_db_instance.default.maintenance_window == "mon:00:00-mon:03:00"
+    error_message = "Should be: mon:00:00-mon:03:00"
   }
 
   assert {
@@ -416,31 +417,30 @@ run "aws_iam_role_unit_test" {
     error_message = "Invalid name_prefix for aws_iam_role.enhanced-monitoring"
   }
 
-  # Cannot test for the default on a plan
-  # aws_iam_role.enhanced-monitoring.max_session_duration == 3600
+  assert {
+    condition     = aws_iam_role.enhanced-monitoring.max_session_duration == 3600
+    error_message = "Should be: 3600"
+  }
 
   assert {
-    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).statement[0].actions[0] == "sts:AssumeRole"
+    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Statement[0].Action == "sts:AssumeRole"
     error_message = "Should be: sts:AssumeRole"
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).statement[0].effect == "Allow"
+    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Statement[0].Effect == "Allow"
     error_message = "Should be: Allow"
   }
 
   assert {
-    condition = [
-      for el in jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).statement[0].principals :
-      true if el.type == "Service" && [
-        for identifier in el.identifiers : true if identifier == "monitoring.rds.amazonaws.com"
-      ][0] == true
-    ][0] == true
-    error_message = "Should be: Service monitoring.rds.amazonaws.com"
+    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Statement[0].Principal.Service == "monitoring.rds.amazonaws.com"
+    error_message = "Should be: monitoring.rds.amazonaws.com"
   }
 
-  # Cannot test for the default on a plan
-  # jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Version == "2012-10-17"
+  assert {
+    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).Version == "2012-10-17"
+    error_message = "Should be: 2012-10-17"
+  }
 
   # Test aws_iam_role_policy_attachment.enhanced-monitoring resource
   assert {
@@ -454,22 +454,29 @@ run "aws_iam_role_unit_test" {
     error_message = "Invalid name for aws_iam_role.lambda-execution-role"
   }
 
-  # Cannot test for the default on a plan
-  # aws_iam_role.lambda-execution-role.max_session_duration == 3600
+  assert {
+    condition     = aws_iam_role.lambda-execution-role.max_session_duration == 3600
+    error_message = "Should be: 3600"
+  }
 
   assert {
-    condition     = jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).statement[0].actions[0] == "sts:AssumeRole"
+    condition     = jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).Statement[0].Action == "sts:AssumeRole"
     error_message = "Should be: sts:AssumeRole"
   }
 
   assert {
-    condition = [
-      for el in jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).statement[0].principals :
-      true if el.type == "Service" && [
-        for identifier in el.identifiers : true if identifier == "lambda.amazonaws.com"
-      ][0] == true
-    ][0] == true
-    error_message = "Should be: Service lambda.amazonaws.com"
+    condition     = jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).Statement[0].Effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition     = jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).Statement[0].Principal.Service == "lambda.amazonaws.com"
+    error_message = "Should be: lambda.amazonaws.com"
+  }
+
+  assert {
+    condition     = jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).Version == "2012-10-17"
+    error_message = "Should be: 2012-10-17"
   }
 }
 
@@ -486,8 +493,10 @@ run "aws_cloudwatch_log_rds_subscription_filter_unit_test" {
     error_message = "Invalid role_arn for aws_cloudwatch_log_subscription_filter.rds"
   }
 
-  # Cannot test for the default on a plan
-  # aws_cloudwatch_log_subscription_filter.rds.distribution == "ByLogStream"
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.rds.distribution == "ByLogStream"
+    error_message = "Should be: ByLogStream"
+  }
 
   assert {
     condition     = aws_cloudwatch_log_subscription_filter.rds.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
@@ -538,8 +547,10 @@ run "aws_lambda_function_unit_test" {
     error_message = "Should be: end with layer:python-postgres:1"
   }
 
-  # Cannot test for the default on a plan
-  # [for el in aws_lambda_function.lambda.vpc_config : true if el.ipv6_allowed_for_dual_stack == false][0] == true
+  assert {
+    condition     = [for el in aws_lambda_function.lambda.vpc_config : true if el.ipv6_allowed_for_dual_stack == false][0] == true
+    error_message = "Should be: false"
+  }
 }
 
 run "aws_lambda_invocation_unit_test" {
@@ -551,14 +562,20 @@ run "aws_lambda_invocation_unit_test" {
     error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
   }
 
-  # Cannot test for the default on a plan
-  # aws_lambda_invocation.create-application-user.lifecycle_scope == "CREATE_ONLY"
+  assert {
+    condition     = aws_lambda_invocation.create-application-user.lifecycle_scope == "CREATE_ONLY"
+    error_message = "Should be: CREATE_ONLY"
+  }
 
-  # Cannot test for the default on a plan
-  # aws_lambda_invocation.create-application-user.qualifier == "$LATEST"
+  assert {
+    condition     = aws_lambda_invocation.create-application-user.qualifier == "$LATEST"
+    error_message = "Should be: $LATEST"
+  }
 
-  # Cannot test for the default on a plan
-  # aws_lambda_invocation.create-application-user.terraform_key == "tf"
+  assert {
+    condition     = aws_lambda_invocation.create-application-user.terraform_key == "tf"
+    error_message = "Should be: tf"
+  }
 
   # Test aws_lambda_invocation.create-readonly-user resource
   assert {
@@ -566,14 +583,20 @@ run "aws_lambda_invocation_unit_test" {
     error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
   }
 
-  # Cannot test for the default on a plan
-  # aws_lambda_invocation.create-readonly-user.lifecycle_scope == "CREATE_ONLY"
+  assert {
+    condition     = aws_lambda_invocation.create-readonly-user.lifecycle_scope == "CREATE_ONLY"
+    error_message = "Should be: CREATE_ONLY"
+  }
 
-  # Cannot test for the default on a plan
-  # aws_lambda_invocation.create-readonly-user.qualifier == "$LATEST"
+  assert {
+    condition     = aws_lambda_invocation.create-readonly-user.qualifier == "$LATEST"
+    error_message = "Should be: $LATEST"
+  }
 
-  # Cannot test for the default on a plan
-  # aws_lambda_invocation.create-readonly-user.terraform_key == "tf"
+  assert {
+    condition     = aws_lambda_invocation.create-readonly-user.terraform_key == "tf"
+    error_message = "Should be: tf"
+  }
 
   assert {
     condition     = aws_lambda_function.lambda.reserved_concurrent_executions == -1

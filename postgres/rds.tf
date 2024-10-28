@@ -115,7 +115,7 @@ resource "aws_db_instance" "default" {
 
 resource "aws_iam_role" "enhanced-monitoring" {
   name_prefix        = "rds-enhanced-monitoring-"
-  assume_role_policy = jsonencode(data.aws_iam_policy_document.enhanced-monitoring)
+  assume_role_policy = data.aws_iam_policy_document.enhanced-monitoring.json
 }
 
 resource "aws_iam_role_policy_attachment" "enhanced-monitoring" {
