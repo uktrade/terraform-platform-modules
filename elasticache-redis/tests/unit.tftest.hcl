@@ -421,9 +421,12 @@ run "test_create_conduit_iam_role" {
     error_message = "Should be: test-redis-test-application-test-environment-conduitEcsTask"
   }
 
-  # We can check that the correct data is used for the assume_role_policy, but cannot check the full details on a plan
+  # Check that the correct aws_iam_policy_document is used from the mocked data json
   assert {
     condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Sid\": \"AllowAssumeECSTaskRole\"}"
     error_message = "Should be: {\"Sid\": \"AllowAssumeECSTaskRole\"}"
   }
+
+  condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
+  error_message = "Should be: \"{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}\""
 }

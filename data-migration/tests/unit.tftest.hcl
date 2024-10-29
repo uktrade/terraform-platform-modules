@@ -48,10 +48,20 @@ run "data_migration_unit_test" {
     error_message = "Should be: test-destination-bucket-name-S3MigrationRole"
   }
 
-  # We can check that the correct data source is used for the policy, but cannot check the full details on a plan
+  # Check that the correct aws_iam_policy_document is used from the mocked data json
   assert {
     condition     = aws_iam_role_policy.s3_migration_policy.policy == "{\"Sid\": \"AllowReadOnSourceBucket\"}"
     error_message = "Should be: {\"Sid\": \"AllowReadOnSourceBucket\"}"
+  }
+
+  assert {
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.s3_migration_policy_document.statement[1].resources), "test-destination-bucket-arn")
+    error_message = "Should contain: test-destination-bucket-arn"
+  }
+
+  assert {
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.s3_migration_policy_document.statement[3].actions), "kms:Decrypt") == true
+    error_message = "Statement should contain kms:Decrypt"
   }
 }
 
@@ -67,6 +77,9 @@ run "data_migration_without_source_kms_key" {
     destination_bucket_identifier = "test-destination-bucket-name"
   }
 
-  # Cannot test for the absence of this on a plan
-  # strcontains(aws_iam_role_policy.s3_migration_policy.policy, "kms:Decrypt") == false
+  assert {
+    # Cannot check the specific statement, because it does not exist
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.s3_migration_policy_document), "kms:Decrypt") == false
+    error_message = "Statement should not contain kms:Decrypt"
+  }
 }
