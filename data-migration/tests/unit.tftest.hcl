@@ -32,7 +32,7 @@ run "data_migration_unit_test" {
     error_message = "Should be: test-destination-bucket-name-S3MigrationRole"
   }
 
-  # We can check that the correct data is used for the assume_role_policy, but cannot check the full details on a plan
+  # Check that the correct aws_iam_policy_document is used from the mocked data json
   assert {
     condition     = aws_iam_role.s3_migration_role.assume_role_policy == "{\"Sid\": \"AllowAssumeWorkerRole\"}"
     error_message = "Should be: {\"Sid\": \"AllowAssumeWorkerRole\"}"
@@ -54,11 +54,11 @@ run "data_migration_unit_test" {
     error_message = "Should be: {\"Sid\": \"AllowReadOnSourceBucket\"}"
   }
 
+  # Check the contents of the policy document
   assert {
     condition     = strcontains(jsonencode(data.aws_iam_policy_document.s3_migration_policy_document.statement[1].resources), "test-destination-bucket-arn")
     error_message = "Should contain: test-destination-bucket-arn"
   }
-
   assert {
     condition     = strcontains(jsonencode(data.aws_iam_policy_document.s3_migration_policy_document.statement[3].actions), "kms:Decrypt") == true
     error_message = "Statement should contain kms:Decrypt"
