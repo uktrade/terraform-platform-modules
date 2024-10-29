@@ -4,8 +4,20 @@ variables {
   name_prefix = "test-name"
 }
 
+override_data {
+  target = data.aws_iam_policy_document.log-resource-policy
+  values = {
+    json = "{\"Sid\": \"StateMachineToCloudWatchLogs\"}"
+  }
+}
+
 run "log_resource_policy_unit_test" {
   command = plan
+
+  assert {
+    condition     = aws_cloudwatch_log_resource_policy.log-resource-policy.policy_document == "{\"Sid\": \"StateMachineToCloudWatchLogs\"}"
+    error_message = "Should be: {\"Sid\": \"StateMachineToCloudWatchLogs\"}"
+  }
 
   assert {
     condition = [

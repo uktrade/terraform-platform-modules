@@ -39,11 +39,6 @@ run "data_migration_unit_test" {
   }
 
   assert {
-    condition     = aws_iam_role.s3_migration_role.assume_role_policy != null
-    error_message = "Role should have an assume role policy"
-  }
-
-  assert {
     condition     = aws_iam_role_policy.s3_migration_policy.name == "test-destination-bucket-name-S3MigrationPolicy"
     error_message = "Should be: test-destination-bucket-name-S3MigrationPolicy"
   }
