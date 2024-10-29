@@ -429,11 +429,11 @@ run "test_create_conduit_iam_role" {
 
   # Check the contents of the policy document
   assert {
-    condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].actions), "sts:AssumeRole")
+    condition     = contains(data.aws_iam_policy_document.assume_ecstask_role.statement[0].actions, "sts:AssumeRole")
     error_message = "Should be: sts:AssumeRole"
   }
   assert {
-    condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].effect), "Allow")
+    condition     = data.aws_iam_policy_document.assume_ecstask_role.statement[0].effect == "Allow"
     error_message = "Should be: Allow"
   }
   assert {
