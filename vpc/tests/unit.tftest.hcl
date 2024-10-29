@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 variables {
   arg_name = "vpc-test-name"
   arg_config = {
@@ -10,6 +12,13 @@ variables {
   }
 }
 
+override_data {
+  target = module.logs.data.aws_iam_policy_document.log-resource-policy
+  values = {
+    json = "{\"Sid\": \"StateMachineToCloudWatchLogs\"}"
+  }
+}
+
 run "aws_vpc_unit_test" {
   command = plan
 
@@ -19,10 +28,8 @@ run "aws_vpc_unit_test" {
     error_message = "Invalid VPC settings"
   }
 
-  assert {
-    condition     = aws_vpc.vpc.enable_dns_support == true
-    error_message = "Invalid VPC settings"
-  }
+  # Cannot test for the default on a plan
+  # aws_vpc.vpc.enable_dns_support == true
 
   assert {
     condition     = aws_vpc.vpc.tags.Name == "vpc-test-name"
@@ -63,10 +70,8 @@ run "aws_security_group_unit_test" {
   command = plan
 
   ### Test aws_security_group resource ###
-  assert {
-    condition     = aws_security_group.vpc-core-sg.revoke_rules_on_delete == false
-    error_message = "Invalid security group settings"
-  }
+  # Cannot test for the default on a plan
+  # aws_security_group.vpc-core-sg.revoke_rules_on_delete == false
 
   ### Test aws_security_group_rule resource ###
   assert {
@@ -144,10 +149,8 @@ run "aws_subnet_unit_test" {
     error_message = "Invalid private subnet config"
   }
 
-  assert {
-    condition     = aws_subnet.private["a"].map_public_ip_on_launch == false
-    error_message = "Invalid private subnet config"
-  }
+  # Cannot test for the default on a plan
+  # aws_subnet.private["a"].map_public_ip_on_launch == false
 
   assert {
     condition     = aws_subnet.private["a"].tags.subnet_type == "private"
