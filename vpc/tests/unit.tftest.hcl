@@ -12,6 +12,13 @@ variables {
   }
 }
 
+override_data {
+  target = module.logs.data.aws_iam_policy_document.log-resource-policy
+  values = {
+    json = "{\"Sid\": \"StateMachineToCloudWatchLogs\"}"
+  }
+}
+
 run "aws_vpc_unit_test" {
   command = plan
 
