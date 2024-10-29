@@ -36,6 +36,62 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.lambda-assume-role-policy
+  values = {
+    json = "{\"Sid\": \"AllowLambdaAssumeRole\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.enhanced-monitoring
+  values = {
+    json = "{\"Sid\": \"AllowEnhancedMonitoringAssumeRole\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.lambda-execution-policy
+  values = {
+    json = "{\"Sid\": \"LambdaExecutionPolicy\"}"
+  }
+}
+
+override_data {
+  target = module.database-dump[0].data.aws_iam_policy_document.assume_ecs_task_role
+  values = {
+    json = "{\"Sid\": \"AllowECSAssumeRole\"}"
+  }
+}
+
+override_data {
+  target = module.database-dump[0].data.aws_iam_policy_document.allow_task_creation
+  values = {
+    json = "{\"Sid\": \"AllowPullFromEcr\"}"
+  }
+}
+
+override_data {
+  target = module.database-load[0].data.aws_iam_policy_document.assume_ecs_task_role
+  values = {
+    json = "{\"Sid\": \"AllowECSAssumeRole\"}"
+  }
+}
+
+override_data {
+  target = module.database-load[0].data.aws_iam_policy_document.allow_task_creation
+  values = {
+    json = "{\"Sid\": \"AllowPullFromEcr\"}"
+  }
+}
+
+override_data {
+  target = module.database-load[0].data.aws_iam_policy_document.data_load
+  values = {
+    json = "{\"Sid\": \"AllowReadFromS3\"}"
+  }
+}
+
 variables {
   application = "test-application"
   environment = "test-environment"
@@ -419,19 +475,24 @@ run "aws_iam_role_unit_test" {
   # Cannot test for the default on a plan
   # aws_iam_role.enhanced-monitoring.max_session_duration == 3600
 
+  # Check that the correct aws_iam_policy_document is used from the mocked data json
   assert {
-    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).statement[0].actions[0] == "sts:AssumeRole"
+    condition     = aws_iam_role.enhanced-monitoring.assume_role_policy == "{\"Sid\": \"AllowEnhancedMonitoringAssumeRole\"}"
+    error_message = "Should be: {\"Sid\": \"AllowEnhancedMonitoringAssumeRole\"}"
+  }
+
+  # Check the contents of the policy document
+  assert {
+    condition     = contains(data.aws_iam_policy_document.enhanced-monitoring.statement[0].actions, "sts:AssumeRole")
     error_message = "Should be: sts:AssumeRole"
   }
-
   assert {
-    condition     = jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).statement[0].effect == "Allow"
+    condition     = data.aws_iam_policy_document.enhanced-monitoring.statement[0].effect == "Allow"
     error_message = "Should be: Allow"
   }
-
   assert {
     condition = [
-      for el in jsondecode(aws_iam_role.enhanced-monitoring.assume_role_policy).statement[0].principals :
+      for el in data.aws_iam_policy_document.enhanced-monitoring.statement[0].principals :
       true if el.type == "Service" && [
         for identifier in el.identifiers : true if identifier == "monitoring.rds.amazonaws.com"
       ][0] == true
@@ -457,14 +518,21 @@ run "aws_iam_role_unit_test" {
   # Cannot test for the default on a plan
   # aws_iam_role.lambda-execution-role.max_session_duration == 3600
 
+  # Check that the correct aws_iam_policy_document is used from the mocked data json
   assert {
-    condition     = jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).statement[0].actions[0] == "sts:AssumeRole"
+    condition     = aws_iam_role.lambda-execution-role.assume_role_policy == "{\"Sid\": \"AllowLambdaAssumeRole\"}"
+    error_message = "Should be: {\"Sid\": \"AllowLambdaAssumeRole\"}"
+  }
+
+  # Check the contents of the policy document
+  assert {
+    condition     = contains(data.aws_iam_policy_document.lambda-assume-role-policy.statement[0].actions, "sts:AssumeRole")
     error_message = "Should be: sts:AssumeRole"
   }
 
   assert {
     condition = [
-      for el in jsondecode(aws_iam_role.lambda-execution-role.assume_role_policy).statement[0].principals :
+      for el in data.aws_iam_policy_document.lambda-assume-role-policy.statement[0].principals :
       true if el.type == "Service" && [
         for identifier in el.identifiers : true if identifier == "lambda.amazonaws.com"
       ][0] == true
