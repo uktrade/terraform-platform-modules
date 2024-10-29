@@ -1,3 +1,12 @@
+mock_provider "aws" {}
+
+override_data {
+  target = data.aws_caller_identity.current
+  values = {
+    account_id = "001122334455"
+  }
+}
+
 override_data {
   target = data.aws_vpc.vpc
   values = {
@@ -17,6 +26,13 @@ override_data {
   target = data.aws_ssm_parameter.log-destination-arn
   values = {
     value = "{\"prod\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod\", \"dev\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.assume_ecstask_role
+  values = {
+    json = "{\"Sid\": \"AllowAssumeECSTaskRole\"}"
   }
 }
 
@@ -427,8 +443,23 @@ run "aws_kms_key_unit_test" {
     error_message = "Should be: my_name-my_app-my_env-conduitEcsTask"
   }
 
+  # Check that the correct aws_iam_policy_document is used from the mocked data json
   assert {
-    condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
-    error_message = "Should be: \"{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}\""
+    condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Sid\": \"AllowAssumeECSTaskRole\"}"
+    error_message = "Should be: {\"Sid\": \"AllowAssumeECSTaskRole\"}"
+  }
+
+  # Check the contents of the policy document
+  assert {
+    condition     = contains(data.aws_iam_policy_document.assume_ecstask_role.statement[0].actions, "sts:AssumeRole")
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.assume_ecstask_role.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].principals), "ecs-tasks.amazonaws.com")
+    error_message = "Should be: ecs-tasks.amazonaws.com"
   }
 }
