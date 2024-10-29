@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.3](https://github.com/uktrade/terraform-platform-modules/compare/5.5.2...5.5.3) (2024-10-29)
+
+
+### Reverts
+
+* "test: Add terraform test GitHub Action (and make tests pass) ([#258](https://github.com/uktrade/terraform-platform-modules/issues/258)) ([3e0fb22](https://github.com/uktrade/terraform-platform-modules/commit/3e0fb22f90942e3694212908e43372dd407e2cbb))
+
 ## [5.5.2](https://github.com/uktrade/terraform-platform-modules/compare/5.5.1...5.5.2) (2024-10-25)
 
 
