@@ -427,6 +427,17 @@ run "test_create_conduit_iam_role" {
     error_message = "Should be: {\"Sid\": \"AllowAssumeECSTaskRole\"}"
   }
 
-  condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
-  error_message = "Should be: \"{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}\""
+  # Check the contents of the policy document
+  assert {
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].actions), "sts:AssumeRole")
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].effect), "Allow")
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].principals), "ecs-tasks.amazonaws.com")
+    error_message = "Should be: ecs-tasks.amazonaws.com"
+  }
 }
