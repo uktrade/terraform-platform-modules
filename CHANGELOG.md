@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.5.3](https://github.com/uktrade/terraform-platform-modules/compare/5.5.2...5.5.3) (2024-10-29)
+
+
+### Fixes
+
+* DBTP-1495 Add some iam:UpdateAssumeRolePolicy permissions so that the deploy environment pipelines work. ([#260](https://github.com/uktrade/terraform-platform-modules/issues/260)) ([049cd4d](https://github.com/uktrade/terraform-platform-modules/commit/049cd4d5205565f55c00ccd427d5de929f2a1c16)))
+
 ## [5.5.2](https://github.com/uktrade/terraform-platform-modules/compare/5.5.1...5.5.2) (2024-10-25)
 
 
