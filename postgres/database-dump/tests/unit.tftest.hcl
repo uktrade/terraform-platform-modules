@@ -9,7 +9,7 @@ mock_provider "aws" {}
 override_data {
   target = data.aws_iam_policy_document.assume_ecs_task_role
   values = {
-    json = "{\"Sid\": \"AssumeECSTaskRole\"}"
+    json = "{\"Sid\": \"AllowECSAssumeRole\"}"
   }
 }
 
@@ -79,8 +79,8 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.data_dump_task_execution_role.assume_role_policy).Sid == "AssumeECSTaskRole"
-    error_message = "Statement Sid should be: 'AssumeECSTaskRole'"
+    condition     = jsondecode(aws_iam_role.data_dump_task_execution_role.assume_role_policy).Sid == "AllowECSAssumeRole"
+    error_message = "Statement Sid should be: AllowECSAssumeRole"
   }
 
   assert {
@@ -168,8 +168,8 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.data_dump.assume_role_policy).Sid == "AssumeECSTaskRole"
-    error_message = "Assume role policy Sid should be AssumeECSTaskRole"
+    condition     = jsondecode(aws_iam_role.data_dump.assume_role_policy).Sid == "AllowECSAssumeRole"
+    error_message = "Assume role policy Sid should be AllowECSAssumeRole"
   }
 
   assert {

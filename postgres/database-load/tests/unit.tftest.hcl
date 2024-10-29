@@ -25,6 +25,27 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.assume_ecs_task_role
+  values = {
+    json = "{\"Sid\": \"AllowECSAssumeRole\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.allow_task_creation
+  values = {
+    json = "{\"Sid\": \"AllowPullFromEcr\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.data_load
+  values = {
+    json = "{\"Sid\": \"AllowReadFromS3\"}"
+  }
+}
+
 run "data_load_unit_test" {
   command = plan
 
@@ -94,7 +115,7 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.data_load_task_execution_role.assume_role_policy).statement[0].sid == "AllowECSAssumeRole"
+    condition     = jsondecode(aws_iam_role.data_load_task_execution_role.assume_role_policy).Sid == "AllowECSAssumeRole"
     error_message = "Statement Sid should be: 'AllowECSAssumeRole'"
   }
 
@@ -168,8 +189,8 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.data_load.assume_role_policy).policy_id == "assume_ecs_task_role"
-    error_message = "Assume role policy id should be assume_ecs_task_role"
+    condition     = jsondecode(aws_iam_role.data_load.assume_role_policy).Sid == "AllowECSAssumeRole"
+    error_message = "Assume role policy id should be AllowECSAssumeRole"
   }
 
   assert {
