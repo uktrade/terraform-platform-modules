@@ -47,6 +47,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.assume_ecstask_role
+  values = {
+    json = "{\"Sid\": \"AllowAssumeECSTaskRole\"}"
+  }
+}
+
 run "aws_elasticache_replication_group_unit_test" {
   command = plan
 
@@ -414,23 +421,9 @@ run "test_create_conduit_iam_role" {
     error_message = "Should be: test-redis-test-application-test-environment-conduitEcsTask"
   }
 
+  # We can check that the correct data is used for the assume_role_policy, but cannot check the full details on a plan
   assert {
-    condition     = jsondecode(aws_iam_role.conduit_ecs_task_role.assume_role_policy).statement[0].actions[0] == "sts:AssumeRole"
-    error_message = "Should be: sts:AssumeRole"
-  }
-
-  assert {
-    condition     = jsondecode(aws_iam_role.conduit_ecs_task_role.assume_role_policy).statement[0].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-
-  assert {
-    condition = [
-      for el in jsondecode(aws_iam_role.conduit_ecs_task_role.assume_role_policy).statement[0].principals :
-      true if el.type == "Service" && [
-        for identifier in el.identifiers : true if identifier == "ecs-tasks.amazonaws.com"
-      ][0] == true
-    ][0] == true
-    error_message = "Should be: Service ecs-tasks.amazonaws.com"
+    condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Sid\": \"AllowAssumeECSTaskRole\"}"
+    error_message = "Should be: {\"Sid\": \"AllowAssumeECSTaskRole\"}"
   }
 }

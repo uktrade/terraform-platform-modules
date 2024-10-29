@@ -32,7 +32,7 @@ run "data_migration_unit_test" {
     error_message = "Should be: test-destination-bucket-name-S3MigrationRole"
   }
 
-  # We can check that the correct data is set for the assume_role_policy, but cannot check the full details on a plan
+  # We can check that the correct data is used for the assume_role_policy, but cannot check the full details on a plan
   assert {
     condition     = aws_iam_role.s3_migration_role.assume_role_policy == "{\"Sid\": \"AllowAssumeWorkerRole\"}"
     error_message = "Should be: {\"Sid\": \"AllowAssumeWorkerRole\"}"
@@ -53,7 +53,7 @@ run "data_migration_unit_test" {
     error_message = "Should be: test-destination-bucket-name-S3MigrationRole"
   }
 
-  # We can check that the correct data is set for the policy, but cannot check the full details on a plan
+  # We can check that the correct data source is used for the policy, but cannot check the full details on a plan
   assert {
     condition     = aws_iam_role_policy.s3_migration_policy.policy == "{\"Sid\": \"AllowReadOnSourceBucket\"}"
     error_message = "Should be: {\"Sid\": \"AllowReadOnSourceBucket\"}"
