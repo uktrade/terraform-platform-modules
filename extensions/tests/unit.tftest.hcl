@@ -91,8 +91,6 @@ run "aws_ssm_parameter_unit_test" {
     error_message = "Invalid config for aws_ssm_parameter type"
   }
 
-  # Value
-
   # Tags
   assert {
     condition     = aws_ssm_parameter.addons.tags["application"] == "test-application"

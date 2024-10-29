@@ -443,9 +443,23 @@ run "aws_kms_key_unit_test" {
     error_message = "Should be: my_name-my_app-my_env-conduitEcsTask"
   }
 
-  # We can check that the correct data is used for the assume_role_policy, but cannot check the full details on a plan
+  # Check that the correct aws_iam_policy_document is used from the mocked data json
   assert {
     condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Sid\": \"AllowAssumeECSTaskRole\"}"
     error_message = "Should be: {\"Sid\": \"AllowAssumeECSTaskRole\"}"
+  }
+
+  # Check the contents of the policy document
+  assert {
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].actions), "sts:AssumeRole")
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].effect), "Allow")
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].principals), "ecs-tasks.amazonaws.com")
+    error_message = "Should be: ecs-tasks.amazonaws.com"
   }
 }
