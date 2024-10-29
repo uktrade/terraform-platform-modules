@@ -56,11 +56,11 @@ run "data_migration_unit_test" {
 
   # Check the contents of the policy document
   assert {
-    condition     = strcontains(jsonencode(data.aws_iam_policy_document.s3_migration_policy_document.statement[1].resources), "test-destination-bucket-arn")
+    condition     = contains(data.aws_iam_policy_document.s3_migration_policy_document.statement[1].resources, "test-destination-bucket-arn")
     error_message = "Should contain: test-destination-bucket-arn"
   }
   assert {
-    condition     = strcontains(jsonencode(data.aws_iam_policy_document.s3_migration_policy_document.statement[3].actions), "kms:Decrypt") == true
+    condition     = contains(data.aws_iam_policy_document.s3_migration_policy_document.statement[3].actions, "kms:Decrypt")
     error_message = "Statement should contain kms:Decrypt"
   }
 }
