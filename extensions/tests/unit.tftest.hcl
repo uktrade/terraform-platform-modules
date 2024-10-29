@@ -53,6 +53,13 @@ override_data {
 }
 
 override_data {
+  target = module.opensearch["test-opensearch"].data.aws_iam_policy_document.assume_ecstask_role
+  values = {
+    json = "{\"Sid\": \"AllowAssumeECSTaskRole\"}"
+  }
+}
+
+override_data {
   target = module.opensearch["test-opensearch"].data.aws_ssm_parameter.log-destination-arn
   values = {
     value = "{\"dev\":\"arn:aws:logs:eu-west-2:763451185160:log-group:/copilot/tools/central_log_groups_dev\",\"prod\":\"arn:aws:logs:eu-west-2:763451185160:log-group:/copilot/tools/central_log_groups_prod\"}"
