@@ -43,11 +43,11 @@ data "aws_iam_policy_document" "lambda-execution-policy" {
 resource "aws_iam_role" "lambda-execution-role" {
   name               = "${local.name}-lambda-role"
   path               = "/"
-  assume_role_policy = jsonencode(data.aws_iam_policy_document.lambda-assume-role-policy)
+  assume_role_policy = data.aws_iam_policy_document.lambda-assume-role-policy.json
 
   inline_policy {
     name   = "${local.name}-execution-policy"
-    policy = jsonencode(data.aws_iam_policy_document.lambda-execution-policy)
+    policy = data.aws_iam_policy_document.lambda-execution-policy.json
   }
 }
 
