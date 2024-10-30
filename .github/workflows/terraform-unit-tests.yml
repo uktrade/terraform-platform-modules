@@ -27,7 +27,7 @@ jobs:
             # Lose leading ./ and select the part before the tests directory
             module=$(echo "${file#./}" | awk -F "/tests/" '{print $1}')
             # In case we separate the test files, only include each module once
-            if [[ "${modules}" != *"${module}"* ]]; then
+            if [[ "\"${modules}\"" != *"\"${module}\""* ]]; then
               echo "Found module ${module}"
               modules+="\"${module}\","
             fi
