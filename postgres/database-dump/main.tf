@@ -58,13 +58,20 @@ resource "aws_iam_role_policy" "allow_task_creation" {
 
 
 data "aws_iam_policy_document" "data_dump" {
-  # checkov:skip=CKV_AWS_356:Permissions required to upload
   policy_id = "data_dump"
   statement {
     sid    = "AllowWriteToS3"
     effect = "Allow"
 
-    actions = local.s3_permissions
+    actions = [
+      "s3:ListBucket",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+      "s3:PutObjectTagging",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging"
+    ]
 
     resources = [
       aws_s3_bucket.data_dump_bucket.arn,
@@ -105,7 +112,7 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = jsonencode([
     {
       name      = local.task_name
-      image     = "public.ecr.aws/uktrade/database-copy:latest"
+      image     = "public.ecr.aws/uktrade/database-copy:tag-latest"
       essential = true
       environment = [
         {
@@ -138,14 +145,11 @@ resource "aws_ecs_task_definition" "service" {
           awslogs-stream-prefix = "ecs"
         }
       }
-
-
     }
   ])
 
   cpu    = 1024
   memory = 3072
-
 
   requires_compatibilities = ["FARGATE"]
 
