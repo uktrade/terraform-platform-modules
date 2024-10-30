@@ -135,53 +135,45 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = length(data.aws_iam_policy_document.data_load.statement) == 2
+    condition     = length(data.aws_iam_policy_document.data_load.statement) == 3
     error_message = "Should be 1 policy statement"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:ListBucket")
-    error_message = "Permission not found: s3:ListBucket"
-  }
-
-  assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObject")
-    error_message = "Permission not found: s3:GetObject"
-  }
-
-  assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObjectTagging")
-    error_message = "Permission not found: s3:GetObjectTagging"
-  }
-
-  assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObjectVersion")
-    error_message = "Permission not found: s3:GetObjectVersion"
-  }
-
-  assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObjectVersionTagging")
-    error_message = "Permission not found: s3:GetObjectVersionTagging"
-  }
-
-  assert {
-    condition     = length(data.aws_iam_policy_document.data_load.statement[0].actions) == 5
+    condition     = length(data.aws_iam_policy_document.data_load.statement[0].actions) == 6
     error_message = "Should be 7 permissions on policy statement"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.data_load.statement[0].actions == toset(["s3:ListBucket", "s3:GetObject", "s3:GetObjectTagging", "s3:GetObjectVersion", "s3:GetObjectVersionTagging", "s3:DeleteObject"])
+    error_message = "Permissions not found"
   }
 
   #  data.aws_iam_policy_document.data_load.statement[0].resources cannot be tested on a 'plan'
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[1].actions, "kms:Decrypt")
-    error_message = "Permission not found: kms:Decrypt"
-  }
-
-  assert {
-    condition     = length(data.aws_iam_policy_document.data_load.statement[1].actions) == 1
+    condition     = length(data.aws_iam_policy_document.data_load.statement[1].actions) == 3
     error_message = "Should be 1 permissions on policy statement"
   }
 
+  assert {
+    condition     = data.aws_iam_policy_document.data_load.statement[1].actions == toset(["ecs:ListServices", "ecs:DescribeServices", "ecs:UpdateService"])
+    error_message = "Permissions not found"
+  }
+
   # data.aws_iam_policy_document.data_load.statement[1].resources cannot be tested on a 'plan'
+
+  assert {
+    condition     = length(data.aws_iam_policy_document.data_load.statement[2].actions) == 1
+    error_message = "Should be 1 permissions on policy statement"
+  }
+
+  assert {
+    condition     = contains(data.aws_iam_policy_document.data_load.statement[2].actions, "kms:Decrypt")
+    error_message = "Permission not found: kms:Decrypt"
+  }
+
+  # data.aws_iam_policy_document.data_load.statement[2].resources cannot be tested on a 'plan'
 
   assert {
     condition     = aws_iam_role.data_load.name == "test-app-test-env-test-db-load-task"
