@@ -136,7 +136,7 @@ run "data_load_unit_test" {
 
   assert {
     condition     = length(data.aws_iam_policy_document.data_load.statement) == 3
-    error_message = "Should be 1 policy statement"
+    error_message = "Should be 3 policy statements"
   }
 
   assert {
