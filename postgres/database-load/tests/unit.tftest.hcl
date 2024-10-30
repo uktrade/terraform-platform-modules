@@ -141,7 +141,7 @@ run "data_load_unit_test" {
 
   assert {
     condition     = length(data.aws_iam_policy_document.data_load.statement[0].actions) == 6
-    error_message = "Should be 7 permissions on policy statement"
+    error_message = "Should be 6 permissions on policy statement"
   }
 
   assert {
