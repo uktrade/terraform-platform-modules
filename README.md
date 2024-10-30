@@ -77,6 +77,10 @@ Execute the tests:
 poetry run pytest
 ```
 
+### Regression/integration testing
+
+Because this codebase is only fully exercised in conjunction with several others, we have [platform-regression-tests](https://github.com/uktrade/platform-regression-tests), which orchestrates the testing of them working together.
+
 ## Backing services module
 
 This module is configured by a YAML file and two simple args:
