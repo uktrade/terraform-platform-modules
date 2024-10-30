@@ -519,7 +519,7 @@ run "aws_db_instance_unit_test_database_load_not_created_if_to_env_is_prod" {
 
   assert {
     condition     = length(module.database-load) == 0
-    error_message = "database-load module should be created"
+    error_message = "database-load module should not be created"
   }
 }
 
