@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.6.0](https://github.com/uktrade/terraform-platform-modules/compare/5.5.3...5.6.0) (2024-10-30)
+
+
+### Features
+
+* Add permissions to the database-load module to allow deletion of the … ([#249](https://github.com/uktrade/terraform-platform-modules/issues/249)) ([1f37adf](https://github.com/uktrade/terraform-platform-modules/commit/1f37adfdfbb427fe8151f86780eef2367d5756e2))
+
+
+### Bug Fixes
+
+* DBTP-1456 Stop the terraform tests GitHub Action excluding modules with submodules ([#262](https://github.com/uktrade/terraform-platform-modules/issues/262)) ([492d102](https://github.com/uktrade/terraform-platform-modules/commit/492d102f849b2cb58a48e38a897a6169d9d605c4))
+
 ## [5.5.3](https://github.com/uktrade/terraform-platform-modules/compare/5.5.2...5.5.3) (2024-10-29)
 
 
