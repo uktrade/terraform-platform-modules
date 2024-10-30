@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_kms_key" "data_dump_kms_key" {
