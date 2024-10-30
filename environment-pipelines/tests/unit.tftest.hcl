@@ -578,6 +578,9 @@ run "test_iam" {
     condition     = aws_iam_role.environment_pipeline_codebuild.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
     error_message = "Should be: {\"Sid\": \"AssumeCodebuildRole\"}"
   }
+
+  # Todo: We should be testing the contents of data.aws_iam_policy_document.iam
+
   # Can't test managed_policy_arns of the environment_pipeline_codebuild role at plan time.
   assert {
     condition     = jsonencode(aws_iam_role.environment_pipeline_codebuild.tags) == jsonencode(var.expected_tags)
