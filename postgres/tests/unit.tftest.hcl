@@ -514,7 +514,7 @@ run "aws_db_instance_unit_test_database_load_not_created_if_to_env_is_prod" {
 
   assert {
     condition     = length(module.database-dump) == 0
-    error_message = "database-dump module should be not created"
+    error_message = "database-dump module should not be created"
   }
 
   assert {
