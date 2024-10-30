@@ -63,7 +63,15 @@ data "aws_iam_policy_document" "data_dump" {
     sid    = "AllowWriteToS3"
     effect = "Allow"
 
-    actions = local.s3_permissions
+    actions = [
+      "s3:ListBucket",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+      "s3:PutObjectTagging",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging"
+    ]
 
     resources = [
       aws_s3_bucket.data_dump_bucket.arn,
