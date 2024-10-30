@@ -396,7 +396,7 @@ run "aws_db_instance_unit_test_database_dump_created" {
 
   assert {
     condition     = length(module.database-load) == 0
-    error_message = "database-load module should be not created"
+    error_message = "database-load module should not be created"
   }
 }
 
@@ -474,6 +474,11 @@ run "aws_db_instance_unit_test_database_load_created" {
   assert {
     condition     = length(module.database-dump) == 0
     error_message = "database-dump module should not be created"
+  }
+
+  assert {
+    condition     = module.database-load[0].database-load-module-created
+    error_message = "database-load module should be created"
   }
 
   assert {
