@@ -237,6 +237,7 @@ data "aws_iam_policy_document" "load_balancer" {
   statement {
     actions = [
       "elasticloadbalancing:DescribeTargetGroups",
+      "elasticloadbalancing:DescribeListenerAttributes",
       "elasticloadbalancing:DescribeTargetGroupAttributes",
       "elasticloadbalancing:DescribeTags",
       "elasticloadbalancing:DescribeLoadBalancers",
