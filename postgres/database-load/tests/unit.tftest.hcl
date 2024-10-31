@@ -8,6 +8,8 @@ variables {
   }
 }
 
+mock_provider "aws" {}
+
 override_data {
   target = data.aws_s3_bucket.data_dump_bucket
   values = {
@@ -20,6 +22,27 @@ override_data {
   target = data.aws_kms_key.data_dump_kms_key
   values = {
     arn = "arn://mock-dump-bucket-kms-key"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.assume_ecs_task_role
+  values = {
+    json = "{\"Sid\": \"AllowECSAssumeRole\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.allow_task_creation
+  values = {
+    json = "{\"Sid\": \"AllowPullFromEcr\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.data_load
+  values = {
+    json = "{\"Sid\": \"AllowReadFromS3\"}"
   }
 }
 
@@ -37,47 +60,52 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "ecr:GetAuthorizationToken")
+    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[0].actions, "ecr:GetAuthorizationToken")
     error_message = "Permission not found: ecr:GetAuthorizationToken"
   }
 
   assert {
-    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "ecr:BatchCheckLayerAvailability")
+    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[0].actions, "ecr:BatchCheckLayerAvailability")
     error_message = "Permission not found: ecr:BatchCheckLayerAvailability"
   }
 
   assert {
-    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "ecr:GetDownloadUrlForLayer")
+    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[0].actions, "ecr:GetDownloadUrlForLayer")
     error_message = "Permission not found: ecr:GetDownloadUrlForLayer"
   }
 
   assert {
-    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[0].Action, "ecr:BatchGetImage")
+    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[0].actions, "ecr:BatchGetImage")
     error_message = "Permission not found: ecr:BatchGetImage"
   }
 
   assert {
-    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[1].Action, "logs:CreateLogGroup")
+    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[1].actions, "logs:CreateLogGroup")
     error_message = "Permission not found: logs:CreateLogGroup"
   }
 
   assert {
-    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[1].Action, "logs:CreateLogStream")
+    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[1].actions, "logs:CreateLogStream")
     error_message = "Permission not found: logs:CreateLogStream"
   }
 
   assert {
-    condition     = contains(jsondecode(data.aws_iam_policy_document.allow_task_creation.json).Statement[1].Action, "logs:PutLogEvents")
+    condition     = contains(data.aws_iam_policy_document.allow_task_creation.statement[1].actions, "logs:PutLogEvents")
     error_message = "Permission not found: logs:PutLogEvents"
   }
 
   assert {
-    condition     = jsondecode(data.aws_iam_policy_document.assume_ecs_task_role.json).Statement[0].Action == "sts:AssumeRole"
+    condition     = contains(data.aws_iam_policy_document.assume_ecs_task_role.statement[0].actions, "sts:AssumeRole")
     error_message = "Permission not found: sts:AssumeRole"
   }
 
   assert {
-    condition     = jsondecode(data.aws_iam_policy_document.assume_ecs_task_role.json).Statement[0].Principal.Service == "ecs-tasks.amazonaws.com"
+    condition = [
+      for el in data.aws_iam_policy_document.assume_ecs_task_role.statement[0].principals :
+      true if el.type == "Service" && [
+        for identifier in el.identifiers : true if identifier == "ecs-tasks.amazonaws.com"
+      ][0] == true
+    ][0] == true
     error_message = "Principal identifier should be: 'ecs-tasks.amazonaws.com'"
   }
 
@@ -87,7 +115,7 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.data_load_task_execution_role.assume_role_policy).Statement[0].Sid == "AllowECSAssumeRole"
+    condition     = jsondecode(aws_iam_role.data_load_task_execution_role.assume_role_policy).Sid == "AllowECSAssumeRole"
     error_message = "Statement Sid should be: 'AllowECSAssumeRole'"
   }
 
@@ -107,53 +135,45 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = length(data.aws_iam_policy_document.data_load.statement) == 2
-    error_message = "Should be 1 policy statement"
+    condition     = length(data.aws_iam_policy_document.data_load.statement) == 3
+    error_message = "Should be 3 policy statements"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:ListBucket")
-    error_message = "Permission not found: s3:ListBucket"
+    condition     = length(data.aws_iam_policy_document.data_load.statement[0].actions) == 6
+    error_message = "Should be 6 permissions on policy statement"
   }
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObject")
-    error_message = "Permission not found: s3:GetObject"
-  }
-
-  assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObjectTagging")
-    error_message = "Permission not found: s3:GetObjectTagging"
-  }
-
-  assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObjectVersion")
-    error_message = "Permission not found: s3:GetObjectVersion"
-  }
-
-  assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[0].actions, "s3:GetObjectVersionTagging")
-    error_message = "Permission not found: s3:GetObjectVersionTagging"
-  }
-
-  assert {
-    condition     = length(data.aws_iam_policy_document.data_load.statement[0].actions) == 5
-    error_message = "Should be 7 permissions on policy statement"
+    condition     = data.aws_iam_policy_document.data_load.statement[0].actions == toset(["s3:ListBucket", "s3:GetObject", "s3:GetObjectTagging", "s3:GetObjectVersion", "s3:GetObjectVersionTagging", "s3:DeleteObject"])
+    error_message = "Permissions not found"
   }
 
   #  data.aws_iam_policy_document.data_load.statement[0].resources cannot be tested on a 'plan'
 
   assert {
-    condition     = contains(data.aws_iam_policy_document.data_load.statement[1].actions, "kms:Decrypt")
-    error_message = "Permission not found: kms:Decrypt"
+    condition     = length(data.aws_iam_policy_document.data_load.statement[1].actions) == 3
+    error_message = "Should be 3 permissions on policy statement"
   }
 
   assert {
-    condition     = length(data.aws_iam_policy_document.data_load.statement[1].actions) == 1
-    error_message = "Should be 1 permissions on policy statement"
+    condition     = data.aws_iam_policy_document.data_load.statement[1].actions == toset(["ecs:ListServices", "ecs:DescribeServices", "ecs:UpdateService"])
+    error_message = "Permissions not found"
   }
 
   # data.aws_iam_policy_document.data_load.statement[1].resources cannot be tested on a 'plan'
+
+  assert {
+    condition     = length(data.aws_iam_policy_document.data_load.statement[2].actions) == 1
+    error_message = "Should be 1 permissions on policy statement"
+  }
+
+  assert {
+    condition     = contains(data.aws_iam_policy_document.data_load.statement[2].actions, "kms:Decrypt")
+    error_message = "Permission not found: kms:Decrypt"
+  }
+
+  # data.aws_iam_policy_document.data_load.statement[2].resources cannot be tested on a 'plan'
 
   assert {
     condition     = aws_iam_role.data_load.name == "test-app-test-env-test-db-load-task"
@@ -161,8 +181,8 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = jsondecode(aws_iam_role.data_load.assume_role_policy).Id == "assume_ecs_task_role"
-    error_message = "Assume role policy id should be assume_ecs_task_role"
+    condition     = jsondecode(aws_iam_role.data_load.assume_role_policy).Sid == "AllowECSAssumeRole"
+    error_message = "Assume role policy id should be AllowECSAssumeRole"
   }
 
   assert {

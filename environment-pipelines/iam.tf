@@ -576,7 +576,8 @@ data "aws_iam_policy_document" "postgres" {
         "iam:PutRolePolicy",
         "iam:GetRolePolicy",
         "iam:DeleteRolePolicy",
-        "iam:PassRole"
+        "iam:PassRole",
+        "iam:UpdateAssumeRolePolicy",
       ]
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-*",
@@ -821,6 +822,7 @@ data "aws_iam_policy_document" "iam" {
         "iam:ListAttachedRolePolicies",
         "iam:ListInstanceProfilesForRole",
         "iam:DeleteRolePolicy",
+        "iam:UpdateAssumeRolePolicy",
       ]
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
@@ -843,6 +845,14 @@ data "aws_iam_policy_document" "iam" {
       "iam:UpdateAssumeRolePolicy"
     ]
     resources = [for environment in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${environment.name}-shared-S3MigrationRole"]
+  }
+
+  statement {
+    sid = "AllowUpdatingPostgresLambdaRoleTrustPolicy"
+    actions = [
+      "iam:UpdateAssumeRolePolicy"
+    ]
+    resources = [for environment in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${environment.name}-*-lambda-role"]
   }
 }
 
