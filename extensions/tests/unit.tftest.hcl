@@ -9,6 +9,10 @@ variables {
           "test-environment" : {
             "bucket_name" : "extensions-test-bucket",
             "versioning" : false
+          },
+          "other-environment" : {
+            "bucket_name" : "other-environment-extensions-test-bucket",
+            "versioning" : false
           }
         }
       },
@@ -17,6 +21,11 @@ variables {
         "name" : "test-small",
         "environments" : {
           "test-environment" : {
+            "engine" : "2.11",
+            "plan" : "small",
+            "volume_size" : 512
+          },
+          "other-environment" : {
             "engine" : "2.11",
             "plan" : "small",
             "volume_size" : 512
@@ -96,6 +105,16 @@ run "aws_ssm_parameter_unit_test" {
   assert {
     condition     = aws_ssm_parameter.addons.type == "String"
     error_message = "Invalid config for aws_ssm_parameter type"
+  }
+
+  # Value only includes current environment
+  assert {
+    condition     = strcontains(aws_ssm_parameter.addons.value, "test-environment")
+    error_message = ""
+  }
+  assert {
+    condition     = strcontains(aws_ssm_parameter.addons.value, "other-environment") == false
+    error_message = ""
   }
 
   # Tags
