@@ -77,9 +77,9 @@ Execute the tests:
 poetry run pytest
 ```
 
-### Regression/integration testing
+### End to end testing
 
-Because this codebase is only fully exercised in conjunction with several others, we have [platform-regression-tests](https://github.com/uktrade/platform-regression-tests), which orchestrates the testing of them working together.
+Because this codebase is only fully exercised in conjunction with several others, we have [platform-end-to-end-tests](https://github.com/uktrade/platform-end-to-end-tests), which orchestrates the testing of them working together.
 
 ## Backing services module
 
