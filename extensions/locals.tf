@@ -1,6 +1,7 @@
 locals {
   plans = yamldecode(file("${path.module}/plans.yml"))
 
+  # So we don't hit a Parameter Store limit, filter environment config for extensions so it only includes the defaults (`"*"`) and the current environment
   extensions_for_environment = {
     for k, v in var.args.services :
     k => merge(v, {
