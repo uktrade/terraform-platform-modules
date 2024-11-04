@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.6.1](https://github.com/uktrade/terraform-platform-modules/compare/5.6.0...5.6.1) (2024-11-01)
+
+
+### Bug Fixes
+
+* DBTP-1454 Limit addons parameter to current environment ([#264](https://github.com/uktrade/terraform-platform-modules/issues/264)) ([d9b51d5](https://github.com/uktrade/terraform-platform-modules/commit/d9b51d530df74a5386b3ffc46c1132e14f37c7dc))
+
 ## [5.6.0](https://github.com/uktrade/terraform-platform-modules/compare/5.5.3...5.6.0) (2024-10-30)
 
 
