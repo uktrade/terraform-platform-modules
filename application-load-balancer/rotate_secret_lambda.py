@@ -17,16 +17,16 @@ logger.setLevel(logging.INFO)
 # Variables
 #======================================================================================================================
 
-
+# All these values are set by terraform-platform-modules ALB lambda function resource.
 WafAclName = os.environ['WAFACLNAME']
 WafAclId = os.environ['WAFACLID']
 WAFRulePriority = os.environ['WAFRULEPRI']
-CFDistroId = os.environ['CFDISTROID']
 HeaderName = os.environ['HEADERNAME']
 OriginUrl = os.environ['ORIGINURL']
 Application = os.environ['APPLICATION']
 Environment = os.environ['ENVIRONMENT']
 RoleArn = os.environ['ROLEARN']
+# DISTROIDLIST is set by terraform but its taken directly from the list of domains in platform-config.yml
 DistroList = os.environ['DISTROIDLIST']
 
 #======================================================================================================================
@@ -58,6 +58,9 @@ def get_session():
 def get_distro_list():
     client = get_session()
 
+    # make a list
+    distrolist = DistroList.split(",")
+
     # To hold matching distributions
     matching_distributions = []
 
@@ -69,7 +72,7 @@ def get_distro_list():
         for distribution in distributions:
             # Check if distribution has Aliases and any match with target_domains
             aliases = distribution.get("Aliases", {}).get("Items", [])
-            if any(domain in aliases for domain in DistroList):
+            if any(domain in aliases for domain in distrolist):
                 matching_distributions.append({
                     "Id": distribution["Id"],
                     "Origin": distribution['Origins']['Items'][0]['DomainName'],
@@ -200,7 +203,6 @@ def update_cfdistro(distroid, headervalue):
     if 'Deployed' in diststatus['Distribution']['Status']:
         distconfig = get_cfdistro_config(distroid)
         headercount = 0
-        #logger.info(distconfig)
         for k in distconfig['DistributionConfig']['Origins']['Items']:
             if k['CustomHeaders']['Quantity'] > 0:
                 for h in k['CustomHeaders']['Items']:
@@ -307,7 +309,9 @@ def set_secret(service_client, arn, token):
     # There could be multiple distros associated with ALB, so loop here.
     # Get all distros.
     matching_distributions = get_distro_list()
+    logger.info("All distros: %s" % matching_distributions)
     for distro in matching_distributions:
+        logger.info("Getting status of disto: %s" % distro['Id'])
         diststatus = get_cfdistro(distro['Id'])
         if 'Deployed' not in diststatus['Distribution']['Status']:
             logger.error("Distribution Id, %s status is not Deployed." % distro['Id'])
@@ -345,10 +349,9 @@ def set_secret(service_client, arn, token):
 
         # There could be multiple distros associated with ALB, so loop here.
         # Get all distros.
-        #matching_distributions = get_distro_list()
         for distro in matching_distributions:
+            logger.info("Updating %s" % distro['Id'])
             update_cfdistro(distro['Id'], pendingsecret['HEADERVALUE'])
-        #update_cfdistro(CFDistroId, pendingsecret['HEADERVALUE'])
     
     except ClientError as e:
         logger.error('Error: {}'.format(e))
@@ -398,11 +401,12 @@ def test_secret(service_client, arn, token):
     for distro in matching_distributions:
         try:
             for s in secrets:
-                if test_origin(distro['Origin'], s):
+                if test_origin("http://" + distro['Origin'], s):
+                    logger.info("Origin ok for http://%s" % distro['Origin'])
                     pass
                 else:
-                    logger.error("Tests failed for URL, %s " % distro['Origin'])
-                    raise ValueError("Tests failed for URL, %s " % distro['Origin'])
+                    logger.error("Tests failed for URL, http://%s " % distro['Origin'])
+                    raise ValueError("Tests failed for URL, http://%s " % distro['Origin'])
 
         except ClientError as e:
             logger.error('Error: {}'.format(e))
