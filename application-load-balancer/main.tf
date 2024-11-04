@@ -166,3 +166,239 @@ output "cert-arn" {
 output "alb-arn" {
   value = aws_lb.this.arn
 }
+
+# This section configures WAF on ALB to attach security token.
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_wafv2_web_acl" "waf-acl" {
+  name  = "${var.application}-${var.environment}-ACL"
+  scope = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${var.application}-${var.environment}-XOriginVerify"
+    sampled_requests_enabled   = true
+  }
+
+  rule {
+    name     = "${var.application}-${var.environment}-XOriginVerify"
+    priority = "0" # maybe have a var for this in locals
+
+    action {
+      allow {}
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.application}-${var.environment}-XMetric"
+      sampled_requests_enabled   = true
+    }
+
+    statement {
+      or_statement {
+        statement {
+          byte_match_statement {
+            field_to_match {
+              single_header {
+                name = "x-origin-verify" # maybe have a var for this in locals
+              }
+            }
+            positional_constraint = "EXACTLY"
+            search_string         = "rotate-me"
+            text_transformation {
+              priority = 0
+              type     = "NONE"
+            }
+          }
+        }
+        statement {
+          byte_match_statement {
+            field_to_match {
+              single_header {
+                name = "x-origin-verify" # maybe have a var for this in locals
+              }
+            }
+            positional_constraint = "EXACTLY"
+            search_string         = random_password.origin_secret.result
+            text_transformation {
+              priority = 0
+              type     = "NONE"
+            }
+          }
+        }
+      }
+    }
+  }
+  lifecycle {
+    # Use `ignore_changes` to allow rotation without Terraform overwriting the value
+    ignore_changes = [rule]
+  }
+
+}
+
+# Random password for the secret value
+resource "random_password" "origin_secret" {
+  length           = 32
+  special          = false
+  override_special = "_%@"
+}
+
+
+resource "aws_secretsmanager_secret" "origin_verify_secret" {
+  name                     = "${var.application}-${var.environment}-origin-verify-secret"
+  description              = "Secret used for Origin verification in WAF rules"
+}
+
+resource "aws_secretsmanager_secret_version" "secret_value" {
+  secret_id     = aws_secretsmanager_secret.origin_verify_secret.id
+  secret_string = jsonencode({ "HEADERVALUE" = random_password.origin_secret.result })
+
+  lifecycle {
+    # Use `ignore_changes` to allow rotation without Terraform overwriting the value
+    ignore_changes = [secret_string]
+  }
+}
+
+
+# IAM Role for Lambda Execution
+# Need to get CDN ID for policy and pass the Domain AWS account ID.
+resource "aws_iam_role" "origin_secret_rotate_execution_role" {
+  name = "${var.application}-${var.environment}-origin-secret-rotate-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+
+  inline_policy {
+    name = "OriginVerifyRotatePolicy"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect   = "Allow"
+          Action   = [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+            "logs:DescribeLogStreams"
+          ]
+          Resource = "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*origin-secret-rotate*"
+        },
+        {
+          Effect   = "Allow"
+          Action   = [
+            "secretsmanager:DescribeSecret",
+            "secretsmanager:GetSecretValue",
+            "secretsmanager:PutSecretValue",
+            "secretsmanager:UpdateSecretVersionStage"
+          ]
+          Resource = aws_secretsmanager_secret.origin_verify_secret.arn
+        },
+        {
+          Effect   = "Allow"
+          Action   = ["secretsmanager:GetRandomPassword"]
+          Resource = "*"
+        },
+        {
+          Effect   = "Allow"
+          Action   = [
+            "cloudfront:GetDistribution",
+            "cloudfront:GetDistributionConfig",
+            "cloudfront:ListDistributions",
+            "cloudfront:UpdateDistribution"
+          ]
+          Resource = "arn:aws:cloudfront::${var.dns_account_id}:distribution/*"
+        },
+        {
+          Effect   = "Allow"
+          Action   = ["wafv2:*"]
+          Resource = aws_wafv2_web_acl.waf-acl.arn
+        },
+        {
+        Effect    = "Allow",
+        Action    =  ["sts:AssumeRole"]
+        Resource  = "arn:aws:iam::${var.dns_account_id}:role/token_rotation_test"
+      }
+      ]
+    })
+  }
+}
+
+# This file needs to exist, but it's not directly used in the Terraform so...
+# tflint-ignore: terraform_unused_declarations
+data "archive_file" "lambda" {
+  type        = "zip"
+  source_file = "${path.module}/rotate_secret_lambda.py"
+  output_path = "${path.module}/rotate_secret_lambda.zip"
+  depends_on = [
+    aws_iam_role.origin_secret_rotate_execution_role
+  ]
+}
+
+
+# Secrets Manager Rotation Lambda Function
+resource "aws_lambda_function" "origin_secret_rotate_function" {
+  filename      = "${path.module}/rotate_secret_lambda.zip"
+  function_name = "${var.application}-${var.environment}-origin-secret-rotate"
+  description   = "Secrets Manager Rotation Lambda Function"
+  handler       = "rotate_secret_lambda.lambda_handler"
+  runtime       = "python3.9"
+  timeout       = 300
+  role          = aws_iam_role.origin_secret_rotate_execution_role.arn
+  # s3_bucket     = "dbt-rotate-secrete-sandbox"
+  # s3_key        = "origin-secret-rotate.zip"
+
+  environment {
+    variables = {
+      WAFACLID      = aws_wafv2_web_acl.waf-acl.id
+      WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
+      WAFRULEPRI    = "0"
+      CFDISTROID    = "E2XVTHGE3FP6GB"  # This needs retrieved from CDN module or lookup.
+      DISTROIDLIST  = "${local.domain_list}"
+      HEADERNAME    = "x-origin-verify" # maybe have a var for this in locals
+      ORIGINURL     = "http://internal.${var.environment}.${var.application}.uktrade.digital" # this should be from local
+      AWSREGION     = "eu-west-2"
+      APPLICATION   = "${var.application}"
+      ENVIRONMENT   = "${var.environment}"
+      ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/token_rotation_test"
+    }
+  }
+
+  layers = ["arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"]
+  source_code_hash = data.archive_file.lambda.output_base64sha256
+}
+
+
+# Lambda Permission for Secrets Manager Rotation
+resource "aws_lambda_permission" "rotate_function_invoke_permission" {
+  statement_id  = "AllowSecretsManagerInvocation"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.origin_secret_rotate_function.function_name
+  principal     = "secretsmanager.amazonaws.com"
+}
+
+# Secrets Manager Rotation Schedule
+resource "aws_secretsmanager_secret_rotation" "origin_verify_rotate_schedule" {
+  secret_id     = aws_secretsmanager_secret.origin_verify_secret.id
+  rotation_lambda_arn = aws_lambda_function.origin_secret_rotate_function.arn
+  rotation_rules {
+    automatically_after_days = "7" # maybe have a var for this in locals
+  }
+}
+
+
+# Associate WAF ACL with ALB
+resource "aws_wafv2_web_acl_association" "waf_alb_association" {
+  resource_arn = aws_lb.this.arn
+  web_acl_arn  = aws_wafv2_web_acl.waf-acl.arn
+}
