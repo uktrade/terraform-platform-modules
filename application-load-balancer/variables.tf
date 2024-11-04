@@ -10,6 +10,10 @@ variable "vpc_name" {
   type = string
 }
 
+variable "dns_account_id" {
+  type = string
+}
+
 variable "config" {
   type = object({
     domain_prefix           = optional(string)

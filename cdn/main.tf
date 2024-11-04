@@ -63,6 +63,10 @@ resource "aws_cloudfront_distribution" "standard" {
       origin_protocol_policy = local.cdn_defaults.origin.custom_origin_config.origin_protocol_policy
       origin_ssl_protocols   = local.cdn_defaults.origin.custom_origin_config.origin_ssl_protocols
     }
+    custom_header {
+      name  = "x-origin-verify" # maybe have a var for this in locals
+      value = "rotate-me"
+    }
   }
 
   default_cache_behavior {
@@ -104,6 +108,11 @@ resource "aws_cloudfront_distribution" "standard" {
       include_cookies = false
       prefix          = each.key
     }
+  }
+
+  lifecycle {
+    # Use `ignore_changes` to allow rotation without Terraform overwriting the value
+    ignore_changes = [origin]
   }
 
   tags = local.tags

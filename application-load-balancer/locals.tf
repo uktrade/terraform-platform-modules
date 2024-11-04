@@ -39,4 +39,5 @@ locals {
 
   # Count total number of domains.
   number_of_domains = length(local.full_list)
+  domain_list = join(",", keys(var.config.cdn_domains_list))
 }
