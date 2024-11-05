@@ -723,7 +723,7 @@ resource "aws_iam_policy" "s3" {
 
 data "aws_iam_policy_document" "ecs" {
   statement {
-    actions   = [
+    actions = [
       "ecs:RegisterTaskDefinition",
       "ecs:ListTaskDefinitions",
       "ecs:DescribeTaskDefinition"
