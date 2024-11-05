@@ -34,7 +34,7 @@ DistroList = os.environ['DISTROIDLIST']
 
 
 # Get a boto session to the CF AWS account.
-def get_session():
+def get_cloudfront_session():
     boto_sts = boto3.client('sts')
     stsresponse = boto_sts.assume_role(
         RoleArn=RoleArn,
@@ -55,7 +55,7 @@ def get_session():
 
 
 def get_distro_list():
-    client = get_session()
+    client = get_cloudfront_session()
 
     # make a list
     distrolist = DistroList.split(",")
@@ -176,7 +176,7 @@ def update_wafacl(NewSecret, PrevSecret):
 
 
 def get_cfdistro(distroid):
-    client = get_session()
+    client = get_cloudfront_session()
 
     response = client.get_distribution(
         Id = distroid
@@ -186,7 +186,7 @@ def get_cfdistro(distroid):
 
 
 def get_cfdistro_config(distroid):
-    client = get_session()
+    client = get_cloudfront_session()
 
     response = client.get_distribution_config(
         Id = distroid
@@ -196,7 +196,7 @@ def get_cfdistro_config(distroid):
 
 
 def update_cfdistro(distroid, headervalue):
-    client = get_session()
+    client = get_cloudfront_session()
 
     diststatus = get_cfdistro(distroid)
     if 'Deployed' in diststatus['Distribution']['Status']:
