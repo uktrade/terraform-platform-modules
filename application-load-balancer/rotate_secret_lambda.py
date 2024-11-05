@@ -22,7 +22,6 @@ WafAclName = os.environ['WAFACLNAME']
 WafAclId = os.environ['WAFACLID']
 WAFRulePriority = os.environ['WAFRULEPRI']
 HeaderName = os.environ['HEADERNAME']
-OriginUrl = os.environ['ORIGINURL']
 Application = os.environ['APPLICATION']
 Environment = os.environ['ENVIRONMENT']
 RoleArn = os.environ['ROLEARN']
@@ -165,7 +164,7 @@ def update_wafacl(NewSecret, PrevSecret):
     DefaultAction={
         'Block': {}
         },
-    Description='CloudFront Origin Verify Sample',
+    Description='CloudFront Origin Verify',
     LockToken = locktoken,
     VisibilityConfig={
         'SampledRequestsEnabled': True|False,
