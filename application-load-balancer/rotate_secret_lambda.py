@@ -236,7 +236,7 @@ def update_cfdistro(distroid, headervalue):
         raise ValueError("Distribution Id, %s status is not Deployed." % distroid)
 
 
-def test_origin(url, secret):
+def run_test_origin(url, secret):
     response = requests.get(
     url,
     headers={HeaderName: secret},
@@ -357,7 +357,7 @@ def set_secret(service_client, arn, token):
         raise ValueError("Failed to update resources CloudFront Distro Id %s , WAF WebACL Id %s " % (distro['Id'], WafAclId))
 
 
-def test_secret(service_client, arn, token):
+def run_test_secret(service_client, arn, token):
     """Test the secret
     This method should validate that the AWSPENDING secret works in the service that the secret belongs to. For example, if the secret
     is a database credential, this method should validate that the user can login with the password in AWSPENDING and that the user has
@@ -400,7 +400,7 @@ def test_secret(service_client, arn, token):
     for distro in matching_distributions:
         try:
             for s in secrets:
-                if test_origin("http://" + distro['Origin'], s):
+                if run_test_origin("http://" + distro['Origin'], s):
                     logger.info("Origin ok for http://%s" % distro['Origin'])
                     pass
                 else:
@@ -477,7 +477,7 @@ def lambda_handler(event, context):
         set_secret(service_client, arn, token)
 
     elif step == "testSecret":
-        test_secret(service_client, arn, token)
+        run_test_secret(service_client, arn, token)
 
     elif step == "finishSecret":
         finish_secret(service_client, arn, token)
