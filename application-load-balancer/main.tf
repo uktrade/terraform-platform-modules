@@ -167,12 +167,22 @@ output "alb-arn" {
   value = aws_lb.this.arn
 }
 
-# This section configures WAF on ALB to attach security token.
+
+## This section configures WAF on ALB to attach security token.
 
 data "aws_caller_identity" "current" {}
 
+# Random password for the secret value
+resource "random_password" "origin-secret" {
+  length           = 32
+  special          = false
+  override_special = "_%@"
+}
+
+# Possible issue, when adding or changing a domain, secret is already deployed, rather than setting the search string here, it needs reading from secret manager
 resource "aws_wafv2_web_acl" "waf-acl" {
   name  = "${var.application}-${var.environment}-ACL"
+  description = "CloudFront Origin Verify"
   scope = "REGIONAL"
 
   default_action {
@@ -187,7 +197,7 @@ resource "aws_wafv2_web_acl" "waf-acl" {
 
   rule {
     name     = "${var.application}-${var.environment}-XOriginVerify"
-    priority = "0" # maybe have a var for this in locals
+    priority = "0"
 
     action {
       allow {}
@@ -205,7 +215,7 @@ resource "aws_wafv2_web_acl" "waf-acl" {
           byte_match_statement {
             field_to_match {
               single_header {
-                name = "x-origin-verify" # maybe have a var for this in locals
+                name = local.secret_token_header_name
               }
             }
             positional_constraint = "EXACTLY"
@@ -220,11 +230,11 @@ resource "aws_wafv2_web_acl" "waf-acl" {
           byte_match_statement {
             field_to_match {
               single_header {
-                name = "x-origin-verify" # maybe have a var for this in locals
+                name = local.secret_token_header_name
               }
             }
             positional_constraint = "EXACTLY"
-            search_string         = random_password.origin_secret.result
+            search_string         = random_password.origin-secret.result
             text_transformation {
               priority = 0
               type     = "NONE"
@@ -238,25 +248,20 @@ resource "aws_wafv2_web_acl" "waf-acl" {
     # Use `ignore_changes` to allow rotation without Terraform overwriting the value
     ignore_changes = [rule]
   }
+  tags                      = local.tags
 
 }
 
-# Random password for the secret value
-resource "random_password" "origin_secret" {
-  length           = 32
-  special          = false
-  override_special = "_%@"
-}
 
-
-resource "aws_secretsmanager_secret" "origin_verify_secret" {
+resource "aws_secretsmanager_secret" "origin-verify-secret" {
   name                     = "${var.application}-${var.environment}-origin-verify-secret"
   description              = "Secret used for Origin verification in WAF rules"
+  tags                     = local.tags
 }
 
-resource "aws_secretsmanager_secret_version" "secret_value" {
-  secret_id     = aws_secretsmanager_secret.origin_verify_secret.id
-  secret_string = jsonencode({ "HEADERVALUE" = random_password.origin_secret.result })
+resource "aws_secretsmanager_secret_version" "secret-value" {
+  secret_id     = aws_secretsmanager_secret.origin-verify-secret.id
+  secret_string = jsonencode({ "HEADERVALUE" = random_password.origin-secret.result })
 
   lifecycle {
     # Use `ignore_changes` to allow rotation without Terraform overwriting the value
@@ -266,8 +271,7 @@ resource "aws_secretsmanager_secret_version" "secret_value" {
 
 
 # IAM Role for Lambda Execution
-# Need to get CDN ID for policy and pass the Domain AWS account ID.
-resource "aws_iam_role" "origin_secret_rotate_execution_role" {
+resource "aws_iam_role" "origin-secret-rotate-execution-role" {
   name = "${var.application}-${var.environment}-origin-secret-rotate-role"
 
   assume_role_policy = jsonencode({
@@ -302,7 +306,7 @@ resource "aws_iam_role" "origin_secret_rotate_execution_role" {
             "secretsmanager:PutSecretValue",
             "secretsmanager:UpdateSecretVersionStage"
           ]
-          Resource = aws_secretsmanager_secret.origin_verify_secret.arn
+          Resource = aws_secretsmanager_secret.origin-verify-secret.arn
         },
         {
           Effect   = "Allow"
@@ -327,11 +331,12 @@ resource "aws_iam_role" "origin_secret_rotate_execution_role" {
         {
         Effect    = "Allow",
         Action    =  ["sts:AssumeRole"]
-        Resource  = "arn:aws:iam::${var.dns_account_id}:role/token_rotation_test"
+        Resource  = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
       }
       ]
     })
   }
+  tags                     = local.tags
 }
 
 # This file needs to exist, but it's not directly used in the Terraform so...
@@ -341,64 +346,61 @@ data "archive_file" "lambda" {
   source_file = "${path.module}/rotate_secret_lambda.py"
   output_path = "${path.module}/rotate_secret_lambda.zip"
   depends_on = [
-    aws_iam_role.origin_secret_rotate_execution_role
+    aws_iam_role.origin-secret-rotate-execution-role
   ]
 }
 
 
 # Secrets Manager Rotation Lambda Function
-resource "aws_lambda_function" "origin_secret_rotate_function" {
+resource "aws_lambda_function" "origin-secret-rotate-function" {
   filename      = "${path.module}/rotate_secret_lambda.zip"
   function_name = "${var.application}-${var.environment}-origin-secret-rotate"
   description   = "Secrets Manager Rotation Lambda Function"
   handler       = "rotate_secret_lambda.lambda_handler"
   runtime       = "python3.9"
   timeout       = 300
-  role          = aws_iam_role.origin_secret_rotate_execution_role.arn
-  # s3_bucket     = "dbt-rotate-secrete-sandbox"
-  # s3_key        = "origin-secret-rotate.zip"
+  role          = aws_iam_role.origin-secret-rotate-execution-role.arn
+
 
   environment {
     variables = {
       WAFACLID      = aws_wafv2_web_acl.waf-acl.id
       WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
       WAFRULEPRI    = "0"
-      CFDISTROID    = "E2XVTHGE3FP6GB"  # This needs retrieved from CDN module or lookup.
       DISTROIDLIST  = "${local.domain_list}"
-      HEADERNAME    = "x-origin-verify" # maybe have a var for this in locals
-      ORIGINURL     = "http://internal.${var.environment}.${var.application}.uktrade.digital" # this should be from local
-      AWSREGION     = "eu-west-2"
+      HEADERNAME    = local.secret_token_header_name
       APPLICATION   = "${var.application}"
       ENVIRONMENT   = "${var.environment}"
-      ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/token_rotation_test"
+      ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
     }
   }
 
   layers = ["arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"]
   source_code_hash = data.archive_file.lambda.output_base64sha256
+  tags                     = local.tags
 }
 
 
 # Lambda Permission for Secrets Manager Rotation
-resource "aws_lambda_permission" "rotate_function_invoke_permission" {
+resource "aws_lambda_permission" "rotate-function-invoke-permission" {
   statement_id  = "AllowSecretsManagerInvocation"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.origin_secret_rotate_function.function_name
+  function_name = aws_lambda_function.origin-secret-rotate-function.function_name
   principal     = "secretsmanager.amazonaws.com"
 }
 
 # Secrets Manager Rotation Schedule
-resource "aws_secretsmanager_secret_rotation" "origin_verify_rotate_schedule" {
-  secret_id     = aws_secretsmanager_secret.origin_verify_secret.id
-  rotation_lambda_arn = aws_lambda_function.origin_secret_rotate_function.arn
+resource "aws_secretsmanager_secret_rotation" "origin-verify-rotate-schedule" {
+  secret_id     = aws_secretsmanager_secret.origin-verify-secret.id
+  rotation_lambda_arn = aws_lambda_function.origin-secret-rotate-function.arn
   rotation_rules {
-    automatically_after_days = "7" # maybe have a var for this in locals
+    automatically_after_days = local.secret_token_rotation_days
   }
 }
 
 
 # Associate WAF ACL with ALB
-resource "aws_wafv2_web_acl_association" "waf_alb_association" {
+resource "aws_wafv2_web_acl_association" "waf-alb-association" {
   resource_arn = aws_lb.this.arn
   web_acl_arn  = aws_wafv2_web_acl.waf-acl.arn
 }
