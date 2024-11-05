@@ -723,11 +723,7 @@ resource "aws_iam_policy" "s3" {
 
 data "aws_iam_policy_document" "ecs" {
   statement {
-    effect = "Allow"
-
-    actions = [
-      "ecs:RegisterTaskDefinition",
-    ]
+    actions = ["ecs:RegisterTaskDefinition"]
     resources = ["arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/${var.application}-*"]
   }
 }
