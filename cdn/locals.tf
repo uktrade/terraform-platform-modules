@@ -40,6 +40,7 @@ locals {
       custom_origin_config = {
         origin_protocol_policy = coalesce(var.config.origin_protocol_policy, "https-only")
         origin_ssl_protocols   = coalesce(var.config.origin_ssl_protocols, ["TLSv1.2"])
+        cdn_timeout_seconds    = coalesce(var.config.cdn_timeout_seconds, 30)
       }
     }
     compress = coalesce(var.config.cdn_compress, true)
