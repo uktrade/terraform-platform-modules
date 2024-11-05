@@ -721,6 +721,24 @@ resource "aws_iam_policy" "s3" {
   policy      = data.aws_iam_policy_document.s3.json
 }
 
+data "aws_iam_policy_document" "ecs" {
+  statement {
+    actions = [
+      "ecs:RegisterTaskDefinition",
+      "ecs:ListTaskDefinitions",
+      "ecs:DescribeTaskDefinition"
+    ]
+    resources = ["arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/${var.application}-*"]
+  }
+}
+
+resource "aws_iam_policy" "ecs" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-ecs-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access ecs resources"
+  policy      = data.aws_iam_policy_document.ecs.json
+}
+
 data "aws_iam_policy_document" "opensearch" {
   statement {
     actions = [
@@ -922,7 +940,8 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
     aws_iam_policy.postgres.arn,
     aws_iam_policy.opensearch.arn,
     aws_iam_policy.load_balancer.arn,
-    aws_iam_policy.s3.arn
+    aws_iam_policy.s3.arn,
+    aws_iam_policy.ecs.arn
   ]
   tags = local.tags
 }

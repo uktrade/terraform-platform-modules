@@ -127,6 +127,13 @@ override_data {
 }
 
 override_data {
+  target = data.aws_iam_policy_document.ecs
+  values = {
+    json = "{\"Sid\": \"ECS\"}"
+  }
+}
+
+override_data {
   target = data.aws_iam_policy_document.opensearch
   values = {
     json = "{\"Sid\": \"OpenSearch\"}"
