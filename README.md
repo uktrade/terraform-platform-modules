@@ -178,6 +178,10 @@ To turn on CloudFront logging to a S3 bucket, set this to true.
 
 - enable_logging: true
 
+Add this property to change the CloudFront `custom_read_timeout` value (defaults to 30 seconds):
+
+- cdn_timeout_seconds: 60
+
 example `platform-config.yml` config.
 
 ```yaml
@@ -194,6 +198,7 @@ my-application-alb:
         - internal.my-web-service-2
       enable_cdn_record: false
       enable_logging: true
+      cdn_timeout_seconds: 60
     prod:
       cdn_domains_list:
         - my-application.prod.uktrade.digital:
