@@ -65,17 +65,37 @@ resource "aws_iam_role_policy" "allow_task_creation" {
 }
 
 data "aws_iam_policy_document" "data_load" {
-  # checkov:skip=CKV_AWS_356:Permissions required to upload
   policy_id = "data_load"
   statement {
     sid    = "AllowReadFromS3"
     effect = "Allow"
 
-    actions = local.s3_permissions
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging",
+      "s3:DeleteObject"
+    ]
 
     resources = [
       data.aws_s3_bucket.data_dump_bucket.arn,
       "${data.aws_s3_bucket.data_dump_bucket.arn}/*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowScaling"
+    effect = "Allow"
+    actions = [
+      "ecs:ListServices",
+      "ecs:DescribeServices",
+      "ecs:UpdateService",
+    ]
+    resources = [
+      "arn:aws:ecs:eu-west-2:${data.aws_caller_identity.current.account_id}:service/default/*",
+      "arn:aws:ecs:eu-west-2:${data.aws_caller_identity.current.account_id}:service/${var.application}-${var.environment}/*"
     ]
   }
 
@@ -109,7 +129,7 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = jsonencode([
     {
       name      = local.task_name
-      image     = "public.ecr.aws/uktrade/database-copy:latest"
+      image     = "public.ecr.aws/uktrade/database-copy:tag-latest"
       essential = true
       environment = [
         {
