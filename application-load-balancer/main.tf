@@ -181,12 +181,12 @@ resource "random_password" "origin-secret" {
 
 # Possible issue, when adding or changing a domain, secret is already deployed, rather than setting the search string here, it needs reading from secret manager
 resource "aws_wafv2_web_acl" "waf-acl" {
-  name  = "${var.application}-${var.environment}-ACL"
+  name        = "${var.application}-${var.environment}-ACL"
   description = "CloudFront Origin Verify"
-  scope = "REGIONAL"
+  scope       = "REGIONAL"
 
   default_action {
-    block {}
+    block {} # Action to perform if none of the rules contained in the WebACL match
   }
 
   visibility_config {
@@ -222,7 +222,7 @@ resource "aws_wafv2_web_acl" "waf-acl" {
             search_string         = "rotate-me"
             text_transformation {
               priority = 0
-              type     = "NONE"
+              type     = "NONE" # Is NONE a sufficient type?
             }
           }
         }
@@ -248,15 +248,15 @@ resource "aws_wafv2_web_acl" "waf-acl" {
     # Use `ignore_changes` to allow rotation without Terraform overwriting the value
     ignore_changes = [rule]
   }
-  tags                      = local.tags
+  tags = local.tags
 
 }
 
 
 resource "aws_secretsmanager_secret" "origin-verify-secret" {
-  name                     = "${var.application}-${var.environment}-origin-verify-secret"
-  description              = "Secret used for Origin verification in WAF rules"
-  tags                     = local.tags
+  name        = "${var.application}-${var.environment}-origin-verify-secret"
+  description = "Secret used for Origin verification in WAF rules"
+  tags        = local.tags
 }
 
 resource "aws_secretsmanager_secret_version" "secret-value" {
@@ -289,8 +289,8 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
       Version = "2012-10-17"
       Statement = [
         {
-          Effect   = "Allow"
-          Action   = [
+          Effect = "Allow"
+          Action = [
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:PutLogEvents",
@@ -299,8 +299,8 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
           Resource = "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*origin-secret-rotate*"
         },
         {
-          Effect   = "Allow"
-          Action   = [
+          Effect = "Allow"
+          Action = [
             "secretsmanager:DescribeSecret",
             "secretsmanager:GetSecretValue",
             "secretsmanager:PutSecretValue",
@@ -314,8 +314,8 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
           Resource = "*"
         },
         {
-          Effect   = "Allow"
-          Action   = [
+          Effect = "Allow"
+          Action = [
             "cloudfront:GetDistribution",
             "cloudfront:GetDistributionConfig",
             "cloudfront:ListDistributions",
@@ -329,14 +329,14 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
           Resource = aws_wafv2_web_acl.waf-acl.arn
         },
         {
-        Effect    = "Allow",
-        Action    =  ["sts:AssumeRole"]
-        Resource  = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
-      }
+          Effect   = "Allow",
+          Action   = ["sts:AssumeRole"]
+          Resource = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+        }
       ]
     })
   }
-  tags                     = local.tags
+  tags = local.tags
 }
 
 # This file needs to exist, but it's not directly used in the Terraform so...
@@ -364,20 +364,20 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
 
   environment {
     variables = {
-      WAFACLID      = aws_wafv2_web_acl.waf-acl.id
-      WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
-      WAFRULEPRI    = "0"
-      DISTROIDLIST  = "${local.domain_list}"
-      HEADERNAME    = local.secret_token_header_name
-      APPLICATION   = "${var.application}"
-      ENVIRONMENT   = "${var.environment}"
-      ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+      WAFACLID     = aws_wafv2_web_acl.waf-acl.id
+      WAFACLNAME   = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
+      WAFRULEPRI   = "0"
+      DISTROIDLIST = local.domain_list
+      HEADERNAME   = local.secret_token_header_name
+      APPLICATION  = var.application
+      ENVIRONMENT  = var.environment
+      ROLEARN      = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
     }
   }
 
-  layers = ["arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"]
+  layers           = ["arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"]
   source_code_hash = data.archive_file.lambda.output_base64sha256
-  tags                     = local.tags
+  tags             = local.tags
 }
 
 
@@ -391,7 +391,7 @@ resource "aws_lambda_permission" "rotate-function-invoke-permission" {
 
 # Secrets Manager Rotation Schedule
 resource "aws_secretsmanager_secret_rotation" "origin-verify-rotate-schedule" {
-  secret_id     = aws_secretsmanager_secret.origin-verify-secret.id
+  secret_id           = aws_secretsmanager_secret.origin-verify-secret.id
   rotation_lambda_arn = aws_lambda_function.origin-secret-rotate-function.arn
   rotation_rules {
     automatically_after_days = local.secret_token_rotation_days
