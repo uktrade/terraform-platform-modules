@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.7.0](https://github.com/uktrade/terraform-platform-modules/compare/5.6.1...5.7.0) (2024-11-05)
+
+
+### Features
+
+* DBTP-1431 Allow setting custom timeouts on CloudFront ([#255](https://github.com/uktrade/terraform-platform-modules/issues/255)) ([d6539a5](https://github.com/uktrade/terraform-platform-modules/commit/d6539a5aca15233da9e1d2cd77ab775fdb4ee05c))
+
 ## [5.6.1](https://github.com/uktrade/terraform-platform-modules/compare/5.6.0...5.6.1) (2024-11-01)
 
 
