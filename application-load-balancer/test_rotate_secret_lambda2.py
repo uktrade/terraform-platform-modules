@@ -2,7 +2,8 @@ import pytest
 import os
 from unittest.mock import patch, MagicMock
 
-@pytest.fixture(autouse=True, scope='session')
+
+@pytest.fixture(autouse=True, scope="session")
 def set_env_vars():
     # Backup original environment variables
     original_env = dict(os.environ)
@@ -25,8 +26,8 @@ def set_env_vars():
 
 @patch.dict(os.environ, {"WAFACLNAME": "test-waf-id", "WAFACLID": "test-waf-acl"})
 class TestRotateSecretLambda:
-    
-    @patch('boto3.client')
+
+    @patch("boto3.client")
     def test_get_cloudfront_session(self, mock_boto_client):
         from rotate_secret_lambda import get_cloudfront_session
 
@@ -36,24 +37,21 @@ class TestRotateSecretLambda:
             "Credentials": {
                 "AccessKeyId": "testAccessKey",
                 "SecretAccessKey": "testSecret",
-                "SessionToken": "testSession"
+                "SessionToken": "testSession",
             }
         }
 
         session = get_cloudfront_session()
         mock_sts.assume_role.assert_called_once_with(
-            RoleArn=os.environ["ROLEARN"],
-            RoleSessionName='rotation_session'
+            RoleArn=os.environ["ROLEARN"], RoleSessionName="rotation_session"
         )
         assert session is not None
-        
 
-    @patch('boto3.client')
-    @patch('rotate_secret_lambda.get_cloudfront_session')
+    @patch("boto3.client")
+    @patch("rotate_secret_lambda.get_cloudfront_session")
     def test_get_distro_list(self, mock_cloudfront_session, mock_boto_client):
         from rotate_secret_lambda import get_distro_list
 
-        
         mock_cloudfront = MagicMock()
         mock_cloudfront_session.return_value = mock_cloudfront
 
@@ -68,23 +66,20 @@ class TestRotateSecretLambda:
                             "Status": "Deployed",
                             "LastModifiedTime": "2022-01-01T00:00:00Z",
                             "DomainName": "exampledistribution.cloudfront.net",
-                            "Aliases": {
-                                "Quantity": 1,
-                                "Items": ["example.com"]
-                            },
+                            "Aliases": {"Quantity": 1, "Items": ["example.com"]},
                             "Origins": {
                                 "Quantity": 1,
                                 "Items": [
                                     {
                                         "Id": "origin1",
-                                        "DomainName": "internal.example.com"
+                                        "DomainName": "internal.example.com",
                                     }
-                                ]
+                                ],
                             },
-                            "Enabled": True
+                            "Enabled": True,
                         }
                     ],
-                    "Quantity": 1
+                    "Quantity": 1,
                 }
             }
         ]
@@ -95,4 +90,34 @@ class TestRotateSecretLambda:
         assert distros[0]["Origin"] == "internal.example.com"
         assert distros[0]["Domain"] == "example.com"
 
+    @patch("boto3.client")
+    def test_get_wafacl(self, mock_boto_client):
+        from rotate_secret_lambda import get_wafacl
 
+        mock_wafv2 = MagicMock()
+        mock_boto_client.return_value = mock_wafv2
+        # mock_wafv2.get_web_acl.return_value = {"WebACL": {"Rules": []}, "'WebACLArn'": "lockToken123"}
+
+        mock_wafv2.get_web_acl.return_value = {
+            "WebACL": {
+                "Rules": [
+                    {
+                        "RuleId": "rule123",
+                        "Action": "ALLOW",
+                        "Priority": 0,
+                        "Type": "REGULAR",
+                    }
+                ],
+                "Name": os.environ["WAFACLNAME"],
+                "WebACLId": os.environ["WAFACLID"],
+            }
+        }
+
+        response = get_wafacl()
+
+        mock_wafv2.get_web_acl.assert_called_once_with(
+            Name=os.environ["WAFACLNAME"], Scope="REGIONAL", Id=os.environ["WAFACLID"]
+        )
+        assert "WebACL" in response
+        assert response["WebACL"]["Name"] == os.environ["WAFACLNAME"]
+        assert response["WebACL"]["WebACLId"] == os.environ["WAFACLID"]
