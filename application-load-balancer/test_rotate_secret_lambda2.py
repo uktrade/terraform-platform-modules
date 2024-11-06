@@ -46,6 +46,8 @@ class TestRotateSecretLambda:
             RoleArn=os.environ["ROLEARN"], RoleSessionName="rotation_session"
         )
         assert session is not None
+        assert session["Credentials"] is not None
+
 
     @patch("boto3.client")
     @patch("rotate_secret_lambda.get_cloudfront_session")
@@ -121,3 +123,16 @@ class TestRotateSecretLambda:
         assert "WebACL" in response
         assert response["WebACL"]["Name"] == os.environ["WAFACLNAME"]
         assert response["WebACL"]["WebACLId"] == os.environ["WAFACLID"]
+
+    @patch('boto3.client') 
+    def test_update_wafacl(self, mock_boto_client): 
+        from rotate_secret_lambda import update_wafacl 
+        
+        mock_waf = MagicMock() 
+        mock_boto_client.return_value = mock_waf 
+        mock_waf.update_web_acl.return_value = {'Summary': 'success'} 
+        
+        update_wafacl('new_secret', 'old_secret') 
+        mock_waf.update_web_acl.assert_called_once() 
+        
+        assert mock_waf.update_web_acl.return_value['Summary'] == 'success'
