@@ -1,39 +1,46 @@
-# import pytest
-# import os
-# from unittest.mock import patch
-# os.environ['WAFACLID'] = 'test-waf-id'
-# os.environ['WAFACLNAME'] = 'test-waf-name'
-# os.environ['WAFRULEPRI'] = '0'
-# os.environ['DISTROIDLIST'] = 'domain1.com,domain2.com'
-# os.environ['HEADERNAME'] = 'x-origin-verify'
-# os.environ['APPLICATION'] = 'test-app'
-# os.environ['ENVIRONMENT'] = 'test-env'
-# os.environ['ROLEARN'] = 'arn:aws:iam::123456789012:role/test-role'
+import pytest
+import os
+from unittest.mock import patch, MagicMock
 
-# from rotate_secret_lambda import lambda_handler, get_cloudfront_session
+from rotate_secret_lambda_class import SecretRotator
 
-# def test_env_is_setup():
-#     assert os.environ.get('WAFACLNAME') == 'test-waf-name'
+@pytest.fixture(autouse=True, scope="session")
+def rotator_with_dummy_envs():
+    return SecretRotator(
+        waf_acl_name = "test-waf-id",
+        waf_acl_id = "test-waf-acl",
+        waf_rule_priority = "0",
+        header_name = "x-origin-verify",
+        application = "test-app",
+        environment = "test",
+        role_arn = "arn:aws:iam::123456789012:role/test-role",
+        distro_list = "example.com,example2.com",
+    )
 
-# def test_cloudfront_session_has_correct_credentials():
-#     mock_credentials = {
-#         "Credentials": {
-#             "AccessKeyId": "test-access-key",
-#             "SecretAccessKey": "test-secret-key",
-#             "SessionToken": "test-session-token"
-#         }
-#     }
+def test_cloudfront_session_has_correct_credentials(rotator_with_dummy_envs):
+    mock_credentials = {
+        "Credentials": {
+            "AccessKeyId": "test-access-key",
+            "SecretAccessKey": "test-secret-key",
+            "SessionToken": "test-session-token"
+        }
+    }
 
-#     with patch('boto3.client') as mock_boto3_client:
-#         mock_sts = mock_boto3_client.return_value
-#         mock_sts.assume_role.return_value = mock_credentials
-
-#         client = get_cloudfront_session()
-
-#         mock_boto3_client.assert_any_call('sts')
-
+    with patch('boto3.client') as mock_boto3_client:
+        mock_sts = mock_boto3_client.return_value
+        mock_sts.assume_role.return_value = mock_credentials
         
+        client = rotator_with_dummy_envs.get_cloudfront_session()
+        
+        mock_boto3_client.assert_any_call('sts')
 
-
-
- 
+        mock_sts.assume_role.assert_any_call(
+            RoleArn="arn:aws:iam::123456789012:role/test-role",
+            RoleSessionName='rotation_session'
+        )
+        
+        mock_boto3_client.assert_any_call('cloudfront',
+            aws_access_key_id="test-access-key",
+            aws_secret_access_key="test-secret-key",
+            aws_session_token="test-session-token"
+        )
