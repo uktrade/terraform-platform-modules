@@ -1,5 +1,4 @@
 import pytest
-import os
 from unittest.mock import patch, MagicMock
 
 from rotate_secret_lambda_class import SecretRotator
@@ -17,7 +16,7 @@ def rotator_with_dummy_envs():
         distro_list = "example.com,example2.com",
     )
 
-def test_cloudfront_session_has_correct_credentials(rotator_with_dummy_envs):
+def test_cloudfront_session_is_created_with_correct_role(rotator_with_dummy_envs):
     mock_credentials = {
         "Credentials": {
             "AccessKeyId": "test-access-key",
@@ -34,7 +33,7 @@ def test_cloudfront_session_has_correct_credentials(rotator_with_dummy_envs):
         
         mock_boto3_client.assert_any_call('sts')
 
-        mock_sts.assume_role.assert_any_call(
+        mock_sts.assume_role.assert_called_once_with(
             RoleArn="arn:aws:iam::123456789012:role/test-role",
             RoleSessionName='rotation_session'
         )
