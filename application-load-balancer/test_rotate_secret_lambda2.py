@@ -45,9 +45,15 @@ class TestRotateSecretLambda:
         mock_sts.assume_role.assert_called_once_with(
             RoleArn=os.environ["ROLEARN"], RoleSessionName="rotation_session"
         )
-        assert session is not None
-        assert session["Credentials"] is not None
 
+        mock_boto_client.assert_any_call(
+            "cloudfront",
+            aws_access_key_id="testAccessKey",
+            aws_secret_access_key="testSecret",
+            aws_session_token="testSession",
+        )
+
+        assert session is not None
 
     @patch("boto3.client")
     @patch("rotate_secret_lambda.get_cloudfront_session")
@@ -124,15 +130,15 @@ class TestRotateSecretLambda:
         assert response["WebACL"]["Name"] == os.environ["WAFACLNAME"]
         assert response["WebACL"]["WebACLId"] == os.environ["WAFACLID"]
 
-    @patch('boto3.client') 
-    def test_update_wafacl(self, mock_boto_client): 
-        from rotate_secret_lambda import update_wafacl 
-        
-        mock_waf = MagicMock() 
-        mock_boto_client.return_value = mock_waf 
-        mock_waf.update_web_acl.return_value = {'Summary': 'success'} 
-        
-        update_wafacl('new_secret', 'old_secret') 
-        mock_waf.update_web_acl.assert_called_once() 
-        
-        assert mock_waf.update_web_acl.return_value['Summary'] == 'success'
+    @patch("boto3.client")
+    def test_update_wafacl(self, mock_boto_client):
+        from rotate_secret_lambda import update_wafacl
+
+        mock_waf = MagicMock()
+        mock_boto_client.return_value = mock_waf
+        mock_waf.update_web_acl.return_value = {"Summary": "success"}
+
+        update_wafacl("new_secret", "old_secret")
+        mock_waf.update_web_acl.assert_called_once()
+
+        assert mock_waf.update_web_acl.return_value["Summary"] == "success"
