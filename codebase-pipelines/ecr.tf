@@ -1,17 +1,8 @@
-variable "application" {
-  type = string
-}
-
-variable "all_codebases" {
-  type = any
-}
-
 resource "aws_ecr_repository" "this" {
-  for_each = var.all_codebases
-  name     = "${var.application}/${each.key}"
+  name = local.ecr_name
 
   tags = {
-    copilot-pipeline    = each.key
+    copilot-pipeline    = var.config.name
     copilot-application = var.application
   }
 
