@@ -555,3 +555,462 @@ def test_set_secret_handles_secret_retrieval_failure(rotator_with_dummy_envs):
             )
 
         assert exc_info.value.response["Error"]["Code"] == "ResourceNotFoundException"
+
+def test_run_test_secret_happy_path(rotator_with_dummy_envs):
+    """Test successful testing of both pending and current secrets"""
+    # Setup our test data
+    mock_pending_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
+    }
+    mock_current_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "current-secret"})
+    }
+    mock_metadata = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "test-token": ["AWSPENDING"]
+        }
+    }
+    mock_distributions = [
+        {"Id": "DIST1", "Origin": "origin1.example.com"},
+        {"Id": "DIST2", "Origin": "origin2.example.com"}
+    ]
+
+    # Setup our service client mock
+    mock_service_client = MagicMock()
+    mock_service_client.get_secret_value.side_effect = [
+        mock_pending_secret,  # First call for AWSPENDING
+        mock_current_secret   # Second call for AWSCURRENT
+    ]
+    mock_service_client.describe_secret.return_value = mock_metadata
+
+    with patch.object(rotator_with_dummy_envs, 'get_distro_list') as mock_get_distro_list, \
+         patch.object(rotator_with_dummy_envs, 'run_test_origin') as mock_run_test_origin:
+        
+        mock_get_distro_list.return_value = mock_distributions
+        mock_run_test_origin.return_value = True  # All origin tests pass
+
+        # Run the test
+        rotator_with_dummy_envs.run_test_secret(
+            mock_service_client,
+            "test-arn",
+            "test-token"
+        )
+
+        # Verify we got both secrets
+        mock_service_client.get_secret_value.assert_has_calls([
+            call(SecretId="test-arn", VersionId="test-token", VersionStage="AWSPENDING"),
+            call(SecretId="test-arn", VersionId="current-version", VersionStage="AWSCURRENT")
+        ])
+
+        # Verify we tested both origins with both secrets
+        expected_test_calls = [
+            call("http://origin1.example.com", "new-secret"),
+            call("http://origin1.example.com", "current-secret"),
+            call("http://origin2.example.com", "new-secret"),
+            call("http://origin2.example.com", "current-secret")
+        ]
+        mock_run_test_origin.assert_has_calls(expected_test_calls)
+
+def test_run_test_secret_fails_on_origin_test(rotator_with_dummy_envs):
+    """Test handling of failed origin test"""
+    mock_pending_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
+    }
+    mock_current_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "current-secret"})
+    }
+    mock_metadata = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "test-token": ["AWSPENDING"]
+        }
+    }
+    mock_distributions = [
+        {"Id": "DIST1", "Origin": "origin1.example.com"}
+    ]
+
+    mock_service_client = MagicMock()
+    mock_service_client.get_secret_value.side_effect = [
+        mock_pending_secret,
+        mock_current_secret
+    ]
+    mock_service_client.describe_secret.return_value = mock_metadata
+
+    with patch.object(rotator_with_dummy_envs, 'get_distro_list') as mock_get_distro_list, \
+         patch.object(rotator_with_dummy_envs, 'run_test_origin') as mock_run_test_origin:
+        
+        mock_get_distro_list.return_value = mock_distributions
+        mock_run_test_origin.return_value = False  # Origin test fails
+
+        with pytest.raises(ValueError) as exc_info:
+            rotator_with_dummy_envs.run_test_secret(
+                mock_service_client,
+                "test-arn",
+                "test-token"
+            )
+
+        assert "Tests failed for URL" in str(exc_info.value)
+        mock_run_test_origin.assert_called_once()  # Should fail on first test
+
+def test_run_test_secret_handles_pending_secret_not_found(rotator_with_dummy_envs):
+    """Test handling of missing pending secret"""
+    mock_service_client = MagicMock()
+    mock_service_client.get_secret_value.side_effect = ClientError(
+        {"Error": {"Code": "ResourceNotFoundException"}},
+        "get_secret_value"
+    )
+
+    with pytest.raises(ClientError) as exc_info:
+        rotator_with_dummy_envs.run_test_secret(
+            mock_service_client,
+            "test-arn",
+            "test-token"
+        )
+
+    assert exc_info.value.response["Error"]["Code"] == "ResourceNotFoundException"
+    # Should fail on first get_secret_value call
+    assert mock_service_client.get_secret_value.call_count == 1
+
+def test_run_test_secret_handles_current_secret_not_found(rotator_with_dummy_envs):
+    """Test handling of missing current secret"""
+    mock_pending_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
+    }
+    mock_metadata = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "test-token": ["AWSPENDING"]
+        }
+    }
+
+    mock_service_client = MagicMock()
+    mock_service_client.describe_secret.return_value = mock_metadata
+    mock_service_client.get_secret_value.side_effect = [
+        mock_pending_secret,  # AWSPENDING succeeds
+        ClientError({"Error": {"Code": "ResourceNotFoundException"}}, "get_secret_value")  # AWSCURRENT fails
+    ]
+
+    with pytest.raises(ClientError) as exc_info:
+        rotator_with_dummy_envs.run_test_secret(
+            mock_service_client,
+            "test-arn",
+            "test-token"
+        )
+
+    assert exc_info.value.response["Error"]["Code"] == "ResourceNotFoundException"
+    assert mock_service_client.get_secret_value.call_count == 2
+
+def test_run_test_secret_handles_invalid_json(rotator_with_dummy_envs):
+    """Test handling of invalid JSON in secret values"""
+    mock_pending_secret = {
+        "SecretString": "invalid-json"  # Not valid JSON
+    }
+    mock_current_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "current-secret"})
+    }
+    mock_metadata = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "test-token": ["AWSPENDING"]
+        }
+    }
+
+    mock_service_client = MagicMock()
+    mock_service_client.get_secret_value.side_effect = [
+        mock_pending_secret,
+        mock_current_secret
+    ]
+    mock_service_client.describe_secret.return_value = mock_metadata
+
+    with pytest.raises(json.JSONDecodeError):
+        rotator_with_dummy_envs.run_test_secret(
+            mock_service_client,
+            "test-arn",
+            "test-token"
+        )
+
+def test_run_test_secret_handles_missing_header_value(rotator_with_dummy_envs):
+    """Test handling of missing HEADERVALUE in secret"""
+    mock_pending_secret = {
+        "SecretString": json.dumps({"WRONGKEY": "new-secret"})  # Missing HEADERVALUE
+    }
+    mock_metadata = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "test-token": ["AWSPENDING"]
+        }
+    }
+
+    mock_service_client = MagicMock()
+    mock_service_client.get_secret_value.return_value = mock_pending_secret
+    mock_service_client.describe_secret.return_value = mock_metadata
+
+    with pytest.raises(KeyError):
+        rotator_with_dummy_envs.run_test_secret(
+            mock_service_client,
+            "test-arn",
+            "test-token"
+        )
+
+def test_run_test_secret_handles_no_distributions(rotator_with_dummy_envs):
+    """Test handling when no distributions are found"""
+    mock_pending_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
+    }
+    mock_current_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "current-secret"})
+    }
+    mock_metadata = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "test-token": ["AWSPENDING"]
+        }
+    }
+
+    mock_service_client = MagicMock()
+    mock_service_client.get_secret_value.side_effect = [
+        mock_pending_secret,
+        mock_current_secret
+    ]
+    mock_service_client.describe_secret.return_value = mock_metadata
+
+    with patch.object(rotator_with_dummy_envs, 'get_distro_list') as mock_get_distro_list, \
+         patch.object(rotator_with_dummy_envs, 'run_test_origin') as mock_run_test_origin:
+        
+        mock_get_distro_list.return_value = []  # No distributions
+
+        # Should complete without error
+        rotator_with_dummy_envs.run_test_secret(
+            mock_service_client,
+            "test-arn",
+            "test-token"
+        )
+
+        # Verify we got the secrets but never tested origins
+        assert mock_service_client.get_secret_value.call_count == 2
+        mock_run_test_origin.assert_not_called()
+
+def test_run_test_secret_handles_origin_test_error(rotator_with_dummy_envs):
+    """Test handling of errors during origin testing"""
+    mock_pending_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
+    }
+    mock_current_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "current-secret"})
+    }
+    mock_metadata = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "test-token": ["AWSPENDING"]
+        }
+    }
+    mock_distributions = [
+        {"Id": "DIST1", "Origin": "origin1.example.com"}
+    ]
+
+    mock_service_client = MagicMock()
+    mock_service_client.get_secret_value.side_effect = [
+        mock_pending_secret,
+        mock_current_secret
+    ]
+    mock_service_client.describe_secret.return_value = mock_metadata
+
+    with patch.object(rotator_with_dummy_envs, 'get_distro_list') as mock_get_distro_list, \
+         patch.object(rotator_with_dummy_envs, 'run_test_origin') as mock_run_test_origin:
+        
+        mock_get_distro_list.return_value = mock_distributions
+        mock_run_test_origin.side_effect = Exception("Network error")
+
+        with pytest.raises(Exception) as exc_info:
+            rotator_with_dummy_envs.run_test_secret(
+                mock_service_client,
+                "test-arn",
+                "test-token"
+            )
+
+        assert "Network error" in str(exc_info.value)
+
+def test_finish_secret_happy_path(rotator_with_dummy_envs):
+    """Test successful transition of a secret from PENDING to CURRENT"""
+    mock_service_client = MagicMock()
+    mock_service_client.describe_secret.return_value = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "test-token": ["AWSPENDING"]
+        }
+    }
+
+    rotator_with_dummy_envs.finish_secret(
+        mock_service_client,
+        "test-arn",
+        "test-token"
+    )
+
+    # Verify describe_secret was called first
+    mock_service_client.describe_secret.assert_called_once_with(
+        SecretId="test-arn"
+    )
+
+    # Verify update_secret_version_stage was called with correct params
+    mock_service_client.update_secret_version_stage.assert_called_once_with(
+        SecretId="test-arn",
+        VersionStage="AWSCURRENT",
+        MoveToVersionId="test-token",
+        RemoveFromVersionId="current-version"
+    )
+
+def test_finish_secret_when_already_current(rotator_with_dummy_envs):
+    """Test when the secret version is already marked as CURRENT"""
+    mock_service_client = MagicMock()
+    mock_service_client.describe_secret.return_value = {
+        "VersionIdsToStages": {
+            "test-token": ["AWSCURRENT", "AWSPENDING"]
+        }
+    }
+
+    rotator_with_dummy_envs.finish_secret(
+        mock_service_client,
+        "test-arn",
+        "test-token"
+    )
+
+    # Verify we only called describe_secret and didn't try to update
+    mock_service_client.describe_secret.assert_called_once_with(
+        SecretId="test-arn"
+    )
+    mock_service_client.update_secret_version_stage.assert_not_called()
+
+def test_finish_secret_no_current_version(rotator_with_dummy_envs):
+    """Test handling when no CURRENT version exists"""
+    mock_service_client = MagicMock()
+    mock_service_client.describe_secret.return_value = {
+        "VersionIdsToStages": {
+            "test-token": ["AWSPENDING"]
+        }
+    }
+
+    rotator_with_dummy_envs.finish_secret(
+        mock_service_client,
+        "test-arn",
+        "test-token"
+    )
+
+    # Verify we update with no RemoveFromVersionId
+    mock_service_client.update_secret_version_stage.assert_called_once_with(
+        SecretId="test-arn",
+        VersionStage="AWSCURRENT",
+        MoveToVersionId="test-token",
+        RemoveFromVersionId=None
+    )
+
+def test_finish_secret_handles_describe_error(rotator_with_dummy_envs):
+    """Test handling of errors during describe_secret"""
+    mock_service_client = MagicMock()
+    mock_service_client.describe_secret.side_effect = ClientError(
+        {"Error": {"Code": "ResourceNotFoundException"}},
+        "describe_secret"
+    )
+
+    with pytest.raises(ClientError) as exc_info:
+        rotator_with_dummy_envs.finish_secret(
+            mock_service_client,
+            "test-arn",
+            "test-token"
+        )
+
+    assert exc_info.value.response["Error"]["Code"] == "ResourceNotFoundException"
+    mock_service_client.update_secret_version_stage.assert_not_called()
+
+def test_finish_secret_handles_update_error(rotator_with_dummy_envs):
+    """Test handling of errors during update_secret_version_stage"""
+    mock_service_client = MagicMock()
+    mock_service_client.describe_secret.return_value = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "test-token": ["AWSPENDING"]
+        }
+    }
+    mock_service_client.update_secret_version_stage.side_effect = ClientError(
+        {"Error": {"Code": "ResourceNotFoundException"}},
+        "update_secret_version_stage"
+    )
+
+    with pytest.raises(ClientError) as exc_info:
+        rotator_with_dummy_envs.finish_secret(
+            mock_service_client,
+            "test-arn",
+            "test-token"
+        )
+
+    assert exc_info.value.response["Error"]["Code"] == "ResourceNotFoundException"
+
+def test_finish_secret_with_multiple_version_stages(rotator_with_dummy_envs):
+    """Test handling of multiple version stages"""
+    mock_service_client = MagicMock()
+    mock_service_client.describe_secret.return_value = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT", "AWSPREVIOUS"],
+            "test-token": ["AWSPENDING"],
+            "old-version": ["AWSPREVIOUS"]
+        }
+    }
+
+    rotator_with_dummy_envs.finish_secret(
+        mock_service_client,
+        "test-arn",
+        "test-token"
+    )
+
+    # Verify we correctly identified the current version despite multiple stages
+    mock_service_client.update_secret_version_stage.assert_called_once_with(
+        SecretId="test-arn",
+        VersionStage="AWSCURRENT",
+        MoveToVersionId="test-token",
+        RemoveFromVersionId="current-version"
+    )
+
+def test_finish_secret_with_empty_version_stages(rotator_with_dummy_envs):
+    """Test handling of empty version stages"""
+    mock_service_client = MagicMock()
+    mock_service_client.describe_secret.return_value = {
+        "VersionIdsToStages": {}
+    }
+
+    rotator_with_dummy_envs.finish_secret(
+        mock_service_client,
+        "test-arn",
+        "test-token"
+    )
+
+    # Verify we handle empty version stages gracefully
+    mock_service_client.update_secret_version_stage.assert_called_once_with(
+        SecretId="test-arn",
+        VersionStage="AWSCURRENT",
+        MoveToVersionId="test-token",
+        RemoveFromVersionId=None
+    )
+
+def test_finish_secret_version_not_found(rotator_with_dummy_envs):
+    """Test when the specified version is not found in stages"""
+    mock_service_client = MagicMock()
+    mock_service_client.describe_secret.return_value = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "other-version": ["AWSPENDING"]
+        }
+    }
+
+    # The method should still work as it only cares about finding AWSCURRENT
+    rotator_with_dummy_envs.finish_secret(
+        mock_service_client,
+        "test-arn",
+        "test-token"
+    )
+
+    mock_service_client.update_secret_version_stage.assert_called_once_with(
+        SecretId="test-arn",
+        VersionStage="AWSCURRENT",
+        MoveToVersionId="test-token",
+        RemoveFromVersionId="current-version"
+    )
