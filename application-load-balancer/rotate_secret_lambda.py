@@ -57,10 +57,7 @@ def get_cloudfront_session():
 def get_distro_list():
     client = get_cloudfront_session()
 
-    # make a list
     distrolist = DistroList.split(",")
-
-    # To hold matching distributions
     matching_distributions = []
 
     # Paginate through all CloudFront distributions
@@ -71,6 +68,7 @@ def get_distro_list():
         for distribution in distributions:
             # Check if distribution has Aliases and any match with target_domains
             aliases = distribution.get("Aliases", {}).get("Items", [])
+            
             if any(domain in aliases for domain in distrolist):
                 matching_distributions.append({
                     "Id": distribution["Id"],

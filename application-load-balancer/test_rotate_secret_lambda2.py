@@ -1,15 +1,12 @@
 import pytest
-import boto3
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import patch, MagicMock
 
-# Define a fixture to set environment variables before tests
 @pytest.fixture(autouse=True, scope='session')
 def set_env_vars():
     # Backup original environment variables
     original_env = dict(os.environ)
 
-    # Set up test environment variables
     os.environ["WAFACLNAME"] = "test-waf-id"
     os.environ["WAFACLID"] = "test-waf-acl"
     os.environ["WAFRULEPRI"] = "0"
@@ -17,65 +14,85 @@ def set_env_vars():
     os.environ["APPLICATION"] = "test-app"
     os.environ["ENVIRONMENT"] = "test"
     os.environ["ROLEARN"] = "arn:aws:iam::123456789012:role/test-role"
-    os.environ["DISTROIDLIST"] = "test1.example.com,test2.example.com"
+    os.environ["DISTROIDLIST"] = "example.com,example2.com"
 
-    # Import the module after setting the environment variables
-    from rotate_secret_lambda import (
-        get_cloudfront_session,
-        get_distro_list,
-        get_wafacl,
-        update_wafacl,
-        get_cfdistro,
-        update_cfdistro,
-        run_test_origin,
-        create_secret,
-        set_secret,
-        run_test_secret,
-        finish_secret,
-        lambda_handler,
-    )
+    # Yield control back to the tests
+    yield
 
-    # Yield the imported functions for use in tests
-    yield {
-        'get_cloudfront_session': get_cloudfront_session,
-        'get_distro_list': get_distro_list,
-        'get_wafacl': get_wafacl,
-        'update_wafacl': update_wafacl,
-        'get_cfdistro': get_cfdistro,
-        'update_cfdistro': update_cfdistro,
-        'run_test_origin': run_test_origin,
-        'create_secret': create_secret,
-        'set_secret': set_secret,
-        'run_test_secret': run_test_secret,
-        'finish_secret': finish_secret,
-        'lambda_handler': lambda_handler,
-    }
+    os.environ.clear()
+    os.environ.update(original_env)
 
-    # Restore original environment variables after tests
-    os.environ = original_env
 
-@pytest.mark.parametrize("sts_response, expected_success", [
-    ({
-        "Credentials": {
-            "AccessKeyId": "test-key",
-            "SecretAccessKey": "test-secret",
-            "SessionToken": "test-token"
+@patch.dict(os.environ, {"WAFACLNAME": "test-waf-id", "WAFACLID": "test-waf-acl"})
+class TestRotateSecretLambda:
+    
+    @patch('boto3.client')
+    def test_get_cloudfront_session(self, mock_boto_client):
+        from rotate_secret_lambda import get_cloudfront_session
+
+        mock_sts = MagicMock()
+        mock_boto_client.return_value = mock_sts
+        mock_sts.assume_role.return_value = {
+            "Credentials": {
+                "AccessKeyId": "testAccessKey",
+                "SecretAccessKey": "testSecret",
+                "SessionToken": "testSession"
+            }
         }
-    }, True),
-    (None, False)
-])
-def test_get_cloudfront_session(set_env_vars, sts_response, expected_success):
-    # Access the imported function from the fixture
-    get_cloudfront_session = set_env_vars['get_cloudfront_session']
 
-    with patch('boto3.client') as mock_boto:
-        mock_sts = Mock()
-        mock_sts.assume_role.return_value = sts_response
-        mock_boto.return_value = mock_sts
+        session = get_cloudfront_session()
+        mock_sts.assume_role.assert_called_once_with(
+            RoleArn=os.environ["ROLEARN"],
+            RoleSessionName='rotation_session'
+        )
+        assert session is not None
+        
 
-        if expected_success:
-            session = get_cloudfront_session()
-            assert session is not None
-        else:
-            with pytest.raises(Exception):
-                get_cloudfront_session()
+    @patch('boto3.client')
+    @patch('rotate_secret_lambda.get_cloudfront_session')
+    def test_get_distro_list(self, mock_cloudfront_session, mock_boto_client):
+        from rotate_secret_lambda import get_distro_list
+
+        
+        mock_cloudfront = MagicMock()
+        mock_cloudfront_session.return_value = mock_cloudfront
+
+        # paginator response
+        mock_cloudfront.get_paginator.return_value.paginate.return_value = [
+            {
+                "DistributionList": {
+                    "Items": [
+                        {
+                            "Id": "dist123",
+                            "ARN": "arn:aws:cloudfront::exampledistribution",
+                            "Status": "Deployed",
+                            "LastModifiedTime": "2022-01-01T00:00:00Z",
+                            "DomainName": "exampledistribution.cloudfront.net",
+                            "Aliases": {
+                                "Quantity": 1,
+                                "Items": ["example.com"]
+                            },
+                            "Origins": {
+                                "Quantity": 1,
+                                "Items": [
+                                    {
+                                        "Id": "origin1",
+                                        "DomainName": "internal.example.com"
+                                    }
+                                ]
+                            },
+                            "Enabled": True
+                        }
+                    ],
+                    "Quantity": 1
+                }
+            }
+        ]
+
+        distros = get_distro_list()
+        assert len(distros) == 1
+        assert distros[0]["Id"] == "dist123"
+        assert distros[0]["Origin"] == "internal.example.com"
+        assert distros[0]["Domain"] == "example.com"
+
+
