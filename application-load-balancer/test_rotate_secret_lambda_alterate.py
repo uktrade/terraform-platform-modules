@@ -149,7 +149,7 @@ class TestRotateSecretLambda:
             'WebACL': {
                 'Rules': [
                     {
-                        'Name': 'OtherRule',
+                        'Name': 'DifferentPriorityRule',
                         'Priority': 5,
                         'Action': 'BLOCK',
                     },
@@ -218,7 +218,7 @@ class TestRotateSecretLambda:
                 }
             },
             {
-                'Name': 'OtherRule',
+                'Name': 'DifferentPriorityRule',
                 'Priority': 5,
                 'Action': 'BLOCK',
             }
