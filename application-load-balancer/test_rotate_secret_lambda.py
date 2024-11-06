@@ -292,3 +292,266 @@ def test_create_secret_handles_put_secret_error(rotator_with_dummy_envs):
     
     # Verify we tried to put the secret
     mock_service_client.put_secret_value.assert_called_once()
+
+def test_set_secret_happy_path(rotator_with_dummy_envs):
+    """Test the happy path for setting a secret"""
+    # Setup mock for get_distro_list
+    mock_distributions = [
+        {"Id": "DIST1", "Origin": "origin1.example.com"},
+        {"Id": "DIST2", "Origin": "origin2.example.com"}
+    ]
+    
+    # Mock all the service responses
+    mock_service_client = MagicMock()
+    mock_get_distro = {
+        "Distribution": {"Status": "Deployed"}
+    }
+    mock_metadata = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"],
+            "test-token": ["AWSPENDING"]
+        }
+    }
+    mock_pending_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
+    }
+    mock_current_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "current-secret"})
+    }
+
+    # Setup all our patches
+    with patch.object(rotator_with_dummy_envs, 'get_distro_list') as mock_get_distro_list, \
+         patch.object(rotator_with_dummy_envs, 'get_cfdistro') as mock_get_cfdistro, \
+         patch.object(rotator_with_dummy_envs, 'update_wafacl') as mock_update_wafacl, \
+         patch.object(rotator_with_dummy_envs, 'update_cfdistro') as mock_update_cfdistro, \
+         patch('time.sleep') as mock_sleep:
+        
+        # Configure our mocks
+        mock_get_distro_list.return_value = mock_distributions
+        mock_get_cfdistro.return_value = mock_get_distro
+        mock_service_client.describe_secret.return_value = mock_metadata
+        mock_service_client.get_secret_value.side_effect = [
+            mock_pending_secret,  # First call for pending
+            mock_current_secret   # Second call for current
+        ]
+
+        # Call the method
+        rotator_with_dummy_envs.set_secret(
+            mock_service_client, 
+            "test-arn", 
+            "test-token"
+        )
+
+        # Verify the sequence of operations
+        mock_get_distro_list.assert_called_once()
+        mock_get_cfdistro.assert_has_calls([
+            call("DIST1"),
+            call("DIST2")
+        ])
+        
+        # Verify WAF update
+        mock_update_wafacl.assert_called_once_with(
+            "new-secret",
+            "current-secret"
+        )
+        
+        # Verify the sleep was called
+        mock_sleep.assert_called_once_with(75)
+        
+        # Verify distribution updates
+        mock_update_cfdistro.assert_has_calls([
+            call("DIST1", "new-secret"),
+            call("DIST2", "new-secret")
+        ])
+
+def test_set_secret_distribution_not_deployed(rotator_with_dummy_envs):
+    """Test handling of non-deployed distribution"""
+    mock_distributions = [
+        {"Id": "DIST1", "Origin": "origin1.example.com"}
+    ]
+    
+    mock_get_distro = {
+        "Distribution": {"Status": "InProgress"}
+    }
+
+    with patch.object(rotator_with_dummy_envs, 'get_distro_list') as mock_get_distro_list, \
+         patch.object(rotator_with_dummy_envs, 'get_cfdistro') as mock_get_cfdistro:
+        
+        mock_get_distro_list.return_value = mock_distributions
+        mock_get_cfdistro.return_value = mock_get_distro
+
+        with pytest.raises(ValueError) as exc_info:
+            rotator_with_dummy_envs.set_secret(MagicMock(), "test-arn", "test-token")
+
+        assert "Distribution Id, DIST1 status is not Deployed" in str(exc_info.value)
+
+def test_set_secret_handles_no_distributions(rotator_with_dummy_envs):
+    """Test handling when no distributions are found"""
+    # Create mock service client
+    mock_service_client = MagicMock()
+    
+    # Set up proper mock returns for secret operations
+    mock_service_client.get_secret_value.return_value = {
+        'SecretString': json.dumps({
+            'HEADERVALUE': 'test-header-value'
+        })
+    }
+    mock_service_client.describe_secret.return_value = {
+        "VersionIdsToStages": {
+            "version1": ["AWSCURRENT"]
+        }
+    }
+
+    # Mock WAF operations
+    with patch('boto3.client') as mock_boto3_client:
+        mock_waf_client = MagicMock()
+        mock_boto3_client.return_value = mock_waf_client
+
+        with patch.object(rotator_with_dummy_envs, 'get_distro_list') as mock_get_distro_list:
+            with patch.object(rotator_with_dummy_envs, 'get_cfdistro') as mock_get_cfdistro, \
+                 patch('time.sleep') as mock_sleep:
+                # Set up empty distributions list
+                mock_get_distro_list.return_value = []
+                
+                # Mock distribution status (although it won't be called in this test)
+                mock_get_cfdistro.return_value = {
+                    'Distribution': {
+                        'Status': 'Deployed'
+                    }
+                }
+                
+                rotator_with_dummy_envs.set_secret(mock_service_client, "test-arn", "test-token")
+
+                # Verify the sleep was called
+                mock_sleep.assert_called_once_with(75)
+                # Verify get_cfdistro was never called since there were no distributions
+                mock_get_cfdistro.assert_not_called()
+
+def test_set_secret_handles_waf_update_failure(rotator_with_dummy_envs):
+    """Test handling of WAF update failure"""
+    mock_distributions = [
+        {"Id": "DIST1", "Origin": "origin1.example.com"}
+    ]
+    
+    mock_get_distro = {
+        "Distribution": {"Status": "Deployed"}
+    }
+    mock_pending_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
+    }
+    mock_current_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "current-secret"})
+    }
+    mock_metadata = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"]
+        }
+    }
+
+    with patch.object(rotator_with_dummy_envs, 'get_distro_list') as mock_get_distro_list, \
+         patch.object(rotator_with_dummy_envs, 'get_cfdistro') as mock_get_cfdistro, \
+         patch.object(rotator_with_dummy_envs, 'update_wafacl') as mock_update_wafacl:
+        
+        mock_get_distro_list.return_value = mock_distributions
+        mock_get_cfdistro.return_value = mock_get_distro
+        mock_update_wafacl.side_effect = ClientError(
+            {"Error": {"Code": "WAFInvalidParameterException"}},
+            "update_web_acl"
+        )
+
+        mock_service_client = MagicMock()
+        mock_service_client.describe_secret.return_value = mock_metadata
+        mock_service_client.get_secret_value.side_effect = [
+            mock_pending_secret,
+            mock_current_secret
+        ]
+
+        with pytest.raises(ValueError) as exc_info:
+            rotator_with_dummy_envs.set_secret(
+                mock_service_client, 
+                "test-arn", 
+                "test-token"
+            )
+
+        assert "Failed to update resources" in str(exc_info.value)
+
+def test_set_secret_handles_distro_update_failure(rotator_with_dummy_envs):
+    """Test handling of distribution update failure"""
+    mock_distributions = [
+        {"Id": "DIST1", "Origin": "origin1.example.com"}
+    ]
+    
+    mock_get_distro = {
+        "Distribution": {"Status": "Deployed"}
+    }
+    mock_pending_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
+    }
+    mock_current_secret = {
+        "SecretString": json.dumps({"HEADERVALUE": "current-secret"})
+    }
+    mock_metadata = {
+        "VersionIdsToStages": {
+            "current-version": ["AWSCURRENT"]
+        }
+    }
+
+    with patch.object(rotator_with_dummy_envs, 'get_distro_list') as mock_get_distro_list, \
+         patch.object(rotator_with_dummy_envs, 'get_cfdistro') as mock_get_cfdistro, \
+         patch.object(rotator_with_dummy_envs, 'update_wafacl') as mock_update_wafacl, \
+         patch.object(rotator_with_dummy_envs, 'update_cfdistro') as mock_update_cfdistro, \
+         patch('time.sleep'):
+        
+        mock_get_distro_list.return_value = mock_distributions
+        mock_get_cfdistro.return_value = mock_get_distro
+        mock_update_cfdistro.side_effect = ClientError(
+            {"Error": {"Code": "InvalidParameter"}},
+            "update_distribution"
+        )
+
+        mock_service_client = MagicMock()
+        mock_service_client.describe_secret.return_value = mock_metadata
+        mock_service_client.get_secret_value.side_effect = [
+            mock_pending_secret,
+            mock_current_secret
+        ]
+
+        with pytest.raises(ValueError) as exc_info:
+            rotator_with_dummy_envs.set_secret(
+                mock_service_client, 
+                "test-arn", 
+                "test-token"
+            )
+
+        assert "Failed to update resources" in str(exc_info.value)
+
+def test_set_secret_handles_secret_retrieval_failure(rotator_with_dummy_envs):
+    """Test handling of secret retrieval failure"""
+    mock_distributions = [
+        {"Id": "DIST1", "Origin": "origin1.example.com"}
+    ]
+    
+    mock_get_distro = {
+        "Distribution": {"Status": "Deployed"}
+    }
+
+    with patch.object(rotator_with_dummy_envs, 'get_distro_list') as mock_get_distro_list, \
+         patch.object(rotator_with_dummy_envs, 'get_cfdistro') as mock_get_cfdistro:
+        
+        mock_get_distro_list.return_value = mock_distributions
+        mock_get_cfdistro.return_value = mock_get_distro
+
+        mock_service_client = MagicMock()
+        mock_service_client.get_secret_value.side_effect = ClientError(
+            {"Error": {"Code": "ResourceNotFoundException"}},
+            "get_secret_value"
+        )
+
+        with pytest.raises(ClientError) as exc_info:
+            rotator_with_dummy_envs.set_secret(
+                mock_service_client, 
+                "test-arn", 
+                "test-token"
+            )
+
+        assert exc_info.value.response["Error"]["Code"] == "ResourceNotFoundException"
