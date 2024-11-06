@@ -91,10 +91,10 @@ def get_wafacl():
 def update_wafacl(NewSecret, PrevSecret):
     client = boto3.client('wafv2')
 
-    currwafrules = get_wafacl()
-    locktoken = currwafrules['LockToken']
+    current_waf_rules = get_wafacl()
+    locktoken = current_waf_rules['LockToken']
 
-    newwafrules = [
+    new_waf_rules = [
         {
         'Name': Application + Environment + 'XOriginVerify',
         'Priority': int(WAFRulePriority),
@@ -149,10 +149,10 @@ def update_wafacl(NewSecret, PrevSecret):
             }
         }
     ]
-
-    for r in currwafrules['WebACL']['Rules']:
+    # loop over the current WAF rules. adds them to new_waf_rules if not thesame priority as the new rule, ensures existing rules are preserved.
+    for r in current_waf_rules['WebACL']['Rules']:
         if int(WAFRulePriority) != int(r['Priority']):
-            newwafrules.append(r)
+            new_waf_rules.append(r)
     
     logger.info("Update WAF WebACL Id, %s." % WafAclId)
     response = client.update_web_acl(
@@ -169,7 +169,7 @@ def update_wafacl(NewSecret, PrevSecret):
         'CloudWatchMetricsEnabled': True|False,
         'MetricName': Application + '-' + Environment + '-' + 'XOriginVerify'
     },
-    Rules = newwafrules
+    Rules = new_waf_rules
     )
 
 

@@ -99,7 +99,7 @@ class TestRotateSecretLambda:
         assert distros[0]["Domain"] == "example.com"
 
     @patch("boto3.client")
-    def test_get_wafacl(self, mock_boto_client):
+    def test_get_wafacl_returns_rules(self, mock_boto_client):
         from rotate_secret_lambda import get_wafacl
 
         mock_wafv2 = MagicMock()
@@ -110,7 +110,6 @@ class TestRotateSecretLambda:
             "WebACL": {
                 "Rules": [
                     {
-                        "RuleId": "rule123",
                         "Action": "ALLOW",
                         "Priority": 0,
                         "Type": "REGULAR",
@@ -128,57 +127,114 @@ class TestRotateSecretLambda:
         )
         
         assert "LockToken" in response
-        assert "WebACL" in response
+        assert "Rules" in response["WebACL"]
         assert response["WebACL"]["Name"] == os.environ["WAFACLNAME"]
         assert response["WebACL"]["WebACLId"] == os.environ["WAFACLID"]
 
 
-    # @pytest.fixture
-    # def mock_wafv2():
-    #     mock_client = MagicMock()
-    #     mock_client.get_web_acl.return_value = {
-    #         "LockToken": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
-    #         "WebACL": {
-    #             "Rules": [
-    #                 {
-    #                     "RuleId": "rule123",
-    #                     "Action": "ALLOW",
-    #                     "Priority": 0,
-    #                     "Type": "REGULAR",
-    #                 }
-    #             ],
-    #             "Name": "WRONG",
-    #             "WebACLId": "WRONG",
-    #         }
-    #     }
-    #     print("Mock wafv2 client created")
-    #     return mock_client
-
-    # @patch("boto3.client")
-    # def test_get_wafacl(self, mock_boto_client, mock_wafv2):
-    #     from rotate_secret_lambda import get_wafacl
-
-    #     response = get_wafacl()
-    #     print(f"RESPONSE WAFACL: ---- {response}")
-
-        # mock_wafv2.get_web_acl.assert_called_once_with(
-        #     Name="test-waf-id", Scope="REGIONAL", Id="test-waf-acl"
-        # )
+    @patch("boto3.client")
+    @patch("rotate_secret_lambda.get_wafacl")
+    def test_update_wafacl_creates_and_updates_waf_rule(self, mock_get_wafacl, mock_boto_client):
+        from rotate_secret_lambda import update_wafacl
         
-        # assert "LockToken" not in response
-        # assert "WebACL" in response
-        # assert response["WebACL"]["Name"] == "test-waf-id"
-        # assert response["WebACL"]["WebACLId"] == "test-waf-acl"
+        application = os.environ["APPLICATION"]
+        environment = os.environ["ENVIRONMENT"]
+        new_secret = "NEW"
+        previous_secret = "PREVIOUS"
+        
+        mock_wafv2 = MagicMock()
+        mock_boto_client.return_value = mock_wafv2
+        mock_get_wafacl.return_value = {
+            'LockToken': 'test-lock-token',
+            'WebACL': {
+                'Rules': [
+                    {
+                        'Name': 'OtherRule',
+                        'Priority': 5,
+                        'Action': 'BLOCK',
+                    },
+                    {
+                        'Name': f"{application}{environment}XOriginVerify",
+                        'Priority': int(os.environ["WAFRULEPRI"]),
+                        'Action': 'ALLOW',
+                    },
+                ]
+            }
+        }
 
-    # @patch("boto3.client")
-    # def test_update_wafacl(self, mock_boto_client):
-    #     from rotate_secret_lambda import update_wafacl
+        update_wafacl(new_secret, previous_secret)
 
-    #     mock_waf = MagicMock()
-    #     mock_boto_client.return_value = mock_waf
-    #     mock_waf.update_web_acl.return_value = {"Summary": "success"}
+        expected_new_waf_rules = [
+            {
+                'Name': f"{application}{environment}XOriginVerify",
+                'Priority': int(os.environ["WAFRULEPRI"]),
+                'Action': {
+                    'Allow': {}
+                },
+                'VisibilityConfig': {
+                    'SampledRequestsEnabled': True,
+                    'CloudWatchMetricsEnabled': True,
+                    'MetricName': f"{application}-{environment}-XOriginVerify"
+                },
+                'Statement': {
+                    'OrStatement': {
+                        'Statements': [
+                            {
+                                'ByteMatchStatement': {
+                                    'FieldToMatch': {
+                                        'SingleHeader': {
+                                            'Name': os.environ["HEADERNAME"]
+                                        }
+                                    },
+                                    'PositionalConstraint': 'EXACTLY',
+                                    'SearchString': new_secret,
+                                    'TextTransformations': [
+                                        {
+                                            'Type': 'NONE',
+                                            'Priority': 0
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                'ByteMatchStatement': {
+                                    'FieldToMatch': {
+                                        'SingleHeader': {
+                                            'Name': os.environ["HEADERNAME"]
+                                        }
+                                    },
+                                    'PositionalConstraint': 'EXACTLY',
+                                    'SearchString': previous_secret,
+                                    'TextTransformations': [
+                                        {
+                                            'Type': 'NONE',
+                                            'Priority': 0
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                'Name': 'OtherRule',
+                'Priority': 5,
+                'Action': 'BLOCK',
+            }
+        ]
 
-    #     update_wafacl("new_secret", "old_secret")
-    #     mock_waf.update_web_acl.assert_called_once()
-
-    #     assert mock_waf.update_web_acl.return_value["Summary"] == "success"
+        mock_wafv2.update_web_acl.assert_called_once_with(
+            Name=os.environ["WAFACLNAME"],
+            Scope='REGIONAL',
+            Id=os.environ["WAFACLID"],
+            DefaultAction={'Block': {}},
+            Description='CloudFront Origin Verify',
+            LockToken='test-lock-token',
+            VisibilityConfig={
+                'SampledRequestsEnabled': True,
+                'CloudWatchMetricsEnabled': True,
+                'MetricName': f"{application}-{environment}-XOriginVerify"
+            },
+            Rules=expected_new_waf_rules
+        )
