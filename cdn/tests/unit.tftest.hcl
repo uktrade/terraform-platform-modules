@@ -90,3 +90,52 @@ run "domain_length_validation_tests" {
     var.config.cdn_domains_list
   ]
 }
+
+run "domain_length_validation_tests_succeed_with_empty_config" {
+  command = plan
+
+  variables {
+    application = "app"
+    environment = "env"
+    config      = {}
+  }
+
+  assert {
+    condition     = var.config.cdn_domains_list == null
+    error_message = "Should be: null"
+  }
+}
+
+run "cdn_read_timeout_is_set_to_30_seconds_by_default" {
+  command = plan
+
+  assert {
+    condition = [
+      for k in aws_cloudfront_distribution.standard["dev.my-application.uktrade.digital"].origin :
+      k.custom_origin_config[0].origin_read_timeout
+      if k.domain_name == "internal.env.app.uktrade.digital"
+    ][0] == 30
+    error_message = "Should be: 30 seconds"
+  }
+}
+
+run "cdn_read_timeout_is_set_to_config_specified_value_when_provided" {
+  command = plan
+
+  variables {
+    config = {
+      cdn_domains_list    = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
+      cdn_timeout_seconds = 60
+    }
+  }
+
+
+  assert {
+    condition = [
+      for k in aws_cloudfront_distribution.standard["dev.my-application.uktrade.digital"].origin :
+      k.custom_origin_config[0].origin_read_timeout
+      if k.domain_name == "internal.env.app.uktrade.digital"
+    ][0] == 60
+    error_message = "Should be: 60 seconds"
+  }
+}

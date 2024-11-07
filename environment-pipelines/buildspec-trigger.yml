@@ -32,11 +32,11 @@ phases:
       - MESSAGE="Triggering ${TRIGGERED_PIPELINE_NAME} pipeline"
       - echo "${MESSAGE}"
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
-
-      - aws codepipeline start-pipeline-execution --name "${TRIGGERED_PIPELINE_NAME}" --profile  "${PROFILE_NAME}" --variables "name=SLACK_THREAD_ID,value=${SLACK_REF}"
+      - aws codepipeline start-pipeline-execution --name "${TRIGGERED_PIPELINE_NAME}" --profile "${PROFILE_NAME}" --variables name=SLACK_THREAD_ID,value=${SLACK_REF}
 
   post_build:
     commands:
+      - export ACCOUNT_NAME="${TRIGGERED_PIPELINE_AWS_PROFILE}"
       - |
         if [ "${CODEBUILD_BUILD_SUCCEEDING}" == "1" ]
         then
@@ -46,7 +46,7 @@ phases:
           MESSAGE=":alert: @here FAILED to trigger ${TRIGGERED_PIPELINE_NAME}"
           ADDITIONAL_OPTIONS="--send-to-main-channel true"
         fi
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} in the ${ACCOUNT_NAME} account." "${ADDITIONAL_OPTIONS}"
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE} in the ${ACCOUNT_NAME} account." ${ADDITIONAL_OPTIONS}
 
 artifacts:
   files: []

@@ -1,27 +1,65 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+resource "aws_kms_key" "cloudwatch_log_group_kms_key" {
+  description         = "KMS Key for ${var.name}-${var.environment} CloudWatch Log encryption"
+  enable_key_rotation = true
+  tags                = local.tags
+}
+
+resource "aws_kms_key_policy" "opensearch_to_cloudwatch" {
+  key_id = aws_kms_key.cloudwatch_log_group_kms_key.key_id
+  policy = jsonencode({
+    Id = "OpenSearchToCloudWatch"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      },
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "logs.${data.aws_region.current.name}.amazonaws.com"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
+}
+
 resource "aws_cloudwatch_log_group" "opensearch_log_group_index_slow_logs" {
   name              = "/aws/opensearch/${local.domain_name}/index-slow"
   retention_in_days = coalesce(var.config.index_slow_log_retention_in_days, 7)
+  kms_key_id        = aws_kms_key.cloudwatch_log_group_kms_key.arn
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_search_slow_logs" {
   name              = "/aws/opensearch/${local.domain_name}/search-slow"
   retention_in_days = coalesce(var.config.search_slow_log_retention_in_days, 7)
+  kms_key_id        = aws_kms_key.cloudwatch_log_group_kms_key.arn
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_es_application_logs" {
   name              = "/aws/opensearch/${local.domain_name}/es-application"
   retention_in_days = coalesce(var.config.es_app_log_retention_in_days, 7)
+  kms_key_id        = aws_kms_key.cloudwatch_log_group_kms_key.arn
 }
 
 resource "aws_cloudwatch_log_group" "opensearch_log_group_audit_logs" {
   name              = "/aws/opensearch/${local.domain_name}/audit"
   retention_in_days = coalesce(var.config.audit_log_retention_in_days, 7)
+  kms_key_id        = aws_kms_key.cloudwatch_log_group_kms_key.arn
 }
 
 resource "aws_security_group" "opensearch-security-group" {
+  # checkov:skip=CKV2_AWS_5: False Positive in Checkov - https://github.com/bridgecrewio/checkov/issues/3010
   name        = local.domain_name
   vpc_id      = data.aws_vpc.vpc.id
   description = "Allow inbound HTTP traffic"
@@ -51,18 +89,21 @@ resource "aws_security_group" "opensearch-security-group" {
 }
 
 resource "random_password" "password" {
-  length      = 32
-  upper       = true
-  special     = true
-  lower       = true
-  numeric     = true
-  min_upper   = 1
-  min_special = 1
-  min_lower   = 1
-  min_numeric = 1
+  length           = 32
+  upper            = true
+  special          = true
+  lower            = true
+  numeric          = true
+  min_upper        = 1
+  min_special      = 1
+  min_lower        = 1
+  min_numeric      = 1
+  override_special = coalesce(var.config.password_special_characters, "-_!.~$&'()*+,;=")
 }
 
 resource "aws_opensearch_domain" "this" {
+  # checkov:skip=CKV_AWS_247: Enabling CMK Forces Cluster Recreation. To be implemented as a separate breaking change
+  # checkov:skip=CKV2_AWS_59: This is a configurable option not picked up by Checkov as it's variablised
   domain_name    = local.domain_name
   engine_version = "OpenSearch_${var.config.engine}"
 
@@ -74,7 +115,7 @@ resource "aws_opensearch_domain" "this" {
   ]
 
   cluster_config {
-    dedicated_master_count   = 1
+    dedicated_master_count   = 3
     dedicated_master_type    = var.config.master ? var.config.instance : null
     dedicated_master_enabled = var.config.master
     instance_type            = var.config.instance
@@ -137,6 +178,7 @@ resource "aws_opensearch_domain" "this" {
   log_publishing_options {
     cloudwatch_log_group_arn = aws_cloudwatch_log_group.opensearch_log_group_audit_logs.arn
     log_type                 = "AUDIT_LOGS"
+    enabled                  = true
   }
 
   node_to_node_encryption {
@@ -169,7 +211,7 @@ resource "aws_ssm_parameter" "opensearch_endpoint" {
   name        = local.ssm_parameter_name
   description = "opensearch_password"
   type        = "SecureString"
-  value       = "https://${local.master_user}:${urlencode(random_password.password.result)}@${aws_opensearch_domain.this.endpoint}"
+  value       = "https://${local.master_user}:${local.urlencode_password ? urlencode(random_password.password.result) : random_password.password.result}@${aws_opensearch_domain.this.endpoint}"
   key_id      = aws_kms_key.ssm_opensearch_endpoint.arn
 
   tags = local.tags

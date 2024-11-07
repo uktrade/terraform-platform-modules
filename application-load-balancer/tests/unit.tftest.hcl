@@ -1,3 +1,5 @@
+mock_provider "aws" {}
+
 mock_provider "aws" {
   alias = "sandbox"
 }
@@ -40,8 +42,11 @@ variables {
   environment = "env"
   vpc_name    = "vpc-name"
   config = {
-    domain_prefix    = "dom-prefix",
-    cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
+    domain_prefix = "dom-prefix",
+    cdn_domains_list = {
+      "web.dev.my-application.uktrade.digital" : ["internal.web", "my-application.uktrade.digital"]
+      "api.dev.my-application.uktrade.digital" : ["internal.api", "my-application.uktrade.digital"]
+    }
   }
 }
 
@@ -131,10 +136,8 @@ run "aws_security_group_http_unit_test" {
     error_message = "Should be: app-env-alb-http"
   }
 
-  assert {
-    condition     = aws_security_group.alb-security-group["http"].revoke_rules_on_delete == false
-    error_message = "Should be: false"
-  }
+  # Cannot test for the default on a plan
+  # aws_security_group.alb-security-group["http"].revoke_rules_on_delete == false
 
   assert {
     condition     = aws_security_group.alb-security-group["http"].vpc_id == "vpc-00112233aabbccdef"
@@ -150,10 +153,8 @@ run "aws_security_group_https_unit_test" {
     error_message = "Should be: app-env-alb-https"
   }
 
-  assert {
-    condition     = aws_security_group.alb-security-group["https"].revoke_rules_on_delete == false
-    error_message = "Should be: false"
-  }
+  # Cannot test for the default on a plan
+  # aws_security_group.alb-security-group["https"].revoke_rules_on_delete == false
 
   assert {
     condition     = aws_security_group.alb-security-group["https"].vpc_id == "vpc-00112233aabbccdef"
@@ -204,13 +205,13 @@ run "aws_acm_certificate_unit_test" {
   }
 
   assert {
-    condition     = [for el in aws_acm_certificate.certificate.subject_alternative_names : true if el == "dev.my-application.uktrade.digital"][0] == true
-    error_message = "Should be: either: dev.my-application.uktrade.digital or dom-prefix.env.app.uktrade.digital"
+    condition     = [for el in aws_acm_certificate.certificate.subject_alternative_names : true if el == "web.dev.my-application.uktrade.digital"][0] == true
+    error_message = "Should be: web.dev.my-application.uktrade.digital"
   }
 
   assert {
-    condition     = [for el in aws_acm_certificate.certificate.subject_alternative_names : true if el == "dom-prefix.env.app.uktrade.digital"][0] == true
-    error_message = "Should be: either: dev.my-application.uktrade.digital or dom-prefix.env.app.uktrade.digital"
+    condition     = [for el in aws_acm_certificate.certificate.subject_alternative_names : true if el == "api.dev.my-application.uktrade.digital"][0] == true
+    error_message = "Should be: api.dev.my-application.uktrade.digital"
   }
 
   assert {
@@ -268,4 +269,19 @@ run "domain_length_validation_tests" {
   expect_failures = [
     var.config.cdn_domains_list
   ]
+}
+
+run "domain_length_validation_tests_succeed_with_empty_config" {
+  command = plan
+
+  variables {
+    application = "app"
+    environment = "env"
+    config      = {}
+  }
+
+  assert {
+    condition     = var.config.cdn_domains_list == null
+    error_message = "Should be: null"
+  }
 }

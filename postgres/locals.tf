@@ -34,4 +34,12 @@ locals {
   rds_master_secret_name       = "${local.secret_prefix}_RDS_MASTER_ARN"
   read_only_secret_name        = "${local.secret_prefix}_READ_ONLY_USER"
   application_user_secret_name = "${local.secret_prefix}_APPLICATION_USER"
+
+  central_log_group_arns        = jsondecode(data.aws_ssm_parameter.log-destination-arn.value)
+  central_log_group_destination = var.environment == "prod" ? local.central_log_group_arns["prod"] : local.central_log_group_arns["dev"]
+
+  data_copy_tasks = coalesce(var.config.database_copy, [])
+
+  data_dump_tasks = [for task in local.data_copy_tasks : task if task.from == var.environment && !strcontains(task.to, "prod")]
+  data_load_tasks = [for task in local.data_copy_tasks : task if task.to == var.environment && !strcontains(task.to, "prod")]
 }

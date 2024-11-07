@@ -37,10 +37,22 @@ variable "config" {
       )
     )
     # NOTE: readonly access is managed by Copilot server addon s3 policy.
-    readonly = optional(bool)
+    readonly             = optional(bool)
+    serve_static_content = optional(bool, false)
     objects = optional(list(object({
-      body = string
-      key  = string
+      body         = string
+      key          = string
+      content_type = optional(string)
     })))
+
+    # S3 to S3 data migration
+    data_migration = optional(object({
+      import = optional(object({
+        source_bucket_arn  = string
+        source_kms_key_arn = optional(string)
+        worker_role_arn    = string
+      }))
+      })
+    )
   })
 }

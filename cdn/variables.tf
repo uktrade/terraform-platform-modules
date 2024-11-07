@@ -24,6 +24,7 @@ variable "config" {
     allowed_methods                             = optional(list(string))
     cached_methods                              = optional(list(string))
     default_waf                                 = optional(string)
+    cdn_timeout_seconds                         = optional(number)
     origin_protocol_policy                      = optional(string)
     origin_ssl_protocols                        = optional(list(string))
     cdn_compress                                = optional(bool)
@@ -34,7 +35,7 @@ variable "config" {
   })
 
   validation {
-    condition = alltrue([
+    condition = var.config.cdn_domains_list == null ? true : alltrue([
       for k, v in var.config.cdn_domains_list : ((length(k) <= 63) && (length(k) >= 3))
     ])
     error_message = "Items in cdn_domains_list should be between 3 and 63 characters long."

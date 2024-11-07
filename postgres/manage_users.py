@@ -4,21 +4,29 @@ import psycopg2
 from botocore.exceptions import ClientError
 
 
-def drop_user(cursor, username):
+MASTER_USERNAME = "postgres"
+APP_USERNAME = "application_user"
+
+
+def create_or_update_db_user(conn, cursor, username, password, permissions):
     cursor.execute(f"SELECT * FROM pg_catalog.pg_user WHERE usename = '{username}'")
 
     if cursor.fetchone() is not None:
-        cursor.execute(f"DROP OWNED BY {username}")
-        cursor.execute(f"DROP USER {username}")
+      update_db_user_password(conn, cursor, username, password)  
+    else:
+      create_db_user(conn, cursor, username, password, permissions) 
 
+
+def update_db_user_password(conn, cursor, username, password):
+    cursor.execute(f"ALTER USER {username} WITH ENCRYPTED PASSWORD '%s'" % password)
+    conn.commit()
+    
 
 def create_db_user(conn, cursor, username, password, permissions):
-    drop_user(cursor, username)
-
     cursor.execute(f"CREATE USER {username} WITH ENCRYPTED PASSWORD '%s'" % password)
-    cursor.execute(f"GRANT {username} to postgres;")
+    cursor.execute(f"GRANT {username} to {MASTER_USERNAME};")
     cursor.execute(f"GRANT {', '.join(permissions)} ON ALL TABLES IN SCHEMA public TO {username};")
-    cursor.execute(f"ALTER DEFAULT PRIVILEGES FOR USER application_user IN SCHEMA public GRANT {', '.join(permissions)} ON TABLES TO {username};")
+    cursor.execute(f"ALTER DEFAULT PRIVILEGES FOR USER {APP_USERNAME} IN SCHEMA public GRANT {', '.join(permissions)} ON TABLES TO {username};")
 
     if 'INSERT' in permissions:
         cursor.execute(f"GRANT CREATE ON SCHEMA public TO {username};")
@@ -96,8 +104,8 @@ def handler(event, context):
     )
 
     cursor = conn.cursor()
-
-    create_db_user(conn, cursor, username, user_password, user_permissions)
+    
+    create_or_update_db_user(conn, cursor, username, user_password, user_permissions)
     create_or_update_user_secret(ssm, user_secret_name, user_secret_string, event)
 
     cursor.close()

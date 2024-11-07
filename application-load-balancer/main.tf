@@ -13,6 +13,8 @@ data "aws_subnets" "public-subnets" {
 }
 
 resource "aws_lb" "this" {
+  # checkov:skip=CKV2_AWS_20: Redirects for HTTP requests into HTTPS happens on the CDN
+  # checkov:skip=CKV2_AWS_28: WAF is outside of terraform-platform-modules
   name               = "${var.application}-${var.environment}"
   load_balancer_type = "application"
   subnets            = tolist(data.aws_subnets.public-subnets.ids)
@@ -25,10 +27,16 @@ resource "aws_lb" "this" {
     prefix  = "${var.application}/${var.environment}"
     enabled = true
   }
+
   tags = local.tags
+
+  drop_invalid_header_fields = true
+  enable_deletion_protection = true
 }
 
 resource "aws_lb_listener" "alb-listener" {
+  # checkov:skip=CKV_AWS_2:Checkov Looking for Hard Coded HTTPS but we use a variable.
+  # checkov:skip=CKV_AWS_103:Checkov Looking for Hard Coded TLS1.2 but we use a variable.
   depends_on = [aws_acm_certificate_validation.cert_validate]
 
   for_each          = local.protocols
@@ -45,11 +53,13 @@ resource "aws_lb_listener" "alb-listener" {
 }
 
 resource "aws_security_group" "alb-security-group" {
-  # checkov:skip=CKV2_AWS_5:Security group is used by VPC. Ticket to investigate: https://uktrade.atlassian.net/browse/DBTP-1039
-  for_each = local.protocols
-  name     = "${var.application}-${var.environment}-alb-${each.key}"
-  vpc_id   = data.aws_vpc.vpc.id
-  tags     = local.tags
+  # checkov:skip=CKV2_AWS_5: False Positive in Checkov - https://github.com/bridgecrewio/checkov/issues/3010
+  # checkov:skip=CKV_AWS_260: Ingress traffic from 0.0.0.0:0 is necessary to enable connecting to web services
+  for_each    = local.protocols
+  name        = "${var.application}-${var.environment}-alb-${each.key}"
+  description = "Managed by Terraform"
+  vpc_id      = data.aws_vpc.vpc.id
+  tags        = local.tags
   ingress {
     description = "Allow from anyone on port ${each.value.port}"
     from_port   = each.value.port
@@ -67,6 +77,7 @@ resource "aws_security_group" "alb-security-group" {
 }
 
 resource "aws_lb_target_group" "http-target-group" {
+  # checkov:skip=CKV_AWS_261:Health Check is Defined by copilot
   name        = "${var.application}-${var.environment}-http"
   port        = 80
   protocol    = "HTTP"

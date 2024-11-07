@@ -14,9 +14,12 @@ data "aws_subnets" "private-subnets" {
 }
 
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 
 resource "aws_elasticache_replication_group" "redis" {
+  # checkov:skip=CKV_AWS_31:Potential cascading impact on Celery. Requires further analysis - DBTP-1216
+  # checkov:skip=CKV_AWS_191:Potential cascading impact on Celery. Requires further analysis - DBTP-1216
   replication_group_id       = "${var.name}-${var.environment}"
   description                = "${var.name}-${var.environment}-redis-cluster"
   engine                     = "redis"
@@ -57,12 +60,14 @@ resource "aws_security_group" "redis" {
   description = "Allow ingress from VPC for Redis"
 
   ingress {
+    description = "Allow from VPC on port 6379"
     from_port   = 6379
     to_port     = 6379
     protocol    = "tcp"
     cidr_blocks = [data.aws_vpc.vpc.cidr_block]
   }
   egress {
+    description = "Allow all traffic"
     from_port   = 0
     to_port     = 0
     protocol    = -1
@@ -168,16 +173,56 @@ resource "aws_elasticache_subnet_group" "es-subnet-group" {
   )
 }
 
+resource "aws_kms_key" "redis-log-group-kms-key" {
+  description         = "KMS Key for ${var.name}-${var.environment} Redis Log encryption"
+  enable_key_rotation = true
+  tags                = local.tags
+}
+
+resource "aws_kms_key_policy" "redis-to-cloudwatch" {
+  key_id = aws_kms_key.redis-log-group-kms-key.key_id
+  policy = jsonencode({
+    Id = "RedisToCloudWatch"
+    Statement = [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      },
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "logs.${data.aws_region.current.name}.amazonaws.com"
+        },
+        "Action" : "kms:*",
+        "Resource" : "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
+}
 resource "aws_cloudwatch_log_group" "redis-slow-log-group" {
+  # checkov:skip=CKV_AWS_338:Retains logs for 7 days instead of 1 year
   name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/slow"
   retention_in_days = 7
   tags              = local.tags
+  kms_key_id        = aws_kms_key.redis-log-group-kms-key.arn
 }
 
 resource "aws_cloudwatch_log_group" "redis-engine-log-group" {
+  # checkov:skip=CKV_AWS_338:Retains logs for 7 days instead of 1 year
   name              = "/aws/elasticache/${var.name}/${var.environment}/${var.name}Redis/engine"
   retention_in_days = 7
   tags              = local.tags
+  kms_key_id        = aws_kms_key.redis-log-group-kms-key.arn
+}
+
+data "aws_ssm_parameter" "log-destination-arn" {
+  name = "/copilot/tools/central_log_groups"
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "redis-subscription-filter-engine" {
@@ -185,7 +230,7 @@ resource "aws_cloudwatch_log_subscription_filter" "redis-subscription-filter-eng
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
   log_group_name  = aws_cloudwatch_log_group.redis-engine-log-group.name
   filter_pattern  = ""
-  destination_arn = local.central_log_destination_arn
+  destination_arn = local.central_log_group_destination
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "redis-subscription-filter-slow" {
@@ -193,6 +238,5 @@ resource "aws_cloudwatch_log_subscription_filter" "redis-subscription-filter-slo
   role_arn        = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/CWLtoSubscriptionFilterRole"
   log_group_name  = aws_cloudwatch_log_group.redis-slow-log-group.name
   filter_pattern  = ""
-  destination_arn = local.central_log_destination_arn
+  destination_arn = local.central_log_group_destination
 }
-
