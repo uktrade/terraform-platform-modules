@@ -81,7 +81,7 @@ resource "aws_cloudwatch_log_stream" "codebase_image_build" {
   log_group_name = aws_cloudwatch_log_group.codebase_image_build.name
 }
 
-resource "aws_codebuild_webhook" "example" {
+resource "aws_codebuild_webhook" "codebuild_webhook" {
   project_name = aws_codebuild_project.codebase_image_build.name
   build_type   = "BUILD"
 
