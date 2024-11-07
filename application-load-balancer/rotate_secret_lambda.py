@@ -22,7 +22,7 @@ class SecretRotator:
         self.application = kwargs.get('application', os.environ.get('APPLICATION'))
         self.environment = kwargs.get('environment', os.environ.get('ENVIRONMENT'))
         self.role_arn = kwargs.get('role_arn', os.environ.get('ROLEARN'))
-        self.distro_list = kwargs.get('distro_list', os.environ.get('DISTROIDLIST'))
+        self.distro_list = kwargs.get('distro_list', os.environ.get('distro_idLIST'))
 
         
     def get_cloudfront_session(self) -> boto3.client:
@@ -106,58 +106,102 @@ class SecretRotator:
             Rules=new_rules
         )
 
-    def get_cfdistro(self, distroid):
+    # def get_cfdistro(self, distro_id):
+    #     client = self.get_cloudfront_session()
+    #     response = client.get_distribution(
+    #         Id=distro_id
+    #     )
+    #     return response
+        
+    def get_cfdistro(self, distro_id: str) -> Dict:
+        """
+        Fetches the CloudFront distribution details.
+        """
         client = self.get_cloudfront_session()
-        response = client.get_distribution(
-            Id=distroid
-        )
-        return response
+        return client.get_distribution(Id=distro_id)
+        
 
-    def get_cfdistro_config(self, distroid):
+    def get_cfdistro_config(self, distro_id):
         client = self.get_cloudfront_session()
         response = client.get_distribution_config(
-            Id=distroid
+            Id=distro_id
         )
         return response
+        
+    def get_cfdistro_config(self, distro_id: str) -> Dict:
+        """
+        Fetches the configuration of a CloudFront distribution.
+        """
+        client = self.get_cloudfront_session()
+        return client.get_distribution_config(Id=distro_id)
+        
 
-    def update_cfdistro(self, distroid, headervalue):
+    def update_cfdistro(self, distro_id: str, header_value: str) -> Dict:
+        """
+        Updates the custom headers for a CloudFront distribution.
+
+        Args:
+            distro_id (str): The ID of the CloudFront distribution.
+            header_value (str): The header value to set for the custom header.
+        """
         client = self.get_cloudfront_session()
 
-        diststatus = self.get_cfdistro(distroid)
-        if 'Deployed' in diststatus['Distribution']['Status']:
-            distconfig = self.get_cfdistro_config(distroid)
-            headercount = 0
-            for k in distconfig['DistributionConfig']['Origins']['Items']:
-                if k['CustomHeaders']['Quantity'] > 0:
-                    for h in k['CustomHeaders']['Items']:
-                        if self.header_name in h['HeaderName']:
-                            logger.info("Update custom header, %s for origin, %s." % (h['HeaderName'], k['Id']))
-                            headercount = headercount + 1
-                            h['HeaderValue'] = headervalue
-                        else:
-                            logger.info("Ignore custom header, %s for origin, %s." % (h['HeaderName'], k['Id']))
-                            pass
-                else:
-                    logger.info("No custom headers found in origin, %s." % k['Id'])
-                    pass
-            
-            if headercount < 1:
-                logger.error("No custom header, %s found in distribution Id, %s." % (self.header_name, distroid))
-                raise ValueError("No custom header found in distribution Id, %s." % distroid)
-            else:
-                response = client.update_distribution(
-                    Id=distroid,
-                    IfMatch=distconfig['ResponseMetadata']['HTTPHeaders']['etag'],
-                    DistributionConfig=distconfig['DistributionConfig']
-                )
-                
-                return response
-                
-        else:
-            logger.error("Distribution Id, %s status is not Deployed." % distroid)
-            raise ValueError("Distribution Id, %s status is not Deployed." % distroid)
+        # Check if the distribution is deployed
+        if not self._is_distribution_deployed(distro_id):
+            logger.error("Distribution Id, %s status is not Deployed." % distro_id)
+            raise ValueError(f"Distribution Id, {distro_id} status is not Deployed.")
 
-    def run_test_origin(self, url, secret):
+        # Get the distribution configuration
+        dist_config = self.get_cfdistro_config(distro_id)
+
+        # Process the custom headers and update them
+        updated = self._update_custom_headers(dist_config, header_value)
+
+        if not updated:
+            logger.error("No custom header, %s found in distribution Id, %s." % (self.header_name, distro_id))
+            raise ValueError(f"No custom header found in distribution Id, {distro_id}.")
+
+        # Update the distribution
+        return self._apply_distribution_update(client, distro_id, dist_config)
+
+    def _is_distribution_deployed(self, distro_id: str) -> bool:
+        """
+        Checks if the CloudFront distribution is deployed.
+
+        """
+        dist_status = self.get_cfdistro(distro_id)
+        return 'Deployed' in dist_status['Distribution']['Status']
+
+    def _update_custom_headers(self, dist_config: Dict, header_value: str) -> bool:
+        """
+        Updates custom headers in the distribution config.
+        """
+        header_count = 0
+        for k in dist_config['DistributionConfig']['Origins']['Items']:
+            if k['CustomHeaders']['Quantity'] > 0:
+                for h in k['CustomHeaders']['Items']:
+                    if self.header_name in h['HeaderName']:
+                        logger.info(f"Update custom header, {h['HeaderName']} for origin, {k['Id']}.")
+                        header_count += 1
+                        h['HeaderValue'] = header_value
+                    else:
+                        logger.info(f"Ignore custom header, {h['HeaderName']} for origin, {k['Id']}.")
+            else:
+                logger.info(f"No custom headers found in origin, {k['Id']}.")
+        
+        return header_count > 0
+
+    def _apply_distribution_update(self, client, distro_id: str, dist_config: Dict) -> Dict:
+        """
+        Applies the distribution update to CloudFront.
+        """
+        return client.update_distribution(
+            Id=distro_id,
+            IfMatch=dist_config['ResponseMetadata']['HTTPHeaders']['etag'],
+            DistributionConfig=dist_config['DistributionConfig']
+        )
+
+    def run_test_origin_access(self, url: str, secret: str) -> bool:
         response = requests.get(
             url,
             headers={self.header_name: secret}
@@ -165,7 +209,7 @@ class SecretRotator:
         logger.info("Testing URL, %s - response code, %s " % (url, response.status_code))
         return response.status_code == 200
         
-    def get_secrets(self, service_client, arn, token):
+    def get_secrets(self, service_client, arn: str, token: str) -> Tuple[Dict, Dict]:
     # Obtain the pending secret value
         pending = service_client.get_secret_value(
             SecretId=arn,
@@ -250,10 +294,11 @@ class SecretRotator:
     # Confirm CloudFront distribution is in Deployed state
         matching_distributions = self.get_distro_list()
         logger.info("All distros: %s" % matching_distributions)
+        
         for distro in matching_distributions:
             logger.info("Getting status of distro: %s" % distro['Id'])
-            diststatus = self.get_cfdistro(distro['Id'])
-            if 'Deployed' not in diststatus['Distribution']['Status']:
+            dist_status = self.get_cfdistro(distro['Id'])
+            if 'Deployed' not in dist_status['Distribution']['Status']:
                 logger.error("Distribution Id, %s status is not Deployed." % distro['Id'])
                 raise ValueError("Distribution Id, %s status is not Deployed." % distro['Id'])
 
@@ -298,7 +343,7 @@ class SecretRotator:
         for distro in matching_distributions:
             try:
                 for s in secrets:
-                    if self.run_test_origin("http://" + distro['Origin'], s):
+                    if self.run_test_origin_access("http://" + distro['Origin'], s):
                         logger.info("Origin ok for http://%s" % distro['Origin'])
                         pass
                     else:

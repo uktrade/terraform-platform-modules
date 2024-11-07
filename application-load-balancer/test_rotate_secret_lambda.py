@@ -447,10 +447,10 @@ class TestRotationProcess:
         mock_service_client.describe_secret.return_value = mock_metadata
 
         with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
-             patch.object(rotator, 'run_test_origin') as mock_run_test_origin:
+             patch.object(rotator, 'run_test_origin_access') as mock_run_test_origin_access:
             
             mock_get_distro_list.return_value = mock_distributions
-            mock_run_test_origin.return_value = True
+            mock_run_test_origin_access.return_value = True
 
             # When testing the secrets
             rotator.run_test_secret(mock_service_client, "test-arn", "test-token")
@@ -462,7 +462,7 @@ class TestRotationProcess:
                 call("http://origin2.example.com", "new-secret"),
                 call("http://origin2.example.com", "current-secret")
             ]
-            mock_run_test_origin.assert_has_calls(expected_test_calls)
+            mock_run_test_origin_access.assert_has_calls(expected_test_calls)
 
 class TestFinishSecretStage:
     """
