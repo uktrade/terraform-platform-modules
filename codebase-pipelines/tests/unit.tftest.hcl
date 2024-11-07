@@ -102,13 +102,13 @@ run "test_codebuild" {
   }
   assert {
     condition = aws_codebuild_project.codebase_image_build.logs_config[0].cloudwatch_logs[
-    0
+      0
     ].group_name == "codebuild/my-app-my-codebase-codebase-image-build/log-group"
     error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-image-build/log-group'"
   }
   assert {
     condition = aws_codebuild_project.codebase_image_build.logs_config[0].cloudwatch_logs[
-    0
+      0
     ].stream_name == "codebuild/my-app-my-codebase-codebase-image-build/log-stream"
     error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-image-build/log-stream'"
   }
@@ -151,5 +151,32 @@ run "test_codebuild" {
   assert {
     condition     = aws_codebuild_webhook.codebuild_webhook.project_name == "my-app-my-codebase-codebase-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+  }
+  assert {
+    condition     = aws_codebuild_webhook.codebuild_webhook.build_type == "BUILD"
+    error_message = "Should be: 'BUILD'"
+  }
+
+  assert {
+    condition     = length(aws_codebuild_webhook.codebuild_webhook.filter_group) == 2
+    error_message = "Should be: 2"
+  }
+  assert {
+    condition = [
+      for el in aws_codebuild_webhook.codebuild_webhook.filter_group : true
+      if[for filter in el.filter : true if filter.type == "EVENT" && filter.pattern == "PUSH"][0] == true
+      ][
+      0
+    ] == true
+    error_message = "Should be: type = 'EVENT' and pattern = 'PUSH'"
+  }
+  assert {
+    condition = [
+      for el in aws_codebuild_webhook.codebuild_webhook.filter_group : true
+      if[for filter in el.filter : true if filter.type == "HEAD_REF" && (filter.pattern == "^refs/heads/main$" || filter.pattern == "^refs/tags/.*")][0] == true
+      ][
+      0
+    ] == true
+    error_message = "Should be: type = 'HEAD_REF' and pattern = '^refs/heads/main$' or '^refs/tags/.*'"
   }
 }
