@@ -220,10 +220,42 @@ class SecretRotator:
         )
         logger.info("Testing URL, %s - response code, %s " % (url, response.status_code))
         return response.status_code == 200
+        
+    def get_secrets(self, service_client, arn, token):
+    # Obtain the pending secret value
+        pending = service_client.get_secret_value(
+            SecretId=arn,
+            VersionId=token,
+            VersionStage="AWSPENDING"
+        )
+
+        # Obtain metadata and find the current version
+        metadata = service_client.describe_secret(SecretId=arn)
+        current, currenttoken = None, None
+
+        for version in metadata.get("VersionIdsToStages", {}):
+            if "AWSCURRENT" in metadata["VersionIdsToStages"].get(version, []):
+                currenttoken = version
+                current = service_client.get_secret_value(
+                    SecretId=arn,
+                    VersionId=currenttoken,
+                    VersionStage="AWSCURRENT"
+                )
+                logger.info("Getting current version %s for %s" % (version, arn))
+                break  # Found AWSCURRENT, exit loop
+
+        if not current:
+            raise ValueError("No AWSCURRENT version found")
+
+        # Parse secrets from JSON format
+        pendingsecret = json.loads(pending['SecretString'])
+        currentsecret = json.loads(current['SecretString'])
+
+        return pendingsecret, currentsecret
 
     def create_secret(self, service_client, arn, token):
         """Create the secret
-        This method first checks for the existence of a secret for the passed in token. If one does not exist, it will generate a
+        This method first checks for the existence of a current secret for the passed in token. If one does not exist, it will generate a
         new secret and put it with the passed in token.
         Args:
             service_client (client): The secrets manager service client
@@ -263,6 +295,7 @@ class SecretRotator:
 
     def set_secret(self, service_client, arn, token):
         """Set the secret
+        Updates the WAF ACL & the CloudFront distributions with the AWSPENDING & AWSCURRENT secret values.
         This method should set the AWSPENDING secret in the service that the secret belongs to. For example, if the secret is a database
         credential, this method should take the value of the AWSPENDING secret and set the user's password to this value in the database.
         Args:
@@ -270,59 +303,32 @@ class SecretRotator:
             arn (string): The secret ARN or other identifier
             token (string): The ClientRequestToken associated with the secret version
         """
-        # This is where the secret should be set in the service
-
-        # First check to confirm CloudFront distribution is in Deployed state
-        # There could be multiple distros associated with ALB, so loop here.
-        # Get all distros.
+    # Confirm CloudFront distribution is in Deployed state
         matching_distributions = self.get_distro_list()
         logger.info("All distros: %s" % matching_distributions)
         for distro in matching_distributions:
-            logger.info("Getting status of disto: %s" % distro['Id'])
+            logger.info("Getting status of distro: %s" % distro['Id'])
             diststatus = self.get_cfdistro(distro['Id'])
             if 'Deployed' not in diststatus['Distribution']['Status']:
                 logger.error("Distribution Id, %s status is not Deployed." % distro['Id'])
                 raise ValueError("Distribution Id, %s status is not Deployed." % distro['Id'])
 
-        pending = service_client.get_secret_value(
-            SecretId=arn,
-            VersionId=token,
-            VersionStage="AWSPENDING"
-        )
-        
-        current = None
-    
-        # Obtain secret value for AWSCURRENT
-        metadata = service_client.describe_secret(SecretId=arn)
-        for version in metadata["VersionIdsToStages"]:
-            logger.info("Getting current version %s for %s" % (version, arn))
-            if "AWSCURRENT" in metadata["VersionIdsToStages"][version]:
-                currenttoken = version
-                current = service_client.get_secret_value(
-                    SecretId=arn,
-                    VersionId=currenttoken,
-                    VersionStage="AWSCURRENT"
-                )
-        
-        if not current:
-            raise ValueError("No AWSCURRENT version found")
-
-        pendingsecret = json.loads(pending['SecretString'])
-        currentsecret = json.loads(current['SecretString'])
+        # Use get_secrets to retrieve AWSPENDING and AWSCURRENT secrets
+        pendingsecret, currentsecret = self.get_secrets(service_client, arn, token)
 
         # Update CloudFront custom header and regional WAF WebACL rule with AWSPENDING and AWSCURRENT
         try:
-             # WAF only needs setting once.
+            # WAF only needs setting once.
             self.update_wafacl(pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE'])
-
+            
             # Sleep for 75 seconds for regional WAF config propagation
             time.sleep(75)
-
-            # There could be multiple distros associated with ALB, so loop here.
-            # Get all distros.
+            
+            # Update each CloudFront distribution with the new pending secret header
             for distro in matching_distributions:
                 logger.info("Updating %s" % distro['Id'])
                 self.update_cfdistro(distro['Id'], pendingsecret['HEADERVALUE'])
+                
         except ClientError as e:
             logger.error('Error: {}'.format(e))
             raise ValueError("Failed to update resources CloudFront Distro Id %s , WAF WebACL Id %s " % (distro['Id'], self.waf_acl_id))
@@ -339,35 +345,7 @@ class SecretRotator:
         """
         # This is where the secret should be tested against the service
 
-        # Obtain secret value for AWSPENDING
-        pending = service_client.get_secret_value(
-            SecretId=arn,
-            VersionId=token,
-            VersionStage="AWSPENDING"
-        )
-
-        # Obtain secret value for AWSCURRENT
-        metadata = service_client.describe_secret(SecretId=arn)
-        current = None
-        currenttoken = None
-        
-        # Find the current version
-        for version in metadata["VersionIdsToStages"]:
-            if "AWSCURRENT" in metadata["VersionIdsToStages"][version]:
-                currenttoken = version
-                current = service_client.get_secret_value(
-                    SecretId=arn,
-                    VersionId=currenttoken,
-                    VersionStage="AWSCURRENT"
-                )
-                logger.info("Getting current version %s for %s" % (version, arn))
-                break  # Found what we need, can exit loop
-        
-        if not current:
-            raise ValueError("No AWSCURRENT version found")
-
-        pendingsecret = json.loads(pending['SecretString'])
-        currentsecret = json.loads(current['SecretString'])
+        pendingsecret, currentsecret = self.get_secrets(service_client, arn, token)
 
         secrets = [pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE']]
 
