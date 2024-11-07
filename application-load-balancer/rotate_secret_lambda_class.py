@@ -289,6 +289,8 @@ class SecretRotator:
             VersionId=token,
             VersionStage="AWSPENDING"
         )
+        
+        current = None
     
         # Obtain secret value for AWSCURRENT
         metadata = service_client.describe_secret(SecretId=arn)
@@ -301,6 +303,9 @@ class SecretRotator:
                     VersionId=currenttoken,
                     VersionStage="AWSCURRENT"
                 )
+        
+        if not current:
+            raise ValueError("No AWSCURRENT version found")
 
         pendingsecret = json.loads(pending['SecretString'])
         currentsecret = json.loads(current['SecretString'])
@@ -343,6 +348,10 @@ class SecretRotator:
 
         # Obtain secret value for AWSCURRENT
         metadata = service_client.describe_secret(SecretId=arn)
+        current = None
+        currenttoken = None
+        
+        # Find the current version
         for version in metadata["VersionIdsToStages"]:
             if "AWSCURRENT" in metadata["VersionIdsToStages"][version]:
                 currenttoken = version
@@ -352,15 +361,17 @@ class SecretRotator:
                     VersionStage="AWSCURRENT"
                 )
                 logger.info("Getting current version %s for %s" % (version, arn))
+                break  # Found what we need, can exit loop
+        
+        if not current:
+            raise ValueError("No AWSCURRENT version found")
 
         pendingsecret = json.loads(pending['SecretString'])
         currentsecret = json.loads(current['SecretString'])
 
         secrets = [pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE']]
 
-        # Test origin URL access functional using validation headers for AWSPENDING and AWSCURRENT
-        # There could be multiple distros associated with ALB, so loop here.
-        # Get all distros.
+        # Test all distributions with both secrets
         matching_distributions = self.get_distro_list()
         for distro in matching_distributions:
             try:
@@ -369,9 +380,8 @@ class SecretRotator:
                         logger.info("Origin ok for http://%s" % distro['Origin'])
                         pass
                     else:
-                        logger.error("Tests failed for URL, http://%s " % distro['Origin'])
-                        raise ValueError("Tests failed for URL, http://%s " % distro['Origin'])
-            
+                        logger.error("Tests failed for URL, http://%s" % distro['Origin'])
+                        raise ValueError("Tests failed for URL, http://%s" % distro['Origin'])
             except ClientError as e:
                 logger.error('Error: {}'.format(e))
 
@@ -418,14 +428,16 @@ def lambda_handler(event, context):
     step = event['Step']
 
     service_client = boto3.client('secretsmanager')
-    rotator = SecretRotator()  # Uses environment variables by default
 
     # Make sure the version is staged correctly
     metadata = service_client.describe_secret(SecretId=arn)
     if not metadata['RotationEnabled']:
         logger.error("Secret %s is not enabled for rotation" % arn)
         raise ValueError("Secret %s is not enabled for rotation" % arn)
+    
     versions = metadata['VersionIdsToStages']
+    rotator = SecretRotator()  # Uses environment variables by default
+
     if token not in versions:
         logger.error("Secret version %s has no stage for rotation of secret %s." % (token, arn))
         raise ValueError("Secret version %s has no stage for rotation of secret %s." % (token, arn))
