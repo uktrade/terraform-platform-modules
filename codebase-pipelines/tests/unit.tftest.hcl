@@ -1,18 +1,67 @@
-mock_provider "aws" {
-  override_resource {
-    target = aws_ecr_repository.demodjango_api
-    values = {
-      id = "demodjango/api"
-    }
+mock_provider "aws" {}
+
+override_data {
+  target = data.aws_iam_policy_document.assume_codebuild_role
+  values = {
+    json = "{\"Sid\": \"AssumeCodebuildRole\"}"
   }
 }
 
-run "data_migration_unit_test" {
+override_data {
+  target = data.aws_iam_policy_document.codebuild_logs
+  values = {
+    json = "{\"Sid\": \"CodeBuildLogs\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.ecr_access
+  values = {
+    json = "{\"Sid\": \"ECRAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.codestar_connection_access
+  values = {
+    json = "{\"Sid\": \"CodeStarConnectionAccess\"}"
+  }
+}
+
+variables {
+  application               = "my-app"
+  codebase                  = "my-codebase"
+  repository                = "my-repository"
+  additional_ecr_repository = "my-additional-repository"
+  expected_tags = {
+    application         = "my-app"
+    copilot-application = "my-app"
+    managed-by          = "DBT Platform - Terraform"
+  }
+  pipelines = [
+    {
+      name   = "main",
+      branch = "main",
+      environments = [
+        { name = "dev" }
+      ]
+    },
+    {
+      name = "tagged",
+      tag  = true,
+      environments = [
+        { name = "staging" },
+        { name = "prod", requires_approval = true }
+      ]
+    }
+  ]
+}
+
+run "test_codebuild" {
   command = plan
 
   assert {
-    condition     = aws_ecr_repository.demodjango_api.name == "demodjango/api"
-    error_message = "Name should be: demodjango/api"
+    condition     = aws_codebuild_project.codebase_image_build.name == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: my-app-my-codebase-codebase-image-build"
   }
 }
-
