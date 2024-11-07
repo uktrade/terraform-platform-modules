@@ -19,10 +19,9 @@ resource "aws_codebuild_project" "codebase_image_build" {
   }
 
   environment {
-    compute_type    = "BUILD_GENERAL1_SMALL"
-    image           = "public.ecr.aws/uktrade/ci-image-builder:tag-latest"
-    type            = "LINUX_CONTAINER"
-    privileged_mode = true
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "public.ecr.aws/uktrade/ci-image-builder:tag-latest"
+    type         = "LINUX_CONTAINER"
 
     environment_variable {
       name  = "AWS_ACCOUNT_ID"

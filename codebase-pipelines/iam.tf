@@ -12,7 +12,7 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
     effect = "Allow"
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["codebuild.amazonaws.com"]
     }
 
@@ -81,8 +81,10 @@ data "aws_iam_policy_document" "ecr_access" {
   }
 
   statement {
+    # checkov:skip=CKV_AWS_107:GetAuthorizationToken required for ci-image-builder
     effect = "Allow"
     actions = [
+      "ecr:GetAuthorizationToken",
       "ecr-public:GetAuthorizationToken",
       "sts:GetServiceBearerToken"
     ]
@@ -94,7 +96,22 @@ data "aws_iam_policy_document" "ecr_access" {
   statement {
     effect = "Allow"
     actions = [
-      "ecr-public:*"
+      "ecr-public:DescribeImageScanFindings",
+      "ecr-public:GetLifecyclePolicyPreview",
+      "ecr-public:GetDownloadUrlForLayer",
+      "ecr-public:BatchGetImage",
+      "ecr-public:DescribeImages",
+      "ecr-public:ListTagsForResource",
+      "ecr-public:BatchCheckLayerAvailability",
+      "ecr-public:GetLifecyclePolicy",
+      "ecr-public:GetRepositoryPolicy",
+      "ecr-public:PutImage",
+      "ecr-public:InitiateLayerUpload",
+      "ecr-public:UploadLayerPart",
+      "ecr-public:CompleteLayerUpload",
+      "ecr-public:BatchDeleteImage",
+      "ecr-public:DescribeRepositories",
+      "ecr-public:ListImages"
     ]
     resources = [
       "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
@@ -119,11 +136,10 @@ data "aws_iam_policy_document" "ecr_access" {
       "ecr:CompleteLayerUpload",
       "ecr:BatchDeleteImage",
       "ecr:DescribeRepositories",
-      "ecr:ListImages",
-      "ecr:GetAuthorizationToken"
+      "ecr:ListImages"
     ]
     resources = [
-      "*"
+      aws_ecr_repository.this.arn
     ]
   }
 }
