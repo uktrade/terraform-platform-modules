@@ -50,7 +50,7 @@ variables {
       ]
     }
   ]
-  expected_codebuild_tags = {
+  expected_tags = {
     application         = "my-app"
     copilot-application = "my-app"
     managed-by          = "DBT Platform - Terraform"
@@ -142,8 +142,8 @@ run "test_codebuild" {
     error_message = "Should contain: '/work/cli build'"
   }
   assert {
-    condition     = jsonencode(aws_codebuild_project.codebase_image_build.tags) == jsonencode(var.expected_codebuild_tags)
-    error_message = "Should be: ${jsonencode(var.expected_codebuild_tags)}"
+    condition     = jsonencode(aws_codebuild_project.codebase_image_build.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 
   # Cloudwatch config:
@@ -200,5 +200,46 @@ run "test_codebuild" {
       0
     ] == true
     error_message = "Should be: type = 'HEAD_REF' and pattern = '^refs/heads/main$' or '^refs/tags/.*'"
+  }
+}
+
+run "test_iam" {
+  command = plan
+
+  assert {
+    condition     = aws_iam_role.codebase_image_build.name == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+  }
+  assert {
+    condition     = aws_iam_role.codebase_image_build.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
+    error_message = "Should be: {\"Sid\": \"AssumeCodebuildRole\"}"
+  }
+  assert {
+    condition     = jsonencode(aws_iam_role.codebase_image_build.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+  assert {
+    condition     = aws_iam_role_policy.codebuild_logs.name == "my-app-my-codebase-codebase-image-build-log-policy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build-log-policy'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.codebuild_logs.role == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access.name == "my-app-my-codebase-codebase-image-build-ecr-policy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build-ecr-policy'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access.role == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.codestar_connection_access.name == "my-app-my-codebase-codebase-image-build-codestar-connection-policy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build-codestar-connection-policy'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.codestar_connection_access.role == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
 }
