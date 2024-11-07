@@ -3,10 +3,10 @@ data "aws_codestarconnections_connection" "github_codestar_connection" {
 }
 
 resource "aws_codebuild_project" "codebase_image_build" {
-  name          = "${var.application}-${var.config.name}-codebase-image-build"
+  name          = "${var.application}-${var.codebase}-codebase-image-build"
   description   = "Publish images on push to ${var.repository}"
   build_timeout = 30
-  service_role  = aws_iam_role.codebase_build.arn
+  service_role  = aws_iam_role.codebase_image_build.arn
   badge_enabled = true
 
   artifacts {
@@ -71,13 +71,13 @@ resource "aws_codebuild_project" "codebase_image_build" {
 resource "aws_cloudwatch_log_group" "codebase_image_build" {
   # checkov:skip=CKV_AWS_338:Retains logs for 3 months instead of 1 year
   # checkov:skip=CKV_AWS_158: To be reworked
-  name              = "codebuild/${var.application}-${var.config.name}-codebase-image-build/log-group"
+  name              = "codebuild/${var.application}-${var.codebase}-codebase-image-build/log-group"
   retention_in_days = 90
   # kms_key_id        = aws_kms_key.codebuild_kms_key.arn
 }
 
 resource "aws_cloudwatch_log_stream" "codebase_image_build" {
-  name           = "codebuild/${var.application}-${var.config.name}-codebase-image-build/log-stream"
+  name           = "codebuild/${var.application}-${var.codebase}-codebase-image-build/log-stream"
   log_group_name = aws_cloudwatch_log_group.codebase_image_build.name
 }
 
