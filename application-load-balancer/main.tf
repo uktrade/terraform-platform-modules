@@ -181,6 +181,8 @@ resource "random_password" "origin-secret" {
 
 # Possible issue, when adding or changing a domain, secret is already deployed, rather than setting the search string here, it needs reading from secret manager
 resource "aws_wafv2_web_acl" "waf-acl" {
+  depends_on = [ data.aws_secretsmanager_secret_version.origin_verify_secret_version, random_password.origin-secret ]
+  
   name        = "${var.application}-${var.environment}-ACL"
   description = "CloudFront Origin Verify"
   scope       = "REGIONAL"
@@ -219,10 +221,10 @@ resource "aws_wafv2_web_acl" "waf-acl" {
               }
             }
             positional_constraint = "EXACTLY"
-            search_string         = data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string["HEADERVALUE"]
+            search_string         = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
             text_transformation {
               priority = 0
-              type     = "NONE" # Is NONE a sufficient type?
+              type     = "NONE"
             }
           }
         }
@@ -254,7 +256,7 @@ resource "aws_wafv2_web_acl" "waf-acl" {
 
 
 resource "aws_secretsmanager_secret" "origin-verify-secret" {
-  name        = "${var.application}-${var.environment}-origin-verify-secret"
+  name        = "${var.application}-${var.environment}-origin-verify-header-secret"
   description = "Secret used for Origin verification in WAF rules"
   tags        = local.tags
 }
@@ -271,7 +273,7 @@ resource "aws_secretsmanager_secret_version" "secret-value" {
 
 # Fetch the secret value from Secrets Manager
 data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
-  secret_id = aws_secretsmanager_secret.origin-verify-secret.id
+  secret_id  = aws_secretsmanager_secret.origin-verify-secret.id
   version_id = aws_secretsmanager_secret_version.secret-value.version_id
 }
 
