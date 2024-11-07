@@ -731,12 +731,12 @@ data "aws_iam_policy_document" "ecs" {
     ]
     resources = ["*"]
   }
+  
   statement {
     sid = "AllowRegisterAndDeregister"
     actions = [
       "ecs:DeregisterTaskDefinition",
       "ecs:RegisterTaskDefinition",
-      # "ecs:DeleteTaskDefinitions",
     ]
     resources = [
       "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*",
