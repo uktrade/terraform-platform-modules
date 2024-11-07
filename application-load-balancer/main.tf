@@ -219,7 +219,7 @@ resource "aws_wafv2_web_acl" "waf-acl" {
               }
             }
             positional_constraint = "EXACTLY"
-            search_string         = "rotate-me"
+            search_string         = data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string["HEADERVALUE"]
             text_transformation {
               priority = 0
               type     = "NONE" # Is NONE a sufficient type?
@@ -267,6 +267,12 @@ resource "aws_secretsmanager_secret_version" "secret-value" {
     # Use `ignore_changes` to allow rotation without Terraform overwriting the value
     ignore_changes = [secret_string]
   }
+}
+
+# Fetch the secret value from Secrets Manager
+data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
+  secret_id = aws_secretsmanager_secret.origin-verify-secret.id
+  version_id = aws_secretsmanager_secret_version.secret-value.version_id
 }
 
 
