@@ -12,6 +12,9 @@ logger = logging.getLogger()
 
 logger.setLevel(logging.INFO)
 
+AWSPENDING="AWSPENDING"
+AWSCURRENT="AWSCURRENT"
+
 class SecretRotator:
     def __init__(self, **kwargs):
         # Use provided values or default to environment variables
@@ -105,13 +108,6 @@ class SecretRotator:
             },
             Rules=new_rules
         )
-
-    # def get_cfdistro(self, distro_id):
-    #     client = self.get_cloudfront_session()
-    #     response = client.get_distribution(
-    #         Id=distro_id
-    #     )
-    #     return response
         
     def get_cfdistro(self, distro_id: str) -> Dict:
         """
@@ -146,15 +142,12 @@ class SecretRotator:
         """
         client = self.get_cloudfront_session()
 
-        # Check if the distribution is deployed
         if not self._is_distribution_deployed(distro_id):
             logger.error("Distribution Id, %s status is not Deployed." % distro_id)
             raise ValueError(f"Distribution Id, {distro_id} status is not Deployed.")
 
-        # Get the distribution configuration
         dist_config = self.get_cfdistro_config(distro_id)
 
-        # Process the custom headers and update them
         updated = self._update_custom_headers(dist_config, header_value)
 
         if not updated:
@@ -214,7 +207,7 @@ class SecretRotator:
         pending = service_client.get_secret_value(
             SecretId=arn,
             VersionId=token,
-            VersionStage="AWSPENDING"
+            VersionStage=AWSPENDING
         )
 
         # Obtain metadata and find the current version
@@ -222,12 +215,12 @@ class SecretRotator:
         current, currenttoken = None, None
 
         for version in metadata.get("VersionIdsToStages", {}):
-            if "AWSCURRENT" in metadata["VersionIdsToStages"].get(version, []):
+            if AWSCURRENT in metadata["VersionIdsToStages"].get(version, []):
                 currenttoken = version
                 current = service_client.get_secret_value(
                     SecretId=arn,
                     VersionId=currenttoken,
-                    VersionStage="AWSCURRENT"
+                    VersionStage=AWSCURRENT
                 )
                 logger.info("Getting current version %s for %s" % (version, arn))
                 break  # Found AWSCURRENT, exit loop
@@ -255,7 +248,7 @@ class SecretRotator:
         # Make sure the current secret exists
         service_client.get_secret_value(
             SecretId=arn,
-            VersionStage="AWSCURRENT"
+            VersionStage=AWSCURRENT
         )
 
         # Now try to get the secret version, if that fails, put a new secret
@@ -263,7 +256,7 @@ class SecretRotator:
             service_client.get_secret_value(
                 SecretId=arn,
                 VersionId=token,
-                VersionStage="AWSPENDING"
+                VersionStage=AWSPENDING
             )
             logger.info("createSecret: Successfully retrieved secret for %s." % arn)
 
@@ -367,7 +360,7 @@ class SecretRotator:
         metadata = service_client.describe_secret(SecretId=arn)
         current_version_token = None
         for version in metadata["VersionIdsToStages"]:
-            if "AWSCURRENT" in metadata["VersionIdsToStages"][version]:
+            if AWSCURRENT in metadata["VersionIdsToStages"][version]:
                 if version == pending_version_token:
                     logger.info("finishSecret: Version %s already marked as AWSCURRENT for %s" % (version, arn))
                     return
@@ -377,7 +370,7 @@ class SecretRotator:
         # Finalize by staging the secret version current
         service_client.update_secret_version_stage(
             SecretId=arn,
-            VersionStage="AWSCURRENT",
+            VersionStage=AWSCURRENT,
             MoveToVersionId=pending_version_token,
             RemoveFromVersionId=current_version_token
         )
@@ -408,10 +401,10 @@ def lambda_handler(event, context):
     if token not in versions:
         logger.error("Secret version %s has no stage for rotation of secret %s." % (token, arn))
         raise ValueError("Secret version %s has no stage for rotation of secret %s." % (token, arn))
-    if "AWSCURRENT" in versions[token]:
+    if AWSCURRENT in versions[token]:
         logger.info("Secret version %s already set as AWSCURRENT for secret %s." % (token, arn))
         return
-    elif "AWSPENDING" not in versions[token]:
+    elif AWSPENDING not in versions[token]:
         logger.error("Secret version %s not set as AWSPENDING for rotation of secret %s." % (token, arn))
         raise ValueError("Secret version %s not set as AWSPENDING for rotation of secret %s." % (token, arn))
 
