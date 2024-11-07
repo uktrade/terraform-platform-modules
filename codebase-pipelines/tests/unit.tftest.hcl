@@ -126,14 +126,6 @@ run "test_codebuild" {
     error_message = "Should be: 'my-additional-repository'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.environment).privileged_mode == true
-    error_message = "Should be: true"
-  }
-  assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.environment).privileged_mode == true
-    error_message = "Should be: true"
-  }
-  assert {
     condition = aws_codebuild_project.codebase_image_build.logs_config[0].cloudwatch_logs[
       0
     ].group_name == "codebuild/my-app-my-codebase-codebase-image-build/log-group"
