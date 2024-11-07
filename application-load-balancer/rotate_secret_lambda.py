@@ -1,10 +1,10 @@
-from __future__ import print_function
 import json
 import os
 import boto3
 import logging
 import requests
 import time
+from typing import Tuple, Dict, Any, List
 
 from botocore.exceptions import ClientError
 
@@ -13,153 +13,97 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 class SecretRotator:
-    def __init__(self, 
-                 waf_acl_name=None,
-                 waf_acl_id=None,
-                 waf_rule_priority=None,
-                 header_name=None,
-                 application=None,
-                 environment=None,
-                 role_arn=None,
-                 distro_list=None):
-        # Initialize with provided values or fall back to environment variables
-        self.waf_acl_name = waf_acl_name or os.environ['WAFACLNAME']
-        self.waf_acl_id = waf_acl_id or os.environ['WAFACLID']
-        self.waf_rule_priority = waf_rule_priority or os.environ['WAFRULEPRI']
-        self.header_name = header_name or os.environ['HEADERNAME']
-        self.application = application or os.environ['APPLICATION']
-        self.environment = environment or os.environ['ENVIRONMENT']
-        self.role_arn = role_arn or os.environ['ROLEARN']
-        self.distro_list = distro_list or os.environ['DISTROIDLIST']
+    def __init__(self, **kwargs):
+        # Use provided values or default to environment variables
+        self.waf_acl_name = kwargs.get('waf_acl_name', os.environ.get('WAFACLNAME'))
+        self.waf_acl_id = kwargs.get('waf_acl_id', os.environ.get('WAFACLID'))
+        self.waf_rule_priority = kwargs.get('waf_rule_priority', os.environ.get('WAFRULEPRI'))
+        self.header_name = kwargs.get('header_name', os.environ.get('HEADERNAME'))
+        self.application = kwargs.get('application', os.environ.get('APPLICATION'))
+        self.environment = kwargs.get('environment', os.environ.get('ENVIRONMENT'))
+        self.role_arn = kwargs.get('role_arn', os.environ.get('ROLEARN'))
+        self.distro_list = kwargs.get('distro_list', os.environ.get('DISTROIDLIST'))
 
-    def get_cloudfront_session(self):
-        boto_sts = boto3.client('sts')
-        stsresponse = boto_sts.assume_role(
-            RoleArn=self.role_arn,
-            RoleSessionName='rotation_session'
-        )
-
-        newsession_id = stsresponse["Credentials"]["AccessKeyId"]
-        newsession_key = stsresponse["Credentials"]["SecretAccessKey"]
-        newsession_token = stsresponse["Credentials"]["SessionToken"]
-
-        client = boto3.client('cloudfront',
-            aws_access_key_id=newsession_id,
-            aws_secret_access_key=newsession_key,
-            aws_session_token=newsession_token
-        )
-
-        return client
-
-    def get_distro_list(self):
+        
+    def get_cloudfront_session(self) -> boto3.client:
+        sts = boto3.client('sts')
+        credentials = sts.assume_role(RoleArn=self.role_arn, RoleSessionName='rotation_session')["Credentials"]
+        return boto3.client('cloudfront',
+                            aws_access_key_id=credentials["AccessKeyId"],
+                            aws_secret_access_key=credentials["SecretAccessKey"],
+                            aws_session_token=credentials["SessionToken"])
+        
+    def get_distro_list(self) -> List[Dict[str, Any]]:
         client = self.get_cloudfront_session()
-        distrolist = self.distro_list.split(",")
+        paginator = client.get_paginator("list_distributions")
         matching_distributions = []
 
-        paginator = client.get_paginator("list_distributions")
         for page in paginator.paginate():
-            distributions = page.get("DistributionList", {}).get("Items", [])
-
-            for distribution in distributions:
-                # Check if distribution has Aliases and any match with target_domains
+            for distribution in page.get("DistributionList", {}).get("Items", []):
                 aliases = distribution.get("Aliases", {}).get("Items", [])
-                if any(domain in aliases for domain in distrolist):
+                if any(domain in aliases for domain in self.distro_list.split(",")):
                     matching_distributions.append({
                         "Id": distribution["Id"],
                         "Origin": distribution['Origins']['Items'][0]['DomainName'],
                         "Domain": distribution['Aliases']['Items'][0]
                     })
         return matching_distributions
-
-    def get_wafacl(self):
+        
+    def get_wafacl(self) -> Dict[str, Any]:
         client = boto3.client('wafv2')
-        response = client.get_web_acl(
-            Name=self.waf_acl_name,
-            Scope='REGIONAL',
-            Id=self.waf_acl_id
-        )
-        return response
+        return client.get_web_acl(Name=self.waf_acl_name, Scope='REGIONAL', Id=self.waf_acl_id)
 
-    def update_wafacl(self, NewSecret, PrevSecret):
+    
+    def _create_byte_match_statement(self, search_string: str) -> Dict[str, Any]:
+        return {
+            'ByteMatchStatement': {
+                'FieldToMatch': {'SingleHeader': {'Name': self.header_name}},
+                'PositionalConstraint': 'EXACTLY',
+                'SearchString': search_string,
+                'TextTransformations': [{'Type': 'NONE', 'Priority': 0}]
+            }
+        }
+        
+    def update_wafacl(self, new_secret: str, prev_secret: str) -> None:
         client = boto3.client('wafv2')
-        currwafrules = self.get_wafacl()
-        locktoken = currwafrules['LockToken']
-
-        newwafrules = [
-            {
-            'Name': self.application + self.environment + 'XOriginVerify',
-            'Priority': int(self.waf_rule_priority),
-            'Action': {
-                'Allow': {}
-            },
+        waf_acl = self.get_wafacl()
+        lock_token = waf_acl['LockToken']
+        metric_name = f"{self.application}-{self.environment}-XOriginVerify"
+        rule = {
+            'Name': f"{self.application}{self.environment}XOriginVerify",
+            'Priority': self.waf_rule_priority,
+            'Action': {'Allow': {}},
             'VisibilityConfig': {
                 'SampledRequestsEnabled': True,
                 'CloudWatchMetricsEnabled': True,
-                'MetricName': self.application + '-' + self.environment + '-' + 'XOriginVerify'
+                'MetricName': metric_name
             },
             'Statement': {
                 'OrStatement': {
                     'Statements': [
-                        {
-                        'ByteMatchStatement': {
-                            'FieldToMatch': {
-                            'SingleHeader': {
-                                'Name': self.header_name
-                            }
-                            },
-                            'PositionalConstraint': 'EXACTLY',
-                            'SearchString': NewSecret,
-                            'TextTransformations': [
-                            {
-                                'Type': 'NONE',
-                                'Priority': 0
-                            }
-                            ]
-                        }
-                        },
-                        {
-                        'ByteMatchStatement': {
-                            'FieldToMatch': {
-                            'SingleHeader': {
-                                'Name': self.header_name
-                            }
-                            },
-                            'PositionalConstraint': 'EXACTLY',
-                            'SearchString': PrevSecret,
-                            'TextTransformations': [
-                            {
-                                'Type': 'NONE',
-                                'Priority': 0
-                            }
-                            ]
-                        }
-                        }
+                        self._create_byte_match_statement(new_secret),
+                        self._create_byte_match_statement(prev_secret)
                     ]
                 }
             }
-            }
-        ]
+        }
 
-        for r in currwafrules['WebACL']['Rules']:
-            if int(self.waf_rule_priority) != int(r['Priority']):
-                newwafrules.append(r)
+        new_rules = [rule] + [r for r in waf_acl['WebACL']['Rules'] if r['Priority'] != self.waf_rule_priority]
+        logger.info("Updating WAF WebACL with new rules.")
         
-        logger.info("Update WAF WebACL Id, %s." % self.waf_acl_id)
-        response = client.update_web_acl(
+        client.update_web_acl(
             Name=self.waf_acl_name,
             Scope='REGIONAL',
             Id=self.waf_acl_id,
-            DefaultAction={
-                'Block': {}
-            },
+            LockToken=lock_token,
+            DefaultAction={'Block': {}},
             Description='CloudFront Origin Verify',
-            LockToken=locktoken,
             VisibilityConfig={
-                'SampledRequestsEnabled': True|False,
-                'CloudWatchMetricsEnabled': True|False,
-                'MetricName': self.application + '-' + self.environment + '-' + 'XOriginVerify'
+                'SampledRequestsEnabled': True,
+                'CloudWatchMetricsEnabled': True,
+                'MetricName': metric_name
             },
-            Rules=newwafrules
+            Rules=new_rules
         )
 
     def get_cfdistro(self, distroid):
@@ -363,7 +307,7 @@ class SecretRotator:
             except ClientError as e:
                 logger.error('Error: {}'.format(e))
 
-    def finish_secret(self, service_client, arn, token):
+    def finish_secret(self, service_client, arn, pending_version_token):
         """Finish the secret
         This method finalizes the rotation process by marking the secret version passed in as the AWSCURRENT secret.
         Args:
@@ -376,23 +320,23 @@ class SecretRotator:
 
         # First describe the secret to get the current version
         metadata = service_client.describe_secret(SecretId=arn)
-        current_version = None
+        current_version_token = None
         for version in metadata["VersionIdsToStages"]:
             if "AWSCURRENT" in metadata["VersionIdsToStages"][version]:
-                if version == token:
+                if version == pending_version_token:
                     logger.info("finishSecret: Version %s already marked as AWSCURRENT for %s" % (version, arn))
                     return
-                current_version = version
+                current_version_token = version
                 break
 
         # Finalize by staging the secret version current
         service_client.update_secret_version_stage(
             SecretId=arn,
             VersionStage="AWSCURRENT",
-            MoveToVersionId=token,
-            RemoveFromVersionId=current_version
+            MoveToVersionId=pending_version_token,
+            RemoveFromVersionId=current_version_token
         )
-        logger.info("finishSecret: Successfully set AWSCURRENT stage to version %s for secret %s." % (token, arn))
+        logger.info("finishSecret: Successfully set AWSCURRENT stage to version %s for secret %s." % (pending_version_token, arn))
 
 #======================================================================================================================
 # Lambda entry point
