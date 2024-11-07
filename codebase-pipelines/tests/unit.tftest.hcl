@@ -33,11 +33,6 @@ variables {
   codebase                  = "my-codebase"
   repository                = "my-repository"
   additional_ecr_repository = "my-additional-repository"
-  expected_tags = {
-    application         = "my-app"
-    copilot-application = "my-app"
-    managed-by          = "DBT Platform - Terraform"
-  }
   pipelines = [
     {
       name   = "main",
@@ -55,6 +50,28 @@ variables {
       ]
     }
   ]
+  expected_codebuild_tags = {
+    application         = "my-app"
+    copilot-application = "my-app"
+    managed-by          = "DBT Platform - Terraform"
+  }
+  expected_ecr_tags = {
+    copilot-pipeline    = "my-codebase"
+    copilot-application = "my-app"
+  }
+}
+
+run "test_ecr" {
+  command = plan
+
+  assert {
+    condition     = aws_ecr_repository.this.name == "my-app/my-codebase"
+    error_message = "Should be: my-app/my-codebase"
+  }
+  assert {
+    condition     = jsonencode(aws_ecr_repository.this.tags) == jsonencode(var.expected_ecr_tags)
+    error_message = "Should be: ${jsonencode(var.expected_ecr_tags)}"
+  }
 }
 
 run "test_codebuild" {
@@ -125,8 +142,8 @@ run "test_codebuild" {
     error_message = "Should contain: '/work/cli build'"
   }
   assert {
-    condition     = jsonencode(aws_codebuild_project.codebase_image_build.tags) == jsonencode(var.expected_tags)
-    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+    condition     = jsonencode(aws_codebuild_project.codebase_image_build.tags) == jsonencode(var.expected_codebuild_tags)
+    error_message = "Should be: ${jsonencode(var.expected_codebuild_tags)}"
   }
 
   # Cloudwatch config:
@@ -173,7 +190,12 @@ run "test_codebuild" {
   assert {
     condition = [
       for el in aws_codebuild_webhook.codebuild_webhook.filter_group : true
-      if[for filter in el.filter : true if filter.type == "HEAD_REF" && (filter.pattern == "^refs/heads/main$" || filter.pattern == "^refs/tags/.*")][0] == true
+      if[
+        for filter in el.filter : true
+        if filter.type == "HEAD_REF" && (filter.pattern == "^refs/heads/main$" || filter.pattern == "^refs/tags/.*")
+        ][
+        0
+      ] == true
       ][
       0
     ] == true
