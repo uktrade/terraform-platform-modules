@@ -14,8 +14,8 @@ resource "aws_codebuild_project" "codebase_image_build" {
   }
 
   cache {
-    type     = "LOCAL"
-    location = "LOCAL_DOCKER_LAYER_CACHE"
+    type  = "LOCAL"
+    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
   }
 
   environment {
@@ -31,7 +31,7 @@ resource "aws_codebuild_project" "codebase_image_build" {
 
     environment_variable {
       name  = "ECR_REPOSITORY"
-      value = var.repository
+      value = local.ecr_name
     }
 
     environment_variable {

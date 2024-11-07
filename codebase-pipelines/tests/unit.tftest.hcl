@@ -98,7 +98,7 @@ run "test_codebuild" {
     error_message = "Should be: 'LOCAL'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.cache).location == "LOCAL_DOCKER_LAYER_CACHE"
+    condition     = one(aws_codebuild_project.codebase_image_build.cache).modes[0] == "LOCAL_DOCKER_LAYER_CACHE"
     error_message = "Should be: 'LOCAL_DOCKER_LAYER_CACHE'"
   }
   assert {
@@ -110,8 +110,24 @@ run "test_codebuild" {
     error_message = "Should be: 'public.ecr.aws/uktrade/ci-image-builder:tag-latest'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.environment).type == "LINUX_CONTAINER"
-    error_message = "Should be: 'LINUX_CONTAINER'"
+    condition     = one(aws_codebuild_project.codebase_image_build.environment).environment_variable[1].name == "ECR_REPOSITORY"
+    error_message = "Should be: 'ECR_REPOSITORY'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_image_build.environment).environment_variable[1].value == "my-app/my-codebase"
+    error_message = "Should be: 'my-app/my-codebase'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_image_build.environment).environment_variable[3].name == "ADDITIONAL_ECR_REPOSITORY"
+    error_message = "Should be: 'ADDITIONAL_ECR_REPOSITORY'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_image_build.environment).environment_variable[3].value == "my-additional-repository"
+    error_message = "Should be: 'my-additional-repository'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_image_build.environment).privileged_mode == true
+    error_message = "Should be: true"
   }
   assert {
     condition     = one(aws_codebuild_project.codebase_image_build.environment).privileged_mode == true
@@ -219,24 +235,24 @@ run "test_iam" {
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.codebuild_logs.name == "my-app-my-codebase-codebase-image-build-log-policy"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build-log-policy'"
+    condition     = aws_iam_role_policy.codebuild_logs.name == "log-policy"
+    error_message = "Should be: 'log-policy'"
   }
   assert {
     condition     = aws_iam_role_policy.codebuild_logs.role == "my-app-my-codebase-codebase-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access.name == "my-app-my-codebase-codebase-image-build-ecr-policy"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build-ecr-policy'"
+    condition     = aws_iam_role_policy.ecr_access.name == "ecr-policy"
+    error_message = "Should be: 'ecr-policy'"
   }
   assert {
     condition     = aws_iam_role_policy.ecr_access.role == "my-app-my-codebase-codebase-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy.codestar_connection_access.name == "my-app-my-codebase-codebase-image-build-codestar-connection-policy"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build-codestar-connection-policy'"
+    condition     = aws_iam_role_policy.codestar_connection_access.name == "codestar-connection-policy"
+    error_message = "Should be: 'codestar-connection-policy'"
   }
   assert {
     condition     = aws_iam_role_policy.codestar_connection_access.role == "my-app-my-codebase-codebase-image-build"

@@ -12,7 +12,7 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
     effect = "Allow"
 
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = ["codebuild.amazonaws.com"]
     }
 
@@ -25,13 +25,8 @@ resource "aws_iam_role_policy_attachment" "ssm_access" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
 }
 
-resource "aws_iam_role_policy_attachment" "cloudformation_access" {
-  role       = aws_iam_role.codebase_image_build.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess"
-}
-
 resource "aws_iam_role_policy" "codebuild_logs" {
-  name   = "${aws_iam_role.codebase_image_build.name}-log-policy"
+  name   = "log-policy"
   role   = aws_iam_role.codebase_image_build.name
   policy = data.aws_iam_policy_document.codebuild_logs.json
 }
@@ -46,8 +41,9 @@ data "aws_iam_policy_document" "codebuild_logs" {
       "logs:TagLogGroup"
     ]
     resources = [
-      "arn:aws:logs:${local.account_region}:log-group:/aws/codebuild/${aws_cloudwatch_log_group.codebase_image_build.name}",
-      "arn:aws:logs:${local.account_region}:log-group:/aws/codebuild/${aws_cloudwatch_log_group.codebase_image_build.name}:*"
+      aws_cloudwatch_log_group.codebase_image_build.arn,
+      "${aws_cloudwatch_log_group.codebase_image_build.arn}:*",
+      "arn:aws:logs:${local.account_region}:log-group:*"
     ]
   }
 
@@ -68,7 +64,7 @@ data "aws_iam_policy_document" "codebuild_logs" {
 }
 
 resource "aws_iam_role_policy" "ecr_access" {
-  name   = "${aws_iam_role.codebase_image_build.name}-ecr-policy"
+  name   = "ecr-policy"
   role   = aws_iam_role.codebase_image_build.name
   policy = data.aws_iam_policy_document.ecr_access.json
 }
@@ -121,7 +117,10 @@ data "aws_iam_policy_document" "ecr_access" {
       "ecr:InitiateLayerUpload",
       "ecr:UploadLayerPart",
       "ecr:CompleteLayerUpload",
-      "ecr:BatchDeleteImage"
+      "ecr:BatchDeleteImage",
+      "ecr:DescribeRepositories",
+      "ecr:ListImages",
+      "ecr:GetAuthorizationToken"
     ]
     resources = [
       "*"
@@ -130,7 +129,7 @@ data "aws_iam_policy_document" "ecr_access" {
 }
 
 resource "aws_iam_role_policy" "codestar_connection_access" {
-  name   = "${aws_iam_role.codebase_image_build.name}-codestar-connection-policy"
+  name   = "codestar-connection-policy"
   role   = aws_iam_role.codebase_image_build.name
   policy = data.aws_iam_policy_document.codestar_connection_access.json
 }
