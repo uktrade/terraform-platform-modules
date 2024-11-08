@@ -25,7 +25,7 @@ class SecretRotator:
         self.application = kwargs.get('application', os.environ.get('APPLICATION'))
         self.environment = kwargs.get('environment', os.environ.get('ENVIRONMENT'))
         self.role_arn = kwargs.get('role_arn', os.environ.get('ROLEARN'))
-        self.distro_list = kwargs.get('distro_list', os.environ.get('distro_idLIST'))
+        self.distro_list = kwargs.get('distro_list', os.environ.get('DISTROIDLIST'))
 
         
     def get_cloudfront_session(self) -> boto3.client:
@@ -44,6 +44,8 @@ class SecretRotator:
         for page in paginator.paginate():
             for distribution in page.get("DistributionList", {}).get("Items", []):
                 aliases = distribution.get("Aliases", {}).get("Items", [])
+                logger.info("Distribution aliases: %s" % aliases)
+                logger.info("Distribution domain list: %s" % self.distro_list)
                 if any(domain in aliases for domain in self.distro_list.split(",")):
                     matching_distributions.append({
                         "Id": distribution["Id"],
@@ -116,13 +118,6 @@ class SecretRotator:
         client = self.get_cloudfront_session()
         return client.get_distribution(Id=distro_id)
         
-
-    def get_cfdistro_config(self, distro_id):
-        client = self.get_cloudfront_session()
-        response = client.get_distribution_config(
-            Id=distro_id
-        )
-        return response
         
     def get_cfdistro_config(self, distro_id: str) -> Dict:
         """
@@ -142,22 +137,22 @@ class SecretRotator:
         """
         client = self.get_cloudfront_session()
 
-        if not self._is_distribution_deployed(distro_id):
+        if not self.is_distribution_deployed(distro_id):
             logger.error("Distribution Id, %s status is not Deployed." % distro_id)
             raise ValueError(f"Distribution Id, {distro_id} status is not Deployed.")
 
         dist_config = self.get_cfdistro_config(distro_id)
 
-        updated = self._update_custom_headers(dist_config, header_value)
+        updated = self.update_custom_headers(dist_config, header_value)
 
         if not updated:
             logger.error("No custom header, %s found in distribution Id, %s." % (self.header_name, distro_id))
             raise ValueError(f"No custom header found in distribution Id, {distro_id}.")
 
         # Update the distribution
-        return self._apply_distribution_update(client, distro_id, dist_config)
+        return self.apply_distribution_update(client, distro_id, dist_config)
 
-    def _is_distribution_deployed(self, distro_id: str) -> bool:
+    def is_distribution_deployed(self, distro_id: str) -> bool:
         """
         Checks if the CloudFront distribution is deployed.
 
@@ -165,7 +160,7 @@ class SecretRotator:
         dist_status = self.get_cfdistro(distro_id)
         return 'Deployed' in dist_status['Distribution']['Status']
 
-    def _update_custom_headers(self, dist_config: Dict, header_value: str) -> bool:
+    def update_custom_headers(self, dist_config: Dict, header_value: str) -> bool:
         """
         Updates custom headers in the distribution config.
         """
@@ -184,7 +179,7 @@ class SecretRotator:
         
         return header_count > 0
 
-    def _apply_distribution_update(self, client, distro_id: str, dist_config: Dict) -> Dict:
+    def apply_distribution_update(self, client, distro_id: str, dist_config: Dict) -> Dict:
         """
         Applies the distribution update to CloudFront.
         """
@@ -277,8 +272,7 @@ class SecretRotator:
     def set_secret(self, service_client, arn, token):
         """Set the secret
         Updates the WAF ACL & the CloudFront distributions with the AWSPENDING & AWSCURRENT secret values.
-        This method should set the AWSPENDING secret in the service that the secret belongs to. For example, if the secret is a database
-        credential, this method should take the value of the AWSPENDING secret and set the user's password to this value in the database.
+        This method should set the AWSPENDING secret in the service that the secret belongs to. 
         Args:
             service_client (client): The secrets manager service client
             arn (string): The secret ARN or other identifier
@@ -291,9 +285,11 @@ class SecretRotator:
         for distro in matching_distributions:
             logger.info("Getting status of distro: %s" % distro['Id'])
 
-            if not self._is_distribution_deployed(distro['Id']):
+            if not self.is_distribution_deployed(distro['Id']):
                 logger.error("Distribution Id, %s status is not Deployed." % distro['Id'])
                 raise ValueError("Distribution Id, %s status is not Deployed." % distro['Id'])
+            else:
+                logger.info("Distro %s is deployed" % distro['Id'])
 
         # Use get_secrets to retrieve AWSPENDING and AWSCURRENT secrets
         pendingsecret, currentsecret = self.get_secrets(service_client, arn, token)
