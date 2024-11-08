@@ -290,8 +290,8 @@ class SecretRotator:
         
         for distro in matching_distributions:
             logger.info("Getting status of distro: %s" % distro['Id'])
-            dist_status = self.get_cfdistro(distro['Id'])
-            if 'Deployed' not in dist_status['Distribution']['Status']:
+
+            if not self._is_distribution_deployed(distro['Id']):
                 logger.error("Distribution Id, %s status is not Deployed." % distro['Id'])
                 raise ValueError("Distribution Id, %s status is not Deployed." % distro['Id'])
 
