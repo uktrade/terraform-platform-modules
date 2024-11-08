@@ -162,3 +162,77 @@ data "aws_iam_policy_document" "codestar_connection_access" {
     ]
   }
 }
+
+resource "aws_iam_role" "codebase_deploy_pipeline" {
+  name               = "${var.application}-${var.codebase}-codebase-pipeline"
+  assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
+  tags               = local.tags
+}
+
+data "aws_iam_policy_document" "assume_codepipeline_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["codepipeline.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "codebase_deploy_pipeline_manifest_codebuild" {
+  name               = "${var.application}-${var.codebase}-codebase-pipeline-manifests"
+  assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy" "artifact_store_access_for_codebase_pipeline" {
+  name   = "${var.application}-${var.codebase}-artifact-store-access-for-codebase-pipeline"
+  role   = aws_iam_role.codebase_deploy_pipeline_manifest_codebuild.name
+  policy = data.aws_iam_policy_document.access_artifact_store.json
+}
+
+data "aws_iam_policy_document" "access_artifact_store" {
+  # checkov:skip=CKV_AWS_111:Permissions required to change ACLs on uploaded artifacts
+  # checkov:skip=CKV_AWS_356:Permissions required to upload artifacts
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketVersioning",
+      "s3:PutObjectAcl",
+      "s3:PutObject",
+    ]
+
+    resources = [
+      aws_s3_bucket.artifact_store.arn,
+      "${aws_s3_bucket.artifact_store.arn}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "codebuild:BatchGetBuilds",
+      "codebuild:StartBuild",
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "kms:GenerateDataKey",
+      "kms:Decrypt"
+    ]
+    resources = [
+      aws_kms_key.artifact_store_kms_key.arn
+    ]
+  }
+}

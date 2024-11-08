@@ -10,4 +10,8 @@ locals {
   ecr_name          = "${var.application}/${var.codebase}"
   pipeline_branches = distinct([for pipeline in var.pipelines : pipeline.branch if lookup(pipeline, "branch", null) != null])
   tagged_pipeline   = length([for pipeline in var.pipelines : true if lookup(pipeline, "tag", null) == true]) > 0
+
+  run_groups        = [for run_group in var.services : [for service in run_group : service]]
+  services          = flatten(local.run_groups)
+
 }

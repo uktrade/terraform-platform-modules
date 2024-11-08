@@ -17,3 +17,7 @@ variable "additional_ecr_repository" {
 variable "pipelines" {
   type = any
 }
+
+variable "services" {
+  type = any
+}
