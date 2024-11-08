@@ -435,8 +435,8 @@ class TestRotationProcess:
             }
         }
         mock_distributions = [
-            {"Id": "DIST1", "Origin": "origin1.example.com"},
-            {"Id": "DIST2", "Origin": "origin2.example.com"}
+            {"Id": "DIST1", "Domain": "domain1.example.com"},
+            {"Id": "DIST2", "Domain": "domain2.example.com"}
         ]
 
         mock_service_client = MagicMock()
@@ -457,10 +457,10 @@ class TestRotationProcess:
 
             # Then verify each origin was tested with both secrets
             expected_test_calls = [
-                call("http://origin1.example.com", "new-secret"),
-                call("http://origin1.example.com", "current-secret"),
-                call("http://origin2.example.com", "new-secret"),
-                call("http://origin2.example.com", "current-secret")
+                call("http://domain1.example.com", "new-secret"),
+                call("http://domain1.example.com", "current-secret"),
+                call("http://domain2.example.com", "new-secret"),
+                call("http://domain2.example.com", "current-secret")
             ]
             mock_run_test_origin_access.assert_has_calls(expected_test_calls)
 
