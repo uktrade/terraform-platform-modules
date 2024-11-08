@@ -20,7 +20,11 @@ class SecretRotator:
         # Use provided values or default to environment variables
         self.waf_acl_name = kwargs.get('waf_acl_name', os.environ.get('WAFACLNAME'))
         self.waf_acl_id = kwargs.get('waf_acl_id', os.environ.get('WAFACLID'))
-        self.waf_rule_priority = kwargs.get('waf_rule_priority', os.environ.get('WAFRULEPRI'))
+        waf_rule_priority = kwargs.get('waf_rule_priority', os.environ.get('WAFRULEPRI'))
+        try:
+            self.waf_rule_priority = int(waf_rule_priority)
+        except (TypeError, ValueError):
+            self.waf_rule_priority = 0
         self.header_name = kwargs.get('header_name', os.environ.get('HEADERNAME'))
         self.application = kwargs.get('application', os.environ.get('APPLICATION'))
         self.environment = kwargs.get('environment', os.environ.get('ENVIRONMENT'))
@@ -44,14 +48,13 @@ class SecretRotator:
         for page in paginator.paginate():
             for distribution in page.get("DistributionList", {}).get("Items", []):
                 aliases = distribution.get("Aliases", {}).get("Items", [])
-                logger.info("Distribution aliases: %s" % aliases)
-                logger.info("Distribution domain list: %s" % self.distro_list)
                 if any(domain in aliases for domain in self.distro_list.split(",")):
                     matching_distributions.append({
                         "Id": distribution["Id"],
                         "Origin": distribution['Origins']['Items'][0]['DomainName'],
                         "Domain": distribution['Aliases']['Items'][0]
                     })
+        logger.info("Matched cloudfront distributions: %s" % matching_distributions)           
         return matching_distributions
         
     def get_wafacl(self) -> Dict[str, Any]:
@@ -96,7 +99,7 @@ class SecretRotator:
         new_rules = [rule] + [r for r in waf_acl['WebACL']['Rules'] if r['Priority'] != self.waf_rule_priority]
         logger.info("Updating WAF WebACL with new rules.")
         
-        client.update_web_acl(
+        response = client.update_web_acl(
             Name=self.waf_acl_name,
             Scope='REGIONAL',
             Id=self.waf_acl_id,
@@ -110,6 +113,9 @@ class SecretRotator:
             },
             Rules=new_rules
         )
+        
+        if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+            logger.info("WAF WebACL rules updated")
         
     def get_cfdistro(self, distro_id: str) -> Dict:
         """
@@ -169,25 +175,39 @@ class SecretRotator:
             if k['CustomHeaders']['Quantity'] > 0:
                 for h in k['CustomHeaders']['Items']:
                     if self.header_name in h['HeaderName']:
-                        logger.info(f"Update custom header, {h['HeaderName']} for origin, {k['Id']}.")
+                        logger.info(f"Update custom header, {h['HeaderName']} for origin: {k['Id']}.")
                         header_count += 1
                         h['HeaderValue'] = header_value
                     else:
-                        logger.info(f"Ignore custom header, {h['HeaderName']} for origin, {k['Id']}.")
+                        logger.info(f"Ignore custom header, {h['HeaderName']} for origin: {k['Id']}.")
             else:
-                logger.info(f"No custom headers found in origin, {k['Id']}.")
+                logger.info(f"No custom headers found in origin: {k['Id']}.")
         
         return header_count > 0
-
+            
     def apply_distribution_update(self, client, distro_id: str, dist_config: Dict) -> Dict:
         """
         Applies the distribution update to CloudFront.
         """
-        return client.update_distribution(
-            Id=distro_id,
-            IfMatch=dist_config['ResponseMetadata']['HTTPHeaders']['etag'],
-            DistributionConfig=dist_config['DistributionConfig']
-        )
+        try:
+            response = client.update_distribution(
+                Id=distro_id,
+                IfMatch=dist_config['ResponseMetadata']['HTTPHeaders']['etag'],
+                DistributionConfig=dist_config['DistributionConfig']
+            )
+            
+            status_code = response['ResponseMetadata']['HTTPStatusCode']
+            
+            if status_code == 200:
+                logger.info("CloudFront distribution %s updated successfully", distro_id)
+            else:
+                logger.warning("Failed to update CloudFront distribution %s. Status code: %d", distro_id, status_code)
+            
+            return response
+
+        except Exception as e:
+            logger.error("Error updating CloudFront distribution %s: %s", distro_id, str(e))
+            raise
 
     def run_test_origin_access(self, url: str, secret: str) -> bool:
         response = requests.get(
@@ -280,8 +300,6 @@ class SecretRotator:
         """
     # Confirm CloudFront distribution is in Deployed state
         matching_distributions = self.get_distro_list()
-        logger.info("All distros: %s" % matching_distributions)
-        
         for distro in matching_distributions:
             logger.info("Getting status of distro: %s" % distro['Id'])
 
