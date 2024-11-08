@@ -56,7 +56,7 @@ resource "aws_codebuild_project" "codebase_image_build" {
 
   source {
     type            = "GITHUB"
-    buildspec       = file("${path.module}/buildspec.yml")
+    buildspec       = file("${path.module}/buildspec-images.yml")
     location        = "https://github.com/${var.repository}.git"
     git_clone_depth = 0
     git_submodules_config {

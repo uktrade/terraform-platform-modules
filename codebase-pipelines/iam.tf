@@ -182,15 +182,15 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
   }
 }
 
-resource "aws_iam_role" "codebase_deploy_pipeline_manifest_codebuild" {
-  name               = "${var.application}-${var.codebase}-codebase-pipeline-manifests"
+resource "aws_iam_role" "codebase_deploy_manifests" {
+  name               = "${var.application}-${var.codebase}-codebase-deploy-manifests"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
   tags               = local.tags
 }
 
 resource "aws_iam_role_policy" "artifact_store_access_for_codebase_pipeline" {
   name   = "${var.application}-${var.codebase}-artifact-store-access-for-codebase-pipeline"
-  role   = aws_iam_role.codebase_deploy_pipeline_manifest_codebuild.name
+  role   = aws_iam_role.codebase_deploy_manifests.name
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
 
