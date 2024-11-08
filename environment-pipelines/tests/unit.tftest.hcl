@@ -852,6 +852,24 @@ run "test_iam" {
     condition     = aws_iam_policy.codepipeline.policy == "{\"Sid\": \"codepipeline\"}"
     error_message = "Unexpected policy"
   }
+
+  # ECS policy
+  assert {
+    condition     = aws_iam_policy.ecs.name == "my-app-my-pipeline-pipeline-ecs-access"
+    error_message = "Unexpected name"
+  }
+  assert {
+    condition     = aws_iam_policy.ecs.path == "/my-app/codebuild/"
+    error_message = "Unexpected path"
+  }
+  assert {
+    condition     = aws_iam_policy.ecs.description == "Allow my-app codebuild job to access ecs resources"
+    error_message = "Unexpected description"
+  }
+  assert {
+    condition     = aws_iam_policy.ecs.policy == "{\"Sid\": \"ECS\"}"
+    error_message = "Unexpected policy"
+  }
 }
 
 run "test_triggering_pipelines" {
