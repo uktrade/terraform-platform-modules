@@ -28,11 +28,32 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.assume_codepipeline_role
+  values = {
+    json = "{\"Sid\": \"AssumeCodepipelineRole\"}"
+  }
+}
+
 variables {
   application               = "my-app"
   codebase                  = "my-codebase"
   repository                = "my-repository"
   additional_ecr_repository = "my-additional-repository"
+  services = [
+    {
+      "run_group_1" : [
+        "web"
+      ]
+    },
+    {
+      "run_group_2" : [
+        "api",
+        "celery-worker",
+        "celery-beat"
+      ]
+    }
+  ]
   pipelines = [
     {
       name   = "main",
@@ -249,5 +270,14 @@ run "test_iam" {
   assert {
     condition     = aws_iam_role_policy.codestar_connection_access.role == "my-app-my-codebase-codebase-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+  }
+}
+
+run "test_pipeline" {
+  command = plan
+
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].name == "my-app-my-codebase-main-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-main-pipeline'"
   }
 }

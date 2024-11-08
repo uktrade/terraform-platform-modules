@@ -1,13 +1,13 @@
-resource "aws_codepipeline" "environment_pipeline" {
-  for_each      = toset(var.pipelines)
-  name          = "${var.application}-${var.codebase}-${each.value}-pipeline"
+resource "aws_codepipeline" "codebase_pipeline" {
+  for_each      = local.pipeline_map
+  name          = "${var.application}-${var.codebase}-${each.value.name}-pipeline"
   role_arn      = aws_iam_role.codebase_deploy_pipeline.arn
-  depends_on = [aws_iam_role_policy.artifact_store_access_for_codebase_pipeline]
+  depends_on    = [aws_iam_role_policy.artifact_store_access_for_codebase_pipeline]
   pipeline_type = "V2"
 
   variable {
     name          = "IMAGE_TAG"
-    default_value = each.value.tag ? "tag-latest" : each.value.branch
+    default_value = coalesce(each.value.tag, false) ? "tag-latest" : each.value.branch
     description   = "Tagged image in ECR to deploy"
   }
 
@@ -25,12 +25,12 @@ resource "aws_codepipeline" "environment_pipeline" {
     name = "Create-Deploy-Manifests"
 
     action {
-      name     = "CreateManifests"
-      category = "Build"
-      owner    = "AWS"
-      provider = "CodeBuild"
+      name             = "CreateManifests"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
       output_artifacts = ["manifest_output"]
-      version  = "1"
+      version          = "1"
 
       configuration = {
         ProjectName = "${var.application}-${var.codebase}-codebase-pipeline-manifests"
@@ -50,15 +50,15 @@ resource "aws_codepipeline" "environment_pipeline" {
       name = stage.value.name
 
       dynamic "action" {
-        for_each = local.run_groups
+        for_each = local.service_order_map
         content {
-          name      = action.value
-          category  = "Deploy"
-          owner     = "AWS"
-          provider  = "ECS"
-          version   = "1"
+          name            = action.key
+          category        = "Deploy"
+          owner           = "AWS"
+          provider        = "ECS"
+          version         = "1"
           input_artifacts = ["manifest_output"]
-          run_order = action.key + 1
+          run_order       = action.value.order
         }
       }
     }
