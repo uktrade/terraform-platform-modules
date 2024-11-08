@@ -348,14 +348,15 @@ class SecretRotator:
         # Test all distributions with both secrets
         matching_distributions = self.get_distro_list()
         for distro in matching_distributions:
+            logger.info(f"DISTRO TO TEST IS: {distro}")
             try:
                 for s in secrets:
-                    if self.run_test_origin_access("http://" + distro['Origin'], s):
-                        logger.info("Origin ok for http://%s" % distro['Origin'])
+                    if self.run_test_origin_access("http://" + distro['Domain'], s):
+                        logger.info("Domain ok for http://%s" % distro['Domain'])
                         pass
                     else:
-                        logger.error("Tests failed for URL, http://%s" % distro['Origin'])
-                        raise ValueError("Tests failed for URL, http://%s" % distro['Origin'])
+                        logger.error("Tests failed for URL, http://%s" % distro['Domain'])
+                        raise ValueError("Tests failed for URL, http://%s" % distro['Domain'])
             except ClientError as e:
                 logger.error('Error: {}'.format(e))
 
