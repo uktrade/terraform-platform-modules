@@ -348,7 +348,7 @@ class SecretRotator:
         # Test all distributions with both secrets
         matching_distributions = self.get_distro_list()
         for distro in matching_distributions:
-            logger.info(f"DISTRO TO TEST IS: {distro}")
+            logger.info(f"Testing distro: %s", distro)
             try:
                 for s in secrets:
                     if self.run_test_origin_access("http://" + distro['Domain'], s):
