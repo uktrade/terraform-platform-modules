@@ -31,6 +31,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
       provider         = "CodeBuild"
       output_artifacts = ["manifest_output"]
       version          = "1"
+      namespace         = "build_manifest"
 
       configuration = {
         ProjectName = "${var.application}-${var.codebase}-codebase-pipeline-manifests"
@@ -59,6 +60,11 @@ resource "aws_codepipeline" "codebase_pipeline" {
           version         = "1"
           input_artifacts = ["manifest_output"]
           run_order       = action.value.order
+          configuration = {
+            ClusterName = "#{build_manifest.${upper(stage.value.name)}_CLUSTER_NAME}"
+            ServiceName = "#{build_manifest.${upper(stage.value.name)}_${upper(action.key)}_SERVICE_NAME}"
+            FileName = "image-definitions-${action.key}.json"
+          }
         }
       }
     }
