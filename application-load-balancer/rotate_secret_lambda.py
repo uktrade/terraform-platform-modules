@@ -5,6 +5,7 @@ import logging
 import requests
 import time
 from typing import Tuple, Dict, Any, List
+from slack_sdk import WebClient
 
 from botocore.exceptions import ClientError
 
@@ -14,6 +15,68 @@ logger.setLevel(logging.INFO)
 
 AWSPENDING="AWSPENDING"
 AWSCURRENT="AWSCURRENT"
+
+
+class SlackNotificationService:
+    def __init__(self, slack_token: str, slack_channel: str):
+        self.client = WebClient(token=slack_token)
+        self.slack_channel = slack_channel
+
+    def send_test_failures(self, failures: List[Dict], environment: str, application: str, channel: str = None) -> None:
+        """
+        Send formatted test failure notifications to Slack
+        """
+        try:
+            message_blocks = self._build_failure_message(failures, environment, application)
+            
+            logger.info("Attempt sending Slack notification for test failures")
+            
+            self.client.chat_postMessage(
+                channel=channel or self.slack_channel,
+                blocks=message_blocks
+            )
+            logger.info("Slack notification sent for test failures")
+        
+        except Exception as e:
+            logger.error(f"Failed to send Slack notification: {str(e)}")
+            # Don't raise the error - we don't want Slack failures to affect the rotation process
+            
+    def _build_failure_message(self, failures: List[Dict], environment: str, application: str) -> List[Dict]:
+        message_blocks = [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": ":rotating_light: Secret Rotation Test Failures"
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*Environment:* {environment}\n*Application:* {application}"
+                }
+            }
+        ]
+
+        # Add each failure to the message
+        failure_text = ""
+        for failure in failures:
+            failure_text += f"• Domain: {failure['domain']}\n"
+            if 'secret_type' in failure:
+                failure_text += f"  Secret Type: {failure['secret_type']}\n"
+            if 'error' in failure:
+                failure_text += f"  Error: {failure['error']}\n"
+
+        message_blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"*Failures:*\n{failure_text}"
+            }
+        })
+
+        return message_blocks
 
 class SecretRotator:
     def __init__(self, **kwargs):
@@ -30,8 +93,14 @@ class SecretRotator:
         self.environment = kwargs.get('environment', os.environ.get('ENVIRONMENT'))
         self.role_arn = kwargs.get('role_arn', os.environ.get('ROLEARN'))
         self.distro_list = kwargs.get('distro_list', os.environ.get('DISTROIDLIST'))
-
         
+        slack_token = kwargs.get('slack_token', os.environ.get('SLACK_TOKEN'))
+        slack_channel = kwargs.get('slack_channel', os.environ.get('SLACK_CHANNEL'))
+        self.slack_service = None
+        if slack_token and slack_channel:
+            self.slack_service = SlackNotificationService(slack_token, slack_channel)
+
+     
     def get_cloudfront_session(self) -> boto3.client:
         sts = boto3.client('sts')
         credentials = sts.assume_role(RoleArn=self.role_arn, RoleSessionName='rotation_session')["Credentials"]
@@ -331,22 +400,18 @@ class SecretRotator:
 
     def run_test_secret(self, service_client, arn, token):
         """Test the secret
-        This method should validate that the AWSPENDING secret works in the service that the secret belongs to. For example, if the secret
-        is a database credential, this method should validate that the user can login with the password in AWSPENDING and that the user has
-        all of the expected permissions against the database.
-        Args:
-            service_client (client): The secrets manager service client
-            arn (string): The secret ARN or other identifier
-            token (string): The ClientRequestToken associated with the secret version
+        This method validates that the AWSPENDING secret works in the service.
+        If any tests fail:
+        1. Attempts to send a Slack notification (notification failure won't stop the process)
+        2. Raises an error to stop the rotation (test failure will stop the process)
         """
-        # This is where the secret should be tested against the service
-
         pendingsecret, currentsecret = self.get_secrets(service_client, arn, token)
-
         secrets = [pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE']]
-
+        
         # Test all distributions with both secrets
         matching_distributions = self.get_distro_list()
+        test_failures = []
+
         for distro in matching_distributions:
             logger.info(f"Testing distro: %s", distro)
             try:
@@ -355,10 +420,31 @@ class SecretRotator:
                         logger.info("Domain ok for http://%s" % distro['Domain'])
                         pass
                     else:
-                        logger.error("Tests failed for URL, http://%s" % distro['Domain'])
-                        raise ValueError("Tests failed for URL, http://%s" % distro['Domain'])
+                        error_msg = f"Tests failed for URL, http://{distro['Domain']}"
+                        logger.error(error_msg)
+                        test_failures.append({
+                            'domain': distro['Domain'],
+                            'secret_type': 'PENDING' if s == pendingsecret['HEADERVALUE'] else 'CURRENT'
+                        })
             except ClientError as e:
-                logger.error('Error: {}'.format(e))
+                error_msg = f"Error testing {distro['Domain']}: {str(e)}"
+                logger.error(error_msg)
+                test_failures.append({
+                    'domain': distro['Domain'],
+                    'error': str(e)
+                })
+
+        if test_failures:
+            if self.slack_service:
+                self.slack_service.send_test_failures(
+                    failures=test_failures,
+                    environment=self.environment,
+                    application=self.application
+                )
+            rotation_error = ValueError(f"Secret rotation tests failed for one or more distributions")
+            logger.error(f"Stopping rotation process due to test failures: {str(rotation_error)}")
+            raise rotation_error
+
 
     def finish_secret(self, service_client, arn, pending_version_token):
         """Finish the secret
@@ -415,8 +501,9 @@ def lambda_handler(event, context):
     
     versions = metadata['VersionIdsToStages']
     logger.info(f"VERSIONS: {versions}")
+    logger.info(f"VERSIONS TOKEN: {versions[token]}")
     
-    rotator = SecretRotator()  # Uses environment variables by default
+    rotator = SecretRotator()
 
     if token not in versions:
         logger.error("Secret version %s has no stage for rotation of secret %s." % (token, arn))

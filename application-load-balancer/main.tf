@@ -380,6 +380,8 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
       APPLICATION  = var.application
       ENVIRONMENT  = var.environment
       ROLEARN      = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+      SLACK_TOKEN = "placeholder for aws data resource"
+      SLACK_CHANNEL = "placeholder for aws data resource"
     }
   }
 
