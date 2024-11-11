@@ -126,3 +126,41 @@ resource "aws_route53_record" "cdn-address" {
     evaluate_target_health = false
   }
 }
+
+
+# Create a CDN cache Policy
+
+resource "aws_cloudfront_cache_policy" "cache_policy" {
+  provider = aws.domain-cdn
+
+  count = length(local.cache_policy_set) > 0 ? 1 : 0
+  #for_each = local.cache_policy_name
+  name        = var.config.cache_policy["name"] #local.cache_policy_name #each.value 
+  comment     = "Cache policy created for ${var.application}"
+  default_ttl = var.config.cache_policy["default_ttl"]
+  max_ttl     = var.config.cache_policy["max_ttl"]
+  min_ttl     = var.config.cache_policy["min_ttl"]
+  
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = var.config.cache_policy["cookies_config"]
+    }
+    headers_config {
+      header_behavior = var.config.cache_policy["header"]
+    }
+    # valiid query string behaviours are none, all, whitelist, allExcept
+    # query string values can only be set if behaviour is whitelist or allExcept.
+    query_strings_config {
+      query_string_behavior = var.config.cache_policy["query_string_behavior"]
+      
+      dynamic query_strings {
+        for_each = var.config.cache_policy["query_string_behavior"] == "whitelist" || var.config.cache_policy["query_string_behavior"] == "allExcept" ? [var.config.cache_policy_query_strings] : []
+          content {
+          items = query_strings.value
+          }
+      }
+    }
+    enable_accept_encoding_brotli = true
+    enable_accept_encoding_gzip = true
+  }
+}

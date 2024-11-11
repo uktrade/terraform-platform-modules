@@ -55,4 +55,5 @@ locals {
 
     default_waf = var.environment == "prod" ? coalesce(var.config.default_waf, "waf_sentinel_684092750218_default") : coalesce(var.config.default_waf, "waf_sentinel_011755346992_default")
   }
+  cache_policy_set = coalesce(var.config.cache_policy, {})
 }
