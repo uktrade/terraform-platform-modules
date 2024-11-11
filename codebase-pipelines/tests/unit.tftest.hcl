@@ -8,16 +8,16 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.codebuild_logs
+  target = data.aws_iam_policy_document.log_access_for_codebuild
   values = {
     json = "{\"Sid\": \"CodeBuildLogs\"}"
   }
 }
 
 override_data {
-  target = data.aws_iam_policy_document.ecr_access
+  target = data.aws_iam_policy_document.ecr_access_for_codebuild_images
   values = {
-    json = "{\"Sid\": \"ECRAccess\"}"
+    json = "{\"Sid\": \"CodeBuildImageECRAccess\"}"
   }
 }
 
@@ -34,6 +34,14 @@ override_data {
     json = "{\"Sid\": \"AssumeCodepipelineRole\"}"
   }
 }
+
+override_data {
+  target = data.aws_iam_policy_document.ecs_access_for_codebuild_manifests
+  values = {
+    json = "{\"Sid\": \"CodeBuildDeployManifestECS\"}"
+  }
+}
+
 
 variables {
   application               = "my-app"
@@ -95,7 +103,7 @@ run "test_ecr" {
   }
 }
 
-run "test_codebuild" {
+run "test_codebuild_images" {
   command = plan
 
   assert {
@@ -248,19 +256,19 @@ run "test_iam" {
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.codebuild_logs.name == "log-policy"
-    error_message = "Should be: 'log-policy'"
+    condition     = aws_iam_role_policy.log_access_for_codebuild_images.name == "my-app-my-codebase-log-access-for-codebuild-images"
+    error_message = "Should be: 'my-app-my-codebase-log-access-for-codebuild-images'"
   }
   assert {
-    condition     = aws_iam_role_policy.codebuild_logs.role == "my-app-my-codebase-codebase-image-build"
+    condition     = aws_iam_role_policy.log_access_for_codebuild_images.role == "my-app-my-codebase-codebase-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access.name == "ecr-policy"
-    error_message = "Should be: 'ecr-policy'"
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.name == "my-app-my-codebase-ecr-access-for-codebuild-images"
+    error_message = "Should be: 'my-app-my-codebase-ecr-access-for-codebuild-images'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access.role == "my-app-my-codebase-codebase-image-build"
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.role == "my-app-my-codebase-codebase-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
   assert {
@@ -277,7 +285,16 @@ run "test_pipeline" {
   command = plan
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].name == "my-app-my-codebase-main-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-main-pipeline'"
+    condition     = aws_codepipeline.codebase_pipeline[0].name == "my-app-my-codebase-main-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-main-codebase-pipeline'"
+  }
+}
+
+run "test_codebuild_manifests" {
+  command = plan
+
+  assert {
+    condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "my-app-my-codebase-main-codebase-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-main-codebase-deploy-manifests'"
   }
 }
