@@ -347,28 +347,47 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
   tags = local.tags
 }
 
+# AWS Lambda Resources
+resource "null_resource" "lambda_dependencies" {
+  triggers = {
+    requirements = filemd5("${path.module}/lambda_function/requirements.txt")
+  }
+  
+  provisioner "local-exec" {
+    interpreter = ["sh", "-c"]
+    command     = "python3 -m pip install -r ${path.module}/lambda_function/requirements.txt -t ${path.module}/lambda_function"
+  }
+
+}
+
 # This file needs to exist, but it's not directly used in the Terraform so...
 # tflint-ignore: terraform_unused_declarations
+# This resource creates the Lambda function code zip file
 data "archive_file" "lambda" {
   type        = "zip"
-  source_file = "${path.module}/rotate_secret_lambda.py"
-  output_path = "${path.module}/rotate_secret_lambda.zip"
+  source_dir  = "${path.module}/lambda_function"
+  output_path = "${path.module}/lambda_function.zip"  # This zip contains only your function code
+  excludes    = [
+    "**/.DS_Store",
+    "**/.idea/*"
+  ]
+
   depends_on = [
-    aws_iam_role.origin-secret-rotate-execution-role
+    aws_iam_role.origin-secret-rotate-execution-role,
+    null_resource.lambda_dependencies
   ]
 }
 
 
 # Secrets Manager Rotation Lambda Function
 resource "aws_lambda_function" "origin-secret-rotate-function" {
-  filename      = "${path.module}/rotate_secret_lambda.zip"
+  filename      = data.archive_file.lambda.output_path
   function_name = "${var.application}-${var.environment}-origin-secret-rotate"
   description   = "Secrets Manager Rotation Lambda Function"
   handler       = "rotate_secret_lambda.lambda_handler"
   runtime       = "python3.9"
   timeout       = 300
   role          = aws_iam_role.origin-secret-rotate-execution-role.arn
-
 
   environment {
     variables = {
@@ -389,7 +408,6 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   source_code_hash = data.archive_file.lambda.output_base64sha256
   tags             = local.tags
 }
-
 
 # Lambda Permission for Secrets Manager Rotation
 resource "aws_lambda_permission" "rotate-function-invoke-permission" {
