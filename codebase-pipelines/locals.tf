@@ -16,20 +16,25 @@ locals {
   pipeline_map = { for id, val in var.pipelines : id => val }
 
   #   ["web","api","celery-worker","celery-beat"]
-  services = flatten([for run_group in var.services : [for service in run_group : service]])
+  services = sort(flatten([
+    for run_group in var.services : [for service in flatten(values(run_group)) : service]
+  ]))
 
-  #  [{"name":"web","order":1},{"name":"api","order":2},{"name":"celery-worker","order":2},{"name":"celery-beat","order":2}]
+  service_export_names = sort(flatten([
+    for run_group in var.services : [for service in flatten(values(run_group)) : upper(replace(service, "-", "_"))]
+  ]))
+
+  #   [{"name":"web","order":1},{"name":"api","order":2},{"name":"celery-beat","order":2},{"name":"celery-worker","order":2}]
   service_order_list = flatten([
     for index, group in var.services : [
       for key, services in group : [
-        for service in services : {
-          name  = service
-          order = index + 1
-        }
+        for sorted_service in local.services : [
+          for service in services : {
+            name  = service
+            order = index + 1
+          } if service == sorted_service
+        ]
       ]
     ]
   ])
-
-  #   {"api":{"order":2},"celery-beat":{"order":2},"celery-worker":{"order":2},"web":{"order":1}}
-  service_order_map = { for service in local.service_order_list : service.name => { order = service.order } }
 }
