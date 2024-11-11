@@ -1,0 +1,28 @@
+version: 0.2
+
+env:
+  ${jsonencode({
+    exported-variables: flatten([ for env in environments : ["CLUSTER_NAME_${env}", [ for svc in services: "SERVICE_NAME_${env}_${svc}" ]]])
+  })}
+
+phases:
+  build:
+    commands:
+      - set -e
+      - for env in $(echo $ENVIRONMENTS | jq -c -r '.[]');
+        do
+          EXPORT_ENV=$(echo $env | tr '[:lower:]' '[:upper:]');
+          export CLUSTER_NAME_$EXPORT_ENV="$APPLICATION-$env";
+          for svc in $(echo $SERVICES | jq -c -r '.[]');
+          do
+            echo '[{"name":"'$svc'","imageUri":"'$REPOSITORY_URL':'$IMAGE_TAG'"}]' > image-definitions-$svc.json;
+            SERVICE_NAME=$(aws ecs list-services --cluster $APPLICATION-$env | jq -r '.serviceArns[] | select(contains("'$APPLICATION-$env'-'$svc'-Service"))');       
+            EXPORT_SVC="$(echo $EXPORT_ENV'_'$svc | tr - _ | tr '[:lower:]' '[:upper:]')";
+            export SERVICE_NAME_$EXPORT_SVC=$(echo $SERVICE_NAME | cut -d '/' -f3);
+            cat image-definitions-$svc.json;
+          done
+        done
+
+artifacts:
+  files:
+    - "**/*"
