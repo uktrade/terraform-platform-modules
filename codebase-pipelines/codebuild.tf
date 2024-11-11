@@ -69,7 +69,7 @@ resource "aws_codebuild_project" "codebase_image_build" {
 
 resource "aws_cloudwatch_log_group" "codebase_image_build" {
   # checkov:skip=CKV_AWS_338:Retains logs for 3 months instead of 1 year
-  # checkov:skip=CKV_AWS_158:To be reworked
+  # checkov:skip=CKV_AWS_158:Log groups encrypted using default encryption key instead of KMS CMK
   name              = "codebuild/${var.application}-${var.codebase}-codebase-image-build/log-group"
   retention_in_days = 90
 }
