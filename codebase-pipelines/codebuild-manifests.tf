@@ -1,8 +1,9 @@
 resource "aws_codebuild_project" "codebase_deploy_manifests" {
-  name          = "${var.application}-${var.codebase}-codebase-deploy-manifests"
+  for_each       = local.pipeline_map
+  name           = "${var.application}-${var.codebase}-${each.value.name}-codebase-deploy-manifests"
   description    = "Create image deploy manifests to deploy services"
   build_timeout  = 5
-  service_role   = aws_iam_role.codebase_deploy_manifests.arn
+  service_role   = aws_iam_role.codebuild_manifests.arn
   encryption_key = aws_kms_key.artifact_store_kms_key.arn
 
   artifacts {
@@ -30,7 +31,7 @@ resource "aws_codebuild_project" "codebase_deploy_manifests" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("${path.module}/buildspec-manifests.yml")
+    buildspec = templatefile("${path.module}/buildspec-manifests.yml", { application = var.application, environments = [for env in each.value.environments : upper(env.name)], services = local.service_export_names })
   }
 
   tags = local.tags
