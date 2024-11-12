@@ -59,7 +59,7 @@ class TestManageUsers(unittest.TestCase):
 
         conn.commit.assert_called_once()
 
-        
+
     def test_create_or_update_db_user_when_user_exists(self):
         self.cursor.fetchone.return_value = ["test_user"]
         conn = MagicMock()
@@ -74,14 +74,14 @@ class TestManageUsers(unittest.TestCase):
         )
 
         conn.commit.assert_called_once()
-        
+
 
     @mock_aws
     def test_create_or_update_user_secret(self):
-        ssm = boto3.client("ssm")
+        ssm = boto3.client("ssm", region_name="eu-west-2")
         user_secret_name = "/test/secret"
         user_secret_string = {"username": "test_user", "password": "test_password"}
-        
+
         response = create_or_update_user_secret(
             ssm, user_secret_name, user_secret_string, self.event
         )
@@ -97,7 +97,7 @@ class TestManageUsers(unittest.TestCase):
 
     @mock_aws
     def test_create_or_update_user_secret_overwrites(self):
-        ssm = boto3.client("ssm")
+        ssm = boto3.client("ssm", region_name="eu-west-2")
         user_secret_name = "/test/secret"
         user_secret_string = {"username": "test_user", "password": "test_password"}
         ssm.put_parameter(Name=user_secret_name, Value="blah", Type="String")
@@ -108,28 +108,28 @@ class TestManageUsers(unittest.TestCase):
 
         assert parameter["Version"] == 2
         assert parameter["Value"] == json.dumps(user_secret_string)
-    
+
 
     @patch("postgres.manage_users.create_or_update_db_user")
     @patch("postgres.manage_users.psycopg2.connect")
     @mock_aws
     def test_handler(self, mock_connect, mock_create_or_update_db_user):
-        secretsmanager = boto3.client("secretsmanager")
+        secretsmanager = boto3.client("secretsmanager", region_name="eu-west-2")
         secret_id = secretsmanager.create_secret(
             Name=self.secret_name, SecretString=self.secret_string
         )["ARN"]
-        
+
         self.event["MasterUserSecretArn"] = secret_id
-        
+
         mock_connect.return_value = self.conn
         self.conn.cursor = self.cursor
 
         handler(self.event, self.context)
 
-        user_password = json.loads(boto3.client("ssm").get_parameter(Name=self.secret_name, WithDecryption=True)["Parameter"]["Value"])[
+        user_password = json.loads(boto3.client("ssm", region_name="eu-west-2").get_parameter(Name=self.secret_name, WithDecryption=True)["Parameter"]["Value"])[
             "password"
         ]
-        
+
         mock_create_or_update_db_user.assert_called_once_with(
             self.conn, self.cursor(), "test-user", user_password, ["SELECT"]
         )
