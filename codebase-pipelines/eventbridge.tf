@@ -1,6 +1,6 @@
 resource "aws_cloudwatch_event_rule" "ecr_image_publish" {
   for_each    = local.pipeline_map
-  name        = "ecr-image-publish-${each.value.name}"
+  name        = "${var.application}-${var.codebase}-ecr-image-publish-${each.value.name}"
   description = "Trigger ${each.value.name} deploy pipeline when an ECR image is published"
 
   event_pattern = jsonencode({
