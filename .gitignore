@@ -9,4 +9,5 @@
 *.env*
 *venv*
 *slack*
+!slack_service.py
 __pycache__
