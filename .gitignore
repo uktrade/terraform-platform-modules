@@ -8,4 +8,5 @@
 *.DS_Store
 *.env*
 *venv*
+*slack*
 __pycache__
