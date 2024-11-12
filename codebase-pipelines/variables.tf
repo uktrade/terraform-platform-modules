@@ -22,7 +22,7 @@ variable "pipelines" {
       tag    = optional(bool)
       environments = list(object(
         {
-          name = string
+          name              = string
           requires_approval = optional(bool)
         }
       ))

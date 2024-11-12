@@ -49,6 +49,19 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.assume_event_bridge_policy
+  values = {
+    json = "{\"Sid\": \"AssumeEventBridge\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.event_bridge_pipeline_trigger
+  values = {
+    json = "{\"Sid\": \"EventBridgePipelineTrigger\"}"
+  }
+}
 
 variables {
   application               = "my-app"

@@ -2,7 +2,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
   for_each       = local.pipeline_map
   name           = "${var.application}-${var.codebase}-${each.value.name}-codebase-pipeline"
   role_arn       = aws_iam_role.codebase_deploy_pipeline.arn
-  depends_on = [aws_iam_role_policy.artifact_store_access_for_codebase_pipeline]
+  depends_on     = [aws_iam_role_policy.artifact_store_access_for_codebase_pipeline]
   pipeline_type  = "V2"
   execution_mode = "QUEUED"
 
@@ -26,12 +26,12 @@ resource "aws_codepipeline" "codebase_pipeline" {
     name = "Source"
 
     action {
-      name      = "Source"
-      category  = "Source"
-      owner     = "AWS"
-      provider  = "ECR"
-      version   = "1"
-      namespace = "source_ecr"
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "ECR"
+      version          = "1"
+      namespace        = "source_ecr"
       output_artifacts = ["source_output"]
 
       configuration = {
@@ -45,14 +45,14 @@ resource "aws_codepipeline" "codebase_pipeline" {
     name = "Create-Deploy-Manifests"
 
     action {
-      name      = "CreateManifests"
-      category  = "Build"
-      owner     = "AWS"
-      provider  = "CodeBuild"
-      input_artifacts = ["source_output"]
+      name             = "CreateManifests"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      input_artifacts  = ["source_output"]
       output_artifacts = ["manifest_output"]
-      version   = "1"
-      namespace = "build_manifest"
+      version          = "1"
+      namespace        = "build_manifest"
 
       configuration = {
         ProjectName = "${var.application}-${var.codebase}-${each.value.name}-codebase-deploy-manifests"
@@ -88,13 +88,13 @@ resource "aws_codepipeline" "codebase_pipeline" {
       dynamic "action" {
         for_each = local.service_order_list
         content {
-          name      = action.value.name
-          category  = "Deploy"
-          owner     = "AWS"
-          provider  = "ECS"
-          version   = "1"
+          name            = action.value.name
+          category        = "Deploy"
+          owner           = "AWS"
+          provider        = "ECS"
+          version         = "1"
           input_artifacts = ["manifest_output"]
-          run_order = action.value.order + 1
+          run_order       = action.value.order + 1
           configuration = {
             ClusterName = "#{build_manifest.CLUSTER_NAME_${upper(stage.value.name)}}"
             ServiceName = "#{build_manifest.SERVICE_NAME_${upper(stage.value.name)}_${upper(replace(action.value.name, "-", "_"))}}"
