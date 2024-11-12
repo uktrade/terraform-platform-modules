@@ -290,3 +290,58 @@ data "aws_iam_policy_document" "ecs_access_for_codebuild_manifests" {
     }
   }
 }
+
+resource "aws_iam_role_policy" "ecs_deploy_access_for_codebase_pipeline" {
+  name   = "${var.application}-${var.codebase}-ecs-deploy-access-for-codebase-pipeline"
+  role   = aws_iam_role.codebase_deploy_pipeline.name
+  policy = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.json
+}
+
+data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
+  dynamic "statement" {
+    for_each = local.pipeline_environments
+    content {
+      actions = [
+        "ecs:UpdateService"
+      ]
+      resources = [
+        "arn:aws:ecs:${local.account_region}:cluster/${var.application}-${statement.value}/*",
+        "arn:aws:ecs:${local.account_region}:service/${var.application}-${statement.value}/*"
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = local.pipeline_environments
+    content {
+      actions = [
+        "ecs:RunTask"
+      ]
+      resources = ["arn:aws:ecs:${local.account_region}:task-definition/${var.application}-${statement.value}-*:*"]
+    }
+  }
+
+  statement {
+    actions = [
+      "ecs:TagResource",
+      "ecs:RegisterTaskDefinition",
+      "ecs:DescribeTaskDefinition",
+      "ecs:DescribeServices",
+      "ecs:DescribeTasks",
+      "ecs:ListTasks"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
+      "iam:PassRole"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "StringLike"
+      values   = ["ecs-tasks.amazonaws.com"]
+      variable = "iam:PassedToService"
+    }
+  }
+}

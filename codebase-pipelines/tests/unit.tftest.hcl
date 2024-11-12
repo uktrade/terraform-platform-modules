@@ -42,6 +42,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline
+  values = {
+    json = "{\"Sid\": \"CodePipelineECSDeploy\"}"
+  }
+}
+
 
 variables {
   application               = "my-app"
@@ -298,8 +305,8 @@ run "test_codebuild_manifests" {
     error_message = "Should be: 'my-app-my-codebase-main-codebase-deploy-manifests'"
   }
 
-#   assert {
-#     condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "test"
-#     error_message = "Should be: ${jsonencode(local.pipeline_environments)}"
-#   }
+  #   assert {
+  #     condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "test"
+  #     error_message = "Should be: ${jsonencode(local.pipeline_environments)}"
+  #   }
 }
