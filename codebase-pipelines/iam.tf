@@ -117,6 +117,7 @@ data "aws_iam_policy_document" "ecr_access_for_codebuild_images" {
       "ecr-public:ListImages"
     ]
     resources = [
+      # We have to wildcard the repository name because we currently expect the repository URL and it's not possible to get the ARN from that
       "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
     ]
   }
