@@ -297,4 +297,9 @@ run "test_codebuild_manifests" {
     condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "my-app-my-codebase-main-codebase-deploy-manifests"
     error_message = "Should be: 'my-app-my-codebase-main-codebase-deploy-manifests'"
   }
+
+#   assert {
+#     condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "test"
+#     error_message = "Should be: ${jsonencode(local.pipeline_environments)}"
+#   }
 }

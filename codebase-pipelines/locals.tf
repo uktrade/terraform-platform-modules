@@ -13,7 +13,8 @@ locals {
   ])
   tagged_pipeline = length([for pipeline in var.pipelines : true if lookup(pipeline, "tag", null) == true]) > 0
 
-  pipeline_map = { for id, val in var.pipelines : id => val }
+  pipeline_map          = { for id, val in var.pipelines : id => val }
+  pipeline_environments = flatten([for pipeline in local.pipeline_map : [for env in pipeline.environments : env.name]])
 
   #   ["web","api","celery-worker","celery-beat"]
   services = sort(flatten([

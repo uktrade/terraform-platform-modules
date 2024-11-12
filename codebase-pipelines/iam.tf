@@ -277,13 +277,16 @@ resource "aws_iam_role_policy" "ecs_access_for_codebuild_manifests" {
 }
 
 data "aws_iam_policy_document" "ecs_access_for_codebuild_manifests" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "ecs:ListServices"
-    ]
-    resources = [
-      "arn:aws:ecs:${local.account_region}:service/${var.application}-*/*"
-    ]
+  dynamic "statement" {
+    for_each = local.pipeline_environments
+    content {
+      effect = "Allow"
+      actions = [
+        "ecs:ListServices"
+      ]
+      resources = [
+        "arn:aws:ecs:${local.account_region}:service/${var.application}-${statement.value}/*"
+      ]
+    }
   }
 }
