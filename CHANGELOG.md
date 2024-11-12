@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.7.1](https://github.com/uktrade/terraform-platform-modules/compare/5.7.0...5.7.1) (2024-11-08)
+
+
+### Bug Fixes
+
+* Environment pipelines given ECS permissions for DatabaseCopy inf… ([#271](https://github.com/uktrade/terraform-platform-modules/issues/271)) ([1cd29ab](https://github.com/uktrade/terraform-platform-modules/commit/1cd29ab7f4955166656306d4a3086f707ebf314d))
+* Environment pipelines given ECS permissions for DatabaseCopy infrastructure ([#267](https://github.com/uktrade/terraform-platform-modules/issues/267)) ([00babbd](https://github.com/uktrade/terraform-platform-modules/commit/00babbd4e00ba7c0820361b4b3aa7720fa82cc6d))
+* Revert "fix: Environment pipelines given ECS permissions for Database..." ([#270](https://github.com/uktrade/terraform-platform-modules/issues/270)) ([d8ba1af](https://github.com/uktrade/terraform-platform-modules/commit/d8ba1af68c4314352ea440f0500edd4cfb69ef7a))
+
 ## [5.7.0](https://github.com/uktrade/terraform-platform-modules/compare/5.6.1...5.7.0) (2024-11-05)
 
 
