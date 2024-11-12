@@ -303,10 +303,12 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
     for_each = local.pipeline_environments
     content {
       actions = [
-        "ecs:UpdateService"
+        "ecs:UpdateService",
+        "ecs:DescribeServices",
+        "ecs:TagResource"
       ]
       resources = [
-        "arn:aws:ecs:${local.account_region}:cluster/${var.application}-${statement.value}/*",
+        "arn:aws:ecs:${local.account_region}:cluster/${var.application}-${statement.value}",
         "arn:aws:ecs:${local.account_region}:service/${var.application}-${statement.value}/*"
       ]
     }
@@ -316,20 +318,43 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
     for_each = local.pipeline_environments
     content {
       actions = [
-        "ecs:RunTask"
+        "ecs:DescribeTasks",
+        "ecs:TagResource"
+      ]
+      resources = [
+        "arn:aws:ecs:${local.account_region}:cluster/${var.application}-${statement.value}",
+        "arn:aws:ecs:${local.account_region}:task/${var.application}-${statement.value}/*"
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = local.pipeline_environments
+    content {
+      actions = [
+        "ecs:RunTask",
+        "ecs:TagResource"
       ]
       resources = ["arn:aws:ecs:${local.account_region}:task-definition/${var.application}-${statement.value}-*:*"]
     }
   }
 
+  dynamic "statement" {
+    for_each = local.pipeline_environments
+    content {
+      actions = [
+        "ecs:ListTasks"
+      ]
+      resources = [
+        "arn:aws:ecs:${local.account_region}:container-instance/${var.application}-${statement.value}/*"
+      ]
+    }
+  }
+
   statement {
     actions = [
-      "ecs:TagResource",
       "ecs:RegisterTaskDefinition",
-      "ecs:DescribeTaskDefinition",
-      "ecs:DescribeServices",
-      "ecs:DescribeTasks",
-      "ecs:ListTasks"
+      "ecs:DescribeTaskDefinition"
     ]
     resources = ["*"]
   }

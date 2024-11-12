@@ -16,7 +16,6 @@ locals {
   pipeline_map          = { for id, val in var.pipelines : id => val }
   pipeline_environments = flatten([for pipeline in local.pipeline_map : [for env in pipeline.environments : env.name]])
 
-  #   ["web","api","celery-worker","celery-beat"]
   services = sort(flatten([
     for run_group in var.services : [for service in flatten(values(run_group)) : service]
   ]))
@@ -25,7 +24,6 @@ locals {
     for run_group in var.services : [for service in flatten(values(run_group)) : upper(replace(service, "-", "_"))]
   ]))
 
-  #   [{"name":"web","order":1},{"name":"api","order":2},{"name":"celery-beat","order":2},{"name":"celery-worker","order":2}]
   service_order_list = flatten([
     for index, group in var.services : [
       for key, services in group : [

@@ -244,19 +244,69 @@ run "test_codebuild_images" {
     ] == true
     error_message = "Should be: type = 'EVENT' and pattern = 'PUSH'"
   }
+}
+
+run "test_main_branch_filter" {
+  command = plan
+
+  variables {
+    pipelines = [
+      {
+        name   = "main",
+        branch = "main",
+        environments = [
+          { name = "dev" },
+          { name = "prod", requires_approval = true }
+        ]
+      }
+    ]
+  }
+
   assert {
     condition = [
       for el in aws_codebuild_webhook.codebuild_webhook.filter_group : true
       if[
         for filter in el.filter : true
-        if filter.type == "HEAD_REF" && (filter.pattern == "^refs/heads/main$" || filter.pattern == "^refs/tags/.*")
+        if filter.type == "HEAD_REF" && filter.pattern == "^refs/heads/main$"
         ][
         0
       ] == true
       ][
       0
     ] == true
-    error_message = "Should be: type = 'HEAD_REF' and pattern = '^refs/heads/main$' or '^refs/tags/.*'"
+    error_message = "Should be: type = 'HEAD_REF' and pattern = '^refs/heads/main$'"
+  }
+}
+
+run "test_tagged_branch_filter" {
+  command = plan
+
+  variables {
+    pipelines = [
+      {
+        name = "tagged",
+        tag  = true,
+        environments = [
+          { name = "staging" },
+          { name = "prod", requires_approval = true }
+        ]
+      }
+    ]
+  }
+
+  assert {
+    condition = [
+      for el in aws_codebuild_webhook.codebuild_webhook.filter_group : true
+      if[
+        for filter in el.filter : true
+        if filter.type == "HEAD_REF" && filter.pattern == "^refs/tags/.*"
+        ][
+        0
+      ] == true
+      ][
+      0
+    ] == true
+    error_message = "Should be: type = 'HEAD_REF' and pattern = '^refs/tags/.*'"
   }
 }
 
@@ -322,4 +372,9 @@ run "test_codebuild_manifests" {
   #     condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "test"
   #     error_message = "Should be: ${jsonencode(local.pipeline_environments)}"
   #   }
+}
+
+run "test_event_bridge" {
+  command = plan
+
 }
