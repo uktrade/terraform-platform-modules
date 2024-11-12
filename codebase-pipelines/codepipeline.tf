@@ -4,6 +4,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
   role_arn      = aws_iam_role.codebase_deploy_pipeline.arn
   depends_on    = [aws_iam_role_policy.artifact_store_access_for_codebase_pipeline]
   pipeline_type = "V2"
+  execution_mode = "QUEUED"
 
   variable {
     name          = "IMAGE_TAG"
@@ -69,7 +70,8 @@ resource "aws_codepipeline" "codebase_pipeline" {
   dynamic "stage" {
     for_each = each.value.environments
     content {
-      name = stage.value.name
+      name = "Deploy-${stage.value.name}"
+
 
       dynamic "action" {
         for_each = local.service_order_list
