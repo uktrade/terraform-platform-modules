@@ -1,3 +1,11 @@
+data "aws_ssm_parameter" "slack_token" {
+  name = "/codebuild/slack_oauth_token"
+}
+
+data "aws_ssm_parameter" "slack_channel_id" {
+  name = "/codebuild/slack_channel_id_test_command_output"
+}
+
 data "aws_vpc" "vpc" {
   filter {
     name   = "tag:Name"
@@ -399,8 +407,9 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
       APPLICATION  = var.application
       ENVIRONMENT  = var.environment
       ROLEARN      = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
-      SLACK_TOKEN = "placeholder for aws data resource"
-      SLACK_CHANNEL = "placeholder for aws data resource"
+      AWS_ACCOUNT = data.aws_caller_identity.current.account_id
+      SLACK_TOKEN  = data.aws_ssm_parameter.slack_token.value
+      SLACK_CHANNEL = data.aws_ssm_parameter.slack_channel_id.value
     }
   }
 
