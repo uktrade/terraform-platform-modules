@@ -99,7 +99,7 @@ resource "aws_codebuild_webhook" "codebuild_webhook" {
   }
 
   dynamic "filter_group" {
-    for_each = local.tagged_pipeline ? [1] : [0]
+    for_each = local.tagged_pipeline ? [1] : []
     content {
       filter {
         type    = "EVENT"
