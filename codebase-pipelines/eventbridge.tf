@@ -29,7 +29,7 @@ resource "aws_iam_role" "event_bridge_pipeline_trigger" {
 }
 
 resource "aws_iam_role_policy" "event_bridge_pipeline_trigger" {
-  name   = "${var.application}-${var.codebase}-ecs-deploy-access-for-codebase-pipeline"
+  name   = "${var.application}-${var.codebase}-pipeline-trigger-access-for-event-bridge"
   role   = aws_iam_role.event_bridge_pipeline_trigger.name
   policy = data.aws_iam_policy_document.event_bridge_pipeline_trigger.json
 }

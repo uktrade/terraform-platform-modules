@@ -71,14 +71,12 @@ variables {
   services = [
     {
       "run_group_1" : [
-        "web"
+        "service-1"
       ]
     },
     {
       "run_group_2" : [
-        "api",
-        "celery-worker",
-        "celery-beat"
+        "service-2"
       ]
     }
   ]
@@ -120,6 +118,31 @@ run "test_ecr" {
   assert {
     condition     = jsonencode(aws_ecr_repository.this.tags) == jsonencode(var.expected_ecr_tags)
     error_message = "Should be: ${jsonencode(var.expected_ecr_tags)}"
+  }
+}
+
+run "test_artifact_store" {
+  command = plan
+
+  assert {
+    condition     = aws_s3_bucket.artifact_store.bucket == "my-app-my-codebase-codebase-pipeline-artifact-store"
+    error_message = "Should be: my-app-my-codebase-codebase-pipeline-artifact-store"
+  }
+  assert {
+    condition     = aws_kms_alias.artifact_store_kms_alias.name == "alias/my-app-my-codebase-codebase-pipeline-artifact-store-key"
+    error_message = "Should be: alias/my-app-my-codebase-codebase-pipeline-artifact-store-key"
+  }
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].condition : true if el.variable == "aws:SecureTransport"][0] == true
+    error_message = "Should be: aws:SecureTransport"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].effect == "Deny"
+    error_message = "Should be: Deny"
+  }
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].actions : true if el == "s3:*"][0] == true
+    error_message = "Should be: s3:*"
   }
 }
 
@@ -313,6 +336,7 @@ run "test_tagged_branch_filter" {
 run "test_iam" {
   command = plan
 
+  # CodeBuild image build
   assert {
     condition     = aws_iam_role.codebase_image_build.name == "my-app-my-codebase-codebase-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
@@ -349,14 +373,81 @@ run "test_iam" {
     condition     = aws_iam_role_policy.codestar_connection_access.role == "my-app-my-codebase-codebase-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
-}
 
-run "test_pipeline" {
-  command = plan
-
+  # CodeBuild deploy manifests
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].name == "my-app-my-codebase-main-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-main-codebase-pipeline'"
+    condition     = aws_iam_role.codebuild_manifests.name == "my-app-my-codebase-codebase-codebuild-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
+  }
+  assert {
+    condition     = aws_iam_role.codebuild_manifests.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
+    error_message = "Should be: {\"Sid\": \"AssumeCodebuildRole\"}"
+  }
+  assert {
+    condition     = jsonencode(aws_iam_role.codebuild_manifests.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.name == "my-app-my-codebase-artifact-store-access-for-codebuild-manifests"
+    error_message = "Should be: 'my-app-my-codebase-artifact-store-access-for-codebuild-manifests'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-codebuild-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.name == "my-app-my-codebase-log-access-for-codebuild-manifests"
+    error_message = "Should be: 'my-app-my-codebase-log-access-for-codebuild-manifests'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-codebuild-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecs_access_for_codebuild_manifests.name == "my-app-my-codebase-ecs-access-for-codebuild-manifests"
+    error_message = "Should be: 'my-app-my-codebase-ecs-access-for-codebuild-manifests'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecs_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-codebuild-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
+  }
+
+  # CodePipeline
+  assert {
+    condition     = aws_iam_role.codebase_deploy_pipeline.name == "my-app-my-codebase-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role.codebase_deploy_pipeline.assume_role_policy == "{\"Sid\": \"AssumeCodepipelineRole\"}"
+    error_message = "Should be: {\"Sid\": \"AssumeCodepipelineRole\"}"
+  }
+  assert {
+    condition     = jsonencode(aws_iam_role.codebase_deploy_pipeline.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.name == "my-app-my-codebase-ecr-access-for-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-ecr-access-for-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.name == "my-app-my-codebase-artifact-store-access-for-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-artifact-store-access-for-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecs_deploy_access_for_codebase_pipeline.name == "my-app-my-codebase-ecs-deploy-access-for-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-ecs-deploy-access-for-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecs_deploy_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
 }
 
@@ -367,14 +458,530 @@ run "test_codebuild_manifests" {
     condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "my-app-my-codebase-main-codebase-deploy-manifests"
     error_message = "Should be: 'my-app-my-codebase-main-codebase-deploy-manifests'"
   }
+  assert {
+    condition     = aws_codebuild_project.codebase_deploy_manifests[0].description == "Create image deploy manifests to deploy services"
+    error_message = "Should be: 'Create image deploy manifests to deploy services'"
+  }
+  assert {
+    condition     = aws_codebuild_project.codebase_deploy_manifests[0].build_timeout == 5
+    error_message = "Should be: 5"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].artifacts).type == "CODEPIPELINE"
+    error_message = "Should be: 'CODEPIPELINE'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].cache).type == "S3"
+    error_message = "Should be: 'S3'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].cache).location == "my-app-my-codebase-codebase-pipeline-artifact-store"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-artifact-store'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].environment).compute_type == "BUILD_GENERAL1_SMALL"
+    error_message = "Should be: 'BUILD_GENERAL1_SMALL'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    error_message = "Should be: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].environment).type == "LINUX_CONTAINER"
+    error_message = "Should be: 'LINUX_CONTAINER'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].environment).image_pull_credentials_type == "CODEBUILD"
+    error_message = "Should be: 'CODEBUILD'"
+  }
+  assert {
+    condition = aws_codebuild_project.codebase_deploy_manifests[0].logs_config[0].cloudwatch_logs[
+      0
+    ].group_name == "codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group"
+    error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group'"
+  }
+  assert {
+    condition = aws_codebuild_project.codebase_deploy_manifests[0].logs_config[0].cloudwatch_logs[
+      0
+    ].stream_name == "codebuild/my-app-my-codebase-codebase-deploy-manifests/log-stream"
+    error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-deploy-manifests/log-stream'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].source).type == "CODEPIPELINE"
+    error_message = "Should be: 'CODEPIPELINE'"
+  }
+  assert {
+    condition     = length(regexall(".*\"exported-variables\":\\[\"CLUSTER_NAME_DEV\".*", aws_codebuild_project.codebase_deploy_manifests[0].source[0].buildspec)) > 0
+    error_message = "Should contain: '\"exported-variables\":[\"CLUSTER_NAME_DEV\"'"
+  }
+  assert {
+    condition     = jsonencode(aws_codebuild_project.codebase_deploy_manifests[0].tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+  assert {
+    condition     = aws_kms_key.codebuild_kms_key.description == "KMS Key for my-app my-codebase CodeBuild encryption"
+    error_message = "Should be: KMS Key for my-app my-codebase CodeBuild encryption"
+  }
 
-  #   assert {
-  #     condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "test"
-  #     error_message = "Should be: ${jsonencode(local.pipeline_environments)}"
-  #   }
+  assert {
+    condition     = aws_kms_key.codebuild_kms_key.enable_key_rotation == true
+    error_message = "Should be: true"
+  }
+
+  assert {
+    condition     = jsonencode(aws_kms_key.codebuild_kms_key.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+
+  # Cloudwatch config:
+  assert {
+    condition     = aws_cloudwatch_log_group.codebase_deploy_manifests.name == "codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group"
+    error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group'"
+  }
+  assert {
+    condition     = aws_cloudwatch_log_group.codebase_deploy_manifests.retention_in_days == 90
+    error_message = "Should be: 90"
+  }
+  assert {
+    condition     = aws_cloudwatch_log_stream.codebase_deploy_manifests.name == "codebuild/my-app-my-codebase-codebase-deploy-manifests/log-stream"
+    error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-deploy-manifests/log-stream'"
+  }
+  assert {
+    condition     = aws_cloudwatch_log_stream.codebase_deploy_manifests.log_group_name == "codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group"
+    error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group'"
+  }
+}
+
+run "test_main_pipeline" {
+  command = plan
+
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].name == "my-app-my-codebase-main-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-main-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].variable[0].name == "IMAGE_TAG"
+    error_message = "Should be: 'IMAGE_TAG'"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].variable[0].default_value == "branch-main"
+    error_message = "Should be: 'branch-main'"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].variable[0].description == "Tagged image in ECR to deploy"
+    error_message = "Should be: 'Tagged image in ECR to deploy'"
+  }
+  assert {
+    condition     = tolist(aws_codepipeline.codebase_pipeline[0].artifact_store)[0].location == "my-app-my-codebase-codebase-pipeline-artifact-store"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-artifact-store'"
+  }
+  assert {
+    condition     = tolist(aws_codepipeline.codebase_pipeline[0].artifact_store)[0].type == "S3"
+    error_message = "Should be: 'S3'"
+  }
+  assert {
+    condition     = tolist(aws_codepipeline.codebase_pipeline[0].artifact_store)[0].encryption_key[0].type == "KMS"
+    error_message = "Should be: 'KMS'"
+  }
+  assert {
+    condition     = jsonencode(aws_codepipeline.codebase_pipeline[0].tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+  assert {
+    condition     = length(aws_codepipeline.codebase_pipeline[0].stage) == 3
+    error_message = "Should be: 3"
+  }
+
+  # Source stage
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].name == "Source"
+    error_message = "Should be: Source"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].name == "Source"
+    error_message = "Should be: Source"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].category == "Source"
+    error_message = "Should be: Source"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].owner == "AWS"
+    error_message = "Should be: AWS"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].provider == "ECR"
+    error_message = "Should be: ECR"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].version == "1"
+    error_message = "Should be: 1"
+  }
+  assert {
+    condition     = one(aws_codepipeline.codebase_pipeline[0].stage[0].action[0].output_artifacts) == "source_output"
+    error_message = "Should be: source_output"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].namespace == "source_ecr"
+    error_message = "Should be: source_ecr"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.RepositoryName == "my-app/my-codebase"
+    error_message = "Should be: my-app/my-codebase"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.ImageTag == "branch-main"
+    error_message = "Should be: branch-main"
+  }
+
+  # Create-Deploy-Manifests stage
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].name == "Create-Deploy-Manifests"
+    error_message = "Should be: Create-Deploy-Manifests"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].name == "CreateManifests"
+    error_message = "Should be: CreateManifests"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].category == "Build"
+    error_message = "Should be: Build"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].owner == "AWS"
+    error_message = "Should be: AWS"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].provider == "CodeBuild"
+    error_message = "Should be: CodeBuild"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].version == "1"
+    error_message = "Should be: 1"
+  }
+  assert {
+    condition     = one(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].input_artifacts) == "source_output"
+    error_message = "Should be: source_output"
+  }
+  assert {
+    condition     = one(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].output_artifacts) == "manifest_output"
+    error_message = "Should be: manifest_output"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-main-codebase-deploy-manifests"
+    error_message = "Should be: my-app-my-codebase-main-codebase-deploy-manifests"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    error_message = "Configuration environment variables incorrect"
+  }
+
+  # Deploy dev environment stage
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].name == "Deploy-dev"
+    error_message = "Should be: Deploy-dev"
+  }
+
+  # Deploy service-1 action
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].name == "service-1"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].category == "Deploy"
+    error_message = "Action category incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].owner == "AWS"
+    error_message = "Action owner incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].provider == "ECS"
+    error_message = "Action provider incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].version == "1"
+    error_message = "Action Version incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.codebase_pipeline[0].stage[2].action[0].input_artifacts) == 1
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].input_artifacts[0] == "manifest_output"
+    error_message = "Input artifacts incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].run_order == 2
+    error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_DEV}"
+    error_message = "Configuration ClusterName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_DEV_SERVICE_1}"
+    error_message = "Configuration ServiceName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].configuration.FileName == "image-definitions-service-1.json"
+    error_message = "Configuration FileName incorrect"
+  }
+
+  # Deploy service-2 action
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].name == "service-2"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].run_order == 3
+    error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_DEV}"
+    error_message = "Configuration ClusterName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_DEV_SERVICE_2}"
+    error_message = "Configuration ServiceName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].configuration.FileName == "image-definitions-service-2.json"
+    error_message = "Configuration FileName incorrect"
+  }
+}
+
+run "test_tagged_pipeline" {
+  command = plan
+
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].name == "my-app-my-codebase-tagged-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-tagged-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].variable[0].default_value == "tag-latest"
+    error_message = "Should be: 'tag-latest'"
+  }
+  assert {
+    condition     = length(aws_codepipeline.codebase_pipeline[1].stage) == 4
+    error_message = "Should be: 4"
+  }
+
+  # Source stage
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[0].action[0].configuration.ImageTag == "tag-latest"
+    error_message = "Should be: tag-latest"
+  }
+
+  # Create-Deploy-Manifests stage
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].name == "Create-Deploy-Manifests"
+    error_message = "Should be: Create-Deploy-Manifests"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-tagged-codebase-deploy-manifests"
+    error_message = "Should be: my-app-my-codebase-tagged-codebase-deploy-manifests"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"staging\\\",\\\"prod\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    error_message = "Configuration environment variables incorrect"
+  }
+
+  # Deploy staging environment stage
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].name == "Deploy-staging"
+    error_message = "Should be: Deploy-staging"
+  }
+
+  # Deploy service-1 action
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].name == "service-1"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].run_order == 2
+    error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_STAGING}"
+    error_message = "Configuration ClusterName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_STAGING_SERVICE_1}"
+    error_message = "Configuration ServiceName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].configuration.FileName == "image-definitions-service-1.json"
+    error_message = "Configuration FileName incorrect"
+  }
+
+  # Deploy service-2 action
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].name == "service-2"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].run_order == 3
+    error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_STAGING}"
+    error_message = "Configuration ClusterName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_STAGING_SERVICE_2}"
+    error_message = "Configuration ServiceName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.FileName == "image-definitions-service-2.json"
+    error_message = "Configuration FileName incorrect"
+  }
+
+  # Deploy prod environment stage
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].name == "Deploy-prod"
+    error_message = "Should be: Deploy-prod"
+  }
+
+  # Approval action
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[0].name == "Approve-prod"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[0].category == "Approval"
+    error_message = "Action category incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[0].owner == "AWS"
+    error_message = "Action owner incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[0].provider == "Manual"
+    error_message = "Action provider incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[0].version == "1"
+    error_message = "Action Version incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[0].run_order == 1
+    error_message = "Run order incorrect"
+  }
+
+  # Deploy service-1 action
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].name == "service-1"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].run_order == 2
+    error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_PROD}"
+    error_message = "Configuration ClusterName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_PROD_SERVICE_1}"
+    error_message = "Configuration ServiceName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].configuration.FileName == "image-definitions-service-1.json"
+    error_message = "Configuration FileName incorrect"
+  }
+
+  # Deploy service-2 action
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].name == "service-2"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].run_order == 3
+    error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_PROD}"
+    error_message = "Configuration ClusterName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_PROD_SERVICE_2}"
+    error_message = "Configuration ServiceName incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].configuration.FileName == "image-definitions-service-2.json"
+    error_message = "Configuration FileName incorrect"
+  }
 }
 
 run "test_event_bridge" {
   command = plan
 
+# Main pipeline trigger
+  assert {
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].name == "my-app-my-codebase-ecr-image-publish-main"
+    error_message = "Should be: 'my-app-my-codebase-ecr-image-publish-main'"
+  }
+  assert {
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].description == "Trigger main deploy pipeline when an ECR image is published"
+    error_message = "Should be: 'Trigger main deploy pipeline when an ECR image is published'"
+  }
+  assert {
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"branch-main\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
+    error_message = "Event pattern is incorrect"
+  }
+  assert {
+    condition     = aws_cloudwatch_event_target.codepipeline[0].rule == "my-app-my-codebase-ecr-image-publish-main"
+    error_message = "Should be: 'my-app-my-codebase-ecr-image-publish-main'"
+  }
+
+  # Tagged pipeline trigger
+  assert {
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].name == "my-app-my-codebase-ecr-image-publish-tagged"
+    error_message = "Should be: 'my-app-my-codebase-ecr-image-publish-tagged'"
+  }
+  assert {
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].description == "Trigger tagged deploy pipeline when an ECR image is published"
+    error_message = "Should be: 'Trigger tagged deploy pipeline when an ECR image is published'"
+  }
+  assert {
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"tag-latest\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
+    error_message = "Event pattern is incorrect"
+  }
+  assert {
+    condition     = aws_cloudwatch_event_target.codepipeline[1].rule == "my-app-my-codebase-ecr-image-publish-tagged"
+    error_message = "Should be: 'my-app-my-codebase-ecr-image-publish-tagged'"
+  }
+
+  # IAM
+  assert {
+    condition     = aws_iam_role.event_bridge_pipeline_trigger.name == "my-app-my-codebase-event-bridge-pipeline-trigger"
+    error_message = "Should be: 'my-app-my-codebase-event-bridge-pipeline-trigger'"
+  }
+  assert {
+    condition     = aws_iam_role.event_bridge_pipeline_trigger.assume_role_policy == "{\"Sid\": \"AssumeEventBridge\"}"
+    error_message = "Should be: {\"Sid\": \"AssumeEventBridge\"}"
+  }
+  assert {
+    condition     = jsonencode(aws_iam_role.event_bridge_pipeline_trigger.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+  assert {
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.name == "my-app-my-codebase-pipeline-trigger-access-for-event-bridge"
+    error_message = "Should be: 'my-app-my-codebase-pipeline-trigger-access-for-event-bridge'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.role == "my-app-my-codebase-event-bridge-pipeline-trigger"
+    error_message = "Should be: 'my-app-my-codebase-event-bridge-pipeline-trigger'"
+  }
 }
+
+# run "test_multiple_codebases" {
+#   command = plan
+#
+#   assert {
+#     condition     = aws_codepipeline.environment_pipeline.variable[0].default_value == "branch-main"
+#     error_message = "Should be: 'NONE'"
+#   }
+#
+# }

@@ -60,7 +60,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
           { name : "APPLICATION", value : var.application },
           { name : "ENVIRONMENTS", value : jsonencode([for env in each.value.environments : env.name]) },
           { name : "SERVICES", value : jsonencode(local.services) },
-          { name : "REPOSITORY_URL", value : aws_ecr_repository.this.repository_url },
+          { name : "REPOSITORY_URL", value : "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}" },
           { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" }
         ])
       }
@@ -71,7 +71,6 @@ resource "aws_codepipeline" "codebase_pipeline" {
     for_each = each.value.environments
     content {
       name = "Deploy-${stage.value.name}"
-
 
       dynamic "action" {
         for_each = coalesce(stage.value.requires_approval, false) ? [1] : []

@@ -155,7 +155,7 @@ resource "aws_codebuild_project" "codebase_deploy_manifests" {
 }
 
 resource "aws_kms_key" "codebuild_kms_key" {
-  description         = "KMS Key for ${var.application}-${var.codebase} CodeBuild encryption"
+  description         = "KMS Key for ${var.application} ${var.codebase} CodeBuild encryption"
   enable_key_rotation = true
 
   policy = jsonencode({
