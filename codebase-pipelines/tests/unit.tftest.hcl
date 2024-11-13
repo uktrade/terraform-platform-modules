@@ -917,7 +917,7 @@ run "test_tagged_pipeline" {
 run "test_event_bridge" {
   command = plan
 
-# Main pipeline trigger
+  # Main pipeline trigger
   assert {
     condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].name == "my-app-my-codebase-ecr-image-publish-main"
     error_message = "Should be: 'my-app-my-codebase-ecr-image-publish-main'"
@@ -976,12 +976,313 @@ run "test_event_bridge" {
   }
 }
 
-# run "test_multiple_codebases" {
-#   command = plan
-#
-#   assert {
-#     condition     = aws_codepipeline.environment_pipeline.variable[0].default_value == "branch-main"
-#     error_message = "Should be: 'NONE'"
-#   }
-#
-# }
+run "test_pipeline_single_run_group" {
+  command = plan
+
+  variables {
+    services = [
+      {
+        "run_group_1" : [
+          "service-1",
+          "service-2",
+          "service-3",
+          "service-4"
+        ]
+      }
+    ]
+  }
+
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    error_message = "Configuration environment variables incorrect"
+  }
+
+  # service-1
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].name == "service-1"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].run_order == 2
+    error_message = "Run order incorrect"
+  }
+
+  # service-2
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].name == "service-2"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].run_order == 2
+    error_message = "Run order incorrect"
+  }
+
+  # service-3
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[2].name == "service-3"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[2].run_order == 2
+    error_message = "Run order incorrect"
+  }
+
+  # service-4
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[3].name == "service-4"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[3].run_order == 2
+    error_message = "Run order incorrect"
+  }
+}
+
+run "test_pipeline_multiple_run_groups" {
+  command = plan
+
+  variables {
+    services = [
+      {
+        "run_group_1" : [
+          "service-1"
+        ]
+      },
+      {
+        "run_group_2" : [
+          "service-2",
+          "service-3"
+        ]
+      },
+      {
+        "run_group_3" : [
+          "service-4"
+        ]
+      },
+      {
+        "run_group_4" : [
+          "service-5",
+          "service-6",
+          "service-7"
+        ]
+      }
+    ]
+  }
+
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\",\\\"service-5\\\",\\\"service-6\\\",\\\"service-7\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    error_message = "Configuration environment variables incorrect"
+  }
+
+  # service-1
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].name == "service-1"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].run_order == 2
+    error_message = "Run order incorrect"
+  }
+
+  # service-2
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].name == "service-2"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].run_order == 3
+    error_message = "Run order incorrect"
+  }
+
+  # service-3
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[2].name == "service-3"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[2].run_order == 3
+    error_message = "Run order incorrect"
+  }
+
+  # service-4
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[3].name == "service-4"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[3].run_order == 4
+    error_message = "Run order incorrect"
+  }
+
+  # service-5
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[4].name == "service-5"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[4].run_order == 5
+    error_message = "Run order incorrect"
+  }
+
+  # service-6
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[5].name == "service-6"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[5].run_order == 5
+    error_message = "Run order incorrect"
+  }
+
+  # service-7
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[6].name == "service-7"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[6].run_order == 5
+    error_message = "Run order incorrect"
+  }
+}
+
+run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
+  command = plan
+
+  variables {
+    services = [
+      {
+        "run_group_1" : [
+          "service-1"
+        ]
+      },
+      {
+        "run_group_2" : [
+          "service-2",
+          "service-3"
+        ]
+      },
+      {
+        "run_group_3" : [
+          "service-4"
+        ]
+      }
+    ]
+    pipelines = [
+      {
+        name   = "main",
+        branch = "main",
+        environments = [
+          { name = "dev" },
+          { name = "prod", requires_approval = true }
+        ]
+      }
+    ]
+  }
+
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\",\\\"prod\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    error_message = "Configuration environment variables incorrect"
+  }
+
+  # Dev
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].name == "Deploy-dev"
+    error_message = "Should be: Deploy-dev"
+  }
+
+  # service-1
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].name == "service-1"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].run_order == 2
+    error_message = "Run order incorrect"
+  }
+
+  # service-2
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].name == "service-2"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].run_order == 3
+    error_message = "Run order incorrect"
+  }
+
+  # service-3
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[2].name == "service-3"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[2].run_order == 3
+    error_message = "Run order incorrect"
+  }
+
+  # service-4
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[3].name == "service-4"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[3].run_order == 4
+    error_message = "Run order incorrect"
+  }
+
+  # Prod
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].name == "Deploy-prod"
+    error_message = "Should be: Deploy-prod"
+  }
+
+  # Approval
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[0].name == "Approve-prod"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[0].run_order == 1
+    error_message = "Run order incorrect"
+  }
+
+  # service-1
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[1].name == "service-1"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[1].run_order == 2
+    error_message = "Run order incorrect"
+  }
+
+  # service-2
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[2].name == "service-2"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[2].run_order == 3
+    error_message = "Run order incorrect"
+  }
+
+  # service-3
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[3].name == "service-3"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[3].run_order == 3
+    error_message = "Run order incorrect"
+  }
+
+  # service-4
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[4].name == "service-4"
+    error_message = "Action name incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[4].run_order == 4
+    error_message = "Run order incorrect"
+  }
+}
