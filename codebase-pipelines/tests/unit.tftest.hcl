@@ -64,6 +64,7 @@ override_data {
 }
 
 variables {
+  deploy_account = "sandbox"
   environments = {
     "*" = {
       accounts = {
@@ -79,6 +80,7 @@ variables {
       vpc : "platform-sandbox-dev"
     },
     "dev" = null,
+    "staging" = null,
     "prod" = {
       accounts = {
         deploy = {
@@ -121,8 +123,8 @@ variables {
       name = "tagged",
       tag  = true,
       environments = [
-        { name = "staging" },
-        { name = "prod", requires_approval = true }
+        { name = "dev" },
+        { name = "staging", requires_approval = true }
       ]
     }
   ]
@@ -812,14 +814,14 @@ run "test_tagged_pipeline" {
     error_message = "Should be: my-app-my-codebase-tagged-codebase-deploy-manifests"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"staging\\\",\\\"prod\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\",\\\"staging\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
-  # Deploy staging environment stage
+  # Deploy dev environment stage
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].name == "Deploy-staging"
-    error_message = "Should be: Deploy-staging"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].name == "Deploy-dev"
+    error_message = "Should be: Deploy-dev"
   }
 
   # Deploy service-1 action
@@ -832,11 +834,11 @@ run "test_tagged_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_STAGING}"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_DEV}"
     error_message = "Configuration ClusterName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_STAGING_SERVICE_1}"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_DEV_SERVICE_1}"
     error_message = "Configuration ServiceName incorrect"
   }
   assert {
@@ -854,11 +856,11 @@ run "test_tagged_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_STAGING}"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_DEV}"
     error_message = "Configuration ClusterName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_STAGING_SERVICE_2}"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_DEV_SERVICE_2}"
     error_message = "Configuration ServiceName incorrect"
   }
   assert {
@@ -866,15 +868,15 @@ run "test_tagged_pipeline" {
     error_message = "Configuration FileName incorrect"
   }
 
-  # Deploy prod environment stage
+  # Deploy staging environment stage
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].name == "Deploy-prod"
-    error_message = "Should be: Deploy-prod"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].name == "Deploy-staging"
+    error_message = "Should be: Deploy-staging"
   }
 
   # Approval action
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[0].name == "Approve-prod"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[0].name == "Approve-staging"
     error_message = "Action name incorrect"
   }
   assert {
@@ -908,11 +910,11 @@ run "test_tagged_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_PROD}"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_STAGING}"
     error_message = "Configuration ClusterName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_PROD_SERVICE_1}"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_STAGING_SERVICE_1}"
     error_message = "Configuration ServiceName incorrect"
   }
   assert {
@@ -930,11 +932,11 @@ run "test_tagged_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_PROD}"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_STAGING}"
     error_message = "Configuration ClusterName incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_PROD_SERVICE_2}"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].configuration.ServiceName == "#{build_manifest.SERVICE_NAME_STAGING_SERVICE_2}"
     error_message = "Configuration ServiceName incorrect"
   }
   assert {
@@ -1202,14 +1204,14 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
         branch = "main",
         environments = [
           { name = "dev" },
-          { name = "prod", requires_approval = true }
+          { name = "staging", requires_approval = true }
         ]
       }
     ]
   }
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\",\\\"prod\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\",\\\"staging\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1259,15 +1261,15 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
     error_message = "Run order incorrect"
   }
 
-  # Prod
+  # Staging
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].name == "Deploy-prod"
-    error_message = "Should be: Deploy-prod"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].name == "Deploy-staging"
+    error_message = "Should be: Deploy-staging"
   }
 
   # Approval
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[0].name == "Approve-prod"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[0].name == "Approve-staging"
     error_message = "Action name incorrect"
   }
   assert {
@@ -1313,5 +1315,56 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[4].run_order == 4
     error_message = "Run order incorrect"
+  }
+}
+
+run "test_pipeline_only_deploys_account_environments" {
+  command = plan
+
+  variables {
+    pipelines = [
+      {
+        name   = "main",
+        branch = "main",
+        environments = [
+          { name = "dev" },
+          { name = "prod", requires_approval = true }
+        ]
+      }
+    ]
+  }
+
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    error_message = "Configuration environment variables incorrect"
+  }
+  assert {
+    condition     = length(aws_codepipeline.codebase_pipeline[0].stage) == 3
+    error_message = "Should be: 3"
+  }
+  assert {
+    condition     = length(aws_codepipeline.codebase_pipeline) == 1
+    error_message = "Should be: 1"
+  }
+}
+
+run "test_pipeline_only_deploys_account_pipelines" {
+  command = plan
+
+  variables {
+    pipelines = [
+      {
+        name   = "main",
+        branch = "main",
+        environments = [
+          { name = "prod"}
+        ]
+      }
+    ]
+  }
+
+  assert {
+    condition     = length(aws_codepipeline.codebase_pipeline) == 0
+    error_message = "Should be: 0"
   }
 }

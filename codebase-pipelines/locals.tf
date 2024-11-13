@@ -17,7 +17,7 @@ locals {
     for name, config in var.environments : name => merge(lookup(var.environments, "*", {}), config) if name != "*"
   }
 
-  # Adds accounts map to each environment within each pipeline
+  # Adds account info to each environment; Removes environments not deployed to the current account; Adds trigger for prod pipeline
   pipeline_environment_account_map = {
     for id, val in var.pipelines : id => {
       "trigger_prod" : length([
