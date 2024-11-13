@@ -304,7 +304,7 @@ class SecretRotator:
                 VersionId=token,
                 VersionStage=AWSPENDING
             )
-            logger.info("createSecret: Successfully retrieved secret for %s." % arn)
+            logger.info("createSecret: Successfully retrieved secret")
 
         except service_client.exceptions.ResourceNotFoundException:
 
@@ -318,7 +318,7 @@ class SecretRotator:
                 SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
                 VersionStages=['AWSPENDING']
             )
-            logger.info("createSecret: Successfully put secret for ARN %s and version %s." % (arn, token))
+            logger.info("createSecret: Successfully put secret for version %s" % (token))
 
     def set_secret(self, service_client, arn, token):
         """Set the secret
@@ -439,7 +439,7 @@ class SecretRotator:
         for version in metadata["VersionIdsToStages"]:
             if AWSCURRENT in metadata["VersionIdsToStages"][version]:
                 if version == pending_version_token:
-                    logger.info("finishSecret: Version %s already marked as AWSCURRENT for %s" % (version, arn))
+                    logger.info("finishSecret: Version %s already marked as AWSCURRENT" % (version))
                     return
                 current_version_token = version
                 break
@@ -451,4 +451,4 @@ class SecretRotator:
             MoveToVersionId=pending_version_token,
             RemoveFromVersionId=current_version_token
         )
-        logger.info("finishSecret: Successfully set AWSCURRENT stage to version %s for secret %s." % (pending_version_token, arn))
+        logger.info("finishSecret: Successfully set AWSCURRENT stage to version %s" % (pending_version_token))

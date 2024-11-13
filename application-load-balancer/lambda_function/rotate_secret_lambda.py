@@ -19,18 +19,18 @@ def lambda_handler(event, context):
     step = event['Step']
     test_domains = event.get('TestDomains', [])
     
-    logger.info(f"ARN - {arn}")
-    logger.info(f"TOKEN - {token}")
-    logger.info(f"STEP - {step}")
-    logger.info(f"TEST DOMAINS - {test_domains}")
+    # logger.info(f"ARN - {arn}")
+    # logger.info(f"TOKEN - {token}")
+    # logger.info(f"STEP - {step}")
+    # logger.info(f"TEST DOMAINS - {test_domains}")
 
     service_client = boto3.client('secretsmanager')
 
     # Make sure the version is staged correctly
     metadata = service_client.describe_secret(SecretId=arn)
     if not metadata['RotationEnabled']:
-        logger.error("Secret %s is not enabled for rotation" % arn)
-        raise ValueError("Secret %s is not enabled for rotation" % arn)
+        logger.error("Secret is not enabled for rotation")
+        raise ValueError("Secret is not enabled for rotation")
     
     versions = metadata['VersionIdsToStages']
     logger.info(f"VERSIONS: {versions}")
@@ -39,13 +39,13 @@ def lambda_handler(event, context):
     rotator = SecretRotator()
 
     if token not in versions:
-        logger.error("Secret version %s has no stage for rotation of secret %s." % (token, arn))
-        raise ValueError("Secret version %s has no stage for rotation of secret %s." % (token, arn))
+        logger.error("Secret version %s has no stage for rotation of secret." % (token))
+        raise ValueError("Secret version %s has no stage for rotation of secret." % (token))
     if AWSCURRENT in versions[token]:
-        logger.info("Secret version %s already set as AWSCURRENT for secret %s." % (token, arn))
+        logger.info("Secret version %s already set as AWSCURRENT for secret." % (token))
     elif AWSPENDING not in versions[token]:
-        logger.error("Secret version %s not set as AWSPENDING for rotation of secret %s." % (token, arn))
-        raise ValueError("Secret version %s not set as AWSPENDING for rotation of secret %s." % (token, arn))
+        logger.error("Secret version %s not set as AWSPENDING for rotation of secret." % (token))
+        raise ValueError("Secret version %s not set as AWSPENDING for rotation of secret." % (token))
     
     if step == "createSecret":
         logger.info("Entered createSecret step")
