@@ -32,7 +32,7 @@ jobs:
       - name: Run pytest
         run: poetry run pytest --cov --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
         env:
-          AWS_REGION: eu-west-2
+          AWS_DEFAULT_REGION: eu-west-2
           PYTHON_VERSION: ${{ matrix.python-version }}
 
       - name: Upload code coverage results to Codecov
