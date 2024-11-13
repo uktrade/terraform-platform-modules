@@ -35,19 +35,9 @@ variable "services" {
 }
 
 variable "environments" {
-  type = map(object(
-    {
-      accounts = object({
-        deploy = object({
-          name = string
-          id   = string
-        })
-        dns = object({
-          name = string
-          id   = string
-        })
-      })
-      vpc = string
-    }
-  ))
+  type = any
+}
+
+variable "deploy_account" {
+  type = string
 }
