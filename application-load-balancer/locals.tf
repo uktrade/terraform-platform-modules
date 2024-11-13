@@ -21,7 +21,7 @@ locals {
   }
 
   secret_token_header_name   = "x-origin-verify"
-  secret_token_rotation_days = "7"
+  secret_token_rotation_days = 7
 
   # The primary domain for every application follows these naming standard.  See README.md 
   domain_prefix             = coalesce(var.config.domain_prefix, "internal")
