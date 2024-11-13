@@ -73,8 +73,8 @@ def handler(event, context):
     username = event['Username']
     user_permissions = event['Permissions']
 
-    secrets_manager = boto3.client("secretsmanager", region_name="eu-west-2")
-    ssm = boto3.client("ssm", region_name="eu-west-2")
+    secrets_manager = boto3.client("secretsmanager")
+    ssm = boto3.client("ssm")
 
     master_user = json.loads(secrets_manager.get_secret_value(SecretId=db_master_user_secret_arn)["SecretString"])
 
