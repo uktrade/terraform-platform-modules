@@ -400,6 +400,7 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   environment {
     variables = {
       WAFACLID      = aws_wafv2_web_acl.waf-acl.id
+      # todo: why are we splitting on |, should it just be aws_wafv2_web_acl.waf-acl.name?
       WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
       WAFRULEPRI    = "0"
       DISTROIDLIST  = local.domain_list
