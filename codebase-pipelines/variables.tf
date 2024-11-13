@@ -33,3 +33,21 @@ variable "pipelines" {
 variable "services" {
   type = any
 }
+
+variable "environments" {
+  type = map(object(
+    {
+      accounts = object({
+        deploy = object({
+          name = string
+          id   = string
+        })
+        dns = object({
+          name = string
+          id   = string
+        })
+      })
+      vpc = string
+    }
+  ))
+}

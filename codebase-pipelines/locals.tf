@@ -36,4 +36,13 @@ locals {
       ]
     ]
   ])
+
+  # {"main":{"accounts":[{"id":"000123456789","name":"sandbox"}]},"tagged":{"accounts":[{"id":"000123456789","name":"sandbox"},{"id":"123456789000","name":"prod"}]}}
+  pipeline_accounts = {
+    for id, pipeline in local.pipeline_map : id => {
+      "accounts" : [for env in pipeline.environments : coalesce(lookup(var.environments, env.name, null), lookup(var.environments, "*", null)).accounts.deploy]
+    }
+  }
+
+  pipeline_account_map = { for id, pipeline in local.pipeline_map : id => merge(pipeline, local.pipeline_accounts[id]) }
 }

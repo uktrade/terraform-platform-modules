@@ -64,6 +64,35 @@ override_data {
 }
 
 variables {
+  environments = {
+    "*" = {
+      accounts = {
+        deploy = {
+          name = "sandbox"
+          id   = "000123456789"
+        }
+        dns = {
+          name = "dev"
+          id   = "000987654321"
+        }
+      }
+      vpc : "platform-sandbox-dev"
+    },
+    "dev" = null,
+    "prod" = {
+      accounts = {
+        deploy = {
+          name = "prod"
+          id   = "123456789000"
+        }
+        dns = {
+          name = "live"
+          id   = "987654321000"
+        }
+      }
+      vpc : "platform-sandbox-prod"
+    }
+  }
   application               = "my-app"
   codebase                  = "my-codebase"
   repository                = "my-repository"
