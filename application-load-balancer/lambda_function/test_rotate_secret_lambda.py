@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock, call
 from botocore.exceptions import ClientError
 import json
-from rotate_secret_lambda import SecretRotator
+from secret_rotator import SecretRotator
 
 @pytest.fixture(scope="session")
 def rotator():
@@ -43,23 +43,18 @@ class TestCloudFrontSessionManagement:
             mock_sts = MagicMock()
             mock_cloudfront = MagicMock()
             
-            # Configure boto3.client to return different mocks based on service name
             mock_boto3_client.side_effect = lambda service, **kwargs: \
                 mock_sts if service == 'sts' else mock_cloudfront
 
-            # Configure STS assume_role response
             mock_sts.assume_role.return_value = mock_credentials
 
-            # When getting a CloudFront session
             client = rotator.get_cloudfront_session()
 
-            # Then it should assume the correct role
             mock_sts.assume_role.assert_called_once_with(
                 RoleArn="arn:aws:iam::123456789012:role/test-role",
                 RoleSessionName='rotation_session'
             )
 
-            # And use the credentials to create a CloudFront client
             mock_boto3_client.assert_has_calls([
                 call('sts'),
                 call('cloudfront',
@@ -103,7 +98,6 @@ class TestDistributionDiscovery:
         }
 
         with patch.object(rotator, 'get_cloudfront_session') as mock_session:
-            # When discovering distributions
             mock_client = MagicMock()
             mock_paginator = MagicMock()
             mock_paginator.paginate.return_value = [mock_distributions]
@@ -114,15 +108,14 @@ class TestDistributionDiscovery:
 
             # Then it should return only matching distributions
             assert len(result) == 2, "Should find exactly 2 matching distributions"
-            
-            # And preserve necessary information for each distribution
+         
             for dist in result:
                 assert set(dist.keys()) == {"Id", "Origin", "Domain"}, \
                     "Each distribution must have Id, Origin, and Domain"
                 assert dist["Domain"] in ["example.com", "example2.com"], \
                     f"Unexpected domain: {dist['Domain']}"
 
-            # And use pagination for large lists
+            # use pagination for large lists
             mock_client.get_paginator.assert_called_once_with("list_distributions")
 
 class TestWAFManagement:
@@ -135,7 +128,6 @@ class TestWAFManagement:
         """
         During rotation, the WAF rule must accept both old and new secrets.
         """
-        # Given existing WAF rules including non-secret rules
         current_rules = {
             "WebACL": {
                 "Rules": [
@@ -206,13 +198,11 @@ class TestDistributionUpdates:
         with patch.object(rotator, 'get_cloudfront_session') as mock_session:
             mock_client = MagicMock()
             mock_session.return_value = mock_client
-            
-            # When distribution is not deployed
+ 
             mock_client.get_distribution.return_value = {
                 "Distribution": {"Status": "InProgress"}
             }
 
-            # Then update should fail safely
             with pytest.raises(ValueError) as exc_info:
                 rotator.update_cfdistro("DIST1", "new-header-value")
             
@@ -312,16 +302,13 @@ class TestSecretManagement:
         ]
         mock_service_client.get_random_password.return_value = {"RandomPassword": "new-secret"}
 
-        # When creating a new secret
         rotator.create_secret(mock_service_client, "test-arn", "test-token")
 
-        # Then verify the sequence of operations
         mock_service_client.get_secret_value.assert_has_calls([
             call(SecretId="test-arn", VersionStage="AWSCURRENT"),
             call(SecretId="test-arn", VersionId="test-token", VersionStage="AWSPENDING")
         ], any_order=False)
 
-        # And verify the new secret was stored correctly
         mock_service_client.put_secret_value.assert_called_once_with(
             SecretId="test-arn",
             ClientRequestToken="test-token",
@@ -342,8 +329,7 @@ class TestSecretManagement:
             "get_secret_value"
         )
 
-        # When attempting to create a new secret
-        # Then it should fail with appropriate error
+        # When attempting to create a new secret it should fail with appropriate error
         with pytest.raises(ClientError) as exc_info:
             rotator.create_secret(mock_service_client, "test-arn", "test-token")
 
@@ -362,7 +348,6 @@ class TestRotationProcess:
         The set_secret method must update all components in the correct order to ensure
         zero-downtime rotation
         """
-        # Given deployed distributions and valid secrets
         mock_distributions = [
             {"Id": "DIST1", "Origin": "origin1.example.com"},
             {"Id": "DIST2", "Origin": "origin2.example.com"}
@@ -400,7 +385,6 @@ class TestRotationProcess:
             mock_get_distro_list.return_value = mock_distributions
             mock_get_cfdistro.return_value = mock_get_distro
 
-            # When setting the secret
             rotator.set_secret(mock_service_client, "test-arn", "test-token")
 
             # Then verify correct sequence and timing
@@ -414,10 +398,9 @@ class TestRotationProcess:
             assert mock_update_cfdistro.call_count == 2  # Both distributions updated
             operation_sequence.extend(['distro1_update', 'distro2_update'])
 
-            # Verify WAF was updated before distributions
             assert operation_sequence.index('waf_update') < operation_sequence.index('distro1_update')
             assert operation_sequence.index('propagation_wait') < operation_sequence.index('distro1_update')
-
+    
     def test_test_secret_validates_all_origins_with_both_secrets(self, rotator):
         """
         The test_secret phase must verify all origin servers accept both old and new secrets.
@@ -434,10 +417,8 @@ class TestRotationProcess:
                 "test-token": ["AWSPENDING"]
             }
         }
-        mock_distributions = [
-            {"Id": "DIST1", "Domain": "domain1.example.com"},
-            {"Id": "DIST2", "Domain": "domain2.example.com"}
-        ]
+        # Set the distro_list value in same format as it's passed to the rotator lambda
+        mock_distro_list = "domain1.example.com,domain2.example.com"
 
         mock_service_client = MagicMock()
         mock_service_client.get_secret_value.side_effect = [
@@ -446,16 +427,13 @@ class TestRotationProcess:
         ]
         mock_service_client.describe_secret.return_value = mock_metadata
 
-        with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
-             patch.object(rotator, 'run_test_origin_access') as mock_run_test_origin_access:
+        with patch.object(rotator, 'distro_list', mock_distro_list), \
+            patch.object(rotator, 'run_test_origin_access') as mock_run_test_origin_access:
             
-            mock_get_distro_list.return_value = mock_distributions
             mock_run_test_origin_access.return_value = True
 
-            # When testing the secrets
             rotator.run_test_secret(mock_service_client, "test-arn", "test-token")
 
-            # Then verify each origin was tested with both secrets
             expected_test_calls = [
                 call("http://domain1.example.com", "new-secret"),
                 call("http://domain1.example.com", "current-secret"),
@@ -464,9 +442,11 @@ class TestRotationProcess:
             ]
             mock_run_test_origin_access.assert_has_calls(expected_test_calls)
 
+
+
 class TestFinishSecretStage:
     """
-    Test this final stage moves the AWSPENDING secret to AWSCURRENT.
+    Test final_secret stage moves the AWSPENDING secret to AWSCURRENT.
     """
 
     def test_finish_secret_completes_rotation(self, rotator):
@@ -489,7 +469,6 @@ class TestFinishSecretStage:
             "test-token"
         )
 
-        # Verify proper staging update
         mock_service_client.update_secret_version_stage.assert_called_once_with(
             SecretId="test-arn",
             VersionStage="AWSCURRENT",
@@ -563,7 +542,6 @@ class TestErrorHandling:
              patch.object(rotator, 'update_wafacl') as mock_update_wafacl:
 
             mock_get_distro_list.return_value = mock_distributions
-            # Second distribution is not deployed
             mock_get_cfdistro.side_effect = [
                 {"Distribution": {"Status": "Deployed"}},
                 {"Distribution": {"Status": "InProgress"}}
@@ -572,7 +550,6 @@ class TestErrorHandling:
             with pytest.raises(ValueError) as exc_info:
                 rotator.set_secret(mock_service_client, "test-arn", "test-token")
 
-            # Verify no updates were attempted
             assert "status is not Deployed" in str(exc_info.value)
             mock_update_wafacl.assert_not_called()
 
@@ -615,10 +592,8 @@ class TestEdgeCases:
         2. Not attempt any distribution updates
         3. Complete successfully
         """
-        # Given no matching distributions
         mock_service_client = MagicMock()
         
-        # Mock the secrets
         mock_pending_secret = {
             "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
         }
@@ -645,16 +620,13 @@ class TestEdgeCases:
 
             mock_get_distro_list.return_value = []
             
-            # When setting the secret
             rotator.set_secret(mock_service_client, "test-arn", "test-token")
             
-            # Then WAF should be updated
             mock_update_wafacl.assert_called_once_with(
                 "new-secret",
                 "current-secret"
             )
             
-            # But no distribution updates should be attempted
             mock_update_cfdistro.assert_not_called()
 
     def test_handles_malformed_secret_data(self, rotator):
@@ -684,8 +656,8 @@ class TestLambdaHandler:
         
         with patch('boto3.client') as mock_boto3_client, \
              patch('rotate_secret_lambda.SecretRotator') as MockRotator:
-            mock_secrets = mock_boto3_client.return_value
-            mock_secrets.describe_secret.return_value = {
+            mock_service_client = mock_boto3_client.return_value
+            mock_service_client.describe_secret.return_value = {
                 "RotationEnabled": False
             }
 
@@ -708,11 +680,11 @@ class TestLambdaHandler:
         with patch('boto3.client') as mock_boto3_client, \
              patch('rotate_secret_lambda.SecretRotator') as MockRotator:
             
-            mock_secrets = mock_boto3_client.return_value
-            mock_secrets.describe_secret.return_value = {
+            mock_service_client = mock_boto3_client.return_value
+            mock_service_client.describe_secret.return_value = {
                 "RotationEnabled": True,
                 "VersionIdsToStages": {
-                    "test-token": ["AWSPENDING"]
+                    "test-token": "AWSPENDING"
                 }
             }
             
@@ -723,5 +695,100 @@ class TestLambdaHandler:
 
             # Verify correct step was called
             mock_rotator.create_secret.assert_called_once_with(
-                mock_secrets, "test-arn", "test-token"
+                mock_service_client, "test-arn", "test-token"
             )
+            
+            
+    def test_run_test_secret_with_test_domains(self, rotator):
+        """
+        Tests the testSecret step in the event.
+        """
+        event = {
+            "SecretId": "test-arn",
+            "ClientRequestToken": "test-token",
+            "Step": "testSecret"
+        }
+        
+        mock_pending_secret = {
+                "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
+            }
+
+        mock_current_secret = {
+            "SecretString": json.dumps({"HEADERVALUE": "current-secret"})
+        }
+
+        mock_metadata = {
+            "RotationEnabled": True,
+            "VersionIdsToStages": {
+                "current-token": ["AWSCURRENT"],
+                "test-token": ["AWSPENDING"]
+            }
+        }
+        
+        # Set the distro_list value in same format as it's passed to the rotator lambda
+        mock_distro_list = "service1.environment.testapp.domain.digital,service2.environment.testapp.domain.digital"
+
+        with patch.object(rotator, 'distro_list', mock_distro_list), \
+            patch('boto3.client') as mock_boto3_client, \
+            patch('rotate_secret_lambda.SecretRotator') as MockSecretRotator:
+
+            mock_service_client = mock_boto3_client.return_value
+            mock_rotator_instance = MockSecretRotator.return_value
+
+
+            # mocks calls made in get_secrets() method
+            mock_service_client.describe_secret.return_value = mock_metadata
+            mock_service_client.get_secret_value.side_effect = [
+                mock_pending_secret,
+                mock_current_secret
+            ]
+
+            from rotate_secret_lambda import lambda_handler
+            # triggers call to run_test_secret() method
+            lambda_handler(event, None)
+
+            assert mock_rotator_instance.run_test_secret.call_count == 1, (
+                f"Expected run_test_secret to be called once, but it was called {mock_rotator_instance.run_test_secret.call_count} times."
+            )
+
+            mock_rotator_instance.run_test_secret.assert_called_once_with(
+                mock_service_client, "test-arn", "test-token", []
+            )
+     
+    def test_run_test_secret_triggers_slack_message(self, rotator):
+        """
+        Tests the testSecret step with a TestDomains property in the event.
+        Verifies that slack notifications are triggered for test failures.
+        """
+        test_domains = [
+            "invalidservice1.environment.testapp.domain.digital",
+            "invalidservice2.environment.testapp.domain.digital"
+        ]
+        
+        mock_slack_instance = MagicMock()
+        rotator.slack_service = mock_slack_instance
+        
+            
+        rotator.run_test_secret(
+            service_client=MagicMock(),
+            arn="test-arn",
+            token="test-token",
+            test_domains=test_domains
+        )
+
+        expected_failures = [
+            {
+                'domain': 'invalidservice1.environment.testapp.domain.digital',
+                'error': 'Simulating test failure for domain: http://invalidservice1.environment.testapp.domain.digital'
+            },
+            {
+                'domain': 'invalidservice2.environment.testapp.domain.digital',
+                'error': 'Simulating test failure for domain: http://invalidservice2.environment.testapp.domain.digital'
+            }
+        ]
+        
+        mock_slack_instance.send_test_failures.assert_called_once_with(
+            failures=expected_failures,
+            environment=rotator.environment,
+            application=rotator.application
+        )
