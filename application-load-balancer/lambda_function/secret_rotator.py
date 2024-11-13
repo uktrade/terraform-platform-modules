@@ -409,7 +409,6 @@ class SecretRotator:
                         'error': str(e)
                     })
 
-
         if test_failures:
             if self.slack_service:
                 try:
