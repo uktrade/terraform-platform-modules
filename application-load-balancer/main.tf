@@ -2,8 +2,8 @@ data "aws_ssm_parameter" "slack_token" {
   name = "/codebuild/slack_oauth_token"
 }
 
-data "aws_ssm_parameter" "slack_channel_id" {
-  name = "/codebuild/slack_channel_id_test_command_output"
+data "aws_ssm_parameter" "slack_alert_channel_alb_secret_rotation" {
+  name = var.config.slack_alert_channel_alb_secret_rotation
 }
 
 data "aws_vpc" "vpc" {
@@ -189,8 +189,8 @@ resource "random_password" "origin-secret" {
 
 # Possible issue, when adding or changing a domain, secret is already deployed, rather than setting the search string here, it needs reading from secret manager
 resource "aws_wafv2_web_acl" "waf-acl" {
-  depends_on = [ data.aws_secretsmanager_secret_version.origin_verify_secret_version, random_password.origin-secret ]
-  
+  depends_on = [data.aws_secretsmanager_secret_version.origin_verify_secret_version, random_password.origin-secret]
+
   name        = "${var.application}-${var.environment}-ACL"
   description = "CloudFront Origin Verify"
   scope       = "REGIONAL"
@@ -285,6 +285,7 @@ data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
   version_id = aws_secretsmanager_secret_version.secret-value.version_id
 }
 
+# AWS Lambda Resources
 
 # IAM Role for Lambda Execution
 resource "aws_iam_role" "origin-secret-rotate-execution-role" {
@@ -355,12 +356,11 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
   tags = local.tags
 }
 
-# AWS Lambda Resources
 resource "null_resource" "lambda_dependencies" {
   triggers = {
     requirements = filemd5("${path.module}/lambda_function/requirements.txt")
   }
-  
+
   provisioner "local-exec" {
     interpreter = ["sh", "-c"]
     command     = "python3 -m pip install -r ${path.module}/lambda_function/requirements.txt -t ${path.module}/lambda_function"
@@ -374,8 +374,8 @@ resource "null_resource" "lambda_dependencies" {
 data "archive_file" "lambda" {
   type        = "zip"
   source_dir  = "${path.module}/lambda_function"
-  output_path = "${path.module}/lambda_function.zip"  # This zip contains only your function code
-  excludes    = [
+  output_path = "${path.module}/lambda_function.zip" # This zip contains only your function code
+  excludes = [
     "**/.DS_Store",
     "**/.idea/*"
   ]
@@ -399,17 +399,17 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
 
   environment {
     variables = {
-      WAFACLID     = aws_wafv2_web_acl.waf-acl.id
-      WAFACLNAME   = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
-      WAFRULEPRI   = "0"
-      DISTROIDLIST = local.domain_list
-      HEADERNAME   = local.secret_token_header_name
-      APPLICATION  = var.application
-      ENVIRONMENT  = var.environment
-      ROLEARN      = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
-      AWS_ACCOUNT = data.aws_caller_identity.current.account_id
-      SLACK_TOKEN  = data.aws_ssm_parameter.slack_token.value
-      SLACK_CHANNEL = data.aws_ssm_parameter.slack_channel_id.value
+      WAFACLID      = aws_wafv2_web_acl.waf-acl.id
+      WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
+      WAFRULEPRI    = "0"
+      DISTROIDLIST  = local.domain_list
+      HEADERNAME    = local.secret_token_header_name
+      APPLICATION   = var.application
+      ENVIRONMENT   = var.environment
+      ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+      AWS_ACCOUNT   = data.aws_caller_identity.current.account_id
+      SLACK_TOKEN   = data.aws_ssm_parameter.slack_token.value
+      SLACK_CHANNEL = data.aws_ssm_parameter.slack_alert_channel_alb_secret_rotation.value
     }
   }
 

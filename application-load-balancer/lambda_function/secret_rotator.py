@@ -32,7 +32,6 @@ class SecretRotator:
         self.environment = kwargs.get('environment', os.environ.get('ENVIRONMENT'))
         self.role_arn = kwargs.get('role_arn', os.environ.get('ROLEARN'))
         self.distro_list = kwargs.get('distro_list', os.environ.get('DISTROIDLIST'))
-        # self.cf_distros_aws_account = self._get_aws_account_from_role_arn(self.role_arn)
         self.aws_account = kwargs.get('aws_account', os.environ.get('AWS_ACCOUNT'))
         
         slack_token = kwargs.get('slack_token', os.environ.get('SLACK_TOKEN'))
