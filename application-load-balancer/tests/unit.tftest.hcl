@@ -41,12 +41,14 @@ variables {
   application = "app"
   environment = "env"
   vpc_name    = "vpc-name"
+  dns_account_id = "123456789012"
   config = {
     domain_prefix = "dom-prefix",
     cdn_domains_list = {
       "web.dev.my-application.uktrade.digital" : ["internal.web", "my-application.uktrade.digital"]
       "api.dev.my-application.uktrade.digital" : ["internal.api", "my-application.uktrade.digital"]
     }
+    slack_alert_channel_alb_secret_rotation = "/slack/test/ssm/parameter/name"
   }
 }
 
@@ -263,6 +265,7 @@ run "domain_length_validation_tests" {
     config = {
       domain_prefix    = "dom-prefix",
       cdn_domains_list = { "a-very-long-domain-name-used-to-test-length-validation.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
+      slack_alert_channel_alb_secret_rotation = "/slack/test/ssm/parameter/name"
     }
   }
 
@@ -271,17 +274,24 @@ run "domain_length_validation_tests" {
   ]
 }
 
-run "domain_length_validation_tests_succeed_with_empty_config" {
+run "domain_length_validation_tests_succeed_with_empty_cdn_domains_list_in_config" {
   command = plan
 
   variables {
     application = "app"
     environment = "env"
-    config      = {}
+    config      = {
+      slack_alert_channel_alb_secret_rotation = "/slack/test/ssm/parameter/name"
+    }
   }
 
   assert {
     condition     = var.config.cdn_domains_list == null
     error_message = "Should be: null"
+  }
+  
+  assert {
+    condition     = local.domain_list == ""
+    error_message = "Should be: \"\""
   }
 }
