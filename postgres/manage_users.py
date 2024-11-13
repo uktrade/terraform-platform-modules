@@ -12,15 +12,15 @@ def create_or_update_db_user(conn, cursor, username, password, permissions):
     cursor.execute(f"SELECT * FROM pg_catalog.pg_user WHERE usename = '{username}'")
 
     if cursor.fetchone() is not None:
-      update_db_user_password(conn, cursor, username, password)
+      update_db_user_password(conn, cursor, username, password)  
     else:
-      create_db_user(conn, cursor, username, password, permissions)
+      create_db_user(conn, cursor, username, password, permissions) 
 
 
 def update_db_user_password(conn, cursor, username, password):
     cursor.execute(f"ALTER USER {username} WITH ENCRYPTED PASSWORD '%s'" % password)
     conn.commit()
-
+    
 
 def create_db_user(conn, cursor, username, password, permissions):
     cursor.execute(f"CREATE USER {username} WITH ENCRYPTED PASSWORD '%s'" % password)
@@ -104,7 +104,7 @@ def handler(event, context):
     )
 
     cursor = conn.cursor()
-
+    
     create_or_update_db_user(conn, cursor, username, user_password, user_permissions)
     create_or_update_user_secret(ssm, user_secret_name, user_secret_string, event)
 
