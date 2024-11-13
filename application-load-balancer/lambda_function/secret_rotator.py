@@ -268,7 +268,7 @@ class SecretRotator:
                     VersionId=currenttoken,
                     VersionStage=AWSCURRENT
                 )
-                logger.info("Getting current version %s for %s" % (version, arn))
+                logger.info("Getting current version: %s" % (version))
                 break  # Found AWSCURRENT, exit loop
 
         if not current:
