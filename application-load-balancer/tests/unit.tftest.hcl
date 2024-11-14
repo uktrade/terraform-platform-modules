@@ -296,7 +296,7 @@ run "domain_length_validation_tests_succeed_with_empty_cdn_domains_list_in_confi
   }
 }
 
-run "aws_resources_test" {
+run "WAF & Rotate Lambda" {
   command = plan
   
    assert {
@@ -344,61 +344,73 @@ run "aws_resources_test" {
     error_message = "Invalid sampled_requests_enabled in visibility_config for aws_wafv2_web_acl.waf-acl"
   }
 
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].name == "${var.application}-${var.environment}-XOriginVerify"
-  #   error_message = "Invalid rule name for aws_wafv2_web_acl.waf-acl"
-  # }
+  assert {
+    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.name if r.name == "${var.application}-${var.environment}-XOriginVerify"]) == 1
+    error_message = "Invalid rule name for aws_wafv2_web_acl.waf-acl"
+  }
 
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].priority == "0"
-  #   error_message = "Invalid rule priority for aws_wafv2_web_acl.waf-acl"
-  # }
+  assert {
+    condition     = [for r in aws_wafv2_web_acl.waf-acl.rule : r.priority if r.name == "${var.application}-${var.environment}-XOriginVerify"][0] == 0
+    error_message = "Invalid priority for rule ${var.application}-${var.environment}-XOriginVerify in aws_wafv2_web_acl.waf-acl"
+  }
 
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].action.allow != null
-  #   error_message = "Invalid rule action for aws_wafv2_web_acl.waf-acl"
-  # }
+  assert {
+    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.action[0].allow if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.action[0].allow != null]) == 1
+    error_message = "Invalid rule action for aws_wafv2_web_acl.waf-acl"
+  }
 
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].visibility_config.cloudwatch_metrics_enabled == true
-  #   error_message = "Invalid visibility_config for aws_wafv2_web_acl.waf-acl rule"
-  # }
+  assert {
+    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.visibility_config[0] if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.visibility_config[0].cloudwatch_metrics_enabled == true]) == 1
+    error_message = "Invalid visibility_config for aws_wafv2_web_acl.waf-acl rule"
+  }
 
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].visibility_config.metric_name == var.application-var.environment-XMetric
-  #   error_message = "Invalid metric_name in visibility_config for aws_wafv2_web_acl.waf-acl rule"
-  # }
+  assert {
+    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.visibility_config[0] if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.visibility_config[0].metric_name == "${var.application}-${var.environment}-XMetric"]) == 1
+    error_message = "Invalid metric_name in visibility_config for aws_wafv2_web_acl.waf-acl rule"
+  }
 
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].visibility_config.sampled_requests_enabled == true
-  #   error_message = "Invalid sampled_requests_enabled in visibility_config for aws_wafv2_web_acl.waf-acl rule"
-  # }
+  assert {
+    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.visibility_config[0] if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.visibility_config[0].sampled_requests_enabled == true]) == 1
+    error_message = "Invalid sampled_requests_enabled in visibility_config for aws_wafv2_web_acl.waf-acl rule"
+  }
+  
+  # --- Testing of the WAF rule statement ---
+  
+  assert {
+    condition = alltrue([
+      for r in aws_wafv2_web_acl.waf-acl.rule :
+        length(r.statement[0].or_statement[0].statement) == 2 &&
+        r.statement[0].or_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name == local.secret_token_header_name &&
+        r.statement[0].or_statement[0].statement[1].byte_match_statement[0].field_to_match[0].single_header[0].name == local.secret_token_header_name
+    ])
+    error_message = "Invalid single_header name in aws_wafv2_web_acl.waf-acl rule"
+  }
+  
+  assert {
+    condition = alltrue([
+      for r in aws_wafv2_web_acl.waf-acl.rule :
+        length(r.statement[0].or_statement[0].statement) == 2 &&
+        r.statement[0].or_statement[0].statement[0].byte_match_statement[0].positional_constraint == "EXACTLY" &&
+        r.statement[0].or_statement[0].statement[1].byte_match_statement[0].positional_constraint == "EXACTLY"
+    ])
+    error_message = "Invalid positional_constraint in aws_wafv2_web_acl.waf-acl rule"
+  }
 
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].statement.or_statement.statement[0].byte_match_statement.field_to_match.single_header.name == local.secret_token_header_name
-  #   error_message = "Invalid field_to_match for aws_wafv2_web_acl.waf-acl rule"
-  # }
+# Cannot test for the search_string on a plan
+# Testing search_string from origin-secret (second statement)
+# assert {
+#   condition = alltrue([
+#     for r in aws_wafv2_web_acl.waf-acl.rule :
+#       # Ensure we have exactly 2 statements in or_statement
+#       length(r.statement[0].or_statement[0].statement) == 2 &&
+#       # Check if the second statement's search_string matches the expected value
+#       r.statement[0].or_statement[0].statement[1].byte_match_statement[0].search_string == random_password.origin-secret.result
+#   ])
+#   error_message = "Invalid search_string for origin-secret in the second byte_match_statement of aws_wafv2_web_acl.waf-acl rule"
+# } 
 
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].statement.or_statement.statement[0].byte_match_statement.positional_constraint == "EXACTLY"
-  #   error_message = "Invalid positional_constraint for aws_wafv2_web_acl.waf-acl rule"
-  # }
-
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].statement.or_statement.statement[0].byte_match_statement.search_string == jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
-  #   error_message = "Invalid search_string for aws_wafv2_web_acl.waf-acl rule"
-  # }
-
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].statement.or_statement.statement[0].byte_match_statement.text_transformation[0].priority == 0
-  #   error_message = "Invalid text_transformation for aws_wafv2_web_acl.waf-acl rule"
-  # }
-
-  # assert {
-  #   condition     = aws_wafv2_web_acl.waf-acl.rule[0].statement.or_statement.statement[0].byte_match_statement.text_transformation[0].type == "NONE"
-  #   error_message = "Invalid text_transformation type for aws_wafv2_web_acl.waf-acl rule"
-  # }
-
+  # --- End testing of the WAF rule statement ---
+  
   assert {
     condition     = aws_lambda_function.origin-secret-rotate-function.function_name == "${var.application}-${var.environment}-origin-secret-rotate"
     error_message = "Invalid name for aws_lambda_function.origin-secret-rotate-function"
@@ -516,11 +528,12 @@ run "aws_resources_test" {
     condition     = length(aws_iam_role.origin-secret-rotate-execution-role.inline_policy) == 1
     error_message = "Invalid number of inline_policies for aws_iam_role.origin-secret-rotate-execution-role"
   }
+  
+  assert {
+  condition     = length([for p in aws_iam_role.origin-secret-rotate-execution-role.inline_policy : p.name if p.name == "OriginVerifyRotatePolicy"]) == 1
+  error_message = "Invalid name for inline_policy of aws_iam_role.origin-secret-rotate-execution-role"
+}
 
-  # assert {
-  #   condition     = aws_iam_role.origin-secret-rotate-execution-role.inline_policy[0].name == "OriginVerifyRotatePolicy"
-  #   error_message = "Invalid name for inline_policy of aws_iam_role.origin-secret-rotate-execution-role"
-  # }
 
   # Cannot assert against the arn in a plan. Requires an apply to evaluate.
   # assert {
