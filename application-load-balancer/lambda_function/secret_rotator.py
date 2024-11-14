@@ -363,15 +363,14 @@ class SecretRotator:
         """Test the secret
         This method validates that the AWSPENDING secret works in the service.
         If any tests fail:
-        1. Attempts to send a Slack notification (notification failure won't stop the process)
-        2. Raises an error to stop the rotation (test failure will stop the process)
+        1. Attempts to send a Slack notification (notification failure won't stop the rotation process)
+        2. If Lambda event contains key TestDomains and provided domains to test, then you can trigger a Slack notification to the configured Slack channel
         """
         test_failures = []
-        print(f"TEST DOMAINS IN RUN TEST SECRET ----- {test_domains}")
         
-        # Check for test_domains key in the event 
+        # Check for TestDomains key in the Lambda event 
         if test_domains: 
-            print("DUMMY TEST DOMAINS EXIST!!!!!")
+            logger.info(f"TestDomains key exists in Lambda event - testing provided dummy domains only")
             for test_domain in test_domains:
                 logger.info(f"Testing dummy distro: %s", test_domain)
                 error_msg = f"Simulating test failure for domain: http://{test_domain}" 
@@ -382,9 +381,8 @@ class SecretRotator:
             pendingsecret, currentsecret = self.get_secrets(service_client, arn, token)
             secrets = [pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE']]
         
-            # Test all CF distributions on the ALB with both secrets
+            # Test all provided CF distributions on the ALB with both secrets
             distro_list =  self.distro_list.split(",")
-            logger.info(f"ALB DISTRO DOMAIN LIST: --- {distro_list}")
             for distro in distro_list:
                 logger.info(f"Testing distro: %s", distro)
                 try:
