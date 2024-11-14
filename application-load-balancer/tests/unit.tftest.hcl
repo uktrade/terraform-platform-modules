@@ -296,7 +296,7 @@ run "domain_length_validation_tests_succeed_with_empty_cdn_domains_list_in_confi
   }
 }
 
-run "WAF & Rotate Lambda" {
+run "waf_and_rotate_lambda" {
   command = plan
   
    assert {
