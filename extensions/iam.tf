@@ -11,11 +11,11 @@ data "aws_iam_policy_document" "codebase_deploy_pipeline_assume_role_policy" {
   statement {
     effect = "Allow"
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = ["arn:aws:iam::${var.args.pipeline_account_id}:root"]
     }
     condition {
-      test     = "StringLike"
+      test = "StringLike"
       values = [
         "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline",
         "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline-deploy-manifests"
@@ -156,7 +156,7 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
     resources = ["*"]
     condition {
       test     = "StringLike"
-      values = ["ecs-tasks.amazonaws.com"]
+      values   = ["ecs-tasks.amazonaws.com"]
       variable = "iam:PassedToService"
     }
   }

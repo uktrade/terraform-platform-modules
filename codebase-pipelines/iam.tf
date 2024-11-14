@@ -12,7 +12,7 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
     effect = "Allow"
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["codebuild.amazonaws.com"]
     }
 
@@ -245,7 +245,7 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
     effect = "Allow"
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["codepipeline.amazonaws.com"]
     }
 
