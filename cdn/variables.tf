@@ -40,4 +40,9 @@ variable "config" {
     ])
     error_message = "Items in cdn_domains_list should be between 3 and 63 characters long."
   }
+
+}
+
+variable "origin_verify_secret_id" { 
+  type = string 
 }

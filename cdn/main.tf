@@ -4,6 +4,10 @@ data "aws_wafv2_web_acl" "waf-default" {
   scope    = "CLOUDFRONT"
 }
 
+data "aws_secretsmanager_secret_version" "origin_verify_secret_version" { 
+  secret_id = var.origin_verify_secret_id 
+}
+
 resource "aws_acm_certificate" "certificate" {
   provider = aws.domain-cdn
   for_each = local.cdn_domains_list
@@ -65,8 +69,9 @@ resource "aws_cloudfront_distribution" "standard" {
       origin_read_timeout    = local.cdn_defaults.origin.custom_origin_config.cdn_timeout_seconds
     }
     custom_header {
-      name  = "x-origin-verify" # maybe have a var for this in locals
-      value = "rotate-me"
+      name  = local.secret_token_header_name
+      value = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
+
     }
   }
 

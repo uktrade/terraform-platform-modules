@@ -78,6 +78,8 @@ module "cdn" {
   }
   application = var.args.application
   environment = var.environment
+  
+  origin_verify_secret_id = module.alb.origin_verify_secret_id
 
   config = each.value
 }
