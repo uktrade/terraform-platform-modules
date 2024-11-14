@@ -13,6 +13,10 @@ variable "config" {
     cdn_domains_list        = optional(map(list(string)))
     additional_address_list = optional(list(string))
     enable_logging          = optional(bool)
+    cache_policy            = optional(map(string))
+    cache_policy_query_strings = optional(list(string))
+    #paths                   = optional(map(list(string)))
+    paths                   = optional(any)
 
     # CDN default overrides
     viewer_certificate_minimum_protocol_version = optional(string)
@@ -41,3 +45,19 @@ variable "config" {
     error_message = "Items in cdn_domains_list should be between 3 and 63 characters long."
   }
 }
+
+variable "paths" {
+  type = list(object({
+      path_pattern           = string
+  }))
+  default = [{
+    path_pattern = "/static"
+  }]
+}
+
+# variable "paths" {
+#   type = list(string
+#   )
+#   default = ["/static"
+#   ]
+# }

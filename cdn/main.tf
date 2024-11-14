@@ -40,6 +40,38 @@ resource "aws_route53_record" "validation-record" {
   ttl      = 300
 }
 
+# Temp VAR tbd
+variable "cache_policy_name" {
+  type    = list(string)
+  default = ["test-policy-jayesh", "great-base-cache"]
+}
+
+data "aws_cloudfront_cache_policy" "policy-name" {
+  provider        = aws.domain-cdn
+  #for_each = toset([var.config.cache_policy.name])
+  # Get this from platform-config.yml 
+  for_each = toset(var.cache_policy_name)
+  name = each.key
+  #name = "test-policy-jayesh"
+}
+
+# Temp VAR tbd
+variable "request_policy_name" {
+  type    = list(string)
+  default = ["great-base-origin-policy"]
+}
+
+data "aws_cloudfront_origin_request_policy" "request-policy-name" {
+  provider        = aws.domain-cdn
+  #for_each = toset([var.config.cache_policy.name])
+  # Get this from platform-config.yml 
+  for_each = toset(var.request_policy_name)
+  name = each.key
+  #name = "test-policy-jayesh"
+}
+
+
+
 resource "aws_cloudfront_distribution" "standard" {
   # checkov:skip=CKV_AWS_305:This is managed in the application.
   # checkov:skip=CKV_AWS_310:No fail-over origin required.
@@ -79,9 +111,25 @@ resource "aws_cloudfront_distribution" "standard" {
     }
     compress               = local.cdn_defaults.compress
     viewer_protocol_policy = local.cdn_defaults.viewer_protocol_policy
-    min_ttl                = 0
+    min_ttl                = 0 
     default_ttl            = 86400
     max_ttl                = 31536000
+  }
+
+    dynamic "ordered_cache_behavior" {
+      #for_each = each.key == "api.jayesh.demodjango.uktrade.digital" ? { for k, v in var.config.paths: k => v  if k == each.key } : {}
+      #for_each = var.config.paths["${each.key}"] != [] ? var.config.paths[each.key]["test-policy-jayesh"] : []
+      for_each = var.config.paths["${each.key}"] != [] ? { for k,v  in var.config.paths[each.key] : k => v } : {}
+      #for_each = coalesce(var.config.paths["${each.key}"], []) ? { for k,v  in var.config.paths[each.key] : k => v } : {}
+        content {
+          path_pattern           = ordered_cache_behavior.key
+          target_origin_id       = "${each.value[0]}.${local.domain_suffix}"
+          cache_policy_id  = data.aws_cloudfront_cache_policy.policy-name[ordered_cache_behavior.value["cache"]].id
+          origin_request_policy_id = data.aws_cloudfront_origin_request_policy.request-policy-name[ordered_cache_behavior.value["request"]].id
+          viewer_protocol_policy = "redirect-to-https"
+          allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+          cached_methods         = ["GET", "HEAD"]
+        }
   }
 
   viewer_certificate {
