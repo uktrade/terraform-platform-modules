@@ -55,7 +55,7 @@ resource "aws_kms_key" "artifact_store_kms_key" {
         "Sid" : "Enable IAM User Permissions",
         "Effect" : "Allow",
         "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" : [for id in local.deploy_account_ids : "arn:aws:iam::${id}:root"]
         },
         "Action" : "kms:*",
         "Resource" : "*"

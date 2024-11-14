@@ -243,7 +243,7 @@ data "aws_iam_policy_document" "ecs_access_for_codebuild_manifests" {
         "ecs:ListServices"
       ]
       resources = [
-        "arn:aws:ecs:${local.account_region}:service/${var.application}-${statement.value}/*"
+        "arn:aws:ecs:${local.account_region}:service/${var.application}-${statement.value.name}/*"
       ]
     }
   }
@@ -268,106 +268,26 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
   }
 }
 
-resource "aws_iam_role_policy" "ecr_access_for_codebase_pipeline" {
-  name   = "${var.application}-${var.codebase}-ecr-access-for-codebase-pipeline"
-  role   = aws_iam_role.codebase_deploy_pipeline.name
-  policy = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.json
+resource "aws_iam_role_policy" "assume_codebase_pipeline_environment_deploy_role" {
+  for_each = toset([for env in local.pipeline_environments : env.name])
+  name     = "${var.application}-${var.codebase}-assume-${each.value}-codebase-pipeline-deploy-role"
+  role     = aws_iam_role.codebase_deploy_pipeline.name
+  policy   = data.aws_iam_policy_document.assume_codebase_pipeline_environment_deploy_role.json
 }
 
-data "aws_iam_policy_document" "ecr_access_for_codebase_pipeline" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "ecr:DescribeImages"
-    ]
-    resources = [
-      aws_ecr_repository.this.arn
-    ]
-  }
-}
-
-resource "aws_iam_role_policy" "artifact_store_access_for_codebase_pipeline" {
-  name   = "${var.application}-${var.codebase}-artifact-store-access-for-codebase-pipeline"
-  role   = aws_iam_role.codebase_deploy_pipeline.name
-  policy = data.aws_iam_policy_document.access_artifact_store.json
-}
-
-resource "aws_iam_role_policy" "ecs_deploy_access_for_codebase_pipeline" {
-  name   = "${var.application}-${var.codebase}-ecs-deploy-access-for-codebase-pipeline"
-  role   = aws_iam_role.codebase_deploy_pipeline.name
-  policy = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.json
-}
-
-data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
+data "aws_iam_policy_document" "assume_codebase_pipeline_environment_deploy_role" {
   dynamic "statement" {
     for_each = local.pipeline_environments
+
     content {
+      effect = "Allow"
       actions = [
-        "ecs:UpdateService",
-        "ecs:DescribeServices",
-        "ecs:TagResource"
+        "sts:AssumeRole"
       ]
       resources = [
-        "arn:aws:ecs:${local.account_region}:cluster/${var.application}-${statement.value}",
-        "arn:aws:ecs:${local.account_region}:service/${var.application}-${statement.value}/*"
+        # TODO: Deploy this role to each environment
+        "arn:aws:iam::${statement.value.account.id}:role/${var.application}-${statement.value.name}-codebase-pipeline-deploy-role"
       ]
-    }
-  }
-
-  dynamic "statement" {
-    for_each = local.pipeline_environments
-    content {
-      actions = [
-        "ecs:DescribeTasks",
-        "ecs:TagResource"
-      ]
-      resources = [
-        "arn:aws:ecs:${local.account_region}:cluster/${var.application}-${statement.value}",
-        "arn:aws:ecs:${local.account_region}:task/${var.application}-${statement.value}/*"
-      ]
-    }
-  }
-
-  dynamic "statement" {
-    for_each = local.pipeline_environments
-    content {
-      actions = [
-        "ecs:RunTask",
-        "ecs:TagResource"
-      ]
-      resources = ["arn:aws:ecs:${local.account_region}:task-definition/${var.application}-${statement.value}-*:*"]
-    }
-  }
-
-  dynamic "statement" {
-    for_each = local.pipeline_environments
-    content {
-      actions = [
-        "ecs:ListTasks"
-      ]
-      resources = [
-        "arn:aws:ecs:${local.account_region}:container-instance/${var.application}-${statement.value}/*"
-      ]
-    }
-  }
-
-  statement {
-    actions = [
-      "ecs:RegisterTaskDefinition",
-      "ecs:DescribeTaskDefinition"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    actions = [
-      "iam:PassRole"
-    ]
-    resources = ["*"]
-    condition {
-      test     = "StringLike"
-      values   = ["ecs-tasks.amazonaws.com"]
-      variable = "iam:PassedToService"
     }
   }
 }

@@ -43,13 +43,6 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline
-  values = {
-    json = "{\"Sid\": \"CodePipelineECSDeploy\"}"
-  }
-}
-
-override_data {
   target = data.aws_iam_policy_document.assume_event_bridge_policy
   values = {
     json = "{\"Sid\": \"AssumeEventBridge\"}"
@@ -63,7 +56,34 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.assume_codebase_pipeline_environment_deploy_role
+  values = {
+    json = "{\"Sid\": \"AssumeEnvironmentDeployRole\"}"
+  }
+}
+
 variables {
+  env_config = {
+    "*" = {
+      accounts = {
+        deploy = {
+          name = "sandbox"
+          id   = "000123456789"
+        }
+      }
+    },
+    "dev"     = null,
+    "staging" = null,
+    "prod" = {
+      accounts = {
+        deploy = {
+          name = "prod"
+          id   = "123456789000"
+        }
+      }
+    }
+  }
   application               = "my-app"
   codebase                  = "my-codebase"
   repository                = "my-repository"
@@ -426,27 +446,27 @@ run "test_iam" {
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.name == "my-app-my-codebase-ecr-access-for-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-ecr-access-for-codebase-pipeline'"
+    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["dev"].name == "my-app-my-codebase-assume-dev-codebase-pipeline-deploy-role"
+    error_message = "Should be: 'my-app-my-codebase-assume-dev-codebase-pipeline-deploy-role'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
+    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["dev"].role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.name == "my-app-my-codebase-artifact-store-access-for-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-artifact-store-access-for-codebase-pipeline'"
+    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["staging"].name == "my-app-my-codebase-assume-staging-codebase-pipeline-deploy-role"
+    error_message = "Should be: 'my-app-my-codebase-assume-staging-codebase-pipeline-deploy-role'"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
+    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["staging"].role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecs_deploy_access_for_codebase_pipeline.name == "my-app-my-codebase-ecs-deploy-access-for-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-ecs-deploy-access-for-codebase-pipeline'"
+    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["prod"].name == "my-app-my-codebase-assume-prod-codebase-pipeline-deploy-role"
+    error_message = "Should be: 'my-app-my-codebase-assume-prod-codebase-pipeline-deploy-role'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecs_deploy_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
+    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["prod"].role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
 }
@@ -1285,4 +1305,9 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[4].run_order == 4
     error_message = "Run order incorrect"
   }
+
+#   assert {
+#     condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[4].run_order == 10
+#     error_message = jsonencode(local.test)
+#   }
 }
