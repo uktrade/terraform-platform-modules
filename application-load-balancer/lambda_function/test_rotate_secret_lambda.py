@@ -405,6 +405,11 @@ class TestRotationProcess:
         """
         The test_secret phase must verify all origin servers accept both old and new secrets.
         """
+        mock_distributions = [
+            {"Id": "DIST1", "Origin": "domain1.example.com"},
+            {"Id": "DIST2", "Origin": "domain2.example.com"}
+        ]
+        
         mock_pending_secret = {
             "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
         }
@@ -417,8 +422,8 @@ class TestRotationProcess:
                 "test-token": ["AWSPENDING"]
             }
         }
-        # Set the distro_list value in same format as it's passed to the rotator lambda
-        mock_distro_list = "domain1.example.com,domain2.example.com"
+        # # Set the distro_list value in same format as it's passed to the rotator lambda
+        # mock_distro_list = "domain1.example.com,domain2.example.com"
 
         mock_service_client = MagicMock()
         mock_service_client.get_secret_value.side_effect = [
@@ -427,9 +432,10 @@ class TestRotationProcess:
         ]
         mock_service_client.describe_secret.return_value = mock_metadata
 
-        with patch.object(rotator, 'distro_list', mock_distro_list), \
+        with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
             patch.object(rotator, 'run_test_origin_access') as mock_run_test_origin_access:
             
+            mock_get_distro_list.return_value = mock_distributions
             mock_run_test_origin_access.return_value = True
 
             rotator.run_test_secret(mock_service_client, "test-arn", "test-token")
