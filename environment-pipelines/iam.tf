@@ -875,7 +875,7 @@ data "aws_iam_policy_document" "iam" {
     actions = [
       "iam:UpdateAssumeRolePolicy"
     ]
-    resources = [for environment in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${environment.name}-shared-S3MigrationRole"]
+    resources = [for environment in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole"]
   }
 
   statement {

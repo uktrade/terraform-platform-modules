@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.8.0](https://github.com/uktrade/terraform-platform-modules/compare/5.7.1...5.8.0) (2024-11-13)
+
+
+### Features
+
+* DBTP-1502 - Terraform image build codebuild project ([#274](https://github.com/uktrade/terraform-platform-modules/issues/274)) ([4f44598](https://github.com/uktrade/terraform-platform-modules/commit/4f44598c84b943c2056cd60a395790855e9beb24))
+
+
+### Bug Fixes
+
+* DBTP-1534 - Assume role policy for the S3 migration were too strict so relaxing them ([#279](https://github.com/uktrade/terraform-platform-modules/issues/279)) ([3ea79ff](https://github.com/uktrade/terraform-platform-modules/commit/3ea79ff7e9a825870c2c8d3638f464fc649892c5))
+
 ## [5.7.1](https://github.com/uktrade/terraform-platform-modules/compare/5.7.0...5.7.1) (2024-11-08)
 
 
