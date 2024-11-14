@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.8.1](https://github.com/uktrade/terraform-platform-modules/compare/5.8.0...5.8.1) (2024-11-14)
+
+
+### Bug Fixes
+
+* DBTP-1534 Add S3MigrationRole to the resources allowed to add policies and roles ([#283](https://github.com/uktrade/terraform-platform-modules/issues/283)) ([0a4130e](https://github.com/uktrade/terraform-platform-modules/commit/0a4130ed37cb16a05ea8f1b6ddebe4d05b2d6183))
+
 ## [5.8.0](https://github.com/uktrade/terraform-platform-modules/compare/5.7.1...5.8.0) (2024-11-13)
 
 
