@@ -11,13 +11,16 @@ data "aws_iam_policy_document" "codebase_deploy_pipeline_assume_role_policy" {
   statement {
     effect = "Allow"
     principals {
-      type        = "AWS"
+      type = "AWS"
       identifiers = ["arn:aws:iam::${var.args.pipeline_account_id}:root"]
     }
     condition {
-      test     = "StringEquals"
-      values = ["codepipeline.amazonaws.com"]
-      variable = "aws:UserAgent"
+      test     = "StringLike"
+      values = [
+        "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline",
+        "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline-deploy-manifests"
+      ]
+      variable = "aws:PrincipalArn"
     }
     actions = ["sts:AssumeRole"]
   }
@@ -36,7 +39,7 @@ data "aws_iam_policy_document" "ecr_access_for_codebase_pipeline" {
       "ecr:DescribeImages"
     ]
     resources = [
-      "arn:aws:ecr:${var.args.pipeline_account_id}:repository/${var.args.application}/*"
+      "arn:aws:ecr:${data.aws_region.current.name}:${var.args.pipeline_account_id}:repository/${var.args.application}/*"
     ]
   }
 }
@@ -99,7 +102,8 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
     actions = [
       "ecs:UpdateService",
       "ecs:DescribeServices",
-      "ecs:TagResource"
+      "ecs:TagResource",
+      "ecs:ListServices"
     ]
     resources = [
       "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.args.application}-${var.environment}",
