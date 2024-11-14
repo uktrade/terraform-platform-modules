@@ -3,6 +3,7 @@ variable "args" {
     application    = string,
     services       = any,
     dns_account_id = string
+    pipeline_account_id = string
   })
 }
 

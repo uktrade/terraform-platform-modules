@@ -10,12 +10,15 @@ resource "aws_iam_role" "codebase_pipeline_deploy_role" {
 data "aws_iam_policy_document" "codebase_deploy_pipeline_assume_role_policy" {
   statement {
     effect = "Allow"
-
     principals {
       type        = "AWS"
-      identifiers = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.args.application}-*-codebase-pipeline"
+      identifiers = ["arn:aws:iam::${var.args.pipeline_account_id}:root"]
     }
-
+    condition {
+      test     = "StringEquals"
+      values = ["codepipeline.amazonaws.com"]
+      variable = "aws:UserAgent"
+    }
     actions = ["sts:AssumeRole"]
   }
 }
@@ -33,7 +36,7 @@ data "aws_iam_policy_document" "ecr_access_for_codebase_pipeline" {
       "ecr:DescribeImages"
     ]
     resources = [
-      "arn:aws:ecr:${local.region_account}:repository/${var.args.application}/*"
+      "arn:aws:ecr:${var.args.pipeline_account_id}:repository/${var.args.application}/*"
     ]
   }
 }
@@ -49,7 +52,6 @@ data "aws_iam_policy_document" "access_artifact_store" {
   # checkov:skip=CKV_AWS_356:Permissions required to upload artifacts
   statement {
     effect = "Allow"
-
     actions = [
       "s3:GetObject",
       "s3:GetObjectVersion",
@@ -57,7 +59,6 @@ data "aws_iam_policy_document" "access_artifact_store" {
       "s3:PutObjectAcl",
       "s3:PutObject",
     ]
-
     resources = [
       "arn:aws:s3:::${var.args.application}-*-codebase-pipeline-artifact-store/*",
       "arn:aws:s3:::${var.args.application}-*-codebase-pipeline-artifact-store"
@@ -82,7 +83,7 @@ data "aws_iam_policy_document" "access_artifact_store" {
       "kms:Decrypt"
     ]
     resources = [
-      "arn:aws:kms:${local.region_account}:key/*"
+      "arn:aws:kms:${data.aws_region.current.name}:${var.args.pipeline_account_id}:key/*"
     ]
   }
 }
@@ -101,8 +102,8 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
       "ecs:TagResource"
     ]
     resources = [
-      "arn:aws:ecs:${local.region_account}:cluster/${var.args.application}-${var.environment}",
-      "arn:aws:ecs:${local.region_account}:service/${var.args.application}-${var.environment}/*"
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.args.application}-${var.environment}",
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.args.application}-${var.environment}/*"
     ]
   }
 
@@ -112,8 +113,8 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
       "ecs:TagResource"
     ]
     resources = [
-      "arn:aws:ecs:${local.region_account}:cluster/${var.args.application}-${var.environment}",
-      "arn:aws:ecs:${local.region_account}:task/${var.args.application}-${var.environment}/*"
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.args.application}-${var.environment}",
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/${var.args.application}-${var.environment}/*"
     ]
   }
 
@@ -123,7 +124,7 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
       "ecs:TagResource"
     ]
     resources = [
-      "arn:aws:ecs:${local.region_account}:task-definition/${var.args.application}-${var.environment}-*:*"
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/${var.args.application}-${var.environment}-*:*"
     ]
   }
 
@@ -132,7 +133,7 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
       "ecs:ListTasks"
     ]
     resources = [
-      "arn:aws:ecs:${local.region_account}:container-instance/${var.args.application}-${var.environment}/*"
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container-instance/${var.args.application}-${var.environment}/*"
     ]
   }
 
