@@ -381,20 +381,19 @@ class SecretRotator:
             pendingsecret, currentsecret = self.get_secrets(service_client, arn, token)
             secrets = [pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE']]
         
-            # Test all provided CF distributions on the ALB with both secrets
-            distro_list =  self.distro_list.split(",")
+            distro_list = self.get_distro_list()
             for distro in distro_list:
-                logger.info(f"Testing distro: %s", distro)
+                logger.info(f"Testing distro: %s", distro["Id"])
                 try:
                     for s in secrets:
-                        if self.run_test_origin_access("http://" + distro, s):
-                            logger.info("Domain ok for http://%s" % distro)
+                        if self.run_test_origin_access("http://" + distro["Domain"], s):
+                            logger.info("Domain ok for http://%s" % distro["Domain"])
                             pass
                         else:
-                            error_msg = f"Tests failed for URL, http://{distro}"
+                            error_msg = f"Tests failed for URL, http://{distro["Domain"]}"
                             logger.error(error_msg)
                             test_failures.append({
-                                'domain': distro,
+                                'domain': distro["Domain"],
                                 'secret_type': 'PENDING' if s == pendingsecret['HEADERVALUE'] else 'CURRENT',
                                 'error': 'Connection failed or non-200 response'
                             })
@@ -402,7 +401,7 @@ class SecretRotator:
                     error_msg = f"Error testing {distro}: {str(e)}"
                     logger.error(error_msg)
                     test_failures.append({
-                        'domain': distro,
+                        'domain': distro["Domain"],
                         'error': str(e)
                     })
 

@@ -406,8 +406,8 @@ class TestRotationProcess:
         The test_secret phase must verify all origin servers accept both old and new secrets.
         """
         mock_distributions = [
-            {"Id": "DIST1", "Origin": "domain1.example.com"},
-            {"Id": "DIST2", "Origin": "domain2.example.com"}
+            {"Id": "DIST1", "Domain": "domain1.example.com"},
+            {"Id": "DIST2", "Domain": "domain2.example.com"}
         ]
         
         mock_pending_secret = {
@@ -422,8 +422,6 @@ class TestRotationProcess:
                 "test-token": ["AWSPENDING"]
             }
         }
-        # # Set the distro_list value in same format as it's passed to the rotator lambda
-        # mock_distro_list = "domain1.example.com,domain2.example.com"
 
         mock_service_client = MagicMock()
         mock_service_client.get_secret_value.side_effect = [
@@ -714,6 +712,10 @@ class TestLambdaHandler:
             "ClientRequestToken": "test-token",
             "Step": "testSecret"
         }
+        mock_distributions = [
+            {"Id": "DIST1", "Origin": "domain1.example.com"},
+            {"Id": "DIST2", "Origin": "domain2.example.com"}
+        ]
         
         mock_pending_secret = {
                 "SecretString": json.dumps({"HEADERVALUE": "new-secret"})
@@ -730,16 +732,14 @@ class TestLambdaHandler:
                 "test-token": ["AWSPENDING"]
             }
         }
-        
-        # Set the distro_list value in same format as it's passed to the rotator lambda
-        mock_distro_list = "service1.environment.testapp.domain.digital,service2.environment.testapp.domain.digital"
 
-        with patch.object(rotator, 'distro_list', mock_distro_list), \
+        with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
             patch('boto3.client') as mock_boto3_client, \
             patch('rotate_secret_lambda.SecretRotator') as MockSecretRotator:
 
             mock_service_client = mock_boto3_client.return_value
             mock_rotator_instance = MockSecretRotator.return_value
+            mock_get_distro_list.return_value = mock_distributions
 
 
             # mocks calls made in get_secrets() method
