@@ -57,7 +57,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
         ProjectName = "${var.application}-${var.codebase}-${each.value.name}-codebase-deploy-manifests"
         EnvironmentVariables : jsonencode([
           { name : "APPLICATION", value : var.application },
-          { name : "ENVIRONMENTS", value : jsonencode([for env in each.value.environments : env.name]) },
+          { name : "ENVIRONMENTS", value : jsonencode([for env in each.value.environments : env]) },
           { name : "SERVICES", value : jsonencode(local.services) },
           { name : "REPOSITORY_URL", value : "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}" },
           { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" }
@@ -98,7 +98,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
             ServiceName = "#{build_manifest.SERVICE_NAME_${upper(stage.value.name)}_${upper(replace(action.value.name, "-", "_"))}}"
             FileName    = "image-definitions-${action.value.name}.json"
           }
-          role_arn = stage.value.name == "hotfix" ? "arn:aws:iam::891377058512:role/demodjango-prod-codebase-pipeline-assume-role" : null
+          role_arn = "arn:aws:iam::${stage.value.account.id}:role/${var.application}-${stage.value.name}-codebase-pipeline-deploy-role"
         }
       }
     }

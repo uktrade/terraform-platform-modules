@@ -9,8 +9,16 @@ phases:
   build:
     commands:
       - set -e
-      - for env in $(echo $ENVIRONMENTS | jq -c -r '.[]');
+      - for env in $(echo $ENVIRONMENTS | jq -c -r '.[].name');
         do
+          unset AWS_ACCESS_KEY_ID;
+          unset AWS_SECRET_ACCESS_KEY;
+          unset AWS_SESSION_TOKEN;
+          ACCOUNT_ID=$(echo $ENVIRONMENTS | jq -c -r '.[] | select(.name=='\"$env\"').account.id');
+          assumed_role=$(aws sts assume-role --role-arn "arn:aws:iam::$ACCOUNT_ID:role/$APPLICATION-$env-codebase-pipeline-deploy-role" --role-session-name "$env-codebase-pipeline-deploy");
+          export AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId);
+          export AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey);
+          export AWS_SESSION_TOKEN=$(echo $assumed_role | jq -r .Credentials.SessionToken);
           EXPORT_ENV=$(echo $env | tr '[:lower:]' '[:upper:]');
           export CLUSTER_NAME_$EXPORT_ENV="$APPLICATION-$env";
           for svc in $(echo $SERVICES | jq -c -r '.[]');
