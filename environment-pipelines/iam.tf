@@ -858,7 +858,8 @@ data "aws_iam_policy_document" "iam" {
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-CFNExecutionRole",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole",
       ]
     }
   }
@@ -875,7 +876,9 @@ data "aws_iam_policy_document" "iam" {
     actions = [
       "iam:UpdateAssumeRolePolicy"
     ]
-    resources = [for environment in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole"]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole"
+    ]
   }
 
   statement {
