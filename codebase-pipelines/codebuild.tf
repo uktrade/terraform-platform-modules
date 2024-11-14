@@ -120,7 +120,7 @@ resource "aws_codebuild_project" "codebase_deploy_manifests" {
   name           = "${var.application}-${var.codebase}-${each.value.name}-codebase-deploy-manifests"
   description    = "Create image deploy manifests to deploy services"
   build_timeout  = 5
-  service_role   = aws_iam_role.codebuild_manifests.arn
+  service_role   = aws_iam_role.codebase_deploy_manifests.arn
   encryption_key = aws_kms_key.artifact_store_kms_key.arn
 
   artifacts {

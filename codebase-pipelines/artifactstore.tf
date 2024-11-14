@@ -12,16 +12,13 @@ resource "aws_s3_bucket" "artifact_store" {
 data "aws_iam_policy_document" "artifact_store_bucket_policy" {
   statement {
     principals {
-      type        = "*"
+      type = "*"
       identifiers = ["*"]
     }
-
     actions = [
-      "s3:*",
+      "s3:*"
     ]
-
     effect = "Deny"
-
     condition {
       test     = "Bool"
       variable = "aws:SecureTransport"
@@ -30,7 +27,24 @@ data "aws_iam_policy_document" "artifact_store_bucket_policy" {
         "false",
       ]
     }
+    resources = [
+      aws_s3_bucket.artifact_store.arn,
+      "${aws_s3_bucket.artifact_store.arn}/*",
+    ]
+  }
 
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [
+        for env in local.pipeline_environments :
+        "arn:aws:iam::${env.account.id}:role/${var.application}-${env.name}-codebase-pipeline-deploy-role"
+      ]
+    }
+    actions = [
+      "s3:*"
+    ]
     resources = [
       aws_s3_bucket.artifact_store.arn,
       "${aws_s3_bucket.artifact_store.arn}/*",
@@ -66,7 +80,7 @@ resource "aws_kms_key" "artifact_store_kms_key" {
 }
 
 resource "aws_kms_alias" "artifact_store_kms_alias" {
-  depends_on    = [aws_kms_key.artifact_store_kms_key]
+  depends_on = [aws_kms_key.artifact_store_kms_key]
   name          = "alias/${var.application}-${var.codebase}-codebase-pipeline-artifact-store-key"
   target_key_id = aws_kms_key.artifact_store_kms_key.id
 }

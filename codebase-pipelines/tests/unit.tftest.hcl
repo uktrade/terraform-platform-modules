@@ -15,7 +15,7 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.ecr_access_for_codebuild_images
+  target = data.aws_iam_policy_document.ecr_access_for_codebase_image_build
   values = {
     json = "{\"Sid\": \"CodeBuildImageECRAccess\"}"
   }
@@ -36,13 +36,6 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.ecs_access_for_codebuild_manifests
-  values = {
-    json = "{\"Sid\": \"CodeBuildDeployManifestECS\"}"
-  }
-}
-
-override_data {
   target = data.aws_iam_policy_document.assume_event_bridge_policy
   values = {
     json = "{\"Sid\": \"AssumeEventBridge\"}"
@@ -57,7 +50,7 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.assume_codebase_pipeline_environment_deploy_role
+  target = data.aws_iam_policy_document.assume_environment_deploy_role
   values = {
     json = "{\"Sid\": \"AssumeEnvironmentDeployRole\"}"
   }
@@ -358,8 +351,8 @@ run "test_iam" {
 
   # CodeBuild image build
   assert {
-    condition     = aws_iam_role.codebase_image_build.name == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_iam_role.codebase_image_build.name == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
     condition     = aws_iam_role.codebase_image_build.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
@@ -370,66 +363,58 @@ run "test_iam" {
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_images.name == "my-app-my-codebase-log-access-for-codebuild-images"
-    error_message = "Should be: 'my-app-my-codebase-log-access-for-codebuild-images'"
+    condition     = aws_iam_role_policy.log_access_for_codebase_image_build.name == "my-app-my-codebase-log-access-for-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-log-access-for-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_images.role == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_iam_role_policy.log_access_for_codebase_image_build.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.name == "my-app-my-codebase-ecr-access-for-codebuild-images"
-    error_message = "Should be: 'my-app-my-codebase-ecr-access-for-codebuild-images'"
+    condition     = aws_iam_role_policy.ecr_access_for_codebase_image_build.name == "my-app-my-codebase-ecr-access-for-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-ecr-access-for-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.role == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_iam_role_policy.ecr_access_for_codebase_image_build.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
     condition     = aws_iam_role_policy.codestar_connection_access.name == "codestar-connection-policy"
     error_message = "Should be: 'codestar-connection-policy'"
   }
   assert {
-    condition     = aws_iam_role_policy.codestar_connection_access.role == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_iam_role_policy.codestar_connection_access.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
 
   # CodeBuild deploy manifests
   assert {
-    condition     = aws_iam_role.codebuild_manifests.name == "my-app-my-codebase-codebase-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
+    condition     = aws_iam_role.codebase_deploy_manifests.name == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
   }
   assert {
-    condition     = aws_iam_role.codebuild_manifests.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
+    condition     = aws_iam_role.codebase_deploy_manifests.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
     error_message = "Should be: {\"Sid\": \"AssumeCodebuildRole\"}"
   }
   assert {
-    condition     = jsonencode(aws_iam_role.codebuild_manifests.tags) == jsonencode(var.expected_tags)
+    condition     = jsonencode(aws_iam_role.codebase_deploy_manifests.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.name == "my-app-my-codebase-artifact-store-access-for-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-artifact-store-access-for-codebuild-manifests'"
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.name == "my-app-my-codebase-artifact-store-access-for-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-artifact-store-access-for-codebase-pipeline-deploy-manifests'"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.name == "my-app-my-codebase-log-access-for-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-log-access-for-codebuild-manifests'"
+    condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.name == "my-app-my-codebase-log-access-for-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-log-access-for-codebase-pipeline-deploy-manifests'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.ecs_access_for_codebuild_manifests.name == "my-app-my-codebase-ecs-access-for-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-ecs-access-for-codebuild-manifests'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.ecs_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
+    condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
   }
 
   # CodePipeline
@@ -446,27 +431,11 @@ run "test_iam" {
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["dev"].name == "my-app-my-codebase-assume-dev-codebase-pipeline-deploy-role"
-    error_message = "Should be: 'my-app-my-codebase-assume-dev-codebase-pipeline-deploy-role'"
+    condition     = aws_iam_role_policy.pipeline_assume_environment_deploy_role.name == "my-app-my-codebase-assume-environment-codebase-pipeline-deploy-role"
+    error_message = "Should be: 'my-app-my-codebase-assume-environment-codebase-pipeline-deploy-role'"
   }
   assert {
-    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["dev"].role == "my-app-my-codebase-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["staging"].name == "my-app-my-codebase-assume-staging-codebase-pipeline-deploy-role"
-    error_message = "Should be: 'my-app-my-codebase-assume-staging-codebase-pipeline-deploy-role'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["staging"].role == "my-app-my-codebase-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["prod"].name == "my-app-my-codebase-assume-prod-codebase-pipeline-deploy-role"
-    error_message = "Should be: 'my-app-my-codebase-assume-prod-codebase-pipeline-deploy-role'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.assume_codebase_pipeline_environment_deploy_role["prod"].role == "my-app-my-codebase-codebase-pipeline"
+    condition     = aws_iam_role_policy.pipeline_assume_environment_deploy_role.role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
 }
@@ -692,7 +661,7 @@ run "test_main_pipeline" {
     error_message = "Should be: my-app-my-codebase-main-codebase-deploy-manifests"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -803,7 +772,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: my-app-my-codebase-tagged-codebase-deploy-manifests"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"staging\\\",\\\"prod\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"staging\\\",\\\"requires_approval\\\":null},{\\\"account\\\":{\\\"id\\\":\\\"123456789000\\\",\\\"name\\\":\\\"prod\\\"},\\\"name\\\":\\\"prod\\\",\\\"requires_approval\\\":true}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1013,7 +982,7 @@ run "test_pipeline_single_run_group" {
   }
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1090,7 +1059,7 @@ run "test_pipeline_multiple_run_groups" {
   }
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\",\\\"service-5\\\",\\\"service-6\\\",\\\"service-7\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\",\\\"service-5\\\",\\\"service-6\\\",\\\"service-7\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1200,7 +1169,7 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
   }
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\",\\\"prod\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null},{\\\"account\\\":{\\\"id\\\":\\\"123456789000\\\",\\\"name\\\":\\\"prod\\\"},\\\"name\\\":\\\"prod\\\",\\\"requires_approval\\\":true}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1305,9 +1274,4 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[4].run_order == 4
     error_message = "Run order incorrect"
   }
-
-#   assert {
-#     condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[4].run_order == 10
-#     error_message = jsonencode(local.test)
-#   }
 }
