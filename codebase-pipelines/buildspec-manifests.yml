@@ -23,13 +23,11 @@ phases:
           export CLUSTER_NAME_$EXPORT_ENV="$APPLICATION-$env";
           for svc in $(echo $SERVICES | jq -c -r '.[]');
           do
-            if [ ! -f image-definitions-$svc.json ]; then
-              echo '[{"name":"'$svc'","imageUri":"'$REPOSITORY_URL':'$IMAGE_TAG'"}]' > image-definitions-$svc.json;
-              SERVICE_NAME=$(aws ecs list-services --cluster $APPLICATION-$env | jq -r '.serviceArns[] | select(contains("'$APPLICATION-$env'-'$svc'-Service"))');       
-              EXPORT_SVC="$(echo $EXPORT_ENV'_'$svc | tr - _ | tr '[:lower:]' '[:upper:]')";
-              export SERVICE_NAME_$EXPORT_SVC=$(echo $SERVICE_NAME | cut -d '/' -f3);
-              cat image-definitions-$svc.json;
-            fi
+            echo '[{"name":"'$svc'","imageUri":"'$REPOSITORY_URL':'$IMAGE_TAG'"}]' > image-definitions-$svc.json;
+            SERVICE_NAME=$(aws ecs list-services --cluster $APPLICATION-$env | jq -r '.serviceArns[] | select(contains("'$APPLICATION-$env'-'$svc'-Service"))');       
+            EXPORT_SVC="$(echo $EXPORT_ENV'_'$svc | tr - _ | tr '[:lower:]' '[:upper:]')";
+            export SERVICE_NAME_$EXPORT_SVC=$(echo $SERVICE_NAME | cut -d '/' -f3);
+            cat image-definitions-$svc.json;
           done
         done
 
