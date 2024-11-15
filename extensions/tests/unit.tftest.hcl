@@ -33,7 +33,8 @@ variables {
         }
       }
     },
-    dns_account_id = "123456"
+    dns_account_id      = "123456"
+    pipeline_account_id = "000123456789"
   }
   application = "test-application"
   environment = "test-environment"
@@ -214,7 +215,8 @@ run "opensearch_plan_medium_ha_service_test" {
           }
         }
       },
-      dns_account_id = "123456"
+      dns_account_id      = "123456"
+      pipeline_account_id = "000123456789"
     }
     environment = "test-environment"
     vpc_name    = "test-vpc"
@@ -255,5 +257,84 @@ run "opensearch_plan_medium_ha_service_test" {
   assert {
     condition     = output.resolved_config.test-opensearch.volume_size == 512
     error_message = "Should be: 512"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.codebase_deploy_pipeline_assume_role_policy
+  values = {
+    json = "{\"Sid\": \"CodeBaseDeployAssumeRole\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline
+  values = {
+    json = "{\"Sid\": \"ECSDeployAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.access_artifact_store
+  values = {
+    json = "{\"Sid\": \"ArtifactStoreAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline
+  values = {
+    json = "{\"Sid\": \"ECSDeployAccess\"}"
+  }
+}
+
+run "codebase_deploy_iam_test" {
+  command = plan
+
+  variables {
+    expected_tags = {
+      application         = var.args.application
+      environment         = var.environment
+      managed-by          = "DBT Platform - Terraform"
+      copilot-application = var.args.application
+      copilot-environment = var.environment
+    }
+  }
+
+  assert {
+    condition     = aws_iam_role.codebase_pipeline_deploy_role.name == "test-application-test-environment-codebase-pipeline-deploy-role"
+    error_message = "Should be: 'test-application-test-environment-codebase-pipeline-deploy-role'"
+  }
+  assert {
+    condition     = aws_iam_role.codebase_pipeline_deploy_role.assume_role_policy == "{\"Sid\": \"CodeBaseDeployAssumeRole\"}"
+    error_message = "Should be: {\"Sid\": \"CodeBaseDeployAssumeRole\"}"
+  }
+  assert {
+    condition     = jsonencode(aws_iam_role.codebase_pipeline_deploy_role.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.name == "test-application-ecr-access-for-codebase-pipeline"
+    error_message = "Should be: 'test-application-ecr-access-for-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.role == "test-application-test-environment-codebase-pipeline-deploy-role"
+    error_message = "Should be: 'test-application-test-environment-codebase-pipeline-deploy-role'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.name == "test-application-artifact-store-access-for-codebase-pipeline"
+    error_message = "Should be: 'test-application-artifact-store-access-for-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.role == "test-application-test-environment-codebase-pipeline-deploy-role"
+    error_message = "Should be: 'test-application-test-environment-codebase-pipeline-deploy-role'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecs_deploy_access_for_codebase_pipeline.name == "test-application-ecs-deploy-access-for-codebase-pipeline"
+    error_message = "Should be: 'test-application-ecs-deploy-access-for-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecs_deploy_access_for_codebase_pipeline.role == "test-application-test-environment-codebase-pipeline-deploy-role"
+    error_message = "Should be: 'test-application-test-environment-codebase-pipeline-deploy-role'"
   }
 }

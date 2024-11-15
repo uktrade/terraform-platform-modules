@@ -146,7 +146,7 @@ run "test_artifact_store" {
     error_message = "Should be: alias/my-app-my-codebase-codebase-pipeline-artifact-store-key"
   }
   assert {
-    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].condition : true if el.variable == "aws:SecureTransport"][0] == true
+    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].condition : el.variable][0] == "aws:SecureTransport"
     error_message = "Should be: aws:SecureTransport"
   }
   assert {
@@ -154,7 +154,19 @@ run "test_artifact_store" {
     error_message = "Should be: Deny"
   }
   assert {
-    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].actions : true if el == "s3:*"][0] == true
+    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].actions : el][0] == "s3:*"
+    error_message = "Should be: s3:*"
+  }
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].principals : el.type][0] == "AWS"
+    error_message = "Should be: AWS"
+  }
+  assert {
+    condition     = flatten([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy-role", "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy-role", "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy-role"]
+    error_message = "Bucket policy principals incorrect"
+  }
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].actions : el][0] == "s3:*"
     error_message = "Should be: s3:*"
   }
 }
@@ -416,6 +428,14 @@ run "test_iam" {
     condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
   }
+  assert {
+    condition     = aws_iam_role_policy.codebuild_assume_environment_deploy_role.name == "my-app-my-codebase-environment-deploy-role-access-for-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-environment-deploy-role-access-for-codebase-pipeline-deploy-manifests'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.codebuild_assume_environment_deploy_role.role == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
+  }
 
   # CodePipeline
   assert {
@@ -429,6 +449,22 @@ run "test_iam" {
   assert {
     condition     = jsonencode(aws_iam_role.codebase_deploy_pipeline.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.name == "my-app-my-codebase-ecr-access-for-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-ecr-access-for-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.name == "my-app-my-codebase-artifact-store-access-for-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-artifact-store-access-for-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
   assert {
     condition     = aws_iam_role_policy.pipeline_assume_environment_deploy_role.name == "my-app-my-codebase-assume-environment-codebase-pipeline-deploy-role"
@@ -511,12 +547,10 @@ run "test_codebuild_manifests" {
     condition     = aws_kms_key.codebuild_kms_key.description == "KMS Key for my-app my-codebase CodeBuild encryption"
     error_message = "Should be: KMS Key for my-app my-codebase CodeBuild encryption"
   }
-
   assert {
     condition     = aws_kms_key.codebuild_kms_key.enable_key_rotation == true
     error_message = "Should be: true"
   }
-
   assert {
     condition     = jsonencode(aws_kms_key.codebuild_kms_key.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
@@ -705,6 +739,10 @@ run "test_main_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].role_arn == "arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy-role"
+    error_message = "Role ARN incorrect"
+  }
+  assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_DEV}"
     error_message = "Configuration ClusterName incorrect"
   }
@@ -725,6 +763,10 @@ run "test_main_pipeline" {
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].run_order == 3
     error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].role_arn == "arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy-role"
+    error_message = "Role ARN incorrect"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_DEV}"
@@ -792,6 +834,10 @@ run "test_tagged_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].role_arn == "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy-role"
+    error_message = "Role ARN incorrect"
+  }
+  assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_STAGING}"
     error_message = "Configuration ClusterName incorrect"
   }
@@ -812,6 +858,10 @@ run "test_tagged_pipeline" {
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].run_order == 3
     error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].role_arn == "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy-role"
+    error_message = "Role ARN incorrect"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_STAGING}"
@@ -868,6 +918,10 @@ run "test_tagged_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].role_arn == "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy-role"
+    error_message = "Role ARN incorrect"
+  }
+  assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_PROD}"
     error_message = "Configuration ClusterName incorrect"
   }
@@ -888,6 +942,10 @@ run "test_tagged_pipeline" {
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].run_order == 3
     error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].role_arn == "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy-role"
+    error_message = "Role ARN incorrect"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].configuration.ClusterName == "#{build_manifest.CLUSTER_NAME_PROD}"
@@ -1188,6 +1246,10 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].run_order == 2
     error_message = "Run order incorrect"
   }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].role_arn == "arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy-role"
+    error_message = "Role ARN incorrect"
+  }
 
   # service-2
   assert {
@@ -1243,6 +1305,10 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[1].run_order == 2
     error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[1].role_arn == "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy-role"
+    error_message = "Role ARN incorrect"
   }
 
   # service-2
