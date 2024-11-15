@@ -2,6 +2,7 @@ import psycopg2
 from manage_users.manage_users import create_or_update_db_user
 
 class TestCreateOrUpdateDbUser: 
+    # TODO setup and teardown db before each test; remove dependencies between tests
     def test_create_or_update_db_user_creates_user(self, database_connection):
         permissions = ['SELECT', 'DELETE']
         
