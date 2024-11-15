@@ -894,6 +894,7 @@ data "aws_iam_policy_document" "codepipeline" {
       "codepipeline:GetPipelineExecution",
       "codepipeline:ListPipelineExecutions",
       "codepipeline:StopPipelineExecution",
+      "codepipeline:UpdatePipeline"
     ]
     resources = [
       "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.application}-${var.pipeline_name}-environment-pipeline"
