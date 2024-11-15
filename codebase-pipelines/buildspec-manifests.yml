@@ -2,7 +2,12 @@ version: 0.2
 
 env:
   ${jsonencode({
-    exported-variables: flatten([ for env in environments : ["CLUSTER_NAME_${env}", [ for svc in services: "SERVICE_NAME_${env}_${svc}" ]]])
+    exported-variables: flatten([
+      for env in environments : [
+        "CLUSTER_NAME_${env}",
+        [ for svc in services: "SERVICE_NAME_${env}_${svc}" ]
+      ]
+    ])
   })}
 
 phases:

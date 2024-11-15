@@ -147,8 +147,14 @@ resource "aws_codebuild_project" "codebase_deploy_manifests" {
   }
 
   source {
-    type      = "CODEPIPELINE"
-    buildspec = templatefile("${path.module}/buildspec-manifests.yml", { application = var.application, environments = [for env in each.value.environments : upper(env.name)], services = local.service_export_names })
+    type = "CODEPIPELINE"
+    buildspec = templatefile("${path.module}/buildspec-manifests.yml", {
+      application = var.application,
+      environments = [
+        for env in each.value.environments : upper(env.name)
+      ],
+      services = local.service_export_names
+    })
   }
 
   tags = local.tags
@@ -159,7 +165,6 @@ resource "aws_kms_key" "codebuild_kms_key" {
   enable_key_rotation = true
 
   policy = jsonencode({
-    Id = "key-default-1"
     Statement = [
       {
         "Sid" : "Enable IAM User Permissions",
