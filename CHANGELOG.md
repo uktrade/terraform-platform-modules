@@ -1,5 +1,181 @@
 # Changelog
 
+## [5.8.1](https://github.com/uktrade/terraform-platform-modules/compare/5.8.0...5.8.1) (2024-11-14)
+
+
+### Bug Fixes
+
+* DBTP-1534 Add S3MigrationRole to the resources allowed to add policies and roles ([#283](https://github.com/uktrade/terraform-platform-modules/issues/283)) ([0a4130e](https://github.com/uktrade/terraform-platform-modules/commit/0a4130ed37cb16a05ea8f1b6ddebe4d05b2d6183))
+
+## [5.8.0](https://github.com/uktrade/terraform-platform-modules/compare/5.7.1...5.8.0) (2024-11-13)
+
+
+### Features
+
+* DBTP-1502 - Terraform image build codebuild project ([#274](https://github.com/uktrade/terraform-platform-modules/issues/274)) ([4f44598](https://github.com/uktrade/terraform-platform-modules/commit/4f44598c84b943c2056cd60a395790855e9beb24))
+
+
+### Bug Fixes
+
+* DBTP-1534 - Assume role policy for the S3 migration were too strict so relaxing them ([#279](https://github.com/uktrade/terraform-platform-modules/issues/279)) ([3ea79ff](https://github.com/uktrade/terraform-platform-modules/commit/3ea79ff7e9a825870c2c8d3638f464fc649892c5))
+
+## [5.7.1](https://github.com/uktrade/terraform-platform-modules/compare/5.7.0...5.7.1) (2024-11-08)
+
+
+### Bug Fixes
+
+* Environment pipelines given ECS permissions for DatabaseCopy inf… ([#271](https://github.com/uktrade/terraform-platform-modules/issues/271)) ([1cd29ab](https://github.com/uktrade/terraform-platform-modules/commit/1cd29ab7f4955166656306d4a3086f707ebf314d))
+* Environment pipelines given ECS permissions for DatabaseCopy infrastructure ([#267](https://github.com/uktrade/terraform-platform-modules/issues/267)) ([00babbd](https://github.com/uktrade/terraform-platform-modules/commit/00babbd4e00ba7c0820361b4b3aa7720fa82cc6d))
+* Revert "fix: Environment pipelines given ECS permissions for Database..." ([#270](https://github.com/uktrade/terraform-platform-modules/issues/270)) ([d8ba1af](https://github.com/uktrade/terraform-platform-modules/commit/d8ba1af68c4314352ea440f0500edd4cfb69ef7a))
+
+## [5.7.0](https://github.com/uktrade/terraform-platform-modules/compare/5.6.1...5.7.0) (2024-11-05)
+
+
+### Features
+
+* DBTP-1431 Allow setting custom timeouts on CloudFront ([#255](https://github.com/uktrade/terraform-platform-modules/issues/255)) ([d6539a5](https://github.com/uktrade/terraform-platform-modules/commit/d6539a5aca15233da9e1d2cd77ab775fdb4ee05c))
+
+## [5.6.1](https://github.com/uktrade/terraform-platform-modules/compare/5.6.0...5.6.1) (2024-11-01)
+
+
+### Bug Fixes
+
+* DBTP-1454 Limit addons parameter to current environment ([#264](https://github.com/uktrade/terraform-platform-modules/issues/264)) ([d9b51d5](https://github.com/uktrade/terraform-platform-modules/commit/d9b51d530df74a5386b3ffc46c1132e14f37c7dc))
+
+## [5.6.0](https://github.com/uktrade/terraform-platform-modules/compare/5.5.3...5.6.0) (2024-10-30)
+
+
+### Features
+
+* Add permissions to the database-load module to allow deletion of the … ([#249](https://github.com/uktrade/terraform-platform-modules/issues/249)) ([1f37adf](https://github.com/uktrade/terraform-platform-modules/commit/1f37adfdfbb427fe8151f86780eef2367d5756e2))
+
+
+### Bug Fixes
+
+* DBTP-1456 Stop the terraform tests GitHub Action excluding modules with submodules ([#262](https://github.com/uktrade/terraform-platform-modules/issues/262)) ([492d102](https://github.com/uktrade/terraform-platform-modules/commit/492d102f849b2cb58a48e38a897a6169d9d605c4))
+
+## [5.5.3](https://github.com/uktrade/terraform-platform-modules/compare/5.5.2...5.5.3) (2024-10-29)
+
+
+### Fixes
+
+* DBTP-1495 Add some iam:UpdateAssumeRolePolicy permissions so that the deploy environment pipelines work. ([#260](https://github.com/uktrade/terraform-platform-modules/issues/260)) ([049cd4d](https://github.com/uktrade/terraform-platform-modules/commit/049cd4d5205565f55c00ccd427d5de929f2a1c16)))
+
+## [5.5.2](https://github.com/uktrade/terraform-platform-modules/compare/5.5.1...5.5.2) (2024-10-25)
+
+
+### Bug Fixes
+
+* Add missing load balancer permission ([#256](https://github.com/uktrade/terraform-platform-modules/issues/256)) ([8c1357e](https://github.com/uktrade/terraform-platform-modules/commit/8c1357e8d600c03be6882efb0b6444ebe2bc02b2))
+* DBTP-1435 Allow environment pipeline to update assume role policy on shared s3 role ([#250](https://github.com/uktrade/terraform-platform-modules/issues/250)) ([e9e12dd](https://github.com/uktrade/terraform-platform-modules/commit/e9e12ddb1f36aea1f8f4e7af8efd3230f2efffd1))
+
+## [5.5.1](https://github.com/uktrade/terraform-platform-modules/compare/5.5.0...5.5.1) (2024-10-17)
+
+
+### Bug Fixes
+
+* Tighten ECR permissions ([#247](https://github.com/uktrade/terraform-platform-modules/issues/247)) ([2cbace7](https://github.com/uktrade/terraform-platform-modules/commit/2cbace7723363cba48bf9dd111472603d2be524e))
+
+## [5.5.0](https://github.com/uktrade/terraform-platform-modules/compare/5.4.3...5.5.0) (2024-10-16)
+
+
+### Features
+
+* Enable data copy between VPCs in a single account ([#239](https://github.com/uktrade/terraform-platform-modules/issues/239)) ([3329381](https://github.com/uktrade/terraform-platform-modules/commit/332938139752b0c46674fcb4abfcc154f6922672))
+
+## [5.4.3](https://github.com/uktrade/terraform-platform-modules/compare/5.4.2...5.4.3) (2024-10-04)
+
+
+### Bug Fixes
+
+* DBTP-1398 Correct prod domain name for static content S3 buckets ([#241](https://github.com/uktrade/terraform-platform-modules/issues/241)) ([33c6e57](https://github.com/uktrade/terraform-platform-modules/commit/33c6e57fd8264c1225cabcbdb2fd6d4e03a52a06))
+* DBTP-1398 Correct prod domain name for static content S3 buckets (2nd pass) ([#243](https://github.com/uktrade/terraform-platform-modules/issues/243)) ([f711fac](https://github.com/uktrade/terraform-platform-modules/commit/f711fac6c1291638a9847cec3ffef752c101aed2))
+
+## [5.4.2](https://github.com/uktrade/terraform-platform-modules/compare/5.4.1...5.4.2) (2024-09-26)
+
+
+### Bug Fixes
+
+* DBTP-1383 - Set correct central log subscription filter destinations ([#233](https://github.com/uktrade/terraform-platform-modules/issues/233)) ([2b57276](https://github.com/uktrade/terraform-platform-modules/commit/2b5727604f40cce9c109e6d6f62d3eda256b38e9))
+
+## [5.4.1](https://github.com/uktrade/terraform-platform-modules/compare/5.4.0...5.4.1) (2024-09-26)
+
+
+### Bug Fixes
+
+* DBTP-1391 - Create separate pipeline artifact bucket ([#234](https://github.com/uktrade/terraform-platform-modules/issues/234)) ([c3d5bbc](https://github.com/uktrade/terraform-platform-modules/commit/c3d5bbc73d5da2bfb22fe2b601a1b453d1996d15))
+* DBTP-1394 - Fix platform-helper environment generate command in environment pipeline apply stage ([#236](https://github.com/uktrade/terraform-platform-modules/issues/236)) ([f0b7bc1](https://github.com/uktrade/terraform-platform-modules/commit/f0b7bc11c670d21dced8400d4bd8a0e0c8591e6d))
+* DBTP-1396 - Fix S3 domain name for prod environments ([#237](https://github.com/uktrade/terraform-platform-modules/issues/237)) ([0df571a](https://github.com/uktrade/terraform-platform-modules/commit/0df571af24307bd2525445b02b47d0e41ef7e866))
+
+## [5.4.0](https://github.com/uktrade/terraform-platform-modules/compare/5.3.0...5.4.0) (2024-09-18)
+
+
+### Features
+
+* Dbtp 1162 support hosting static sites on s3 ([#212](https://github.com/uktrade/terraform-platform-modules/issues/212)) ([f1976bb](https://github.com/uktrade/terraform-platform-modules/commit/f1976bb694d598bd175003c475e5fa779bd80b65))
+
+
+### Bug Fixes
+
+* DBTP-1338 - Run copilot env deploy in env pipelines ([#224](https://github.com/uktrade/terraform-platform-modules/issues/224)) ([ea3b56d](https://github.com/uktrade/terraform-platform-modules/commit/ea3b56d3f86676eec487dc1b65aba2c387f22594))
+* DBTP-1366 - Force environment pipeline to trigger on correct branch ([#230](https://github.com/uktrade/terraform-platform-modules/issues/230)) ([3a95838](https://github.com/uktrade/terraform-platform-modules/commit/3a958381bae3fc911abfcf124c0df3ab3765ca15))
+
+## [5.3.0](https://github.com/uktrade/terraform-platform-modules/compare/5.2.4...5.3.0) (2024-09-10)
+
+
+### Features
+
+* DBTP-1301 - provide cross account s3 to s3 migration permissions ([#220](https://github.com/uktrade/terraform-platform-modules/issues/220)) ([85c7f46](https://github.com/uktrade/terraform-platform-modules/commit/85c7f467b560d5140eccc68f325ddbe14465df05))
+
+## [5.2.4](https://github.com/uktrade/terraform-platform-modules/compare/5.2.3...5.2.4) (2024-09-05)
+
+
+### Bug Fixes
+
+* DBTP-1346 Add special characters & urlencode options for OpenSearch passwords ([#225](https://github.com/uktrade/terraform-platform-modules/issues/225)) ([d11bd13](https://github.com/uktrade/terraform-platform-modules/commit/d11bd13cf3f049db5e05e43b43d9fc6b5f839ce3))
+
+## [5.2.3](https://github.com/uktrade/terraform-platform-modules/compare/5.2.2...5.2.3) (2024-09-02)
+
+
+### Bug Fixes
+
+* hardcoded 'demodjango' ([#221](https://github.com/uktrade/terraform-platform-modules/issues/221)) ([d0910aa](https://github.com/uktrade/terraform-platform-modules/commit/d0910aaa52738f6e3c855eb54c8e81cc45866f13))
+
+## [5.2.2](https://github.com/uktrade/terraform-platform-modules/compare/5.2.1...5.2.2) (2024-08-23)
+
+
+### Bug Fixes
+
+* No idea why this was working before but isn't now. ([#218](https://github.com/uktrade/terraform-platform-modules/issues/218)) ([253bab5](https://github.com/uktrade/terraform-platform-modules/commit/253bab587df9d1feb7d0b51604d120937cb5fedf))
+
+## [5.2.1](https://github.com/uktrade/terraform-platform-modules/compare/5.2.0...5.2.1) (2024-08-22)
+
+
+### Bug Fixes
+
+* Fix missing quote and missing permission ([#216](https://github.com/uktrade/terraform-platform-modules/issues/216)) ([9f7992c](https://github.com/uktrade/terraform-platform-modules/commit/9f7992c6790ee54130a865570efcbea2acdb7005))
+
+## [5.2.0](https://github.com/uktrade/terraform-platform-modules/compare/5.1.6...5.2.0) (2024-08-21)
+
+
+### Features
+
+* Changes to buildspec to support changing the version of platform-helper used in the pipeline ([#206](https://github.com/uktrade/terraform-platform-modules/issues/206)) ([1d20161](https://github.com/uktrade/terraform-platform-modules/commit/1d20161752182d47440fe8e0f12be251152516bc))
+
+## [5.1.6](https://github.com/uktrade/terraform-platform-modules/compare/5.1.5...5.1.6) (2024-08-20)
+
+
+### Bug Fixes
+
+* DBTP-1304 - manage users lambda does not drop tables ([#207](https://github.com/uktrade/terraform-platform-modules/issues/207)) ([aa3b567](https://github.com/uktrade/terraform-platform-modules/commit/aa3b5676adc119bf0d4dfad925cf0855422bee44))
+
+## [5.1.5](https://github.com/uktrade/terraform-platform-modules/compare/5.1.4...5.1.5) (2024-08-19)
+
+
+### Bug Fixes
+
+* DBTP-972 Add IAM Permissions for Pipeline Changes ([#209](https://github.com/uktrade/terraform-platform-modules/issues/209)) ([71992ac](https://github.com/uktrade/terraform-platform-modules/commit/71992acb579c29ebfb59de37308b0b556847b56c))
+
 ## [5.1.4](https://github.com/uktrade/terraform-platform-modules/compare/5.1.3...5.1.4) (2024-08-19)
 
 

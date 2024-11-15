@@ -3,6 +3,10 @@ module "s3" {
 
   for_each = local.s3
 
+  providers = {
+    aws.domain-cdn = aws.domain-cdn
+  }
+
   application = var.args.application
   environment = var.environment
   name        = each.key
@@ -95,6 +99,6 @@ resource "aws_ssm_parameter" "addons" {
   name  = "/copilot/applications/${var.args.application}/environments/${var.environment}/addons"
   tier  = "Intelligent-Tiering"
   type  = "String"
-  value = jsonencode(var.args.services)
+  value = jsonencode(local.extensions_for_environment)
   tags  = local.tags
 }

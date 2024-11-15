@@ -29,8 +29,8 @@ data "aws_iam_policy_document" "access_artifact_store" {
     ]
 
     resources = [
-      module.artifact_store.arn,
-      "${module.artifact_store.arn}/*"
+      aws_s3_bucket.artifact_store.arn,
+      "${aws_s3_bucket.artifact_store.arn}/*"
     ]
   }
 
@@ -38,6 +38,12 @@ data "aws_iam_policy_document" "access_artifact_store" {
     effect    = "Allow"
     actions   = ["codestar-connections:UseConnection"]
     resources = [data.aws_codestarconnections_connection.github_codestar_connection.arn]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["codestar-connections:ListConnections"]
+    resources = ["arn:aws:codestar-connections:eu-west-2:${data.aws_caller_identity.current.account_id}:*"]
   }
 
   statement {
@@ -58,7 +64,7 @@ data "aws_iam_policy_document" "access_artifact_store" {
       "kms:Decrypt"
     ]
     resources = [
-      module.artifact_store.kms_key_arn
+      aws_kms_key.artifact_store_kms_key.arn
     ]
   }
 }
@@ -73,6 +79,40 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
     }
 
     actions = ["sts:AssumeRole"]
+  }
+
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    actions = ["sts:AssumeRole"]
+
+    condition {
+      test     = "StringLike"
+      variable = "sts:RoleSessionName"
+
+      values = [
+        "environment-pipeline-platform-helper-generate-*"
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = toset(local.triggers_another_pipeline ? [""] : [])
+    content {
+      effect = "Allow"
+
+      principals {
+        type        = "AWS"
+        identifiers = [local.triggered_pipeline_codebuild_role]
+      }
+
+      actions = ["sts:AssumeRole"]
+    }
   }
 }
 
@@ -204,7 +244,9 @@ data "aws_iam_policy_document" "load_balancer" {
       "elasticloadbalancing:DescribeSSLPolicies",
       "elasticloadbalancing:DescribeListeners",
       "elasticloadbalancing:DescribeTargetHealth",
-      "elasticloadbalancing:DescribeRules"
+      "elasticloadbalancing:DescribeRules",
+      "elasticloadbalancing:DescribeListenerCertificates",
+      "elasticloadbalancing:DescribeListenerAttributes"
     ]
     resources = [
       "*"
@@ -247,7 +289,8 @@ data "aws_iam_policy_document" "load_balancer" {
     for_each = local.environment_config
     content {
       actions = [
-        "elasticloadbalancing:AddTags"
+        "elasticloadbalancing:AddTags",
+        "elasticloadbalancing:ModifyListener"
       ]
       resources = [
         "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:listener/app/${var.application}-${statement.value.name}/*"
@@ -382,6 +425,10 @@ data "aws_iam_policy_document" "cloudwatch" {
   }
 }
 
+data "aws_ssm_parameter" "log-destination-arn" {
+  name = "/copilot/tools/central_log_groups"
+}
+
 data "aws_iam_policy_document" "logs" {
   statement {
     actions = [
@@ -400,7 +447,8 @@ data "aws_iam_policy_document" "logs" {
       "logs:PutSubscriptionFilter"
     ]
     resources = [
-      local.central_log_destination_arn
+      jsondecode(data.aws_ssm_parameter.log-destination-arn.value)["dev"],
+      jsondecode(data.aws_ssm_parameter.log-destination-arn.value)["prod"]
     ]
   }
 
@@ -496,6 +544,17 @@ data "aws_iam_policy_document" "redis" {
       "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:*"
     ]
   }
+
+  statement {
+    actions = [
+      "elasticache:DescribeCacheEngineVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+    sid = "AllowRedisListVersions"
+  }
 }
 
 resource "aws_iam_policy" "redis" {
@@ -527,7 +586,9 @@ data "aws_iam_policy_document" "postgres" {
         "iam:AttachRolePolicy",
         "iam:PutRolePolicy",
         "iam:GetRolePolicy",
-        "iam:PassRole"
+        "iam:DeleteRolePolicy",
+        "iam:PassRole",
+        "iam:UpdateAssumeRolePolicy",
       ]
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-*",
@@ -671,6 +732,37 @@ resource "aws_iam_policy" "s3" {
   policy      = data.aws_iam_policy_document.s3.json
 }
 
+data "aws_iam_policy_document" "ecs" {
+  statement {
+    sid = "AllowTaskDefinitionsRead"
+    actions = [
+      "ecs:ListTaskDefinitionFamilies",
+      "ecs:ListTaskDefinitions",
+      "ecs:DescribeTaskDefinition",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "AllowRegisterAndDeregister"
+    actions = [
+      "ecs:DeregisterTaskDefinition",
+      "ecs:RegisterTaskDefinition",
+    ]
+    resources = [
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*",
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "ecs" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-ecs-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access ecs resources"
+  policy      = data.aws_iam_policy_document.ecs.json
+}
+
 data "aws_iam_policy_document" "opensearch" {
   statement {
     actions = [
@@ -685,6 +777,17 @@ data "aws_iam_policy_document" "opensearch" {
     resources = [
       "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/*"
     ]
+  }
+
+  statement {
+    actions = [
+      "es:ListVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+    sid = "AllowOpensearchListVersions"
   }
 }
 
@@ -708,6 +811,18 @@ data "aws_iam_policy_document" "copilot_assume_role" {
       ]
     }
   }
+
+  dynamic "statement" {
+    for_each = toset(local.triggers_another_pipeline ? local.triggered_pipeline_environments : [])
+    content {
+      actions = [
+        "sts:AssumeRole"
+      ]
+      resources = [
+        "arn:aws:iam::${local.triggered_account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
+      ]
+    }
+  }
 }
 
 data "aws_iam_policy_document" "cloudformation" {
@@ -723,6 +838,8 @@ data "aws_iam_policy_document" "cloudformation" {
       "cloudformation:DescribeChangeSet",
       "cloudformation:CreateChangeSet",
       "cloudformation:ExecuteChangeSet",
+      "cloudformation:DescribeStackEvents",
+      "cloudformation:DeleteStack"
     ]
     resources = [
       "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.application}-*",
@@ -740,26 +857,58 @@ resource "aws_iam_policy" "cloudformation" {
 }
 
 data "aws_iam_policy_document" "iam" {
+  dynamic "statement" {
+    for_each = local.environment_config
+    content {
+      actions = [
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:CreatePolicy",
+        "iam:DeletePolicy",
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:TagRole",
+        "iam:PutRolePolicy",
+        "iam:GetRole",
+        "iam:ListRolePolicies",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfilesForRole",
+        "iam:DeleteRolePolicy",
+        "iam:UpdateAssumeRolePolicy",
+      ]
+      resources = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-CFNExecutionRole",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole",
+      ]
+    }
+  }
+
   statement {
     actions = [
-      "iam:AttachRolePolicy",
-      "iam:DetachRolePolicy",
-      "iam:CreatePolicy",
-      "iam:DeletePolicy",
-      "iam:CreateRole",
-      "iam:DeleteRole",
-      "iam:TagRole",
-      "iam:PutRolePolicy",
-      "iam:GetRole",
-      "iam:ListRolePolicies",
-      "iam:GetRolePolicy",
-      "iam:ListAttachedRolePolicies",
-      "iam:ListInstanceProfilesForRole",
-      "iam:DeleteRolePolicy",
+      "sts:AssumeRole"
+    ]
+    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${var.pipeline_name}-environment-pipeline-codebuild"]
+  }
+
+  statement {
+    sid = "AllowUpdatingSharedS3MigrationRoleTrustPolicy"
+    actions = [
+      "iam:UpdateAssumeRolePolicy"
     ]
     resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole"
     ]
+  }
+
+  statement {
+    sid = "AllowUpdatingPostgresLambdaRoleTrustPolicy"
+    actions = [
+      "iam:UpdateAssumeRolePolicy"
+    ]
+    resources = [for environment in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${environment.name}-*-lambda-role"]
   }
 }
 
@@ -791,6 +940,25 @@ resource "aws_iam_policy" "codepipeline" {
   policy      = data.aws_iam_policy_document.codepipeline.json
 }
 
+data "aws_iam_policy_document" "cloudfront" {
+  statement {
+    actions = [
+      "cloudfront:ListCachePolicies",
+      "cloudfront:GetCachePolicy"
+    ]
+    resources = [
+      "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:cache-policy/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "cloudfront" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-cloudfront"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job access to cloudfront cache policies"
+  policy      = data.aws_iam_policy_document.cloudfront.json
+}
+
 # Roles
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
   name               = "${var.application}-${var.pipeline_name}-environment-pipeline-codepipeline"
@@ -804,12 +972,14 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
   managed_policy_arns = [
     aws_iam_policy.iam.arn,
     aws_iam_policy.cloudformation.arn,
+    aws_iam_policy.cloudfront.arn,
     aws_iam_policy.codepipeline.arn,
     aws_iam_policy.redis.arn,
     aws_iam_policy.postgres.arn,
     aws_iam_policy.opensearch.arn,
     aws_iam_policy.load_balancer.arn,
-    aws_iam_policy.s3.arn
+    aws_iam_policy.s3.arn,
+    aws_iam_policy.ecs.arn
   ]
   tags = local.tags
 }
@@ -954,6 +1124,40 @@ data "aws_iam_policy_document" "trigger_pipeline" {
   }
 }
 
+resource "aws_iam_role_policy" "assume_role_for_copilot_env_commands" {
+  for_each = toset(local.triggered_by_another_pipeline ? [""] : [])
+  name     = "${var.application}-${var.pipeline_name}-assume-role-for-copilot-env-commands"
+  role     = aws_iam_role.environment_pipeline_codebuild.name
+  policy   = data.aws_iam_policy_document.assume_role_for_copilot_env_commands_policy_document[""].json
+}
+
+data "aws_iam_policy_document" "assume_role_for_copilot_env_commands_policy_document" {
+  for_each = toset(local.triggered_by_another_pipeline ? [""] : [])
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = local.triggering_pipeline_role_arns
+  }
+
+  statement {
+    actions = [
+      "kms:*",
+    ]
+    resources = [
+      "arn:aws:kms:${data.aws_region.current.name}:${local.triggering_account_id}:key/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "s3:*",
+    ]
+    resources = [
+      "arn:aws:s3:::stackset-${var.application}-*-pipelinebuiltartifactbuc-*"
+    ]
+  }
+}
 
 #------NON-PROD-SOURCE-ACCOUNT------
 

@@ -1,3 +1,12 @@
+mock_provider "aws" {}
+
+override_data {
+  target = data.aws_caller_identity.current
+  values = {
+    account_id = "001122334455"
+  }
+}
+
 override_data {
   target = data.aws_vpc.vpc
   values = {
@@ -14,9 +23,16 @@ override_data {
 }
 
 override_data {
-  target = data.aws_ssm_parameter.destination-arn
+  target = data.aws_ssm_parameter.log-destination-arn
   values = {
-    value = "{\"prod\":\"arn:aws:ssm:eu-west-2:123456789987:parameter/copilot/tools/central_log_groups\"}"
+    value = "{\"prod\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod\", \"dev\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.assume_ecstask_role
+  values = {
+    json = "{\"Sid\": \"AllowAssumeECSTaskRole\"}"
   }
 }
 
@@ -30,11 +46,13 @@ run "test_create_opensearch" {
     vpc_name    = "terraform-tests-vpc"
 
     config = {
-      engine      = "2.5"
-      instance    = "t3.small.search"
-      instances   = 1
-      volume_size = 80
-      master      = false
+      engine                      = "2.5"
+      instance                    = "t3.small.search"
+      instances                   = 1
+      volume_size                 = 80
+      master                      = false
+      password_special_characters = "-_.,()"
+      urlencode_password          = false
     }
   }
 
@@ -336,8 +354,18 @@ run "test_create_cloudwatch_subscription_filters" {
   }
 
   assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_index_slow_logs.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
+    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_index_slow_logs'Should be: 'arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev'"
+  }
+
+  assert {
     condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_search_slow_logs.name == "/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_search_slow"
     error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_search_slow_logs'Should be: '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_search_slow'"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_search_slow_logs.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
+    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_search_slow_logs'Should be: 'arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev'"
   }
 
   assert {
@@ -346,8 +374,18 @@ run "test_create_cloudwatch_subscription_filters" {
   }
 
   assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_es_application_logs.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
+    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_es_application_logs'Should be: 'arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev'"
+  }
+
+  assert {
     condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_audit_logs.name == "/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_audit"
     error_message = "Cloudwatch log subscription filter name for cloudwatch log 'opensearch_log_group_audit_logs'Should be: '/aws/opensearch/my_app/my_env/my_name/opensearch_log_group_audit'"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_subscription_filter.opensearch_log_group_audit_logs.destination_arn == "arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev"
+    error_message = "Cloudwatch log subscription filter destination ARN for cloudwatch log 'opensearch_log_group_audit_logs'Should be: 'arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev'"
   }
 
   assert {
@@ -405,8 +443,23 @@ run "aws_kms_key_unit_test" {
     error_message = "Should be: my_name-my_app-my_env-conduitEcsTask"
   }
 
+  # Check that the correct aws_iam_policy_document is used from the mocked data json
   assert {
-    condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
-    error_message = "Should be: \"{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ecs-tasks.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}\""
+    condition     = aws_iam_role.conduit_ecs_task_role.assume_role_policy == "{\"Sid\": \"AllowAssumeECSTaskRole\"}"
+    error_message = "Should be: {\"Sid\": \"AllowAssumeECSTaskRole\"}"
+  }
+
+  # Check the contents of the policy document
+  assert {
+    condition     = contains(data.aws_iam_policy_document.assume_ecstask_role.statement[0].actions, "sts:AssumeRole")
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.assume_ecstask_role.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].principals), "ecs-tasks.amazonaws.com")
+    error_message = "Should be: ecs-tasks.amazonaws.com"
   }
 }
