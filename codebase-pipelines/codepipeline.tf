@@ -54,7 +54,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
       namespace        = "build_manifest"
 
       configuration = {
-        ProjectName = "${var.application}-${var.codebase}-codebase-deploy-manifests"
+        ProjectName = aws_codebuild_project.codebase_deploy_manifests.name
         EnvironmentVariables : jsonencode([
           { name : "APPLICATION", value : var.application },
           { name : "ENVIRONMENTS", value : jsonencode([for env in each.value.environments : env]) },

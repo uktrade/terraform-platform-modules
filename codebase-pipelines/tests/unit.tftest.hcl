@@ -480,67 +480,67 @@ run "test_codebuild_manifests" {
   command = plan
 
   assert {
-    condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "my-app-my-codebase-main-codebase-deploy-manifests"
-    error_message = "Should be: 'my-app-my-codebase-main-codebase-deploy-manifests'"
+    condition     = aws_codebuild_project.codebase_deploy_manifests.name == "my-app-my-codebase-codebase-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-deploy-manifests'"
   }
   assert {
-    condition     = aws_codebuild_project.codebase_deploy_manifests[0].description == "Create image deploy manifests to deploy services"
+    condition     = aws_codebuild_project.codebase_deploy_manifests.description == "Create image deploy manifests to deploy services"
     error_message = "Should be: 'Create image deploy manifests to deploy services'"
   }
   assert {
-    condition     = aws_codebuild_project.codebase_deploy_manifests[0].build_timeout == 5
+    condition     = aws_codebuild_project.codebase_deploy_manifests.build_timeout == 5
     error_message = "Should be: 5"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].artifacts).type == "CODEPIPELINE"
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests.artifacts).type == "CODEPIPELINE"
     error_message = "Should be: 'CODEPIPELINE'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].cache).type == "S3"
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests.cache).type == "S3"
     error_message = "Should be: 'S3'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].cache).location == "my-app-my-codebase-codebase-pipeline-artifact-store"
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests.cache).location == "my-app-my-codebase-codebase-pipeline-artifact-store"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-artifact-store'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].environment).compute_type == "BUILD_GENERAL1_SMALL"
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests.environment).compute_type == "BUILD_GENERAL1_SMALL"
     error_message = "Should be: 'BUILD_GENERAL1_SMALL'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests.environment).image == "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
     error_message = "Should be: 'aws/codebuild/amazonlinux2-x86_64-standard:5.0'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].environment).type == "LINUX_CONTAINER"
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests.environment).type == "LINUX_CONTAINER"
     error_message = "Should be: 'LINUX_CONTAINER'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].environment).image_pull_credentials_type == "CODEBUILD"
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests.environment).image_pull_credentials_type == "CODEBUILD"
     error_message = "Should be: 'CODEBUILD'"
   }
   assert {
-    condition = aws_codebuild_project.codebase_deploy_manifests[0].logs_config[0].cloudwatch_logs[
+    condition = aws_codebuild_project.codebase_deploy_manifests.logs_config[0].cloudwatch_logs[
       0
     ].group_name == "codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group"
     error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group'"
   }
   assert {
-    condition = aws_codebuild_project.codebase_deploy_manifests[0].logs_config[0].cloudwatch_logs[
+    condition = aws_codebuild_project.codebase_deploy_manifests.logs_config[0].cloudwatch_logs[
       0
     ].stream_name == "codebuild/my-app-my-codebase-codebase-deploy-manifests/log-stream"
     error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-deploy-manifests/log-stream'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_deploy_manifests[0].source).type == "CODEPIPELINE"
+    condition     = one(aws_codebuild_project.codebase_deploy_manifests.source).type == "CODEPIPELINE"
     error_message = "Should be: 'CODEPIPELINE'"
   }
   assert {
-    condition     = length(regexall(".*\"exported-variables\":\\[\"CLUSTER_NAME_DEV\".*", aws_codebuild_project.codebase_deploy_manifests[0].source[0].buildspec)) > 0
+    condition     = length(regexall(".*\"exported-variables\":\\[\"CLUSTER_NAME_DEV\".*", aws_codebuild_project.codebase_deploy_manifests.source[0].buildspec)) > 0
     error_message = "Should contain: '\"exported-variables\":[\"CLUSTER_NAME_DEV\"'"
   }
   assert {
-    condition     = jsonencode(aws_codebuild_project.codebase_deploy_manifests[0].tags) == jsonencode(var.expected_tags)
+    condition     = jsonencode(aws_codebuild_project.codebase_deploy_manifests.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
@@ -691,8 +691,8 @@ run "test_main_pipeline" {
     error_message = "Should be: manifest_output"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-main-codebase-deploy-manifests"
-    error_message = "Should be: my-app-my-codebase-main-codebase-deploy-manifests"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-deploy-manifests"
+    error_message = "Should be: my-app-my-codebase-codebase-deploy-manifests"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
@@ -810,8 +810,8 @@ run "test_tagged_pipeline" {
     error_message = "Should be: Create-Deploy-Manifests"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-tagged-codebase-deploy-manifests"
-    error_message = "Should be: my-app-my-codebase-tagged-codebase-deploy-manifests"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-deploy-manifests"
+    error_message = "Should be: my-app-my-codebase-codebase-deploy-manifests"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"staging\\\",\\\"requires_approval\\\":null},{\\\"account\\\":{\\\"id\\\":\\\"123456789000\\\",\\\"name\\\":\\\"prod\\\"},\\\"name\\\":\\\"prod\\\",\\\"requires_approval\\\":true}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
