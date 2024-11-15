@@ -53,3 +53,4 @@ class TestCreateOrUpdateDbUser:
         
         new_cursor.execute('SELECT id FROM public.new_user_table')
         assert new_cursor.fetchone()[0] == 1
+        
