@@ -544,6 +544,17 @@ data "aws_iam_policy_document" "redis" {
       "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:*"
     ]
   }
+
+  statement {
+    actions = [
+      "elasticache:DescribeCacheEngineVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+    sid = "AllowRedisListVersions"
+  }
 }
 
 resource "aws_iam_policy" "redis" {
@@ -766,6 +777,17 @@ data "aws_iam_policy_document" "opensearch" {
     resources = [
       "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/*"
     ]
+  }
+
+  statement {
+    actions = [
+      "es:ListVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+    sid = "AllowOpensearchListVersions"
   }
 }
 
