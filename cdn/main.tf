@@ -40,34 +40,18 @@ resource "aws_route53_record" "validation-record" {
   ttl      = 300
 }
 
-# Temp VAR tbd
-variable "cache_policy_name" {
-  type    = list(string)
-  default = ["test-policy-jayesh", "great-base-cache"]
-}
-
 data "aws_cloudfront_cache_policy" "policy-name" {
   provider        = aws.domain-cdn
-  #for_each = toset([var.config.cache_policy.name])
-  # Get this from platform-config.yml 
-  for_each = toset(var.cache_policy_name)
-  name = each.key
-  #name = "test-policy-jayesh"
-}
+  for_each = var.config.cache_policy
 
-# Temp VAR tbd
-variable "request_policy_name" {
-  type    = list(string)
-  default = ["great-base-origin-policy"]
+  name = "${each.key}-${var.application}-${var.environment}"
 }
 
 data "aws_cloudfront_origin_request_policy" "request-policy-name" {
   provider        = aws.domain-cdn
-  #for_each = toset([var.config.cache_policy.name])
-  # Get this from platform-config.yml 
-  for_each = toset(var.request_policy_name)
-  name = each.key
-  #name = "test-policy-jayesh"
+  for_each = var.config.origin_request_policy
+
+  name = "${each.key}-${var.application}-${var.environment}"
 }
 
 
@@ -102,34 +86,42 @@ resource "aws_cloudfront_distribution" "standard" {
     allowed_methods  = local.cdn_defaults.allowed_methods
     cached_methods   = local.cdn_defaults.cached_methods
     target_origin_id = "${each.value[0]}.${local.domain_suffix}"
-    forwarded_values {
-      query_string = local.cdn_defaults.forwarded_values.query_string
-      headers      = local.cdn_defaults.forwarded_values.headers
-      cookies {
-        forward = local.cdn_defaults.forwarded_values.cookies.forward
+    viewer_protocol_policy = local.cdn_defaults.viewer_protocol_policy
+
+    compress               = local.cdn_defaults.compress
+    # Else condition will never occur because the if statement var is not set tf will error, the try will catch that and set the default values.
+    min_ttl                = try(var.config.paths[each.key].default != null ? null : 0, 0) #: null
+    default_ttl            = try(var.config.paths[each.key].default != null ? null : 86400, 86400)
+    max_ttl                = try(var.config.paths[each.key].default != null ? null : 31536000, 31536000)
+
+    cache_policy_id = try(data.aws_cloudfront_cache_policy.policy-name[var.config.paths[each.key].default.cache].id, "")
+    origin_request_policy_id = try(data.aws_cloudfront_origin_request_policy.request-policy-name[var.config.paths[each.key].default.request].id, "")
+
+    dynamic "forwarded_values" {
+      #Also needs to be set if there is no var.config.paths VAR
+      for_each = try(var.config.paths[each.key].default != null ? [] : ["default"], ["default"])
+        content {     
+            query_string = local.cdn_defaults.forwarded_values.query_string
+            headers      = local.cdn_defaults.forwarded_values.headers
+            cookies {
+              forward = local.cdn_defaults.forwarded_values.cookies.forward
+          }
       }
     }
-    compress               = local.cdn_defaults.compress
-    viewer_protocol_policy = local.cdn_defaults.viewer_protocol_policy
-    min_ttl                = 0 
-    default_ttl            = 86400
-    max_ttl                = 31536000
   }
 
-    dynamic "ordered_cache_behavior" {
-      #for_each = each.key == "api.jayesh.demodjango.uktrade.digital" ? { for k, v in var.config.paths: k => v  if k == each.key } : {}
-      #for_each = var.config.paths["${each.key}"] != [] ? var.config.paths[each.key]["test-policy-jayesh"] : []
-      for_each = var.config.paths["${each.key}"] != [] ? { for k,v  in var.config.paths[each.key] : k => v } : {}
-      #for_each = coalesce(var.config.paths["${each.key}"], []) ? { for k,v  in var.config.paths[each.key] : k => v } : {}
-        content {
-          path_pattern           = ordered_cache_behavior.key
-          target_origin_id       = "${each.value[0]}.${local.domain_suffix}"
-          cache_policy_id  = data.aws_cloudfront_cache_policy.policy-name[ordered_cache_behavior.value["cache"]].id
-          origin_request_policy_id = data.aws_cloudfront_origin_request_policy.request-policy-name[ordered_cache_behavior.value["request"]].id
-          viewer_protocol_policy = "redirect-to-https"
-          allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-          cached_methods         = ["GET", "HEAD"]
-        }
+  dynamic "ordered_cache_behavior" {
+    for_each = try(var.config.paths[each.key] != null ? [ for k in var.config.paths[each.key].additional : k ] : [],[])
+    
+      content {
+        path_pattern           = ordered_cache_behavior.value.path
+        target_origin_id       = "${each.value[0]}.${local.domain_suffix}"
+        cache_policy_id  = data.aws_cloudfront_cache_policy.policy-name[ordered_cache_behavior.value.cache].id
+        origin_request_policy_id = data.aws_cloudfront_origin_request_policy.request-policy-name[ordered_cache_behavior.value.request].id
+        viewer_protocol_policy = "redirect-to-https"
+        allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+        cached_methods         = ["GET", "HEAD"]
+      }
   }
 
   viewer_certificate {
