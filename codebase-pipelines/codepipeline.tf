@@ -173,10 +173,7 @@ resource "aws_codepipeline" "manual_release_pipeline" {
           { name : "APPLICATION", value : var.application },
           { name : "ENVIRONMENTS", value : "[\"#{variables.ENVIRONMENT}\"]" },
           { name : "SERVICES", value : jsonencode(local.services) },
-          {
-            name : "REPOSITORY_URL",
-            value : "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}"
-          },
+          { name : "REPOSITORY_URL", value : "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}" },
           { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" }
         ])
       }
@@ -202,7 +199,7 @@ resource "aws_codepipeline" "manual_release_pipeline" {
           FileName    = "image-definitions-${action.value.name}.json"
         }
         # role_arn = "arn:aws:iam::${stage.value.account.id}:role/${var.application}-${stage.value.name}-codebase-pipeline-deploy-role"
-        # TODO This is going to need to be a role capable of deploying any environment in the account
+        # TODO This is going to need to be a role capable of deploying any environment in the account, how will that work cross-account?
       }
     }
   }
