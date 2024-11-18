@@ -2,19 +2,26 @@ version: 0.2
 
 env:
   ${jsonencode({
-    exported-variables: flatten([ for env in environments : ["CLUSTER_NAME_${env}", [ for svc in services: "SERVICE_NAME_${env}_${svc}" ]]])
+    exported-variables: flatten([ for env in environments : [
+      "CLUSTER_NAME",
+      "CLUSTER_NAME_${env}",
+      [ for svc in services: [
+        "SERVICE_NAME_${svc}",
+        "SERVICE_NAME_${env}_${svc}"
+      ]]
+    ]])
   })}
 
 phases:
   build:
     commands:
       - set -e
-      - for env in $(echo $ENVIRONMENTS | jq -c -r '.[].name');
+      - for env in $(echo $ENVIRONMENTS | jq -c -r '.[]');
         do
           unset AWS_ACCESS_KEY_ID;
           unset AWS_SECRET_ACCESS_KEY;
           unset AWS_SESSION_TOKEN;
-          ACCOUNT_ID=$(echo $ENVIRONMENTS | jq -c -r '.[] | select(.name=='\"$env\"').account.id');
+          ACCOUNT_ID=$(echo $ENV_CONFIG | jq -c -r .$env.accounts.deploy.id);
           assumed_role=$(aws sts assume-role --role-arn "arn:aws:iam::$ACCOUNT_ID:role/$APPLICATION-$env-codebase-pipeline-deploy-role" --role-session-name "$env-codebase-pipeline-deploy");
           export AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId);
           export AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey);

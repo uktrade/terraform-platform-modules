@@ -136,6 +136,10 @@ resource "aws_codebuild_project" "codebase_deploy_manifests" {
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
+    environment_variable {
+      name  = "ENV_CONFIG"
+      value = jsonencode(local.base_env_config)
+    }
   }
 
   logs_config {
@@ -146,8 +150,12 @@ resource "aws_codebuild_project" "codebase_deploy_manifests" {
   }
 
   source {
-    type      = "CODEPIPELINE"
-    buildspec = templatefile("${path.module}/buildspec-manifests.yml", { application = var.application, environments = [for env in local.pipeline_environments : upper(env.name)], services = local.service_export_names })
+    type = "CODEPIPELINE"
+    buildspec = templatefile("${path.module}/buildspec-manifests.yml", {
+      application = var.application, environments = [
+        for env in local.pipeline_environments : upper(env.name)
+      ], services = local.service_export_names
+    })
   }
 
   tags = local.tags

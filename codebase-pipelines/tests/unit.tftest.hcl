@@ -132,6 +132,10 @@ run "test_ecr" {
     condition     = jsonencode(aws_ecr_repository.this.tags) == jsonencode(var.expected_ecr_tags)
     error_message = "Should be: ${jsonencode(var.expected_ecr_tags)}"
   }
+  assert {
+    condition     = jsonencode(aws_ecr_repository.this.tags) == false
+    error_message = "Should be: ${jsonencode(jsonencode(local.base_env_config))}"
+  }
 }
 
 run "test_artifact_store" {
