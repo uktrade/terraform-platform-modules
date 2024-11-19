@@ -4,8 +4,8 @@ data "aws_wafv2_web_acl" "waf-default" {
   scope    = "CLOUDFRONT"
 }
 
-data "aws_secretsmanager_secret_version" "origin_verify_secret_version" { 
-  secret_id = var.origin_verify_secret_id 
+data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
+  secret_id = var.origin_verify_secret_id
 }
 
 resource "aws_acm_certificate" "certificate" {
@@ -68,10 +68,11 @@ resource "aws_cloudfront_distribution" "standard" {
       origin_ssl_protocols   = local.cdn_defaults.origin.custom_origin_config.origin_ssl_protocols
       origin_read_timeout    = local.cdn_defaults.origin.custom_origin_config.cdn_timeout_seconds
     }
+
+    # Entire CF distro resource must be reprovisioned for changes to custom_header to take effect
     custom_header {
       name  = local.secret_token_header_name
       value = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
-
     }
   }
 

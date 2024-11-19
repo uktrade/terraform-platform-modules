@@ -78,8 +78,9 @@ module "cdn" {
   }
   application = var.args.application
   environment = var.environment
-  
-  origin_verify_secret_id = module.alb.origin_verify_secret_id
+
+  # Since all CDN instances use the same secret, we can take it from any ALB instance
+  origin_verify_secret_id = one(values(module.alb)).origin_verify_secret_id
 
   config = each.value
 }

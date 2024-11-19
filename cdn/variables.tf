@@ -43,6 +43,7 @@ variable "config" {
 
 }
 
-variable "origin_verify_secret_id" { 
-  type = string 
+variable "origin_verify_secret_id" {
+  description = "The ID of the secret used for origin verification"
+  type        = string
 }
