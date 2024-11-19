@@ -178,6 +178,17 @@ resource "aws_route53_record" "cdn-address" {
 
 # Create a CDN cache policy and origin request policy - Optional, but if one is set the the other needs to also be set.
 # These resources are only needed if you need to apply caching on your CDN either on the root or path of your domain.
+# There is a bug in the AWS provider where terraform is not able to in one terraform apply create the policy then attach the policy
+# to the paths.  You need to create the resource first run terraform apply, then attach the resource to the path.
+#
+#|Error: Provider produced inconsistent final plan
+#│
+#│ When expanding the plan for module.extensions.module.cdn["<alb-name>"].aws_cloudfront_distribution.standard["<domain-name>"] to include new values learned so far
+#│ during apply, provider "registry.terraform.io/hashicorp/aws" produced an invalid new value for .default_cache_behavior[0].origin_request_policy_id: was cty.StringVal(""), but now
+#│ cty.StringVal("6b392d40-eb27-42d5-9e21-70f028b40bbf").
+#│
+#│ This is a bug in the provider, which should be reported in the provider's own issue tracker.
+#
 resource "aws_cloudfront_cache_policy" "cache_policy" {
   provider = aws.domain-cdn
 
