@@ -385,31 +385,31 @@ run "waf_and_rotate_lambda" {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(length(r.statement[0].or_statement[0].statement), 0) == 2 &&
-        try(r.statement[0].or_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == local.secret_token_header_name &&
+        length(r.statement[0].or_statement[0].statement) == 2
+      ) : true
+    ])
+    error_message = "Incorrect number of statements in or_statement"
+  }
+
+  assert {
+    condition = alltrue([
+      for r in aws_wafv2_web_acl.waf-acl.rule :
+      r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
+        try(r.statement[0].or_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == local.secret_token_header_name
+      ) : true
+    ])
+    error_message = "First statement's header name is incorrect"
+  }
+
+  assert {
+    condition = alltrue([
+      for r in aws_wafv2_web_acl.waf-acl.rule :
+      r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
         try(r.statement[0].or_statement[0].statement[1].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == local.secret_token_header_name
       ) : true
     ])
-    error_message = "Invalid single_header name in aws_wafv2_web_acl.waf-acl rule"
+    error_message = "Second statement's header name is incorrect"
   }
-
-  # assert {
-  #   condition = alltrue([
-  #     for r in aws_wafv2_web_acl.waf-acl.rule :
-  #     (
-  #       # Check if the rule is the custom rule we want to validate
-  #       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-  #         try(length(r.statement[0].or_statement[0].statement), 0) == 2 &&
-  #         try(r.statement[0].or_statement[0].statement[0].byte_match_statement[0].positional_constraint, "") == "EXACTLY" &&
-  #         try(r.statement[0].or_statement[0].statement[1].byte_match_statement[0].positional_constraint, "") == "EXACTLY"
-  #       ) : (
-  #         # Allow managed rules to bypass this test
-  #         try(r.statement[0].managed_rule_group_statement.name, null) == "AWSManagedRulesKnownBadInputsRuleSet"
-  #       )
-  #     )
-  #   ])
-  #   error_message = "Invalid positional_constraint in aws_wafv2_web_acl.waf-acl rule"
-  # }
 
   assert {
     condition = alltrue([
