@@ -42,14 +42,14 @@ resource "aws_route53_record" "validation-record" {
 
 data "aws_cloudfront_cache_policy" "policy-name" {
   provider        = aws.domain-cdn
-  for_each = var.config.cache_policy
+  for_each = coalesce(var.config.cache_policy, {})
 
   name = "${each.key}-${var.application}-${var.environment}"
 }
 
 data "aws_cloudfront_origin_request_policy" "request-policy-name" {
   provider        = aws.domain-cdn
-  for_each = var.config.origin_request_policy
+  for_each = coalesce(var.config.origin_request_policy, {})
 
   name = "${each.key}-${var.application}-${var.environment}"
 }
