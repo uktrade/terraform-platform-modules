@@ -390,7 +390,7 @@ class SecretRotator:
                             logger.info("Domain ok for http://%s" % distro["Domain"])
                             pass
                         else:
-                            error_msg = f"Tests failed for URL, http://{distro["Domain"]}"
+                            error_msg = f"Tests failed for URL, http://{distro['Domain']}"
                             logger.error(error_msg)
                             test_failures.append({
                                 'domain': distro["Domain"],
