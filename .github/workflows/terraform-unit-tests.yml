@@ -59,9 +59,6 @@ jobs:
       - name: Check AWS Profile
         run: |
           echo "AWS_PROFILE is set to: $AWS_PROFILE"
-      - name: Check AWS Configuration
-        run: |
-          aws sts get-caller-identity
       - name: terraform test
         run: |
           cd ${{ matrix.module }}
