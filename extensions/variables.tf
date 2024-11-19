@@ -13,3 +13,9 @@ variable "environment" {
 variable "vpc_name" {
   type = string
 }
+
+# variable "paths" {
+#   type = list(object({
+#       path_pattern           = string
+#   }))
+# }
