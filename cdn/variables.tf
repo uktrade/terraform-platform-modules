@@ -15,8 +15,6 @@ variable "config" {
     enable_logging          = optional(bool)
     cache_policy            = optional(map(any))
     origin_request_policy   = optional(map(any))
-    #cache_policy_query_strings = optional(list(string))
-    #paths                   = optional(map(list(string)))
     paths                   = optional(any)
     default_path                   = optional(any)
 
@@ -47,19 +45,3 @@ variable "config" {
     error_message = "Items in cdn_domains_list should be between 3 and 63 characters long."
   }
 }
-
-variable "paths" {
-  type = list(object({
-      path_pattern           = string
-  }))
-  default = [{
-    path_pattern = "/static"
-  }]
-}
-
-# variable "paths" {
-#   type = list(string
-#   )
-#   default = ["/static"
-#   ]
-# }

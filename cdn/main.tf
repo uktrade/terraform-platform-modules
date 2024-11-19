@@ -166,3 +166,74 @@ resource "aws_route53_record" "cdn-address" {
     evaluate_target_health = false
   }
 }
+
+
+# Create a CDN cache Policy
+
+resource "aws_cloudfront_cache_policy" "cache_policy" {
+  provider = aws.domain-cdn
+
+  for_each = coalesce(var.config.cache_policy, {})
+
+  name        = "${each.key}-${var.application}-${var.environment}"
+  comment     = "Cache policy created for ${var.application}"
+  default_ttl = each.value["default_ttl"]
+  max_ttl     = each.value["max_ttl"]
+  min_ttl     = each.value["min_ttl"]
+  
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = each.value["cookies_config"]
+
+      dynamic cookies {
+        for_each = each.value["cookies_config"] == "whitelist" || each.value["cookies_config"] == "allExcept" ? [each.value["cookie_list"]] : []
+          content {
+          items = cookies.value
+          }
+      }
+    }
+    headers_config {
+      header_behavior = each.value["header"]
+
+      dynamic headers {
+        for_each = each.value["header"] == "whitelist" ? [each.value["headers_list"]] : []
+          content {
+          items = headers.value
+          }
+      }
+    }
+    # valiid query string behaviours are none, all, whitelist, allExcept
+    # query string values can only be set if behaviour is whitelist or allExcept.
+    query_strings_config {
+      query_string_behavior = each.value["query_string_behavior"]
+      
+      dynamic query_strings {
+        for_each = each.value["query_string_behavior"] == "whitelist" || each.value["query_string_behavior"] == "allExcept" ? [each.value["cache_policy_query_strings"]] : []
+          content {
+          items = query_strings.value
+          }
+      }
+    }
+    enable_accept_encoding_brotli = true
+    enable_accept_encoding_gzip = true
+  }
+}
+
+# We do not cache requests, so leaving all config as default.
+resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {
+  provider = aws.domain-cdn
+
+  for_each = coalesce(var.config.origin_request_policy, {})
+  
+  name    = "${each.key}-${var.application}-${var.environment}"
+  comment = "Origin request policy created for ${var.application}"
+  cookies_config {
+    cookie_behavior = "all"
+  }
+  headers_config {
+    header_behavior = "allViewer"
+  }
+  query_strings_config {
+    query_string_behavior = "all"
+  }
+}
