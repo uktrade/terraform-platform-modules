@@ -146,11 +146,11 @@ run "validate_cache_policy" {
     config = {
       cache_policy = {
         "test" = {
-          min_ttl = 1
-          max_ttl = 3600
-          default_ttl = 1
-          cookies_config = "all"
-          header = "none"
+          min_ttl               = 1
+          max_ttl               = 3600
+          default_ttl           = 1
+          cookies_config        = "all"
+          header                = "none"
           query_string_behavior = "none"
         }
       }
@@ -192,18 +192,18 @@ run "validate_cache_policy_cookie_list" {
     config = {
       cache_policy = {
         "test" = {
-          min_ttl = 1
-          max_ttl = 3600
-          default_ttl = 1
+          min_ttl        = 1
+          max_ttl        = 3600
+          default_ttl    = 1
           cookies_config = "whitelist"
-          cookie_list: ["my-cookie"]
-          header = "none"
+          cookie_list : ["my-cookie"]
+          header                = "none"
           query_string_behavior = "all"
-       }
+        }
       }
     }
   }
- assert {
+  assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].cookies_config[0].cookie_behavior == "whitelist"
     error_message = "Cache policy cookie_behavior does not match expected value."
   }
@@ -221,18 +221,18 @@ run "validate_cache_policy_header_list" {
     config = {
       cache_policy = {
         "test" = {
-          min_ttl = 1
-          max_ttl = 3600
-          default_ttl = 1
-          cookies_config = "all"
-          header = "whitelist"
-          headers_list = ["my-header"]
+          min_ttl               = 1
+          max_ttl               = 3600
+          default_ttl           = 1
+          cookies_config        = "all"
+          header                = "whitelist"
+          headers_list          = ["my-header"]
           query_string_behavior = "all"
-       }
+        }
       }
     }
   }
- assert {
+  assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].headers_config[0].header_behavior == "whitelist"
     error_message = "Cache policy header_behavior does not match expected value."
   }
@@ -251,18 +251,18 @@ run "validate_cache_policy_query_strings" {
     config = {
       cache_policy = {
         "test" = {
-          min_ttl = 1
-          max_ttl = 3600
-          default_ttl = 1
-          cookies_config = "all"
-          header = "none"
+          min_ttl               = 1
+          max_ttl               = 3600
+          default_ttl           = 1
+          cookies_config        = "all"
+          header                = "none"
           query_string_behavior = "whitelist"
-          cache_policy_query_strings: ["q", "test"]
-       }
+          cache_policy_query_strings : ["q", "test"]
+        }
       }
     }
   }
- assert {
+  assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].query_strings_config[0].query_string_behavior == "whitelist"
     error_message = "Cache policy query_string_behavior does not match expected value."
   }
@@ -280,32 +280,32 @@ run "validate_multiple_cache_policys" {
     config = {
       cache_policy = {
         "test" = {
-          min_ttl = 1
-          max_ttl = 3600
-          default_ttl = 1
-          cookies_config = "all"
-          header = "none"
+          min_ttl               = 1
+          max_ttl               = 3600
+          default_ttl           = 1
+          cookies_config        = "all"
+          header                = "none"
           query_string_behavior = "none"
-       }
-       "test2" = {
-          min_ttl = 2
-          max_ttl = 3600
-          default_ttl = 1
-          cookies_config = "all"
-          header = "none"
+        }
+        "test2" = {
+          min_ttl               = 2
+          max_ttl               = 3600
+          default_ttl           = 1
+          cookies_config        = "all"
+          header                = "none"
           query_string_behavior = "none"
-       }
+        }
       }
     }
   }
- assert {
+  assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].min_ttl == 1
     error_message = "Cache policy min_ttl does not match expected value."
   }
-assert {
-  condition     = aws_cloudfront_cache_policy.cache_policy["test2"].min_ttl == 2
-  error_message = "Cache policy min_ttl does not match expected value."
-}
+  assert {
+    condition     = aws_cloudfront_cache_policy.cache_policy["test2"].min_ttl == 2
+    error_message = "Cache policy min_ttl does not match expected value."
+  }
 
 }
 
@@ -346,7 +346,7 @@ run "validate_default_cache_policy_not_set" {
       cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
     }
   }
- assert {
+  assert {
     condition     = contains(aws_cloudfront_distribution.standard["dev.my-application.uktrade.digital"].default_cache_behavior[0].forwarded_values[0].headers, "*")
     error_message = "header does not match expected value."
   }
@@ -370,28 +370,28 @@ run "validate_default_cache_policy_set" {
     config = {
       cache_policy = {
         "test-policy" = {
-          min_ttl = 1
-          max_ttl = 3600
-          default_ttl = 1
-          cookies_config = "all"
-          header = "none"
+          min_ttl               = 1
+          max_ttl               = 3600
+          default_ttl           = 1
+          cookies_config        = "all"
+          header                = "none"
           query_string_behavior = "none"
-       }
+        }
       }
-      origin_request_policy = {"test-origin-request" = {}}
-      domain_prefix    = "dom-prefix",
-      cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
+      origin_request_policy = { "test-origin-request" = {} }
+      domain_prefix         = "dom-prefix",
+      cdn_domains_list      = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
       paths = {
         "dev.my-application.uktrade.digital" = {
           default = {
-            cache = "test-policy"
+            cache   = "test-policy"
             request = "test-origin-request"
-        }
+          }
         }
       }
     }
-  } 
- assert {
+  }
+  assert {
     condition     = length(aws_cloudfront_distribution.standard["dev.my-application.uktrade.digital"].default_cache_behavior[0].forwarded_values) == 0
     error_message = "default forwarded values should not be set."
   }
@@ -407,34 +407,34 @@ run "validate_default_cache_policy_set_multiple_domains" {
     config = {
       cache_policy = {
         "test-policy" = {
-          min_ttl = 1
-          max_ttl = 3600
-          default_ttl = 1
-          cookies_config = "all"
-          header = "none"
+          min_ttl               = 1
+          max_ttl               = 3600
+          default_ttl           = 1
+          cookies_config        = "all"
+          header                = "none"
           query_string_behavior = "none"
-       }
+        }
       }
-      origin_request_policy = {"test-origin-request" = {}}
-      domain_prefix    = "dom-prefix",
-      cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"],  "dev2.my-application.uktrade.digital" : ["internal-2", "my-application.uktrade.digital"]}
+      origin_request_policy = { "test-origin-request" = {} }
+      domain_prefix         = "dom-prefix",
+      cdn_domains_list      = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"], "dev2.my-application.uktrade.digital" : ["internal-2", "my-application.uktrade.digital"] }
       paths = {
         "dev.my-application.uktrade.digital" = {
           default = {
-            cache = "test-policy"
+            cache   = "test-policy"
             request = "test-origin-request"
-        }
+          }
         },
         "dev2.my-application.uktrade.digital" = {
           default = {
-            cache = "test-policy"
+            cache   = "test-policy"
             request = "test-origin-request"
-        }
+          }
         }
       }
     }
   }
- assert {
+  assert {
     condition     = length(aws_cloudfront_distribution.standard["dev2.my-application.uktrade.digital"].default_cache_behavior[0].forwarded_values) == 0
     error_message = "default forwarded values should not be set."
   }
@@ -450,36 +450,36 @@ run "validate_ordered_cache_policy_set" {
     config = {
       cache_policy = {
         "test-policy" = {
-          min_ttl = 1
-          max_ttl = 3600
-          default_ttl = 1
-          cookies_config = "all"
-          header = "none"
+          min_ttl               = 1
+          max_ttl               = 3600
+          default_ttl           = 1
+          cookies_config        = "all"
+          header                = "none"
           query_string_behavior = "none"
-       }
+        }
       }
-      origin_request_policy = {"test-origin-request" = {}}
-      domain_prefix    = "dom-prefix",
-      cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
+      origin_request_policy = { "test-origin-request" = {} }
+      domain_prefix         = "dom-prefix",
+      cdn_domains_list      = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
       paths = {
         "dev.my-application.uktrade.digital" = {
           additional = [
             {
-            path = "/static"
-            cache = "test-policy"
-            request = "test-origin-request"
-          },
-          {
-            path = "/images"
-            cache = "test-policy"
-            request = "test-origin-request"
-          }
+              path    = "/static"
+              cache   = "test-policy"
+              request = "test-origin-request"
+            },
+            {
+              path    = "/images"
+              cache   = "test-policy"
+              request = "test-origin-request"
+            }
           ]
         }
       }
     }
   }
- 
+
   assert {
     condition     = aws_cloudfront_distribution.standard["dev.my-application.uktrade.digital"].ordered_cache_behavior[0].path_pattern == "/static"
     error_message = "default forwarded values should not be set."

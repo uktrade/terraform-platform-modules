@@ -42,19 +42,19 @@ resource "aws_route53_record" "validation-record" {
 
 # These data exports are only run if there is a cache policy configured in platform-config.yml
 data "aws_cloudfront_cache_policy" "policy-name" {
-  provider        = aws.domain-cdn
+  provider = aws.domain-cdn
   for_each = coalesce(var.config.cache_policy, {})
 
-  name = "${each.key}-${var.application}-${var.environment}"
-  depends_on = [ aws_cloudfront_cache_policy.cache_policy ]
+  name       = "${each.key}-${var.application}-${var.environment}"
+  depends_on = [aws_cloudfront_cache_policy.cache_policy]
 }
 
 data "aws_cloudfront_origin_request_policy" "request-policy-name" {
-  provider        = aws.domain-cdn
+  provider = aws.domain-cdn
   for_each = coalesce(var.config.origin_request_policy, {})
 
-  name = "${each.key}-${var.application}-${var.environment}"
-  depends_on = [ aws_cloudfront_origin_request_policy.origin_request_policy]
+  name       = "${each.key}-${var.application}-${var.environment}"
+  depends_on = [aws_cloudfront_origin_request_policy.origin_request_policy]
 }
 
 resource "aws_cloudfront_distribution" "standard" {
@@ -63,10 +63,10 @@ resource "aws_cloudfront_distribution" "standard" {
   # checkov:skip=CKV2_AWS_32:Response headers policy not required.
   # checkov:skip=CKV2_AWS_47:WAFv2 WebACL rules are set in https://gitlab.ci.uktrade.digital/webops/terraform-waf
   depends_on = [
-    aws_acm_certificate_validation.cert-validate, 
-    aws_cloudfront_cache_policy.cache_policy, 
+    aws_acm_certificate_validation.cert-validate,
+    aws_cloudfront_cache_policy.cache_policy,
     aws_cloudfront_origin_request_policy.origin_request_policy
-    ]
+  ]
 
   provider        = aws.domain-cdn
   for_each        = local.cdn_domains_list
@@ -88,48 +88,48 @@ resource "aws_cloudfront_distribution" "standard" {
   }
 
   default_cache_behavior {
-    allowed_methods  = local.cdn_defaults.allowed_methods
-    cached_methods   = local.cdn_defaults.cached_methods
-    target_origin_id = "${each.value[0]}.${local.domain_suffix}"
+    allowed_methods        = local.cdn_defaults.allowed_methods
+    cached_methods         = local.cdn_defaults.cached_methods
+    target_origin_id       = "${each.value[0]}.${local.domain_suffix}"
     viewer_protocol_policy = local.cdn_defaults.viewer_protocol_policy
     compress               = local.cdn_defaults.compress
 
     # These 4 paramters (min_ttl, default_ttl, max_ttl and forwarded_values) are only used if there is no cache policy set on the default root path, 
     # therefore they need to be set to null if you want to use a cache policy on the root.
     # If the variable paths/{domain}/default is not set the default values are used. 
-    min_ttl                = try(var.config.paths[each.key].default != null ? null : 0, 0)
-    default_ttl            = try(var.config.paths[each.key].default != null ? null : 86400, 86400)
-    max_ttl                = try(var.config.paths[each.key].default != null ? null : 31536000, 31536000)
-    
+    min_ttl     = try(var.config.paths[each.key].default != null ? null : 0, 0)
+    default_ttl = try(var.config.paths[each.key].default != null ? null : 86400, 86400)
+    max_ttl     = try(var.config.paths[each.key].default != null ? null : 31536000, 31536000)
+
     dynamic "forwarded_values" {
       for_each = try(var.config.paths[each.key].default != null ? [] : ["default"], ["default"])
-        content {     
-            query_string = local.cdn_defaults.forwarded_values.query_string
-            headers      = local.cdn_defaults.forwarded_values.headers
-            cookies {
-              forward = local.cdn_defaults.forwarded_values.cookies.forward
-          }
+      content {
+        query_string = local.cdn_defaults.forwarded_values.query_string
+        headers      = local.cdn_defaults.forwarded_values.headers
+        cookies {
+          forward = local.cdn_defaults.forwarded_values.cookies.forward
+        }
       }
     }
 
     # If the variable paths/{domain}/default/[cache/request] are set.
-    cache_policy_id = try(data.aws_cloudfront_cache_policy.policy-name[var.config.paths[each.key].default.cache].id, "")
+    cache_policy_id          = try(data.aws_cloudfront_cache_policy.policy-name[var.config.paths[each.key].default.cache].id, "")
     origin_request_policy_id = try(data.aws_cloudfront_origin_request_policy.request-policy-name[var.config.paths[each.key].default.request].id, "")
   }
 
   # If path based routing is set in platform-config.yml then this is run per path, you will always attach a policy to a path.
   dynamic "ordered_cache_behavior" {
-    for_each = try(var.config.paths[each.key] != null ? [ for k in var.config.paths[each.key].additional : k ] : [],[])
-    
-      content {
-        path_pattern           = ordered_cache_behavior.value.path
-        target_origin_id       = "${each.value[0]}.${local.domain_suffix}"
-        cache_policy_id  = data.aws_cloudfront_cache_policy.policy-name[ordered_cache_behavior.value.cache].id
-        origin_request_policy_id = data.aws_cloudfront_origin_request_policy.request-policy-name[ordered_cache_behavior.value.request].id
-        viewer_protocol_policy = "redirect-to-https"
-        allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-        cached_methods         = ["GET", "HEAD"]
-      }
+    for_each = try(var.config.paths[each.key] != null ? [for k in var.config.paths[each.key].additional : k] : [], [])
+
+    content {
+      path_pattern             = ordered_cache_behavior.value.path
+      target_origin_id         = "${each.value[0]}.${local.domain_suffix}"
+      cache_policy_id          = data.aws_cloudfront_cache_policy.policy-name[ordered_cache_behavior.value.cache].id
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.request-policy-name[ordered_cache_behavior.value.request].id
+      viewer_protocol_policy   = "redirect-to-https"
+      allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+      cached_methods           = ["GET", "HEAD"]
+    }
   }
 
   viewer_certificate {
@@ -188,18 +188,18 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
   default_ttl = each.value["default_ttl"]
   max_ttl     = each.value["max_ttl"]
   min_ttl     = each.value["min_ttl"]
-  
+
   parameters_in_cache_key_and_forwarded_to_origin {
     cookies_config {
       cookie_behavior = each.value["cookies_config"]
 
-    # valid cookies config are none, all, whitelist, allExcept
-    # cookie values can only be set if cookie_config is whitelist or allExcept.
-      dynamic cookies {
+      # valid cookies config are none, all, whitelist, allExcept
+      # cookie values can only be set if cookie_config is whitelist or allExcept.
+      dynamic "cookies" {
         for_each = each.value["cookies_config"] == "whitelist" || each.value["cookies_config"] == "allExcept" ? [each.value["cookie_list"]] : []
-          content {
+        content {
           items = cookies.value
-          }
+        }
       }
     }
     headers_config {
@@ -207,27 +207,27 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
 
       # valid headers config are none, all, whitelist, allExcept
       # header values can only be set if header is whitelist.
-      dynamic headers {
+      dynamic "headers" {
         for_each = each.value["header"] == "whitelist" ? [each.value["headers_list"]] : []
-          content {
+        content {
           items = headers.value
-          }
+        }
       }
     }
     # valiid query string behaviours are none, all, whitelist, allExcept
     # query string values can only be set if behaviour is whitelist or allExcept.
     query_strings_config {
       query_string_behavior = each.value["query_string_behavior"]
-      
-      dynamic query_strings {
+
+      dynamic "query_strings" {
         for_each = each.value["query_string_behavior"] == "whitelist" || each.value["query_string_behavior"] == "allExcept" ? [each.value["cache_policy_query_strings"]] : []
-          content {
+        content {
           items = query_strings.value
-          }
+        }
       }
     }
     enable_accept_encoding_brotli = true
-    enable_accept_encoding_gzip = true
+    enable_accept_encoding_gzip   = true
   }
 }
 
@@ -236,7 +236,7 @@ resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {
   provider = aws.domain-cdn
 
   for_each = coalesce(var.config.origin_request_policy, {})
-  
+
   name    = "${each.key}-${var.application}-${var.environment}"
   comment = "Origin request policy created for ${var.application}"
   cookies_config {
