@@ -254,6 +254,30 @@ resource "aws_wafv2_web_acl" "waf-acl" {
       }
     }
   }
+
+  # Add the Managed Rule Group for Log4j2 protection
+  rule {
+    name     = "AWS-AWSManagedRulesKnownBadInputsRuleSet"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.application}-${var.environment}-ManagedBadInputs"
+      sampled_requests_enabled   = true
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+  }
+
   lifecycle {
     # Use `ignore_changes` to allow rotation without Terraform overwriting the value
     ignore_changes = [rule]
