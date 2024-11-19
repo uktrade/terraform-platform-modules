@@ -14,12 +14,12 @@ override_data {
   }
 }
 
-# override_data {
-#   target = data.aws_secretsmanager_secret_version.origin_verify_secret_version
-#   values = {
-#     secret_string = "{\"HEADERVALUE\": \"dummy123\"}"
-#   }
-# }
+override_data {
+  target = data.aws_secretsmanager_secret_version.origin_verify_secret_version
+  values = {
+    secret_string = "{\"HEADERVALUE\": \"dummy123\"}"
+  }
+}
 
 
 variables {
