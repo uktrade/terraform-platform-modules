@@ -70,7 +70,7 @@ run "aws_cloudfront_distribution_custom_header_test" {
   assert {
     condition = [
       for origin in aws_cloudfront_distribution.standard["dev.my-application.uktrade.digital"].origin :
-      true if [for header in origin.custom_header : true if header.name == "x-origin-verify" && header.value == "dummy123"] != []][0] == true
+    true if[for header in origin.custom_header : true if header.name == "x-origin-verify" && header.value == "dummy123"] != []][0] == true
     error_message = "Custom header x-origin-verify with value 'dummy123' is missing or incorrectly configured."
   }
 }
