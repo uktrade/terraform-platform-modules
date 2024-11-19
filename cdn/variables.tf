@@ -16,7 +16,6 @@ variable "config" {
     cache_policy            = optional(map(any))
     origin_request_policy   = optional(map(any))
     paths                   = optional(any)
-    default_path                   = optional(any)
 
     # CDN default overrides
     viewer_certificate_minimum_protocol_version = optional(string)

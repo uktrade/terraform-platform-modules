@@ -40,11 +40,13 @@ resource "aws_route53_record" "validation-record" {
   ttl      = 300
 }
 
+# These data exports are only run if there is a cache policy configured in platform-config.yml
 data "aws_cloudfront_cache_policy" "policy-name" {
   provider        = aws.domain-cdn
   for_each = coalesce(var.config.cache_policy, {})
 
   name = "${each.key}-${var.application}-${var.environment}"
+  depends_on = [ aws_cloudfront_cache_policy.cache_policy ]
 }
 
 data "aws_cloudfront_origin_request_policy" "request-policy-name" {
@@ -52,16 +54,19 @@ data "aws_cloudfront_origin_request_policy" "request-policy-name" {
   for_each = coalesce(var.config.origin_request_policy, {})
 
   name = "${each.key}-${var.application}-${var.environment}"
+  depends_on = [ aws_cloudfront_origin_request_policy.origin_request_policy]
 }
-
-
 
 resource "aws_cloudfront_distribution" "standard" {
   # checkov:skip=CKV_AWS_305:This is managed in the application.
   # checkov:skip=CKV_AWS_310:No fail-over origin required.
   # checkov:skip=CKV2_AWS_32:Response headers policy not required.
   # checkov:skip=CKV2_AWS_47:WAFv2 WebACL rules are set in https://gitlab.ci.uktrade.digital/webops/terraform-waf
-  depends_on = [aws_acm_certificate_validation.cert-validate]
+  depends_on = [
+    aws_acm_certificate_validation.cert-validate, 
+    aws_cloudfront_cache_policy.cache_policy, 
+    aws_cloudfront_origin_request_policy.origin_request_policy
+    ]
 
   provider        = aws.domain-cdn
   for_each        = local.cdn_domains_list
@@ -87,18 +92,16 @@ resource "aws_cloudfront_distribution" "standard" {
     cached_methods   = local.cdn_defaults.cached_methods
     target_origin_id = "${each.value[0]}.${local.domain_suffix}"
     viewer_protocol_policy = local.cdn_defaults.viewer_protocol_policy
-
     compress               = local.cdn_defaults.compress
-    # Else condition will never occur because the if statement var is not set tf will error, the try will catch that and set the default values.
-    min_ttl                = try(var.config.paths[each.key].default != null ? null : 0, 0) #: null
+
+    # These 4 paramters (min_ttl, default_ttl, max_ttl and forwarded_values) are only used if there is no cache policy set on the default root path, 
+    # therefore they need to be set to null if you want to use a cache policy on the root.
+    # If the variable paths/{domain}/default is not set the default values are used. 
+    min_ttl                = try(var.config.paths[each.key].default != null ? null : 0, 0)
     default_ttl            = try(var.config.paths[each.key].default != null ? null : 86400, 86400)
     max_ttl                = try(var.config.paths[each.key].default != null ? null : 31536000, 31536000)
-
-    cache_policy_id = try(data.aws_cloudfront_cache_policy.policy-name[var.config.paths[each.key].default.cache].id, "")
-    origin_request_policy_id = try(data.aws_cloudfront_origin_request_policy.request-policy-name[var.config.paths[each.key].default.request].id, "")
-
+    
     dynamic "forwarded_values" {
-      #Also needs to be set if there is no var.config.paths VAR
       for_each = try(var.config.paths[each.key].default != null ? [] : ["default"], ["default"])
         content {     
             query_string = local.cdn_defaults.forwarded_values.query_string
@@ -108,8 +111,13 @@ resource "aws_cloudfront_distribution" "standard" {
           }
       }
     }
+
+    # If the variable paths/{domain}/default/[cache/request] are set.
+    cache_policy_id = try(data.aws_cloudfront_cache_policy.policy-name[var.config.paths[each.key].default.cache].id, "")
+    origin_request_policy_id = try(data.aws_cloudfront_origin_request_policy.request-policy-name[var.config.paths[each.key].default.request].id, "")
   }
 
+  # If path based routing is set in platform-config.yml then this is run per path, you will always attach a policy to a path.
   dynamic "ordered_cache_behavior" {
     for_each = try(var.config.paths[each.key] != null ? [ for k in var.config.paths[each.key].additional : k ] : [],[])
     
@@ -168,8 +176,8 @@ resource "aws_route53_record" "cdn-address" {
 }
 
 
-# Create a CDN cache Policy
-
+# Create a CDN cache policy and origin request policy - Optional, but if one is set the the other needs to also be set.
+# These resources are only needed if you need to apply caching on your CDN either on the root or path of your domain.
 resource "aws_cloudfront_cache_policy" "cache_policy" {
   provider = aws.domain-cdn
 
@@ -185,6 +193,8 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
     cookies_config {
       cookie_behavior = each.value["cookies_config"]
 
+    # valid cookies config are none, all, whitelist, allExcept
+    # cookie values can only be set if cookie_config is whitelist or allExcept.
       dynamic cookies {
         for_each = each.value["cookies_config"] == "whitelist" || each.value["cookies_config"] == "allExcept" ? [each.value["cookie_list"]] : []
           content {
@@ -195,6 +205,8 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
     headers_config {
       header_behavior = each.value["header"]
 
+      # valid headers config are none, all, whitelist, allExcept
+      # header values can only be set if header is whitelist.
       dynamic headers {
         for_each = each.value["header"] == "whitelist" ? [each.value["headers_list"]] : []
           content {
@@ -219,7 +231,7 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
   }
 }
 
-# We do not cache requests, so leaving all config as default.
+# We do not cache origin requests, so leaving all config as default.
 resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {
   provider = aws.domain-cdn
 

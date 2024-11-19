@@ -159,27 +159,27 @@ run "validate_cache_policy" {
 
   assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].min_ttl == 1
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy min_ttl does not match expected value."
   }
   assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].max_ttl == 3600
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy max_ttl does not match expected value."
   }
   assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].default_ttl == 1
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy default_ttl does not match expected value."
   }
   assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].cookies_config[0].cookie_behavior == "all" #var.config.cache_policy.cookies_config
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy cookie_behavior does not match expected value."
   }
   assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].headers_config[0].header_behavior == "none" #var.config.cache_policy.header
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy header_behavior does not match expected value."
   }
   assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].query_strings_config[0].query_string_behavior == "none" #var.config.cache_policy.query_string_behavior
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy query_string_behavior does not match expected value."
   }
 
 }
@@ -205,11 +205,11 @@ run "validate_cache_policy_cookie_list" {
   }
  assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].cookies_config[0].cookie_behavior == "whitelist"
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy cookie_behavior does not match expected value."
   }
   assert {
     condition     = contains(aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].cookies_config[0].cookies[0].items, "my-cookie")
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy cookies does not match expected value."
   }
 }
 
@@ -234,11 +234,11 @@ run "validate_cache_policy_header_list" {
   }
  assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].headers_config[0].header_behavior == "whitelist"
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy header_behavior does not match expected value."
   }
   assert {
     condition     = contains(aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].headers_config[0].headers[0].items, "my-header")
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy headers does not match expected value."
   }
 }
 
@@ -264,11 +264,11 @@ run "validate_cache_policy_query_strings" {
   }
  assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].query_strings_config[0].query_string_behavior == "whitelist"
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy query_string_behavior does not match expected value."
   }
   assert {
     condition     = contains(aws_cloudfront_cache_policy.cache_policy["test"].parameters_in_cache_key_and_forwarded_to_origin[0].query_strings_config[0].query_strings[0].items, "test")
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy query_strings does not match expected value."
   }
 }
 
@@ -300,11 +300,11 @@ run "validate_multiple_cache_policys" {
   }
  assert {
     condition     = aws_cloudfront_cache_policy.cache_policy["test"].min_ttl == 1
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy min_ttl does not match expected value."
   }
 assert {
   condition     = aws_cloudfront_cache_policy.cache_policy["test2"].min_ttl == 2
-  error_message = "Cache policy name does not match expected value."
+  error_message = "Cache policy min_ttl does not match expected value."
 }
 
 }
@@ -322,15 +322,15 @@ run "validate_origin_request_policy" {
   }
   assert {
     condition     = aws_cloudfront_origin_request_policy.origin_request_policy["test"].cookies_config[0].cookie_behavior == "all"
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy cookie_behavior does not match expected value."
   }
   assert {
     condition     = aws_cloudfront_origin_request_policy.origin_request_policy["test"].headers_config[0].header_behavior == "allViewer"
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy header_behavior does not match expected value."
   }
   assert {
     condition     = aws_cloudfront_origin_request_policy.origin_request_policy["test"].query_strings_config[0].query_string_behavior == "all"
-    error_message = "Cache policy name does not match expected value."
+    error_message = "Cache policy query_string_behavior does not match expected value."
   }
 }
 
@@ -340,8 +340,8 @@ run "validate_default_cache_policy_not_set" {
 
   variables {
     config = {
-      cache_policy = {"test-policy" = {}}
-      origin_request_policy = {"test-origin-request" = {}}
+      # cache_policy = {"test-policy" = {}}
+      # origin_request_policy = {"test-origin-request" = {}}
       domain_prefix    = "dom-prefix",
       cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
     }
@@ -368,7 +368,16 @@ run "validate_default_cache_policy_set" {
     application = "app"
     environment = "env"
     config = {
-      cache_policy = {"test-policy" = {}}
+      cache_policy = {
+        "test-policy" = {
+          min_ttl = 1
+          max_ttl = 3600
+          default_ttl = 1
+          cookies_config = "all"
+          header = "none"
+          query_string_behavior = "none"
+       }
+      }
       origin_request_policy = {"test-origin-request" = {}}
       domain_prefix    = "dom-prefix",
       cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
@@ -381,7 +390,7 @@ run "validate_default_cache_policy_set" {
         }
       }
     }
-  }
+  } 
  assert {
     condition     = length(aws_cloudfront_distribution.standard["dev.my-application.uktrade.digital"].default_cache_behavior[0].forwarded_values) == 0
     error_message = "default forwarded values should not be set."
@@ -396,7 +405,16 @@ run "validate_default_cache_policy_set_multiple_domains" {
     application = "app"
     environment = "env"
     config = {
-      cache_policy = {"test-policy" = {}}
+      cache_policy = {
+        "test-policy" = {
+          min_ttl = 1
+          max_ttl = 3600
+          default_ttl = 1
+          cookies_config = "all"
+          header = "none"
+          query_string_behavior = "none"
+       }
+      }
       origin_request_policy = {"test-origin-request" = {}}
       domain_prefix    = "dom-prefix",
       cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"],  "dev2.my-application.uktrade.digital" : ["internal-2", "my-application.uktrade.digital"]}
@@ -430,7 +448,16 @@ run "validate_ordered_cache_policy_set" {
     application = "app"
     environment = "env"
     config = {
-      cache_policy = {"test-policy" = {}}
+      cache_policy = {
+        "test-policy" = {
+          min_ttl = 1
+          max_ttl = 3600
+          default_ttl = 1
+          cookies_config = "all"
+          header = "none"
+          query_string_behavior = "none"
+       }
+      }
       origin_request_policy = {"test-origin-request" = {}}
       domain_prefix    = "dom-prefix",
       cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }

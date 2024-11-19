@@ -77,7 +77,6 @@ module "cdn" {
   }
   application = var.args.application
   environment = var.environment
-  #paths = var.paths
 
   config = each.value
 }
