@@ -38,9 +38,9 @@ override_data {
 
 
 variables {
-  application = "app"
-  environment = "env"
-  vpc_name    = "vpc-name"
+  application    = "app"
+  environment    = "env"
+  vpc_name       = "vpc-name"
   dns_account_id = "123456789012"
   config = {
     domain_prefix = "dom-prefix",
@@ -263,8 +263,8 @@ run "domain_length_validation_tests" {
     application = "app"
     environment = "env"
     config = {
-      domain_prefix    = "dom-prefix",
-      cdn_domains_list = { "a-very-long-domain-name-used-to-test-length-validation.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
+      domain_prefix                           = "dom-prefix",
+      cdn_domains_list                        = { "a-very-long-domain-name-used-to-test-length-validation.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"] }
       slack_alert_channel_alb_secret_rotation = "/slack/test/ssm/parameter/name"
     }
   }
@@ -280,7 +280,7 @@ run "domain_length_validation_tests_succeed_with_empty_cdn_domains_list_in_confi
   variables {
     application = "app"
     environment = "env"
-    config      = {
+    config = {
       slack_alert_channel_alb_secret_rotation = "/slack/test/ssm/parameter/name"
     }
   }
@@ -289,7 +289,7 @@ run "domain_length_validation_tests_succeed_with_empty_cdn_domains_list_in_confi
     condition     = var.config.cdn_domains_list == null
     error_message = "Should be: null"
   }
-  
+
   assert {
     condition     = local.domain_list == ""
     error_message = "Should be: \"\""
@@ -298,8 +298,8 @@ run "domain_length_validation_tests_succeed_with_empty_cdn_domains_list_in_confi
 
 run "waf_and_rotate_lambda" {
   command = plan
-  
-   assert {
+
+  assert {
     condition     = aws_secretsmanager_secret.origin-verify-secret.name == "${var.application}-${var.environment}-origin-verify-header-secret"
     error_message = "Invalid name for aws_secretsmanager_secret.origin-verify-secret"
   }
@@ -373,44 +373,44 @@ run "waf_and_rotate_lambda" {
     condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.visibility_config[0] if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.visibility_config[0].sampled_requests_enabled == true]) == 1
     error_message = "Invalid sampled_requests_enabled in visibility_config for aws_wafv2_web_acl.waf-acl rule"
   }
-  
+
   # --- Testing of the WAF rule statement ---
-  
+
   assert {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
-        length(r.statement[0].or_statement[0].statement) == 2 &&
-        r.statement[0].or_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name == local.secret_token_header_name &&
-        r.statement[0].or_statement[0].statement[1].byte_match_statement[0].field_to_match[0].single_header[0].name == local.secret_token_header_name
+      length(r.statement[0].or_statement[0].statement) == 2 &&
+      r.statement[0].or_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name == local.secret_token_header_name &&
+      r.statement[0].or_statement[0].statement[1].byte_match_statement[0].field_to_match[0].single_header[0].name == local.secret_token_header_name
     ])
     error_message = "Invalid single_header name in aws_wafv2_web_acl.waf-acl rule"
   }
-  
+
   assert {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
-        length(r.statement[0].or_statement[0].statement) == 2 &&
-        r.statement[0].or_statement[0].statement[0].byte_match_statement[0].positional_constraint == "EXACTLY" &&
-        r.statement[0].or_statement[0].statement[1].byte_match_statement[0].positional_constraint == "EXACTLY"
+      length(r.statement[0].or_statement[0].statement) == 2 &&
+      r.statement[0].or_statement[0].statement[0].byte_match_statement[0].positional_constraint == "EXACTLY" &&
+      r.statement[0].or_statement[0].statement[1].byte_match_statement[0].positional_constraint == "EXACTLY"
     ])
     error_message = "Invalid positional_constraint in aws_wafv2_web_acl.waf-acl rule"
   }
 
-# Cannot test for the search_string on a plan
-# Testing search_string from origin-secret (second statement)
-# assert {
-#   condition = alltrue([
-#     for r in aws_wafv2_web_acl.waf-acl.rule :
-#       # Ensure we have exactly 2 statements in or_statement
-#       length(r.statement[0].or_statement[0].statement) == 2 &&
-#       # Check if the second statement's search_string matches the expected value
-#       r.statement[0].or_statement[0].statement[1].byte_match_statement[0].search_string == random_password.origin-secret.result
-#   ])
-#   error_message = "Invalid search_string for origin-secret in the second byte_match_statement of aws_wafv2_web_acl.waf-acl rule"
-# } 
+  # Cannot test for the search_string on a plan
+  # Testing search_string from origin-secret (second statement in rule)
+  # assert {
+  #   condition = alltrue([
+  #     for r in aws_wafv2_web_acl.waf-acl.rule :
+  #       # Ensure we have exactly 2 statements in or_statement
+  #       length(r.statement[0].or_statement[0].statement) == 2 &&
+  #       # Check if the second statement's search_string matches the expected value
+  #       r.statement[0].or_statement[0].statement[1].byte_match_statement[0].search_string == random_password.origin-secret.result
+  #   ])
+  #   error_message = "Invalid search_string for origin-secret in the second byte_match_statement of aws_wafv2_web_acl.waf-acl rule"
+  # } 
 
   # --- End testing of the WAF rule statement ---
-  
+
   assert {
     condition     = aws_lambda_function.origin-secret-rotate-function.function_name == "${var.application}-${var.environment}-origin-secret-rotate"
     error_message = "Invalid name for aws_lambda_function.origin-secret-rotate-function"
@@ -492,7 +492,7 @@ run "waf_and_rotate_lambda" {
     condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.SLACK_CHANNEL == data.aws_ssm_parameter.slack_alert_channel_alb_secret_rotation.value
     error_message = "Invalid SLACK_CHANNEL environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
-  
+
   assert {
     condition     = aws_lambda_permission.rotate-function-invoke-permission.statement_id == "AllowSecretsManagerInvocation"
     error_message = "Invalid statement_id for aws_lambda_permission.rotate-function-invoke-permission"
@@ -528,11 +528,11 @@ run "waf_and_rotate_lambda" {
     condition     = length(aws_iam_role.origin-secret-rotate-execution-role.inline_policy) == 1
     error_message = "Invalid number of inline_policies for aws_iam_role.origin-secret-rotate-execution-role"
   }
-  
+
   assert {
-  condition     = length([for p in aws_iam_role.origin-secret-rotate-execution-role.inline_policy : p.name if p.name == "OriginVerifyRotatePolicy"]) == 1
-  error_message = "Invalid name for inline_policy of aws_iam_role.origin-secret-rotate-execution-role"
-}
+    condition     = length([for p in aws_iam_role.origin-secret-rotate-execution-role.inline_policy : p.name if p.name == "OriginVerifyRotatePolicy"]) == 1
+    error_message = "Invalid name for inline_policy of aws_iam_role.origin-secret-rotate-execution-role"
+  }
 
 
   # Cannot assert against the arn in a plan. Requires an apply to evaluate.

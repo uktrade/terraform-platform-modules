@@ -14,6 +14,14 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_secretsmanager_secret_version.origin_verify_secret_version
+  values = {
+    secret_string = "{\"HEADERVALUE\": \"dummy123\"}"
+  }
+}
+
+
 variables {
   application = "app"
   environment = "env"
@@ -22,6 +30,7 @@ variables {
     domain_prefix    = "dom-prefix",
     cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"], "dev2.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital", "disable_cdn"] }
   }
+  origin_verify_secret_id = "dummy123"
 }
 
 
@@ -53,6 +62,17 @@ run "aws_cloudfront_distribution_unit_test" {
     error_message = "Should be: [ dev.my-application.uktrade.digital, ]"
   }
 
+}
+
+run "aws_cloudfront_distribution_custom_header_test" {
+  command = plan
+
+  assert {
+    condition = [
+      for origin in aws_cloudfront_distribution.standard["dev.my-application.uktrade.digital"].origin :
+      true if [for header in origin.custom_header : true if header.name == "x-origin-verify" && header.value == "dummy123"] != []][0] == true
+    error_message = "Custom header x-origin-verify with value 'dummy123' is missing or incorrectly configured."
+  }
 }
 
 run "aws_route53_record_unit_test_prod" {
