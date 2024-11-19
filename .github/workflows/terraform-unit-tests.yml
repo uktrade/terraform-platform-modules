@@ -59,6 +59,13 @@ jobs:
       - name: Check AWS Profile
         run: |
           echo "AWS_PROFILE is set to: $AWS_PROFILE"
+      - name: Debug Environment
+        run: env
+      - name: Test AWS CLI
+        run: aws --version
+      - name: Check AWS Region
+        run: |
+          echo "AWS REFGION: $AWS_REGION"
       - name: terraform test
         run: |
           cd ${{ matrix.module }}
