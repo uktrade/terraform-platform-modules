@@ -74,6 +74,14 @@ jobs:
       - name: Check AWS Region
         run: |
           echo "AWS REFGION: $AWS_REGION"
+      - name: Debug AWS Authentication 
+        run: | 
+          aws sts get-caller-identity 
+          aws configure list 
+          aws configure list-profiles 
+          echo "Current AWS Profile: $AWS_PROFILE" 
+          echo "Current AWS Region: $AWS_REGION"
+
       - name: terraform test
         run: |
           cd ${{ matrix.module }}
