@@ -544,6 +544,17 @@ data "aws_iam_policy_document" "redis" {
       "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:*"
     ]
   }
+
+  statement {
+    actions = [
+      "elasticache:DescribeCacheEngineVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+    sid = "AllowRedisListVersions"
+  }
 }
 
 resource "aws_iam_policy" "redis" {
@@ -767,6 +778,17 @@ data "aws_iam_policy_document" "opensearch" {
       "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/*"
     ]
   }
+
+  statement {
+    actions = [
+      "es:ListVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+    sid = "AllowOpensearchListVersions"
+  }
 }
 
 resource "aws_iam_policy" "opensearch" {
@@ -858,7 +880,8 @@ data "aws_iam_policy_document" "iam" {
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-CFNExecutionRole",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole",
       ]
     }
   }
@@ -875,7 +898,9 @@ data "aws_iam_policy_document" "iam" {
     actions = [
       "iam:UpdateAssumeRolePolicy"
     ]
-    resources = [for environment in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${environment.name}-shared-S3MigrationRole"]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole"
+    ]
   }
 
   statement {
