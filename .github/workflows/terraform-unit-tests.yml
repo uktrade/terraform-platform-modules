@@ -56,6 +56,9 @@ jobs:
         run: |
           cd ${{ matrix.module }}
           terraform init
+      - name: Check AWS Profile
+        run: |
+          echo "AWS_PROFILE Iis set to: $AWS_PROFILE"
       - name: terraform test
         run: |
           cd ${{ matrix.module }}
