@@ -72,7 +72,7 @@ resource "aws_cloudfront_distribution" "standard" {
 
     # Entire CF distro resource must be reprovisioned for changes to custom_header to take effect
     custom_header {
-      name  = local.token_header_name
+      name  = "x-origin-verify"
       value = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
     }
   }

@@ -189,7 +189,7 @@ resource "random_password" "origin-secret" {
 
 # Possible issue, when adding or changing a domain, secret is already deployed, rather than setting the search string here, it needs reading from secret manager
 resource "aws_wafv2_web_acl" "waf-acl" {
-  # checkov:skip=CKV2_AWS_31:Add logging resources - new ticket to be spun up
+  # checkov:skip=CKV_AWS_31:Ensure WAF2 has a Logging Configuration - new ticket to be spun up
   depends_on = [data.aws_secretsmanager_secret_version.origin_verify_secret_version, random_password.origin-secret]
 
   name        = "${var.application}-${var.environment}-ACL"
@@ -226,7 +226,7 @@ resource "aws_wafv2_web_acl" "waf-acl" {
           byte_match_statement {
             field_to_match {
               single_header {
-                name = local.token_header_name
+                name = "x-origin-verify"
               }
             }
             positional_constraint = "EXACTLY"
@@ -241,7 +241,7 @@ resource "aws_wafv2_web_acl" "waf-acl" {
           byte_match_statement {
             field_to_match {
               single_header {
-                name = local.token_header_name
+                name = "x-origin-verify"
               }
             }
             positional_constraint = "EXACTLY"
@@ -395,9 +395,8 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   # checkov:skip=CKV_AWS_272:Code signing is not currently in use
   # checkov:skip=CKV_AWS_116:Dead letter queue not required due to the nature of this function
   # checkov:skip=CKV_AWS_173:Encryption of environmental variables is not configured with KMS key
-  # checkov:skip=CKV_AWS_117:Run Lmabda inside VC with security groups & private subnets not necessary
+  # checkov:skip=CKV_AWS_117:Run Lambda inside VPC with security groups & private subnets not necessary
   # checkov:skip=CKV_AWS_50:XRAY tracing not used
-  # checkov:skip=CKV_AWS_31:XRAY tracing not used
   filename      = data.archive_file.lambda.output_path
   function_name = "${var.application}-${var.environment}-origin-secret-rotate"
   description   = "Secrets Manager Rotation Lambda Function"
@@ -415,7 +414,7 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
       WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
       WAFRULEPRI    = "0"
       DISTROIDLIST  = local.domain_list
-      HEADERNAME    = local.token_header_name
+      HEADERNAME    = "x-origin-verify"
       APPLICATION   = var.application
       ENVIRONMENT   = var.environment
       ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
