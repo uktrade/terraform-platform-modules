@@ -488,7 +488,7 @@ resource "aws_lambda_permission" "rotate-function-invoke-permission" {
   function_name = aws_lambda_function.origin-secret-rotate-function.function_name
   principal     = "secretsmanager.amazonaws.com"
 
-  # chekov requirement: limit lambda invocation by secrets in the same AWS account
+  # chekov CKV_AWS_364 requirement: limit lambda invocation by secrets in the same AWS account
   source_account = data.aws_caller_identity.current.account_id
 }
 

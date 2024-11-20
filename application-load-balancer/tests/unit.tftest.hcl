@@ -1,4 +1,12 @@
-mock_provider "aws" {}
+mock_provider "aws" {
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "123456789012"
+      id         = "123456789012"
+    user_id = "XXXXXXXXXXXXXXXXXXXXX" }
+  }
+
+}
 
 mock_provider "aws" {
   alias = "sandbox"
@@ -6,6 +14,12 @@ mock_provider "aws" {
 
 mock_provider "aws" {
   alias = "domain"
+  mock_data "aws_caller_identity" {
+    defaults = {
+      account_id = "123456789012"
+      id         = "123456789012"
+    user_id = "XXXXXXXXXXXXXXXXXXXXX" }
+  }
 }
 
 override_data {
@@ -395,7 +409,7 @@ run "waf_and_rotate_lambda" {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(r.statement[0].or_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == local.secret_token_header_name
+        try(r.statement[0].or_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == local.token_header_name
       ) : true
     ])
     error_message = "First statement's header name is incorrect"
@@ -405,7 +419,7 @@ run "waf_and_rotate_lambda" {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(r.statement[0].or_statement[0].statement[1].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == local.secret_token_header_name
+        try(r.statement[0].or_statement[0].statement[1].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == local.token_header_name
       ) : true
     ])
     error_message = "Second statement's header name is incorrect"
@@ -555,7 +569,7 @@ run "waf_and_rotate_lambda" {
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.HEADERNAME == local.secret_token_header_name
+    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.HEADERNAME == local.token_header_name
     error_message = "Invalid HEADERNAME environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
@@ -644,7 +658,7 @@ run "waf_and_rotate_lambda" {
   # }
 
   assert {
-    condition     = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule.rotation_rules[0].automatically_after_days == local.secret_token_rotation_days
+    condition     = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule.rotation_rules[0].automatically_after_days == 7
     error_message = "Invalid rotation_rules.automatically_after_days for aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule"
   }
 
