@@ -188,7 +188,7 @@ resource "random_password" "origin-secret" {
 }
 
 resource "aws_wafv2_web_acl" "waf-acl" {
-  # checkov:skip=CKV_AWS_31:Ensure WAF2 has a Logging Configuration to be done new ticket
+  # checkov:skip=CKV2_AWS_31: Ensure WAF2 has a Logging Configuration to be done new ticket
   depends_on = [data.aws_secretsmanager_secret_version.origin_verify_secret_version, random_password.origin-secret]
 
   name        = "${var.application}-${var.environment}-ACL"
