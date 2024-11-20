@@ -225,7 +225,7 @@ resource "aws_wafv2_web_acl" "waf-acl" {
           byte_match_statement {
             field_to_match {
               single_header {
-                name = local.secret_token_header_name
+                name = local.token_header_name
               }
             }
             positional_constraint = "EXACTLY"
@@ -240,7 +240,7 @@ resource "aws_wafv2_web_acl" "waf-acl" {
           byte_match_statement {
             field_to_match {
               single_header {
-                name = local.secret_token_header_name
+                name = local.token_header_name
               }
             }
             positional_constraint = "EXACTLY"
@@ -266,7 +266,7 @@ resource "aws_wafv2_web_acl" "waf-acl" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.application}-${var.environment}-ManagedBadInputs"
+      metric_name                = "${var.application}-${var.environment}-WAF-ACL-ManagedBadInputs"
       sampled_requests_enabled   = true
     }
 
@@ -442,6 +442,13 @@ data "archive_file" "lambda" {
 
 # Secrets Manager Rotation Lambda Function
 resource "aws_lambda_function" "origin-secret-rotate-function" {
+  # Precedence in the Postgres Lambda to skip first 2 checks
+  # checkov:skip=CKV_AWS_272:Code signing is not currently in use
+  # checkov:skip=CKV_AWS_116:Dead letter queue not required due to the nature of this function
+  # checkov:skip=CKV_AWS_173:Encryption of environmental variables is not configured with KMS key
+  # checkov:skip=CKV_AWS_117:Run Lmabda inside VC with security groups & private subnets not necessary
+  # checkov:skip=CKV_AWS_50:XRAY tracing not used
+  # checkov:skip=CKV_AWS_31:XRAY tracing not used
   filename      = data.archive_file.lambda.output_path
   function_name = "${var.application}-${var.environment}-origin-secret-rotate"
   description   = "Secrets Manager Rotation Lambda Function"
@@ -449,6 +456,8 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   runtime       = "python3.9"
   timeout       = 300
   role          = aws_iam_role.origin-secret-rotate-execution-role.arn
+  # this is not a user-facing function that needs to scale rapidly
+  reserved_concurrent_executions = 5
 
   environment {
     variables = {
@@ -457,7 +466,7 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
       WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
       WAFRULEPRI    = "0"
       DISTROIDLIST  = local.domain_list
-      HEADERNAME    = local.secret_token_header_name
+      HEADERNAME    = local.token_header_name
       APPLICATION   = var.application
       ENVIRONMENT   = var.environment
       ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
@@ -478,6 +487,9 @@ resource "aws_lambda_permission" "rotate-function-invoke-permission" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.origin-secret-rotate-function.function_name
   principal     = "secretsmanager.amazonaws.com"
+
+  # chekov requirement: limit lambda invocation by secrets in the same AWS account
+  source_account = data.aws_caller_identity.current.account_id
 }
 
 # Secrets Manager Rotation Schedule
@@ -485,7 +497,7 @@ resource "aws_secretsmanager_secret_rotation" "origin-verify-rotate-schedule" {
   secret_id           = aws_secretsmanager_secret.origin-verify-secret.id
   rotation_lambda_arn = aws_lambda_function.origin-secret-rotate-function.arn
   rotation_rules {
-    automatically_after_days = local.secret_token_rotation_days
+    automatically_after_days = 7
   }
 }
 
