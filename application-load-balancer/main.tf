@@ -187,9 +187,8 @@ resource "random_password" "origin-secret" {
   override_special = "_%@"
 }
 
-# Possible issue, when adding or changing a domain, secret is already deployed, rather than setting the search string here, it needs reading from secret manager
 resource "aws_wafv2_web_acl" "waf-acl" {
-  # checkov:skip=CKV_AWS_31:Ensure WAF2 has a Logging Configuration - new ticket to be spun up
+  # checkov:skip=CKV_AWS_31:Ensure WAF2 has a Logging Configuration to be done new ticket
   depends_on = [data.aws_secretsmanager_secret_version.origin_verify_secret_version, random_password.origin-secret]
 
   name        = "${var.application}-${var.environment}-ACL"
