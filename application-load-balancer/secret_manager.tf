@@ -1,3 +1,9 @@
+# Fetch the secret value from Secrets Manager
+data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
+  secret_id  = aws_secretsmanager_secret.origin-verify-secret.id
+  version_id = aws_secretsmanager_secret_version.secret-value.version_id
+}
+
 resource "aws_secretsmanager_secret" "origin-verify-secret" {
   name        = "${var.application}-${var.environment}-origin-verify-header-secret"
   description = "Secret used for Origin verification in WAF rules"
@@ -35,12 +41,6 @@ resource "aws_secretsmanager_secret_version" "secret-value" {
     # Use `ignore_changes` to allow rotation without Terraform overwriting the value
     ignore_changes = [secret_string]
   }
-}
-
-# Fetch the secret value from Secrets Manager
-data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
-  secret_id  = aws_secretsmanager_secret.origin-verify-secret.id
-  version_id = aws_secretsmanager_secret_version.secret-value.version_id
 }
 
 resource "aws_kms_key" "origin_verify_secret_key" {
