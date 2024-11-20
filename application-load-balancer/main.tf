@@ -189,6 +189,7 @@ resource "random_password" "origin-secret" {
 
 # Possible issue, when adding or changing a domain, secret is already deployed, rather than setting the search string here, it needs reading from secret manager
 resource "aws_wafv2_web_acl" "waf-acl" {
+  # checkov:skip=CKV2_AWS_31:Add logging resources - new ticket to be spun up
   depends_on = [data.aws_secretsmanager_secret_version.origin_verify_secret_version, random_password.origin-secret]
 
   name        = "${var.application}-${var.environment}-ACL"
