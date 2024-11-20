@@ -409,7 +409,7 @@ run "waf_and_rotate_lambda" {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(r.statement[0].or_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == local.token_header_name
+        try(r.statement[0].or_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == "x-origin-verify"
       ) : true
     ])
     error_message = "First statement's header name is incorrect"
@@ -419,7 +419,7 @@ run "waf_and_rotate_lambda" {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(r.statement[0].or_statement[0].statement[1].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == local.token_header_name
+        try(r.statement[0].or_statement[0].statement[1].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == "x-origin-verify"
       ) : true
     ])
     error_message = "Second statement's header name is incorrect"
@@ -569,7 +569,7 @@ run "waf_and_rotate_lambda" {
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.HEADERNAME == local.token_header_name
+    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.HEADERNAME == "x-origin-verify"
     error_message = "Invalid HEADERNAME environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
