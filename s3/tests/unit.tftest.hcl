@@ -285,6 +285,19 @@ run "aws_s3_bucket_external_role_access_read_write_unit_test" {
     ]) 
     error_message = "Should be: s3:Get*, s3:Put*, s3:ListBucket"
   }
+
+  assert {
+    condition     = data.aws_iam_policy_document.key-policy[0].statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition     = alltrue([
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:Decrypt"),
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:GenerateDataKey"),
+    ]) 
+    error_message = "Should be: kms:Decrypt, kms:GenerateDataKey"
+  }
 }
 
 run "aws_s3_bucket_external_role_access_read_only_unit_test" {
@@ -318,6 +331,19 @@ run "aws_s3_bucket_external_role_access_read_only_unit_test" {
     ]) 
     error_message = "Should be: s3:Get*, s3:ListBucket"
   }
+
+  assert {
+    condition     = data.aws_iam_policy_document.key-policy[0].statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition     = alltrue([
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:Decrypt"),
+      ! contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:GenerateDataKey"),
+    ]) 
+    error_message = "Should be: kms:Decrypt"
+  }
 }
 
 run "aws_s3_bucket_external_role_access_write_only_unit_test" {
@@ -350,6 +376,19 @@ run "aws_s3_bucket_external_role_access_write_only_unit_test" {
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
     ]) 
     error_message = "Should be: s3:Put*"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.key-policy[0].statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition     = alltrue([
+      ! contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:Decrypt"),
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:GenerateDataKey"),
+    ]) 
+    error_message = "Should be: kms:GenerateDataKey"
   }
 }
 
