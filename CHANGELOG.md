@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.9.0](https://github.com/uktrade/terraform-platform-modules/compare/5.8.1...5.9.0) (2024-11-21)
+
+
+### Features
+
+* DBTP 1433 cdn cache on paths ([#291](https://github.com/uktrade/terraform-platform-modules/issues/291)) ([c456564](https://github.com/uktrade/terraform-platform-modules/commit/c4565641e91369c309bdec2adaf46127c9d5f6a4))
+* DBTP-1380 Get Opensearch/Redis versions from AWS API - Permissions on env pipeline ([#275](https://github.com/uktrade/terraform-platform-modules/issues/275)) ([aca4cc4](https://github.com/uktrade/terraform-platform-modules/commit/aca4cc4dfe6a52f19a65cc3c107f0ca5500c19ba))
+
 ## [5.8.1](https://github.com/uktrade/terraform-platform-modules/compare/5.8.0...5.8.1) (2024-11-14)
 
 
