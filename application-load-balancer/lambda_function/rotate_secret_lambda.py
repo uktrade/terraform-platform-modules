@@ -18,11 +18,6 @@ def lambda_handler(event, context):
     token = event['ClientRequestToken']
     step = event['Step']
     test_domains = event.get('TestDomains', [])
-    
-    # logger.info(f"ARN - {arn}")
-    # logger.info(f"TOKEN - {token}")
-    # logger.info(f"STEP - {step}")
-    # logger.info(f"TEST DOMAINS - {test_domains}")
 
     service_client = boto3.client('secretsmanager')
 
