@@ -277,7 +277,8 @@ data "aws_iam_policy_document" "load_balancer" {
         "elasticloadbalancing:ModifyLoadBalancerAttributes",
         "elasticloadbalancing:DeleteLoadBalancer",
         "elasticloadbalancing:CreateListener",
-        "elasticloadbalancing:ModifyListener"
+        "elasticloadbalancing:ModifyListener",
+        "elasticloadbalancing:SetWebACL"
       ]
       resources = [
         "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:loadbalancer/app/${var.application}-${statement.value.name}/*"
@@ -991,7 +992,9 @@ data "aws_iam_policy_document" "lambda_policy_access" {
     for_each = local.environment_config
     content {
       actions = [
-        "lambda:GetPolicy"
+        "lambda:GetPolicy",
+        "lambda:RemovePermission",
+        "lambda:DeleteFunction"
       ]
       resources = [
         "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${statement.value.name}-origin-secret-rotate"
@@ -1004,7 +1007,8 @@ data "aws_iam_policy_document" "wafv2_read_access" {
   statement {
     actions = [
       "wafv2:GetWebACL",
-      "wafv2:GetWebACLForResource"
+      "wafv2:GetWebACLForResource",
+      "wafv2:ListTagsForResource"
     ]
     resources = [
       "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*/*"
@@ -1018,7 +1022,10 @@ data "aws_iam_policy_document" "secret_manager_read_access" {
     content {
       actions = [
         "secretsmanager:DescribeSecret",
-        "secretsmanager:GetSecretValue"
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:DeleteResourcePolicy",
+        "secretsmanager:CancelRotateSecret"
       ]
       resources = [
         "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${statement.value.name}-origin-verify-header-secret-*"
