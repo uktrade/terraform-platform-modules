@@ -985,7 +985,67 @@ resource "aws_iam_role" "environment_pipeline_codebuild" {
   tags = local.tags
 }
 
+data "aws_iam_policy_document" "lambda_policy_access" {
+
+  dynamic "statement" {
+    for_each = local.environment_config
+    content {
+      actions = [
+        "lambda:GetPolicy"
+      ]
+      resources = [
+        "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${statement.value.name}-origin-secret-rotate"
+      ]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "wafv2_read_access" {
+  statement {
+    actions = [
+      "wafv2:GetWebACL",
+      "wafv2:GetWebACLForResource"
+    ]
+    resources = [
+      "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "secret_manager_read_access" {
+  dynamic "statement" {
+    for_each = local.environment_config
+    content {
+      actions = [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue"
+      ]
+      resources = [
+        "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${statement.value.name}-origin-verify-header-secret-*"
+      ]
+    }
+  }
+}
+
 # Inline policies
+resource "aws_iam_role_policy" "lambda_policy_access_for_environment_codebuild" {
+  name   = "${var.application}-${var.pipeline_name}-lambda-policy-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.lambda_policy_access.json
+}
+
+resource "aws_iam_role_policy" "wafv2_read_access_for_environment_codebuild" {
+  name   = "${var.application}-${var.pipeline_name}-waf2-read-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.wafv2_read_access.json
+}
+
+resource "aws_iam_role_policy" "secret_manager_read_access_for_environment_codebuild" {
+  name   = "${var.application}-${var.pipeline_name}-secret-manager-read-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.secret_manager_read_access.json
+}
+
 resource "aws_iam_role_policy" "artifact_store_access_for_environment_codepipeline" {
   name   = "${var.application}-${var.pipeline_name}-artifact-store-access-for-environment-codepipeline"
   role   = aws_iam_role.environment_pipeline_codepipeline.name

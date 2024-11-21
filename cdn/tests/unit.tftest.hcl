@@ -6,6 +6,10 @@ mock_provider "aws" {
   alias = "domain"
 }
 
+mock_provider "aws" {
+
+}
+
 override_data {
   target = data.aws_route53_zone.domain-root
   values = {
