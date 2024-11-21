@@ -41,16 +41,6 @@ variable "config" {
       write             = bool
       cyber_sign_off_by = string
     })))
-    # NOTE: allows access to S3 bucket from DBT Platform managed service roles, also generates Copilot addon for service access
-    cross_environment_service_access = optional(map(object({
-      application       = string
-      account           = string
-      environment       = string
-      service           = string
-      read              = bool
-      write             = bool
-      cyber_sign_off_by = string
-    })))
     # NOTE: readonly access is managed by Copilot server addon s3 policy.
     readonly             = optional(bool)
     serve_static_content = optional(bool, false)
