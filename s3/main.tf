@@ -56,27 +56,6 @@ data "aws_iam_policy_document" "bucket-policy" {
       resources = [aws_s3_bucket.this.arn, "${aws_s3_bucket.this.arn}/*"]
     }
   }
-
-  dynamic "statement" {
-    for_each = coalesce(var.config.cross_environment_service_access, {})
-    content {
-      effect = "Allow"
-      actions = flatten([
-        statement.value.read ? ["s3:Get*", "s3:ListBucket"] : [],
-        statement.value.write ? ["s3:Put*"] : [],
-      ])
-      principals {
-        identifiers = ["*"]
-        type        = "AWS"
-      }
-      condition {
-        test     = "StringLike"
-        values   = ["arn:aws:iam::${statement.value.account}:role/${statement.value.application}-${statement.value.environment}-${statement.value.service}-TaskRole-*"]
-        variable = "aws:PrincipalArn"
-      }
-      resources = [aws_s3_bucket.this.arn, "${aws_s3_bucket.this.arn}/*"]
-    }
-  }
 }
 
 resource "aws_s3_bucket_policy" "bucket-policy" {
@@ -142,27 +121,6 @@ data "aws_iam_policy_document" "key-policy" {
       principals {
         identifiers = [statement.value.role_arn]
         type        = "AWS"
-      }
-      resources = [aws_kms_key.kms-key[0].arn]
-    }
-  }
-
-  dynamic "statement" {
-    for_each = coalesce(var.config.cross_environment_service_access, {})
-    content {
-      effect = "Allow"
-      actions = flatten([
-        statement.value.read ? ["kms:Decrypt"] : [],
-        statement.value.write ? ["kms:GenerateDataKey"] : [],
-      ])
-      principals {
-        identifiers = ["*"]
-        type        = "AWS"
-      }
-      condition {
-        test     = "StringLike"
-        values   = ["arn:aws:iam::${statement.value.account}:role/${statement.value.application}-${statement.value.environment}-${statement.value.service}-TaskRole-*"]
-        variable = "aws:PrincipalArn"
       }
       resources = [aws_kms_key.kms-key[0].arn]
     }
