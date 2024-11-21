@@ -128,7 +128,7 @@ data "aws_iam_policy_document" "key-policy" {
 }
 
 resource "aws_kms_key_policy" "key-policy" {
-  count = var.config.serve_static_content ? 0 : 1
+  count  = var.config.serve_static_content ? 0 : 1
   key_id = aws_kms_key.kms-key[0].id
   policy = data.aws_iam_policy_document.key-policy[0].json
 }
