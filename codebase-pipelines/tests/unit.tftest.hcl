@@ -1461,7 +1461,7 @@ run "test_event_bridge" {
   }
   assert {
     condition     = one(data.aws_iam_policy_document.event_bridge_pipeline_trigger.statement[0].resources) == "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:my-app-my-codebase-main-codebase-pipeline"
-    error_message = "Should be: ${jsonencode([for el in data.aws_iam_policy_document.event_bridge_pipeline_trigger.statement[0].resources : el][0])}"
+    error_message = "Unexpected resources"
   }
   assert {
     condition     = data.aws_iam_policy_document.assume_event_bridge_policy.statement[0].effect == "Allow"
