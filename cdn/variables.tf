@@ -13,6 +13,9 @@ variable "config" {
     cdn_domains_list        = optional(map(list(string)))
     additional_address_list = optional(list(string))
     enable_logging          = optional(bool)
+    cache_policy            = optional(map(any))
+    origin_request_policy   = optional(map(any))
+    paths                   = optional(any)
 
     # CDN default overrides
     viewer_certificate_minimum_protocol_version = optional(string)
