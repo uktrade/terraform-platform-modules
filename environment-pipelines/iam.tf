@@ -991,6 +991,7 @@ data "aws_iam_policy_document" "lambda_policy_access" {
   dynamic "statement" {
     for_each = local.environment_config
     content {
+      effect = "Allow"
       actions = [
         "lambda:GetPolicy",
         "lambda:RemovePermission",
@@ -1005,13 +1006,16 @@ data "aws_iam_policy_document" "lambda_policy_access" {
 
 data "aws_iam_policy_document" "wafv2_read_access" {
   statement {
+    sid    = "WAFv2ReadAccess"
+    effect = "Allow"
     actions = [
       "wafv2:GetWebACL",
       "wafv2:GetWebACLForResource",
-      "wafv2:ListTagsForResource"
+      "wafv2:ListTagsForResource",
+      "wafv2:DeleteWebACL"
     ]
     resources = [
-      "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*/*"
+      "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*"
     ]
   }
 }
@@ -1020,12 +1024,14 @@ data "aws_iam_policy_document" "secret_manager_read_access" {
   dynamic "statement" {
     for_each = local.environment_config
     content {
+      effect = "Allow"
       actions = [
         "secretsmanager:DescribeSecret",
         "secretsmanager:GetSecretValue",
         "secretsmanager:GetResourcePolicy",
         "secretsmanager:DeleteResourcePolicy",
-        "secretsmanager:CancelRotateSecret"
+        "secretsmanager:CancelRotateSecret",
+        "secretsmanager:DeleteSecret"
       ]
       resources = [
         "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${statement.value.name}-origin-verify-header-secret-*"
