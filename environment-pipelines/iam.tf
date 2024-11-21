@@ -991,6 +991,7 @@ data "aws_iam_policy_document" "lambda_policy_access" {
   dynamic "statement" {
     for_each = local.environment_config
     content {
+      sid    = "LambdaPolicyAccess"
       effect = "Allow"
       actions = [
         "lambda:GetPolicy",
@@ -1015,7 +1016,7 @@ data "aws_iam_policy_document" "wafv2_read_access" {
       "wafv2:DeleteWebACL"
     ]
     resources = [
-      "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*"
+      "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*/*"
     ]
   }
 }
@@ -1024,6 +1025,7 @@ data "aws_iam_policy_document" "secret_manager_read_access" {
   dynamic "statement" {
     for_each = local.environment_config
     content {
+      sid    = "SecretManagerReadAccess"
       effect = "Allow"
       actions = [
         "secretsmanager:DescribeSecret",
