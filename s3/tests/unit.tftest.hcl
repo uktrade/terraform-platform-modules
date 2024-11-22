@@ -373,6 +373,138 @@ run "aws_s3_bucket_external_role_access_invalid_cyber_sign_off" {
   expect_failures = [var.config.external_role_access.cyber_sign_off_by]
 }
 
+# TODO assert on the condtion stringLike "arn:aws:iam::${var.config.cross_environment_service_access.test-access.account}:role/${statement.value.application}-${statement.value.environment}-${statement.value.service}-TaskRole-*"
+run "aws_s3_bucket_cross_environment_service_access_read_write_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-cross-env-service-access",
+      "type"        = "s3",
+      "cross_environment_service_access" = {
+        "test-access" = {
+          "application" = "app",
+          "environment" = "test",
+          "account"     = "123456789012",
+          "service"     = "service",
+          "read"        = true,
+          "write"       = true,
+          "cyber_sign_off_by"  = "test@businessandtrade.gov.uk"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.bucket-policy.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition     = alltrue([
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
+    ]) 
+    error_message = "Should be: s3:Get*, s3:Put*, s3:ListBucket"
+  }
+}
+
+run "aws_s3_bucket_cross_environment_service_access_read_only_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-cross-env-service-access",
+      "type"        = "s3",
+      "cross_environment_service_access" = {
+        "test-access" = {
+          "application" = "app",
+          "environment" = "test",
+          "account"     = "123456789012",
+          "service"     = "service",
+          "read"        = true,
+          "write"       = false,
+          "cyber_sign_off_by"  = "test@businessandtrade.gov.uk"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.bucket-policy.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition     = alltrue([
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
+      ! contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
+    ]) 
+    error_message = "Should be: s3:Get*, s3:ListBucket"
+  }
+}
+
+run "aws_s3_bucket_cross_environment_service_access_write_only_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-cross-env-service-access",
+      "type"        = "s3",
+      "cross_environment_service_access" = {
+        "test-access" = {
+          "application" = "app",
+          "environment" = "test",
+          "account"     = "123456789012",
+          "service"     = "service",
+          "read"        = false,
+          "write"       = true,
+          "cyber_sign_off_by"  = "test@businessandtrade.gov.uk"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.bucket-policy.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition     = alltrue([
+      ! contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
+      ! contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
+    ]) 
+    error_message = "Should be: s3:Put*"
+  }
+}
+
+run "aws_s3_bucket_cross_environment_service_access_invalid_cyber_sign_off" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-cross-env-service-access",
+      "type"        = "s3",
+      "cross_environment_service_access" = {
+        "test-access" = {
+          "application" = "app",
+          "environment" = "test",
+          "account"     = "123456789012",
+          "service"     = "service",
+          "read"        = true,
+          "write"       = true,
+          "cyber_sign_off_by"  = "no-one"
+        }
+      }
+    }
+  }
+  expect_failures = [var.config.cross_environment_service_access.cyber_sign_off_by]
+}
+
 run "aws_s3_bucket_object_lock_configuration_governance_unit_test" {
   command = plan
 
