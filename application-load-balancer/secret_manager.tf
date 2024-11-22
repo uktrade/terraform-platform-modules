@@ -5,10 +5,11 @@ data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
 }
 
 resource "aws_secretsmanager_secret" "origin-verify-secret" {
-  name        = "${var.application}-${var.environment}-origin-verify-header-secret"
-  description = "Secret used for Origin verification in WAF rules"
-  kms_key_id  = aws_kms_key.origin_verify_secret_key.key_id
-  tags        = local.tags
+  name                    = "${var.application}-${var.environment}-origin-verify-header-secret"
+  description             = "Secret used for Origin verification in WAF rules"
+  kms_key_id              = aws_kms_key.origin_verify_secret_key.key_id
+  recovery_window_in_days = 0
+  tags                    = local.tags
 }
 
 resource "aws_secretsmanager_secret_policy" "secret_policy" {
