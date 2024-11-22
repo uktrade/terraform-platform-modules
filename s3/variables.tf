@@ -33,9 +33,24 @@ variable "config" {
       filter_prefix   = optional(string)
       expiration_days = number
       enabled         = bool
-      })
-      )
-    )
+    })))
+    # NOTE: allows access to S3 bucket from non-DBT Platform managed roles
+    external_role_access = optional(map(object({
+      role_arn          = string
+      read              = bool
+      write             = bool
+      cyber_sign_off_by = string
+    })))
+    # NOTE: allows access to S3 bucket from DBT Platform managed service roles, also generates Copilot addon for service access
+    cross_environment_service_access = optional(map(object({
+      application       = string
+      account           = string
+      environment       = string
+      service           = string
+      read              = bool
+      write             = bool
+      cyber_sign_off_by = string
+    })))
     # NOTE: readonly access is managed by Copilot server addon s3 policy.
     readonly             = optional(bool)
     serve_static_content = optional(bool, false)
@@ -55,4 +70,22 @@ variable "config" {
       })
     )
   })
+
+  validation {
+    condition = var.config.external_role_access == null ? true : alltrue([
+      for k, v in var.config.external_role_access : (can(regex("^[\\w\\-\\.]+@(businessandtrade.gov.uk|digital.trade.gov.uk)$", v.cyber_sign_off_by)))
+      # ((length(k) <= 63) && (length(k) >= 3))
+    ])
+    error_message = "All instances of external_role_access must be approved by cyber, and a cyber rep's email address entered."
+  }
+
+  validation {
+    condition = var.config.cross_environment_service_access == null ? true : alltrue([
+      for k, v in var.config.cross_environment_service_access : (can(regex("^[\\w\\-\\.]+@(businessandtrade.gov.uk|digital.trade.gov.uk)$", v.cyber_sign_off_by)))
+      # ((length(k) <= 63) && (length(k) >= 3))
+    ])
+    error_message = "All instances of cross_environment_service_access must be approved by cyber, and a cyber rep's email address entered."
+  }
+
+
 }
