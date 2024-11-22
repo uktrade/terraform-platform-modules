@@ -1033,7 +1033,8 @@ data "aws_iam_policy_document" "secret_manager_read_access" {
         "secretsmanager:GetResourcePolicy",
         "secretsmanager:DeleteResourcePolicy",
         "secretsmanager:CancelRotateSecret",
-        "secretsmanager:DeleteSecret"
+        "secretsmanager:DeleteSecret",
+        "secretsmanager:CreateSecret"
       ]
       resources = [
         "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${statement.value.name}-origin-verify-header-secret-*"
