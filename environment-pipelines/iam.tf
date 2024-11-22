@@ -996,12 +996,26 @@ data "aws_iam_policy_document" "lambda_policy_access" {
       actions = [
         "lambda:GetPolicy",
         "lambda:RemovePermission",
-        "lambda:DeleteFunction"
+        "lambda:DeleteFunction",
+        "lambda:TagResource",
+        "lambda:PutFunctionConcurrency",
+        "lambda:AddPermission"
       ]
       resources = [
         "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${statement.value.name}-origin-secret-rotate"
       ]
     }
+  }
+
+  statement {
+    sid    = "LambdaLayerAccess"
+    effect = "Allow"
+    actions = [
+      "lambda:GetLayerVersion"
+    ]
+    resources = [
+      "arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"
+    ]
   }
 }
 
@@ -1013,10 +1027,23 @@ data "aws_iam_policy_document" "wafv2_read_access" {
       "wafv2:GetWebACL",
       "wafv2:GetWebACLForResource",
       "wafv2:ListTagsForResource",
-      "wafv2:DeleteWebACL"
+      "wafv2:DeleteWebACL",
+      "wafv2:CreateWebACL",
+      "wafv2:TagResource",
+      "wafv2:AssociateWebACL"
     ]
     resources = [
       "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*/*"
+    ]
+  }
+  statement {
+    sid    = "WAFv2RuleSetAccess"
+    effect = "Allow"
+    actions = [
+      "wafv2:CreateWebACL"
+    ]
+    resources = [
+      "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/managedruleset/*/*"
     ]
   }
 }
@@ -1034,10 +1061,30 @@ data "aws_iam_policy_document" "secret_manager_read_access" {
         "secretsmanager:DeleteResourcePolicy",
         "secretsmanager:CancelRotateSecret",
         "secretsmanager:DeleteSecret",
-        "secretsmanager:CreateSecret"
+        "secretsmanager:CreateSecret",
+        "secretsmanager:TagResource",
+        "secretsmanager:PutResourcePolicy",
+        "secretsmanager:PutSecretValue",
+        "secretsmanager:RotateSecret"
       ]
       resources = [
         "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${statement.value.name}-origin-verify-header-secret-*"
+      ]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "origin_secret_rotation_role_access" {
+  dynamic "statement" {
+    for_each = local.environment_config
+    content {
+      sid    = "OriginSecretRotationRoleAccess"
+      effect = "Allow"
+      actions = [
+        "iam:TagRole"
+      ]
+      resources = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-origin-secret-rotate-role"
       ]
     }
   }
@@ -1060,6 +1107,12 @@ resource "aws_iam_role_policy" "secret_manager_read_access_for_environment_codeb
   name   = "${var.application}-${var.pipeline_name}-secret-manager-read-access-for-environment-codebuild"
   role   = aws_iam_role.environment_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.secret_manager_read_access.json
+}
+
+resource "aws_iam_role_policy" "origin_secret_rotation_role_access_for_environment_codebuild" {
+  name   = "${var.application}-${var.pipeline_name}-origin-secret-rotation-role-access-for-environment-codebuild"
+  role   = aws_iam_role.environment_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.origin_secret_rotation_role_access.json
 }
 
 resource "aws_iam_role_policy" "artifact_store_access_for_environment_codepipeline" {

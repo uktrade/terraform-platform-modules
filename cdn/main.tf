@@ -5,7 +5,8 @@ data "aws_wafv2_web_acl" "waf-default" {
 }
 
 data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
-  secret_id = var.origin_verify_secret_id
+  secret_id     = var.origin_verify_secret_id
+  version_stage = "AWSCURRENT"
 }
 
 resource "aws_acm_certificate" "certificate" {

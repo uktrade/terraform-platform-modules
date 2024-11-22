@@ -439,15 +439,6 @@ resource "aws_lambda_permission" "rotate-function-invoke-permission" {
   source_account = data.aws_caller_identity.current.account_id
 }
 
-# Secrets Manager Rotation Schedule
-resource "aws_secretsmanager_secret_rotation" "origin-verify-rotate-schedule" {
-  secret_id           = aws_secretsmanager_secret.origin-verify-secret.id
-  rotation_lambda_arn = aws_lambda_function.origin-secret-rotate-function.arn
-  rotation_rules {
-    automatically_after_days = 7
-  }
-}
-
 
 # Associate WAF ACL with ALB
 resource "aws_wafv2_web_acl_association" "waf-alb-association" {

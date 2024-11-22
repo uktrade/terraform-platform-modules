@@ -12,26 +12,25 @@ resource "aws_secretsmanager_secret" "origin-verify-secret" {
   tags                    = local.tags
 }
 
+data "aws_iam_policy_document" "secret_manager_policy" {
+  statement {
+    sid    = "AllowAssumedRoleToAccessSecret"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${var.dns_account_id}:role/environment-pipeline-assumed-role"]
+    }
+
+    actions = ["secretsmanager:GetSecretValue",
+    "secretsmanager:DescribeSecret"]
+    resources = [aws_secretsmanager_secret.origin-verify-secret.arn]
+  }
+}
+
 resource "aws_secretsmanager_secret_policy" "secret_policy" {
   secret_arn = aws_secretsmanager_secret.origin-verify-secret.arn
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "AllowAssumedRoleToAccessSecret"
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret"
-        ]
-        Resource = aws_secretsmanager_secret.origin-verify-secret.arn
-        Principal = {
-          AWS = "arn:aws:iam::${var.dns_account_id}:role/environment-pipeline-assumed-role"
-        }
-      }
-    ]
-  })
+  policy     = data.aws_iam_policy_document.secret_manager_policy.json
 }
 
 resource "aws_secretsmanager_secret_version" "secret-value" {
@@ -70,4 +69,13 @@ resource "aws_kms_key" "origin_verify_secret_key" {
 resource "aws_kms_alias" "origin_verify_secret_key_alias" {
   name          = "alias/${var.application}-${var.environment}-origin-verify-header-secret-key"
   target_key_id = aws_kms_key.origin_verify_secret_key.key_id
+}
+
+# Secrets Manager Rotation Schedule
+resource "aws_secretsmanager_secret_rotation" "origin-verify-rotate-schedule" {
+  secret_id           = aws_secretsmanager_secret.origin-verify-secret.id
+  rotation_lambda_arn = aws_lambda_function.origin-secret-rotate-function.arn
+  rotation_rules {
+    automatically_after_days = 7
+  }
 }
