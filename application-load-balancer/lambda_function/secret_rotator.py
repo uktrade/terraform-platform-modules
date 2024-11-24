@@ -324,7 +324,7 @@ class SecretRotator:
                 SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
                 VersionStages=['AWSPENDING']
             )
-            logger.info("createSecret: Successfully put secret for version %s" % (token))
+            logger.info(f"createSecret: Successfully put secret for version {token}")
 
     def set_secret(self, service_client, arn, token):
         """Set the secret
@@ -382,7 +382,7 @@ class SecretRotator:
         if test_domains: 
             logger.info(f"TestDomains key exists in Lambda event - testing provided dummy domains only")
             for test_domain in test_domains:
-                logger.info(f"Testing dummy distro: %s", test_domain)
+                logger.info(f"Testing dummy distro: {test_domain}")
                 error_msg = f"Simulating test failure for domain: http://{test_domain}" 
                 logger.error(error_msg) 
                 test_failures.append({ 'domain': test_domain, 'error': error_msg, }) 
@@ -418,7 +418,6 @@ class SecretRotator:
         if test_failures:
             if self.slack_service:
                 try:
-                    print("CALLING SEND_TEST_FAILURES!!!!!")
                     self.slack_service.send_test_failures(
                         failures=test_failures,
                         environment=self.environment,
