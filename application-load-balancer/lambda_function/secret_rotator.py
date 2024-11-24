@@ -56,7 +56,7 @@ class SecretRotator:
             logger.warning("No RoleArn provided - AWS account ID cannot be set.") 
             return None 
     
-    def get_cloudfront_session(self) -> boto3.client:
+    def get_cloudfront_client(self) -> boto3.client:
         sts = boto3.client('sts')
         credentials = sts.assume_role(RoleArn=self.role_arn, RoleSessionName='rotation_session')["Credentials"]
         return boto3.client('cloudfront',
@@ -65,7 +65,7 @@ class SecretRotator:
                             aws_session_token=credentials["SessionToken"])
         
     def get_distro_list(self) -> List[Dict[str, Any]]:
-        client = self.get_cloudfront_session()
+        client = self.get_cloudfront_client()
         paginator = client.get_paginator("list_distributions")
         matching_distributions = []
 
@@ -82,7 +82,7 @@ class SecretRotator:
         return matching_distributions
 
         
-    def get_wafacl(self) -> Dict[str, Any]:
+    def get_waf_acl(self) -> Dict[str, Any]:
         client = boto3.client('wafv2')
         return client.get_web_acl(Name=self.waf_acl_name, Scope='REGIONAL', Id=self.waf_acl_id)
 
@@ -97,9 +97,9 @@ class SecretRotator:
             }
         }
         
-    def update_wafacl(self, new_secret: str, prev_secret: str) -> None:
+    def update_waf_acl(self, new_secret: str, prev_secret: str) -> None:
         client = boto3.client('wafv2')
-        waf_acl = self.get_wafacl()
+        waf_acl = self.get_waf_acl()
         lock_token = waf_acl['LockToken']
         metric_name = f"{self.application}-{self.environment}-XOriginVerify"
         rule = {
@@ -142,23 +142,23 @@ class SecretRotator:
         if response['ResponseMetadata']['HTTPStatusCode'] == 200:
             logger.info("WAF WebACL rules updated")
         
-    def get_cfdistro(self, distro_id: str) -> Dict:
+    def get_cf_distro(self, distro_id: str) -> Dict:
         """
         Fetches the CloudFront distribution details.
         """
-        client = self.get_cloudfront_session()
+        client = self.get_cloudfront_client()
         return client.get_distribution(Id=distro_id)
         
         
-    def get_cfdistro_config(self, distro_id: str) -> Dict:
+    def get_cf_distro_config(self, distro_id: str) -> Dict:
         """
         Fetches the configuration of a CloudFront distribution.
         """
-        client = self.get_cloudfront_session()
+        client = self.get_cloudfront_client()
         return client.get_distribution_config(Id=distro_id)
         
 
-    def update_cfdistro(self, distro_id: str, header_value: str) -> Dict:
+    def update_cf_distro(self, distro_id: str, header_value: str) -> Dict:
         """
         Updates the custom headers for a CloudFront distribution.
 
@@ -166,13 +166,13 @@ class SecretRotator:
             distro_id (str): The ID of the CloudFront distribution.
             header_value (str): The header value to set for the custom header.
         """
-        client = self.get_cloudfront_session()
+        client = self.get_cloudfront_client()
 
         if not self.is_distribution_deployed(distro_id):
             logger.error("Distribution Id, %s status is not Deployed." % distro_id)
             raise ValueError(f"Distribution Id, {distro_id} status is not Deployed.")
 
-        dist_config = self.get_cfdistro_config(distro_id)
+        dist_config = self.get_cf_distro_config(distro_id)
 
         updated = self.update_custom_headers(dist_config, header_value)
 
@@ -180,15 +180,21 @@ class SecretRotator:
             logger.error("No custom header, %s found in distribution Id, %s." % (self.header_name, distro_id))
             raise ValueError(f"No custom header found in distribution Id, {distro_id}.")
 
-        # Update the distribution
-        return self.apply_distribution_update(client, distro_id, dist_config)
+        # Update the distribution 
+        try: 
+            return self.apply_distribution_update(client, distro_id, dist_config) 
+            
+        except RuntimeError as e: 
+            logger.error(f"Failed to update custom headers for distribution Id {distro_id}: {e}") 
+            raise
+
 
     def is_distribution_deployed(self, distro_id: str) -> bool:
         """
         Checks if the CloudFront distribution is deployed.
 
         """
-        dist_status = self.get_cfdistro(distro_id)
+        dist_status = self.get_cf_distro(distro_id)
         return 'Deployed' in dist_status['Distribution']['Status']
 
     def update_custom_headers(self, dist_config: Dict, header_value: str) -> bool:
@@ -226,7 +232,8 @@ class SecretRotator:
             if status_code == 200:
                 logger.info("CloudFront distribution %s updated successfully", distro_id)
             else:
-                logger.warning("Failed to update CloudFront distribution %s. Status code: %d", distro_id, status_code)
+                logger.warning(f"Failed to update CloudFront distribution {distro_id}. Status code: {status_code}")
+                raise RuntimeError(f"Failed to update CloudFront distribution {distro_id}. Status code: {status_code}")
             
             return response
 
@@ -345,7 +352,7 @@ class SecretRotator:
         # Update CloudFront custom header and regional WAF WebACL rule with AWSPENDING and AWSCURRENT
         try:
             # WAF only needs setting once.
-            self.update_wafacl(pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE'])
+            self.update_waf_acl(pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE'])
             
             # Sleep for 75 seconds for regional WAF config propagation
             time.sleep(75)
@@ -353,11 +360,14 @@ class SecretRotator:
             # Update each CloudFront distribution with the new pending secret header
             for distro in matching_distributions:
                 logger.info("Updating %s" % distro['Id'])
-                self.update_cfdistro(distro['Id'], pendingsecret['HEADERVALUE'])
+                self.update_cf_distro(distro['Id'], pendingsecret['HEADERVALUE'])
                 
         except ClientError as e:
-            logger.error('Error: {}'.format(e))
-            raise ValueError("Failed to update resources CloudFront Distro Id %s , WAF WebACL Id %s " % (distro['Id'], self.waf_acl_id))
+            logger.error("Error updating resources: %s", e)
+            raise ValueError(
+                "Failed to update resources CloudFront Distro Id %s , WAF WebACL Id %s" % (distro['Id'], self.waf_acl_id)
+            ) from e
+
 
     def run_test_secret(self, service_client, arn, token, test_domains=[]):
         """Test the secret

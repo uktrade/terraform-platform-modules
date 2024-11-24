@@ -48,7 +48,7 @@ class TestCloudFrontSessionManagement:
 
             mock_sts.assume_role.return_value = mock_credentials
 
-            client = rotator.get_cloudfront_session()
+            client = rotator.get_cloudfront_client()
 
             mock_sts.assume_role.assert_called_once_with(
                 RoleArn="arn:aws:iam::123456789012:role/test-role",
@@ -97,7 +97,7 @@ class TestDistributionDiscovery:
             }
         }
 
-        with patch.object(rotator, 'get_cloudfront_session') as mock_session:
+        with patch.object(rotator, 'get_cloudfront_client') as mock_session:
             mock_client = MagicMock()
             mock_paginator = MagicMock()
             mock_paginator.paginate.return_value = [mock_distributions]
@@ -139,13 +139,13 @@ class TestWAFManagement:
         }
 
         with patch('boto3.client') as mock_boto3_client, \
-             patch.object(rotator, 'get_wafacl') as mock_get_wafacl:
+             patch.object(rotator, 'get_waf_acl') as mock_get_waf_acl:
             
-            mock_get_wafacl.return_value = current_rules
+            mock_get_waf_acl.return_value = current_rules
             mock_wafv2 = mock_boto3_client.return_value
 
             # When updating the WAF ACL with both secrets
-            rotator.update_wafacl("new-secret", "old-secret")
+            rotator.update_waf_acl("new-secret", "old-secret")
 
             # Then the update should preserve existing rules
             call_args = mock_wafv2.update_web_acl.call_args[1]
@@ -172,13 +172,13 @@ class TestWAFManagement:
         }
 
         with patch('boto3.client') as mock_boto3_client, \
-             patch.object(rotator, 'get_wafacl') as mock_get_wafacl:
+             patch.object(rotator, 'get_waf_acl') as mock_get_waf_acl:
             
-            mock_get_wafacl.return_value = current_rules
+            mock_get_waf_acl.return_value = current_rules
             mock_wafv2 = mock_boto3_client.return_value
 
             # When updating the WAF
-            rotator.update_wafacl("new-secret", "old-secret")
+            rotator.update_waf_acl("new-secret", "old-secret")
 
             # Then it should use the lock token
             call_args = mock_wafv2.update_web_acl.call_args[1]
@@ -195,7 +195,7 @@ class TestDistributionUpdates:
         Distribution updates must only proceed when the distribution is in 'Deployed' state.
         """
         # Given a distribution in progress
-        with patch.object(rotator, 'get_cloudfront_session') as mock_session:
+        with patch.object(rotator, 'get_cloudfront_client') as mock_session:
             mock_client = MagicMock()
             mock_session.return_value = mock_client
  
@@ -204,7 +204,7 @@ class TestDistributionUpdates:
             }
 
             with pytest.raises(ValueError) as exc_info:
-                rotator.update_cfdistro("DIST1", "new-header-value")
+                rotator.update_cf_distro("DIST1", "new-header-value")
             
             assert "status is not Deployed" in str(exc_info.value)
             mock_client.update_distribution.assert_not_called()
@@ -257,17 +257,23 @@ class TestDistributionUpdates:
             }
         }
 
-        with patch.object(rotator, 'get_cloudfront_session') as mock_session, \
-             patch.object(rotator, 'get_cfdistro') as mock_get_cfdistro, \
-             patch.object(rotator, 'get_cfdistro_config') as mock_get_config:
+        with patch.object(rotator, 'get_cloudfront_client') as mock_session, \
+             patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
+             patch.object(rotator, 'get_cf_distro_config') as mock_get_config:
             
             mock_client = MagicMock()
             mock_session.return_value = mock_client
-            mock_get_cfdistro.return_value = mock_dist_status
+            mock_get_cf_distro.return_value = mock_dist_status
             mock_get_config.return_value = mock_dist_config
+            
+            mock_client.update_distribution.return_value = {
+                'ResponseMetadata': {
+                    'HTTPStatusCode': 200
+                }
+            }
 
             # When updating the distribution
-            rotator.update_cfdistro("DIST1", "new-value")
+            rotator.update_cf_distro("DIST1", "new-value")
 
             # Then it should update all matching headers
             update_call = mock_client.update_distribution.call_args[1]
@@ -377,25 +383,25 @@ class TestRotationProcess:
         ]
 
         with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
-             patch.object(rotator, 'get_cfdistro') as mock_get_cfdistro, \
-             patch.object(rotator, 'update_wafacl') as mock_update_wafacl, \
-             patch.object(rotator, 'update_cfdistro') as mock_update_cfdistro, \
+             patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
+             patch.object(rotator, 'update_waf_acl') as mock_update_waf_acl, \
+             patch.object(rotator, 'update_cf_distro') as mock_update_cf_distro, \
              patch('time.sleep') as mock_sleep:
             
             mock_get_distro_list.return_value = mock_distributions
-            mock_get_cfdistro.return_value = mock_get_distro
+            mock_get_cf_distro.return_value = mock_get_distro
 
             rotator.set_secret(mock_service_client, "test-arn", "test-token")
 
             # Then verify correct sequence and timing
             operation_sequence = []
-            mock_update_wafacl.assert_called_once()
+            mock_update_waf_acl.assert_called_once()
             operation_sequence.append('waf_update')
             
             mock_sleep.assert_called_once_with(75)  # WAF propagation delay
             operation_sequence.append('propagation_wait')
             
-            assert mock_update_cfdistro.call_count == 2  # Both distributions updated
+            assert mock_update_cf_distro.call_count == 2  # Both distributions updated
             operation_sequence.extend(['distro1_update', 'distro2_update'])
 
             assert operation_sequence.index('waf_update') < operation_sequence.index('distro1_update')
@@ -542,11 +548,11 @@ class TestErrorHandling:
         
         mock_service_client = MagicMock()
         with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
-             patch.object(rotator, 'get_cfdistro') as mock_get_cfdistro, \
-             patch.object(rotator, 'update_wafacl') as mock_update_wafacl:
+             patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
+             patch.object(rotator, 'update_waf_acl') as mock_update_waf_acl:
 
             mock_get_distro_list.return_value = mock_distributions
-            mock_get_cfdistro.side_effect = [
+            mock_get_cf_distro.side_effect = [
                 {"Distribution": {"Status": "Deployed"}},
                 {"Distribution": {"Status": "InProgress"}}
             ]
@@ -555,7 +561,7 @@ class TestErrorHandling:
                 rotator.set_secret(mock_service_client, "test-arn", "test-token")
 
             assert "status is not Deployed" in str(exc_info.value)
-            mock_update_wafacl.assert_not_called()
+            mock_update_waf_acl.assert_not_called()
 
     def test_handles_waf_update_failure_without_distribution_updates(self, rotator):
         """
@@ -571,13 +577,13 @@ class TestErrorHandling:
         mock_service_client.get_secret_value.return_value = mock_secrets
 
         with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
-             patch.object(rotator, 'get_cfdistro') as mock_get_cfdistro, \
-             patch.object(rotator, 'update_wafacl') as mock_update_wafacl, \
-             patch.object(rotator, 'update_cfdistro') as mock_update_cfdistro:
+             patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
+             patch.object(rotator, 'update_waf_acl') as mock_update_waf_acl, \
+             patch.object(rotator, 'update_cf_distro') as mock_update_cf_distro:
 
             mock_get_distro_list.return_value = mock_distributions
-            mock_get_cfdistro.return_value = mock_get_distro
-            mock_update_wafacl.side_effect = ClientError(
+            mock_get_cf_distro.return_value = mock_get_distro
+            mock_update_waf_acl.side_effect = ClientError(
                 {"Error": {"Code": "WAFInvalidParameterException"}},
                 "update_web_acl"
             )
@@ -585,7 +591,7 @@ class TestErrorHandling:
             with pytest.raises(ValueError):
                 rotator.set_secret(mock_service_client, "test-arn", "test-token")
 
-            mock_update_cfdistro.assert_not_called()
+            mock_update_cf_distro.assert_not_called()
 
 class TestEdgeCases:
 
@@ -618,20 +624,20 @@ class TestEdgeCases:
         mock_service_client.describe_secret.return_value = mock_metadata
 
         with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
-            patch.object(rotator, 'update_wafacl') as mock_update_wafacl, \
-            patch.object(rotator, 'update_cfdistro') as mock_update_cfdistro, \
+            patch.object(rotator, 'update_waf_acl') as mock_update_waf_acl, \
+            patch.object(rotator, 'update_cf_distro') as mock_update_cf_distro, \
             patch('time.sleep') as mock_sleep:
 
             mock_get_distro_list.return_value = []
             
             rotator.set_secret(mock_service_client, "test-arn", "test-token")
             
-            mock_update_wafacl.assert_called_once_with(
+            mock_update_waf_acl.assert_called_once_with(
                 "new-secret",
                 "current-secret"
             )
             
-            mock_update_cfdistro.assert_not_called()
+            mock_update_cf_distro.assert_not_called()
 
     def test_handles_malformed_secret_data(self, rotator):
         mock_service_client = MagicMock()
