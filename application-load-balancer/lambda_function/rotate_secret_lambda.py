@@ -13,7 +13,6 @@ AWSCURRENT="AWSCURRENT"
 
 def lambda_handler(event, context):
     logger.info(f"log -- Event: {json.dumps(event)}")
-
     service_client = boto3.client('secretsmanager')
 
     # Ensure version is staged correctly
@@ -26,29 +25,31 @@ def lambda_handler(event, context):
     logger.info(f"VERSIONS: {versions}")
     logger.info(f"VERSIONS TOKEN: {versions[event['ClientRequestToken']]}")
 
-    if event['ClientRequestToken'] not in versions:
-        logger.error(f"Secret version {event['ClientRequestToken']} has no stage for rotation of secret.")
-        raise ValueError(f"Secret version {event['ClientRequestToken']} has no stage for rotation of secret.")
-    if AWSCURRENT in versions[event['ClientRequestToken']]:
-        logger.info(f"Secret version {event['ClientRequestToken']} already set as AWSCURRENT for secret.")
-    elif AWSPENDING not in versions[event['ClientRequestToken']]:
-        logger.error(f"Secret version {event['ClientRequestToken']} not set as AWSPENDING for rotation of secret.")
-        raise ValueError(f"Secret version {event['ClientRequestToken']} not set as AWSPENDING for rotation of secret.")
+    token = event['ClientRequestToken']
+    if token not in versions:
+        logger.error(f"Secret version {token} has no stage for rotation of secret.")
+        raise ValueError(f"Secret version {token} has no stage for rotation of secret.")
+        
+    if AWSCURRENT in versions[token]:
+        logger.info(f"Secret version {token} already set as AWSCURRENT for secret.")     
+    elif AWSPENDING not in versions[token]:
+        logger.error(f"Secret version {token} not set as AWSPENDING for rotation of secret.")
+        raise ValueError(f"Secret version {token} not set as AWSPENDING for rotation of secret.")
     
     rotator = SecretRotator()
     step = event['Step']
     
     if step == "createSecret":
         logger.info("Entered createSecret step")
-        rotator.create_secret(service_client, event['SecretId'], event['ClientRequestToken'])
+        rotator.create_secret(service_client, event['SecretId'], token)
     elif step == "setSecret":
         logger.info("Entered setSecret step")
-        rotator.set_secret(service_client, event['SecretId'], event['ClientRequestToken'])
+        rotator.set_secret(service_client, event['SecretId'], token)
     elif step == "testSecret":
         logger.info("Entered testSecret step")
-        rotator.run_test_secret(service_client, event['SecretId'], event['ClientRequestToken'], event.get('TestDomains', []))
+        rotator.run_test_secret(service_client, event['SecretId'], token, event.get('TestDomains', []))
     elif step == "finishSecret":
         logger.info("Entered finishSecret step")
-        rotator.finish_secret(service_client, event['SecretId'], event['ClientRequestToken'])
+        rotator.finish_secret(service_client, event['SecretId'], token)
     else:
         raise ValueError("Invalid step parameter")
