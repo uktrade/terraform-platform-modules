@@ -5,7 +5,7 @@ import logging
 import requests
 import time
 from typing import Tuple, Dict, Any, List, Optional
-from slack_service import SlackNotificationService
+from slack_service_requests import SlackNotificationService
 from requests.exceptions import RequestException
 
 from botocore.exceptions import ClientError
@@ -285,46 +285,34 @@ class SecretRotator:
         currentsecret = json.loads(current['SecretString'])
 
         return pendingsecret, currentsecret
-
+        
     def create_secret(self, service_client, arn, token):
-        """Create the secret
-        This method first checks for the existence of a current secret for the passed in token. If one does not exist, it will generate a
-        new secret and put it with the passed in token.
-        Args:
-            service_client (client): The secrets manager service client
-            arn (string): The secret ARN or other identifier
-            token (string): The ClientRequestToken associated with the secret version
-        Raises:
-            ResourceNotFoundException: If the secret with the specified arn and stage does not exist
-        """
-        # Make sure the current secret exists
-        service_client.get_secret_value(
-            SecretId=arn,
-            VersionStage=AWSCURRENT
-        )
-
-        # Now try to get the secret version, if that fails, put a new secret
+        """Create a new secret version"""
         try:
-            service_client.get_secret_value(
-                SecretId=arn,
-                VersionId=token,
-                VersionStage=AWSPENDING
-            )
-            logger.info("createSecret: Successfully retrieved secret")
-
-        except service_client.exceptions.ResourceNotFoundException:
-
-            # Generate a random password
+            metadata = service_client.describe_secret(SecretId=arn)
+            versions = metadata.get('VersionIdsToStages', {})
+            has_pending = any('AWSPENDING' in stages for stages in versions.values())
+            
+            if has_pending:
+                logger.info("An AWSPENDING version already exists")
+                return
+                
+            # If no AWSPENDING exists, create new secret
             passwd = service_client.get_random_password(
                 ExcludePunctuation=True
             )
+            
             service_client.put_secret_value(
                 SecretId=arn,
                 ClientRequestToken=token,
                 SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
                 VersionStages=['AWSPENDING']
             )
-            logger.info(f"createSecret: Successfully put secret for version {token}")
+            logger.info(f"Successfully created new AWSPENDING version {token}")
+            
+        except ClientError as e:
+            logger.error(f"Error in create_secret: {str(e)}")
+            raise e
 
     def set_secret(self, service_client, arn, token):
         """Set the secret
