@@ -12,11 +12,11 @@ AWSCURRENT="AWSCURRENT"
 
 
 def lambda_handler(event, context):
-    logger.info("log -- Event: %s " % json.dumps(event))
+    logger.info(f"log -- Event: {json.dumps(event)}")
 
     service_client = boto3.client('secretsmanager')
 
-    # Make sure the version is staged correctly
+    # Ensure version is staged correctly
     metadata = service_client.describe_secret(SecretId=event['SecretId'])
     if not metadata['RotationEnabled']:
         logger.error("Secret is not enabled for rotation")
@@ -27,13 +27,13 @@ def lambda_handler(event, context):
     logger.info(f"VERSIONS TOKEN: {versions[event['ClientRequestToken']]}")
 
     if event['ClientRequestToken'] not in versions:
-        logger.error("Secret version %s has no stage for rotation of secret." % (event['ClientRequestToken']))
-        raise ValueError("Secret version %s has no stage for rotation of secret." % (event['ClientRequestToken']))
+        logger.error(f"Secret version {event['ClientRequestToken']} has no stage for rotation of secret.")
+        raise ValueError(f"Secret version {event['ClientRequestToken']} has no stage for rotation of secret.")
     if AWSCURRENT in versions[event['ClientRequestToken']]:
-        logger.info("Secret version %s already set as AWSCURRENT for secret." % (event['ClientRequestToken']))
+        logger.info(f"Secret version {event['ClientRequestToken']} already set as AWSCURRENT for secret.")
     elif AWSPENDING not in versions[event['ClientRequestToken']]:
-        logger.error("Secret version %s not set as AWSPENDING for rotation of secret." % (event['ClientRequestToken']))
-        raise ValueError("Secret version %s not set as AWSPENDING for rotation of secret." % (event['ClientRequestToken']))
+        logger.error(f"Secret version {event['ClientRequestToken']} not set as AWSPENDING for rotation of secret.")
+        raise ValueError(f"Secret version {event['ClientRequestToken']} not set as AWSPENDING for rotation of secret.")
     
     rotator = SecretRotator()
     step = event['Step']
