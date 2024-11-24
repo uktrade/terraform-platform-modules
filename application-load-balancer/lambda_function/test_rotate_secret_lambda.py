@@ -213,10 +213,11 @@ class TestDistributionUpdates:
         """
         All custom headers matching our header name must be updated with the new secret.
         """
-        # Given a distribution with multiple origins and headers
+        # get_cf_distro - used to determine the status of the distribution
         mock_dist_status = {
             "Distribution": {"Status": "Deployed"}
         }
+        # get_cf_distro_config - returns a distribution with multiple origins and headers
         mock_dist_config = {
             "DistributionConfig": {
                 "Origins": {
@@ -288,6 +289,88 @@ class TestDistributionUpdates:
                     else:
                         assert header['HeaderValue'] == "unchanged", \
                             "Non-matching headers should not be modified"
+                            
+                        
+    def test_runtime_error_for_failed_distribution_update(self, rotator):
+        """
+        Test that a RuntimeError is raised when the CloudFront distribution update fails
+        (i.e., when the status code is not 200).
+        """
+       # get_cf_distro - used to determine the status of the distribution
+        mock_dist_status = {
+            "Distribution": {"Status": "Deployed"}
+        }
+        mock_dist_config = {
+            "DistributionConfig": {
+                "Origins": {
+                    "Items": [
+                        {
+                            "Id": "origin1",
+                            "CustomHeaders": {
+                                "Quantity": 2,
+                                "Items": [
+                                    {
+                                        "HeaderName": "x-origin-verify",
+                                        "HeaderValue": "old-value"
+                                    },
+                                    {
+                                        "HeaderName": "other-header",
+                                        "HeaderValue": "unchanged"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "ResponseMetadata": {
+                "HTTPHeaders": {"etag": "test-etag"}
+            }
+        }
+        
+        with patch.object(rotator, 'get_cloudfront_client') as mock_session, \
+            patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
+            patch.object(rotator, 'get_cf_distro_config') as mock_get_config:
+            
+            mock_client = MagicMock()
+            mock_session.return_value = mock_client
+            mock_get_cf_distro.return_value = mock_dist_status
+            mock_get_config.return_value = mock_dist_config
+
+            mock_client.update_distribution.return_value = {
+                'ResponseMetadata': {
+                    'HTTPStatusCode': 500 
+                }
+            }
+
+            with pytest.raises(RuntimeError) as excinfo:
+                rotator.update_cf_distro("DIST1", "new-value")
+
+            assert "Failed to update CloudFront distribution" in str(excinfo.value)
+            assert "Status code: 500" in str(excinfo.value)
+
+
+    def test_value_error_for_non_deployed_distribution(self, rotator):
+        """
+        Test that a ValueError is raised when the distribution is not deployed
+        (i.e., when the `is_distribution_deployed` method returns False).
+        """
+        with patch.object(rotator, 'get_cloudfront_client') as mock_session, \
+            patch.object(rotator, 'is_distribution_deployed') as mock_is_deployed:
+            
+            mock_session.return_value = MagicMock()
+            mock_is_deployed.return_value = False
+            
+            # Test that the ValueError is raised when update_cf_distro is called
+            with pytest.raises(ValueError) as excinfo:
+                rotator.update_cf_distro("DIST1", "new-value")
+                
+            # checl exception type is correct 
+            if not isinstance(excinfo.value, ValueError): 
+                pytest.fail(f"Expected ValueError, but got {type(excinfo.value).__name__} instead.")
+
+            assert "Distribution Id, DIST1 status is not Deployed." in str(excinfo.value)
+
 
 class TestSecretManagement:
     """
