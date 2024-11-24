@@ -350,23 +350,16 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
           Effect   = "Allow",
           Action   = ["sts:AssumeRole"]
           Resource = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+        },
+        {
+          Effect   = "Allow",
+          Action   = ["kms:Decrypt", "kms:DescribeKey"]
+          Resource = aws_kms_key.origin_verify_secret_key.arn
         }
       ]
     })
   }
   tags = local.tags
-}
-
-resource "null_resource" "lambda_dependencies" {
-  triggers = {
-    requirements = filemd5("${path.module}/lambda_function/requirements.txt")
-  }
-
-  provisioner "local-exec" {
-    interpreter = ["sh", "-c"]
-    command     = "python3 -m pip install -r ${path.module}/lambda_function/requirements.txt -t ${path.module}/lambda_function"
-  }
-
 }
 
 # This file needs to exist, but it's not directly used in the Terraform so...
@@ -382,8 +375,7 @@ data "archive_file" "lambda" {
   ]
 
   depends_on = [
-    aws_iam_role.origin-secret-rotate-execution-role,
-    null_resource.lambda_dependencies
+    aws_iam_role.origin-secret-rotate-execution-role
   ]
 }
 
@@ -396,6 +388,7 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   # checkov:skip=CKV_AWS_173:Encryption of environmental variables is not configured with KMS key
   # checkov:skip=CKV_AWS_117:Run Lambda inside VPC with security groups & private subnets not necessary
   # checkov:skip=CKV_AWS_50:XRAY tracing not used
+  depends_on    = [data.archive_file.lambda]
   filename      = data.archive_file.lambda.output_path
   function_name = "${var.application}-${var.environment}-origin-secret-rotate"
   description   = "Secrets Manager Rotation Lambda Function"
