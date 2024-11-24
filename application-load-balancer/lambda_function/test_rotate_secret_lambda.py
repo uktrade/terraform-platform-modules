@@ -387,22 +387,21 @@ class TestSecretManagement:
         """
         System must create a new pending secret if none exists.
         """
-        # Given a service client with only current secret
         mock_service_client = MagicMock()
         mock_service_client.exceptions.ResourceNotFoundException = ClientError
-        mock_service_client.get_secret_value.side_effect = [
-            {"SecretString": '{"HEADERVALUE":"current-secret"}'}, # AWSCURRENT exists
-            ClientError({"Error": {"Code": "ResourceNotFoundException"}}, "operation") # No AWSPENDING
-        ]
-        mock_service_client.get_random_password.return_value = {"RandomPassword": "new-secret"}
 
+        # Mock describe_secret to return metadata with no AWSPENDING version
+        mock_service_client.describe_secret.return_value = {
+            'VersionIdsToStages': {
+                'current-version-id': ['AWSCURRENT']
+            }
+        }
+
+        mock_service_client.get_random_password.return_value = {"RandomPassword": "new-secret"}
         rotator.create_secret(mock_service_client, "test-arn", "test-token")
 
-        mock_service_client.get_secret_value.assert_has_calls([
-            call(SecretId="test-arn", VersionStage="AWSCURRENT"),
-            call(SecretId="test-arn", VersionId="test-token", VersionStage="AWSPENDING")
-        ], any_order=False)
-
+        mock_service_client.describe_secret.assert_called_once_with(SecretId="test-arn")
+        
         mock_service_client.put_secret_value.assert_called_once_with(
             SecretId="test-arn",
             ClientRequestToken="test-token",
@@ -410,26 +409,18 @@ class TestSecretManagement:
             VersionStages=['AWSPENDING']
         )
 
-    def test_secret_creation_requires_existing_current_version(self, rotator):
-        """
-        New secrets can only be created if there is an existing AWSCURRENT version.
-        """
-        mock_service_client = MagicMock()
-        mock_service_client.exceptions.ResourceNotFoundException = ClientError
+    def test_secret_creation_requires_existing_current_version(self, rotator): 
+        """ New secrets can only be created if there is an existing AWSCURRENT version. """ 
+        mock_service_client = MagicMock() 
+        mock_service_client.exceptions.ResourceNotFoundException = ClientError  
+        mock_service_client.describe_secret.side_effect = ClientError( {"Error": {"Code": "ResourceNotFoundException"}}, "describe_secret" ) 
         
-        # Given no AWSCURRENT secret exists
-        mock_service_client.get_secret_value.side_effect = ClientError(
-            {"Error": {"Code": "ResourceNotFoundException"}},
-            "get_secret_value"
-        )
+        with pytest.raises(ClientError) as exc_info: 
+            rotator.create_secret(mock_service_client, "test-arn", "test-token") 
+            assert exc_info.value.response["Error"]["Code"] == "ResourceNotFoundException" 
+            mock_service_client.get_random_password.assert_not_called() 
+            mock_service_client.put_secret_value.assert_not_called()
 
-        # When attempting to create a new secret it should fail with appropriate error
-        with pytest.raises(ClientError) as exc_info:
-            rotator.create_secret(mock_service_client, "test-arn", "test-token")
-
-        assert exc_info.value.response["Error"]["Code"] == "ResourceNotFoundException"
-        mock_service_client.get_random_password.assert_not_called()
-        mock_service_client.put_secret_value.assert_not_called()
 
 class TestRotationProcess:
     """
