@@ -78,7 +78,7 @@ class SecretRotator:
                         "Origin": distribution['Origins']['Items'][0]['DomainName'],
                         "Domain": distribution['Aliases']['Items'][0]
                     })
-        logger.info("Matched cloudfront distributions: %s" % matching_distributions)           
+        logger.info(f"Matched cloudfront distributions: {matching_distributions}")           
         return matching_distributions
 
         
@@ -169,15 +169,15 @@ class SecretRotator:
         client = self.get_cloudfront_client()
 
         if not self.is_distribution_deployed(distro_id):
-            logger.error("Distribution Id, %s status is not Deployed." % distro_id)
-            raise ValueError(f"Distribution Id, {distro_id} status is not Deployed.")
+            logger.error(f"Distribution Id: {distro_id} status is not Deployed.")
+            raise ValueError(f"Distribution Id: {distro_id} status is not Deployed.")
 
         dist_config = self.get_cf_distro_config(distro_id)
 
         updated = self.update_custom_headers(dist_config, header_value)
 
         if not updated:
-            logger.error("No custom header, %s found in distribution Id, %s." % (self.header_name, distro_id))
+            logger.error(f"No custom header, {self.header_name} found in distribution Id, {distro_id}.")
             raise ValueError(f"No custom header found in distribution Id, {distro_id}.")
 
         # Update the distribution 
@@ -230,7 +230,7 @@ class SecretRotator:
             status_code = response['ResponseMetadata']['HTTPStatusCode']
             
             if status_code == 200:
-                logger.info("CloudFront distribution %s updated successfully", distro_id)
+                logger.info(f"CloudFront distribution {distro_id} updated successfully")
             else:
                 logger.warning(f"Failed to update CloudFront distribution {distro_id}. Status code: {status_code}")
                 raise RuntimeError(f"Failed to update CloudFront distribution {distro_id}. Status code: {status_code}")
@@ -238,7 +238,7 @@ class SecretRotator:
             return response
 
         except Exception as e:
-            logger.error("Error updating CloudFront distribution %s: %s", distro_id, str(e))
+            logger.error(f"Error updating CloudFront distribution {distro_id}: {str(e)}")
             raise
         
     def run_test_origin_access(self, url: str, secret: str) -> bool:
@@ -247,7 +247,7 @@ class SecretRotator:
                 url,
                 headers={self.header_name: secret}, timeout=(3, 5) # 3-second connection timeout, 5-second read timeout
             )
-            logger.info("Testing URL, %s - response code, %s " % (url, response.status_code))
+            logger.info(f"Testing URL, {url} - response code, {response.status_code}")
             return response.status_code == 200
         except RequestException as e:
             logger.error(f"Connection error for URL {url}: {str(e)}")
@@ -274,7 +274,7 @@ class SecretRotator:
                     VersionId=currenttoken,
                     VersionStage=AWSCURRENT
                 )
-                logger.info("Getting current version: %s" % (version))
+                logger.info(f"Getting current version: {version}")
                 break  # Found AWSCURRENT, exit loop
 
         if not current:
@@ -338,13 +338,13 @@ class SecretRotator:
     # Confirm CloudFront distribution is in Deployed state
         matching_distributions = self.get_distro_list()
         for distro in matching_distributions:
-            logger.info("Getting status of distro: %s" % distro['Id'])
+            logger.info(f"Getting status of distro: {distro['Id']}")
 
             if not self.is_distribution_deployed(distro['Id']):
-                logger.error("Distribution Id, %s status is not Deployed." % distro['Id'])
-                raise ValueError("Distribution Id, %s status is not Deployed." % distro['Id'])
+                logger.error(f"Distribution Id, {distro['Id']} status is not Deployed.")
+                raise ValueError(f"Distribution Id, {distro['Id']} status is not Deployed.")
             else:
-                logger.info("Distro %s is deployed" % distro['Id'])
+                logger.info(f"Distro {distro['Id']} is deployed")
 
         # Use get_secrets to retrieve AWSPENDING and AWSCURRENT secrets
         pendingsecret, currentsecret = self.get_secrets(service_client, arn, token)
@@ -359,14 +359,13 @@ class SecretRotator:
             
             # Update each CloudFront distribution with the new pending secret header
             for distro in matching_distributions:
-                logger.info("Updating %s" % distro['Id'])
+                logger.info(f"Updating {distro['Id']}")
                 self.update_cf_distro(distro['Id'], pendingsecret['HEADERVALUE'])
                 
         except ClientError as e:
-            logger.error("Error updating resources: %s", e)
+            logger.error(f"Error updating resources: {e}")
             raise ValueError(
-                "Failed to update resources CloudFront Distro Id %s , WAF WebACL Id %s" % (distro['Id'], self.waf_acl_id)
-            ) from e
+                f"Failed to update resources CloudFront Distro Id {distro['Id']} , WAF WebACL Id {self.waf_acl_id}") from e
 
 
     def run_test_secret(self, service_client, arn, token, test_domains=[]):
@@ -393,11 +392,11 @@ class SecretRotator:
         
             distro_list = self.get_distro_list()
             for distro in distro_list:
-                logger.info(f"Testing distro: %s", distro["Id"])
+                logger.info(f"Testing distro: {distro["Id"]}")
                 try:
                     for s in secrets:
                         if self.run_test_origin_access("http://" + distro["Domain"], s):
-                            logger.info("Domain ok for http://%s" % distro["Domain"])
+                            logger.info(f"Domain ok for http://{distro['Domain']}")
                             pass
                         else:
                             error_msg = f"Tests failed for URL, http://{distro['Domain']}"
@@ -444,7 +443,7 @@ class SecretRotator:
         for version in metadata["VersionIdsToStages"]:
             if AWSCURRENT in metadata["VersionIdsToStages"][version]:
                 if version == pending_version_token:
-                    logger.info("finishSecret: Version %s already marked as AWSCURRENT" % (version))
+                    logger.info(f"finishSecret: Version {version} already marked as AWSCURRENT")
                     return
                 current_version_token = version
                 break
@@ -456,4 +455,4 @@ class SecretRotator:
             MoveToVersionId=pending_version_token,
             RemoveFromVersionId=current_version_token
         )
-        logger.info("finishSecret: Successfully set AWSCURRENT stage to version %s" % (pending_version_token))
+        logger.info(f"finishSecret: Successfully set AWSCURRENT stage to version {pending_version_token}")

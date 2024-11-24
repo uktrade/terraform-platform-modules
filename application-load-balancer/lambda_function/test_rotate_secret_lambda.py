@@ -374,7 +374,7 @@ class TestDistributionUpdates:
             if not isinstance(excinfo.value, ValueError): 
                 pytest.fail(f"Expected ValueError, but got {type(excinfo.value).__name__} instead.")
 
-            assert "Distribution Id, DIST1 status is not Deployed." in str(excinfo.value)
+            assert "Distribution Id: DIST1 status is not Deployed." in str(excinfo.value)
 
 
 class TestSecretManagement:
