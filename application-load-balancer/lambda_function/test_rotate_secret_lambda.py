@@ -96,26 +96,31 @@ class TestDistributionDiscovery:
                 ]
             }
         }
+        
+        expected_result = [ 
+                            {
+                                "Id": "DIST1", 
+                                "Origin": "origin1.example.com", 
+                                "Domain": "example.com"
+                            }, 
+                            {
+                                "Id": "DIST2", 
+                                "Origin": "origin2.example.com", 
+                                "Domain": "example2.com"
+                            } 
+                          ]
 
         with patch.object(rotator, 'get_cloudfront_client') as mock_session:
             mock_client = MagicMock()
             mock_paginator = MagicMock()
-            mock_paginator.paginate.return_value = [mock_distributions]
             mock_client.get_paginator.return_value = mock_paginator
+            mock_paginator.paginate.return_value = [mock_distributions]
             mock_session.return_value = mock_client
 
             result = rotator.get_distro_list()
+            
+            assert result == expected_result, f"Expected: {expected_result}, but got: {result}"
 
-            # Then it should return only matching distributions
-            assert len(result) == 2, "Should find exactly 2 matching distributions"
-         
-            for dist in result:
-                assert set(dist.keys()) == {"Id", "Origin", "Domain"}, \
-                    "Each distribution must have Id, Origin, and Domain"
-                assert dist["Domain"] in ["example.com", "example2.com"], \
-                    f"Unexpected domain: {dist['Domain']}"
-
-            # use pagination for large lists
             mock_client.get_paginator.assert_called_once_with("list_distributions")
 
 class TestWAFManagement:
@@ -490,7 +495,7 @@ class TestRotationProcess:
             assert operation_sequence.index('waf_update') < operation_sequence.index('distro1_update')
             assert operation_sequence.index('propagation_wait') < operation_sequence.index('distro1_update')
     
-    def test_test_secret_validates_all_origins_with_both_secrets(self, rotator):
+    def test_secret_validates_all_origins_with_both_secrets(self, rotator):
         """
         The test_secret phase must verify all origin servers accept both old and new secrets.
         """
@@ -862,7 +867,6 @@ class TestLambdaHandler:
         
         mock_slack_instance = MagicMock()
         rotator.slack_service = mock_slack_instance
-        
             
         rotator.run_test_secret(
             service_client=MagicMock(),
