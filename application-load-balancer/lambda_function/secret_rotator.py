@@ -392,7 +392,7 @@ class SecretRotator:
         
             distro_list = self.get_distro_list()
             for distro in distro_list:
-                logger.info(f"Testing distro: {distro["Id"]}")
+                logger.info(f"Testing distro: {distro['Id']}")
                 try:
                     for s in secrets:
                         if self.run_test_origin_access("http://" + distro["Domain"], s):
