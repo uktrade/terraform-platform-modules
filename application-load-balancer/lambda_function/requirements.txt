@@ -1,2 +1,0 @@
-# Add change in file to trigger update in terraform null_resource resource & reinstall dependencies when running terraform apply
-slack-sdk==3.21.3
