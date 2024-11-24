@@ -238,6 +238,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.origin_secret_rotation_role_access
+  values = {
+    json = "{\"Sid\": \"SecretRotationRolePolicy\"}"
+  }
+}
+
 variables {
   application   = "my-app"
   repository    = "my-repository"
