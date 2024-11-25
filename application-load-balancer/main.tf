@@ -3,7 +3,7 @@ data "aws_ssm_parameter" "slack_token" {
 }
 
 data "aws_ssm_parameter" "slack_alert_channel_alb_secret_rotation" {
-  name = var.config.slack_alert_channel_alb_secret_rotation
+  name = local.config_with_defaults.slack_alert_channel_alb_secret_rotation
 }
 
 data "aws_vpc" "vpc" {
