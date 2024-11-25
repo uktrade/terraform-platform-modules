@@ -56,8 +56,18 @@ resource "aws_kms_key" "origin_verify_secret_key" {
         Effect = "Allow"
         Principal = {
           AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+
         }
         Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Rotation Lambda Function to Use Key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${var.environment}-origin-secret-rotate-role"
+        }
+        Action   = ["kms:Decrypt", "kms:Encrypt", "kms:GenerateDataKey"]
         Resource = "*"
       }
     ]
