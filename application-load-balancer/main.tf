@@ -348,6 +348,11 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
           Resource = aws_wafv2_web_acl.waf-acl.arn
         },
         {
+          Effect   = "Allow"
+          Action   = ["wafv2:UpdateWebACL"]
+          Resource = "arn:aws:wafv2:eu-west-2:${data.aws_caller_identity.current.account_id}:regional/managedruleset/*/*"
+        },
+        {
           Effect   = "Allow",
           Action   = ["sts:AssumeRole"]
           Resource = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
