@@ -5,6 +5,7 @@ module "database-dump" {
   application   = var.application
   environment   = var.environment
   database_name = var.name
+  task          = local.data_dump_tasks[count.index]
 }
 
 

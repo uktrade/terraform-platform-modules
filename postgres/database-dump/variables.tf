@@ -9,3 +9,10 @@ variable "environment" {
 variable "database_name" {
   type = string
 }
+
+variable "task" {
+  type = object({
+    from = string
+    to   = string
+  })
+}

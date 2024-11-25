@@ -1,13 +1,5 @@
 data "aws_caller_identity" "current" {}
 
-data "aws_kms_key" "data_dump_kms_key" {
-  key_id = local.dump_kms_key_alias
-}
-
-data "aws_s3_bucket" "data_dump_bucket" {
-  bucket = local.dump_bucket_name
-}
-
 data "aws_iam_policy_document" "allow_task_creation" {
   statement {
     sid    = "AllowPullFromEcr"
@@ -66,24 +58,6 @@ resource "aws_iam_role_policy" "allow_task_creation" {
 
 data "aws_iam_policy_document" "data_load" {
   policy_id = "data_load"
-  statement {
-    sid    = "AllowReadFromS3"
-    effect = "Allow"
-
-    actions = [
-      "s3:ListBucket",
-      "s3:GetObject",
-      "s3:GetObjectTagging",
-      "s3:GetObjectVersion",
-      "s3:GetObjectVersionTagging",
-      "s3:DeleteObject"
-    ]
-
-    resources = [
-      data.aws_s3_bucket.data_dump_bucket.arn,
-      "${data.aws_s3_bucket.data_dump_bucket.arn}/*"
-    ]
-  }
 
   statement {
     sid    = "AllowScaling"
@@ -100,14 +74,15 @@ data "aws_iam_policy_document" "data_load" {
   }
 
   statement {
-    sid    = "AllowKMSDencryption"
+    sid    = "AllowAssumeCrossAccountRole"
     effect = "Allow"
-
     actions = [
-      "kms:Decrypt",
+      "sts:AssumeRole"
     ]
-
-    resources = [data.aws_kms_key.data_dump_kms_key.arn]
+    resources = [
+      # TODO: How do we get the dump account id?
+      "arn:aws:iam::891377058512:role/${var.application}-${var.task.from}-${var.database_name}-dump-cross-account-assume-role"
+    ]
   }
 }
 
@@ -142,7 +117,7 @@ resource "aws_ecs_task_definition" "service" {
         },
         {
           name  = "S3_BUCKET_NAME"
-          value = data.aws_s3_bucket.data_dump_bucket.bucket
+          value = local.dump_bucket_name
         }
       ],
       portMappings = [
@@ -167,7 +142,6 @@ resource "aws_ecs_task_definition" "service" {
 
   cpu    = 1024
   memory = 3072
-
 
   requires_compatibilities = ["FARGATE"]
 

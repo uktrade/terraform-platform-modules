@@ -56,7 +56,6 @@ resource "aws_iam_role_policy" "allow_task_creation" {
   policy = data.aws_iam_policy_document.allow_task_creation.json
 }
 
-
 data "aws_iam_policy_document" "data_dump" {
   policy_id = "data_dump"
   statement {
@@ -163,7 +162,6 @@ resource "aws_ecs_task_definition" "service" {
   }
 }
 
-
 resource "aws_s3_bucket" "data_dump_bucket" {
   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
@@ -256,4 +254,61 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_iam_role" "cross_account_access" {
+  name               = "${local.task_name}-cross-account-assume-role"
+  assume_role_policy = data.aws_iam_policy_document.cross_account_access.json
+  tags               = local.tags
+}
+
+data "aws_iam_policy_document" "cross_account_access" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type = "AWS"
+      # TODO: How do we get the load account id
+      identifiers = ["arn:aws:iam::563763463626:role/${var.application}-${var.task.to}-${var.database_name}-load-task"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "cross_account_access" {
+  name   = "AllowDataDump"
+  role   = aws_iam_role.cross_account_access.name
+  policy = data.aws_iam_policy_document.cross_account_access.json
+}
+
+data "aws_iam_policy_document" "cross_account_access" {
+  policy_id = "cross_account_data_load"
+  statement {
+    sid    = "AllowReadFromS3"
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging",
+      "s3:DeleteObject"
+    ]
+
+    resources = [
+      aws_s3_bucket.data_dump_bucket.arn,
+      "${aws_s3_bucket.data_dump_bucket.arn}/*",
+    ]
+  }
+
+  statement {
+    sid    = "AllowKMSDencryption"
+    effect = "Allow"
+
+    actions = [
+      "kms:Decrypt",
+    ]
+
+    resources = [aws_kms_key.data_dump_kms_key.arn]
+  }
 }
