@@ -334,7 +334,7 @@ class SecretRotator:
                 VersionStage="AWSCURRENT"
             )
         except service_client.exceptions.ResourceNotFoundException:
-            logger.error(f"AWSCURRENT version does not exist for secret {arn}")
+            logger.error(f"AWSCURRENT version does not exist for secret")
             raise
 
         passwd = service_client.get_random_password(
@@ -348,39 +348,10 @@ class SecretRotator:
                 SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
                 VersionStages=['AWSPENDING']
             )
-            logger.info(f"Successfully created or overwritten AWSPENDING version for secret {arn} with token {token}")
+            logger.info(f"Successfully created or overwritten AWSPENDING version for secret with token {token}")
         except Exception as e:
-            logger.error(f"Failed to create AWSPENDING version for secret {arn}: {str(e)}")
+            logger.error(f"Failed to create AWSPENDING version for secret: {str(e)}")
             raise
-
-        
-        
-        
-        # try:
-        #     metadata = service_client.describe_secret(SecretId=arn)
-        #     versions = metadata.get('VersionIdsToStages', {})
-        #     has_pending = any('AWSPENDING' in stages for stages in versions.values())
-            
-        #     if has_pending:
-        #         logger.info("An AWSPENDING version already exists")
-        #         return
-                
-        #     # If no AWSPENDING exists, create new secret
-        #     passwd = service_client.get_random_password(
-        #         ExcludePunctuation=True
-        #     )
-            
-        #     service_client.put_secret_value(
-        #         SecretId=arn,
-        #         ClientRequestToken=token,
-        #         SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
-        #         VersionStages=['AWSPENDING']
-        #     )
-        #     logger.info(f"Successfully created new AWSPENDING version {token}")
-            
-        # except ClientError as e:
-        #     logger.error(f"Error in create_secret: {str(e)}")
-        #     raise e
 
     def set_secret(self, service_client, arn, token):
         """Set the secret
