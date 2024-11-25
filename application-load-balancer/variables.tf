@@ -22,7 +22,7 @@ variable "config" {
     additional_address_list                 = optional(list(string))
     slack_alert_channel_alb_secret_rotation = optional(string)
   })
-  
+
   default = {}
 
   validation {
