@@ -324,7 +324,8 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
             "secretsmanager:PutSecretValue",
             "secretsmanager:UpdateSecretVersionStage"
           ]
-          Resource = aws_secretsmanager_secret.origin-verify-secret.arn
+          Resource = "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:*"
+          
         },
         {
           Effect   = "Allow"
@@ -353,7 +354,7 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
         },
         {
           Effect   = "Allow",
-          Action   = ["kms:Decrypt", "kms:DescribeKey"]
+          Action   = ["kms:Decrypt", "kms:DescribeKey", "kms:Encrypt"]
           Resource = aws_kms_key.origin_verify_secret_key.arn
         }
       ]

@@ -174,11 +174,7 @@ class SecretRotator:
 
         dist_config = self.get_cf_distro_config(distro_id)
 
-        updated = self.update_custom_headers(dist_config, header_value)
-
-        if not updated:
-            logger.error(f"No custom header, {self.header_name} found in distribution Id, {distro_id}.")
-            raise ValueError(f"No custom header found in distribution Id, {distro_id}.")
+        self.update_custom_headers(dist_config, header_value)
 
         # Update the distribution 
         try: 
@@ -196,25 +192,47 @@ class SecretRotator:
         """
         dist_status = self.get_cf_distro(distro_id)
         return 'Deployed' in dist_status['Distribution']['Status']
-
+    
     def update_custom_headers(self, dist_config: Dict, header_value: str) -> bool:
         """
-        Updates custom headers in the distribution config.
+        Updates or creates custom headers in the distribution config.
+        Returns True if any headers were updated or created.
         """
         header_count = 0
-        for k in dist_config['DistributionConfig']['Origins']['Items']:
-            if k['CustomHeaders']['Quantity'] > 0:
-                for h in k['CustomHeaders']['Items']:
-                    if self.header_name in h['HeaderName']:
-                        logger.info(f"Update custom header, {h['HeaderName']} for origin: {k['Id']}.")
-                        header_count += 1
-                        h['HeaderValue'] = header_value
-                    else:
-                        logger.info(f"Ignore custom header, {h['HeaderName']} for origin: {k['Id']}.")
-            else:
-                logger.info(f"No custom headers found in origin: {k['Id']}.")
         
+        for origin in dist_config['DistributionConfig']['Origins']['Items']:
+            if 'CustomHeaders' not in origin or origin['CustomHeaders']['Quantity'] == 0:
+                logger.info(f"No custom headers exist. Creating new custom header {self.header_name} for origin: {origin['Id']}")
+                origin['CustomHeaders'] = {
+                    'Quantity': 1,
+                    'Items': [{
+                        'HeaderName': self.header_name,
+                        'HeaderValue': header_value
+                    }]
+                }
+                header_count += 1
+                continue
+                
+            found_header = False
+            for header in origin['CustomHeaders']['Items']:
+                if header['HeaderName'] == self.header_name:
+                    logger.info(f"Updating existing custom header {self.header_name} for origin: {origin['Id']}")
+                    header['HeaderValue'] = header_value
+                    found_header = True
+                    header_count += 1
+                    break
+                      
+            if not found_header:
+                logger.info(f"Adding new custom header {self.header_name} to existing headers for origin: {origin['Id']}")
+                origin['CustomHeaders']['Items'].append({
+                    'HeaderName': self.header_name,
+                    'HeaderValue': header_value
+                })
+                origin['CustomHeaders']['Quantity'] += 1
+                header_count += 1
+                
         return header_count > 0
+
             
     def apply_distribution_update(self, client, distro_id: str, dist_config: Dict) -> Dict:
         """
@@ -255,64 +273,114 @@ class SecretRotator:
 
         
     def get_secrets(self, service_client, arn: str, token: str) -> Tuple[Dict, Dict]:
-    # Obtain the pending secret value
-        pending = service_client.get_secret_value(
-            SecretId=arn,
-            VersionId=token,
-            VersionStage=AWSPENDING
-        )
-
-        # Obtain metadata and find the current version
         metadata = service_client.describe_secret(SecretId=arn)
-        current, currenttoken = None, None
-
-        for version in metadata.get("VersionIdsToStages", {}):
-            if AWSCURRENT in metadata["VersionIdsToStages"].get(version, []):
-                currenttoken = version
-                current = service_client.get_secret_value(
-                    SecretId=arn,
-                    VersionId=currenttoken,
-                    VersionStage=AWSCURRENT
-                )
-                logger.info(f"Getting current version: {version}")
-                break  # Found AWSCURRENT, exit loop
-
-        if not current:
-            raise ValueError("No AWSCURRENT version found")
-
-        # Parse secrets from JSON format
-        pendingsecret = json.loads(pending['SecretString'])
-        currentsecret = json.loads(current['SecretString'])
-
-        return pendingsecret, currentsecret
+        version_stages = metadata.get("VersionIdsToStages", {})
+        current_version = None
+        pending_version = None
         
-    def create_secret(self, service_client, arn, token):
-        """Create a new secret version"""
-        try:
-            metadata = service_client.describe_secret(SecretId=arn)
-            versions = metadata.get('VersionIdsToStages', {})
-            has_pending = any('AWSPENDING' in stages for stages in versions.values())
+        for version, stages in version_stages.items():
+            if AWSCURRENT in stages:
+                current_version = version
+                logger.info(f"Found AWSCURRENT version: {version}")
+            if AWSPENDING in stages:
+                pending_version = version
+                logger.info(f"Found AWSPENDING version: {version}")
+        
+        if not current_version:
+            raise ValueError("No AWSCURRENT version found")
             
-            if has_pending:
-                logger.info("An AWSPENDING version already exists")
-                return
-                
-            # If no AWSPENDING exists, create new secret
-            passwd = service_client.get_random_password(
-                ExcludePunctuation=True
+        if not pending_version:
+            raise ValueError("No AWSPENDING version found")
+        
+        try:
+            current = service_client.get_secret_value(
+                SecretId=arn,
+                VersionId=current_version,
+                VersionStage=AWSCURRENT
             )
             
+            pending = service_client.get_secret_value(
+                SecretId=arn,
+                VersionId=pending_version,
+                VersionStage=AWSPENDING
+            )
+        except service_client.exceptions.ResourceNotFoundException as e:
+            logger.error(f"Failed to retrieve secret values: {e}")
+            raise
+            
+        # Parse secrets from JSON format
+        pending_secret = json.loads(pending['SecretString'])
+        current_secret = json.loads(current['SecretString'])
+        
+        return pending_secret, current_secret
+
+        
+        
+        
+    def create_secret(self, service_client, arn, token):
+        """Create the secret.
+        This method first checks for the existence of a current secret for the passed-in token. Irrespective of whether AWSPENDING
+        exists or not, it will generate and create a new AWSPENDING secret with a random value.
+        Args:
+            service_client (client): The secrets manager service client
+            arn (string): The secret ARN or other identifier
+            token (string): The ClientRequestToken associated with the secret version
+        Raises:
+            ResourceNotFoundException: If the secret with the specified arn and stage does not exist
+        """
+        try:
+            service_client.get_secret_value(
+                SecretId=arn,
+                VersionStage="AWSCURRENT"
+            )
+        except service_client.exceptions.ResourceNotFoundException:
+            logger.error(f"AWSCURRENT version does not exist for secret {arn}")
+            raise
+
+        passwd = service_client.get_random_password(
+            ExcludePunctuation=True
+        )
+
+        try:
             service_client.put_secret_value(
                 SecretId=arn,
                 ClientRequestToken=token,
                 SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
                 VersionStages=['AWSPENDING']
             )
-            logger.info(f"Successfully created new AWSPENDING version {token}")
+            logger.info(f"Successfully created or overwritten AWSPENDING version for secret {arn} with token {token}")
+        except Exception as e:
+            logger.error(f"Failed to create AWSPENDING version for secret {arn}: {str(e)}")
+            raise
+
+        
+        
+        
+        # try:
+        #     metadata = service_client.describe_secret(SecretId=arn)
+        #     versions = metadata.get('VersionIdsToStages', {})
+        #     has_pending = any('AWSPENDING' in stages for stages in versions.values())
             
-        except ClientError as e:
-            logger.error(f"Error in create_secret: {str(e)}")
-            raise e
+        #     if has_pending:
+        #         logger.info("An AWSPENDING version already exists")
+        #         return
+                
+        #     # If no AWSPENDING exists, create new secret
+        #     passwd = service_client.get_random_password(
+        #         ExcludePunctuation=True
+        #     )
+            
+        #     service_client.put_secret_value(
+        #         SecretId=arn,
+        #         ClientRequestToken=token,
+        #         SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
+        #         VersionStages=['AWSPENDING']
+        #     )
+        #     logger.info(f"Successfully created new AWSPENDING version {token}")
+            
+        # except ClientError as e:
+        #     logger.error(f"Error in create_secret: {str(e)}")
+        #     raise e
 
     def set_secret(self, service_client, arn, token):
         """Set the secret
@@ -337,7 +405,7 @@ class SecretRotator:
         # Use get_secrets to retrieve AWSPENDING and AWSCURRENT secrets
         pendingsecret, currentsecret = self.get_secrets(service_client, arn, token)
 
-        # Update CloudFront custom header and regional WAF WebACL rule with AWSPENDING and AWSCURRENT
+        # Update regional WAF WebACL rule and CloudFront custom header with AWSPENDING and AWSCURRENT
         try:
             # WAF only needs setting once.
             self.update_waf_acl(pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE'])
