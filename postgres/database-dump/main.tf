@@ -257,12 +257,13 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
 }
 
 resource "aws_iam_role" "cross_account_access" {
-  name               = "${local.task_name}-cross-account-assume-role"
-  assume_role_policy = data.aws_iam_policy_document.cross_account_access.json
+  for_each           = toset(local.cross_account ? [""] : [])
+  name               = "${local.task_name}-cross-account"
+  assume_role_policy = data.aws_iam_policy_document.cross_account_access_assume_policy.json
   tags               = local.tags
 }
 
-data "aws_iam_policy_document" "cross_account_access" {
+data "aws_iam_policy_document" "cross_account_access_assume_policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -275,8 +276,8 @@ data "aws_iam_policy_document" "cross_account_access" {
 }
 
 resource "aws_iam_role_policy" "cross_account_access" {
-  name   = "AllowDataDump"
-  role   = aws_iam_role.cross_account_access.name
+  name   = "AllowDataLoad"
+  role   = aws_iam_role.cross_account_access[""].name
   policy = data.aws_iam_policy_document.cross_account_access.json
 }
 

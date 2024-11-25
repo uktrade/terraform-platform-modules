@@ -15,4 +15,6 @@ locals {
 
   ecr_repository_arn = "arn:aws:ecr-public::763451185160:repository/database-copy"
 
+  cross_account = (var.task.to == var.environment && coalesce(var.task.cross_account, false))
+
 }
