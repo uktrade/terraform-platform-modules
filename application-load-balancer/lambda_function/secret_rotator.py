@@ -4,6 +4,7 @@ import boto3
 import logging
 import requests
 import time
+import uuid
 from typing import Tuple, Dict, Any, List, Optional
 from slack_service import SlackNotificationService
 from requests.exceptions import RequestException
@@ -341,11 +342,13 @@ class SecretRotator:
         passwd = service_client.get_random_password(
             ExcludePunctuation=True
         )
+        
+        pending_token = str(uuid.uuid4())
 
         try:
             service_client.put_secret_value(
                 SecretId=arn,
-                ClientRequestToken=token,
+                ClientRequestToken=pending_token,
                 SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
                 VersionStages=['AWSPENDING']
             )
