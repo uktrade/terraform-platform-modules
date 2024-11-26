@@ -293,7 +293,7 @@ run "aws_s3_bucket_external_role_access_read_write_unit_test" {
 
   assert {
     condition     = length(aws_kms_key_policy.key-policy) == 1
-    error_message = "Should be a kms key policy"
+    error_message = "Should be a single kms key policy"
   }
 
   assert {
