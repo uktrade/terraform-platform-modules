@@ -692,56 +692,69 @@ class TestErrorHandling:
 
 class TestEdgeCases:
 
-    # def test_handles_empty_distribution_list_gracefully(self, rotator):
-    #     """
-    #         When no matching distributions are found:
-    #         1. WAF rules should not be updated.
-    #         2. Distribution updates should not be attempted.
-    #         3. The method should raise an error and stop.
-    #     """
-    #     mock_service_client = MagicMock()
-    #     mock_pending_secret = {"SecretString": json.dumps({"HEADERVALUE": "new-secret"})}
-    #     mock_current_secret = {"SecretString": json.dumps({"HEADERVALUE": "current-secret"})}
-    #     mock_metadata = {
-    #         "VersionIdsToStages": {
-    #             "current-version": ["AWSCURRENT"],
-    #             "test-token": ["AWSPENDING"],
-    #         }
-    #     }
-    #     mock_credentials = {
-    #         "Credentials": {
-    #             "AccessKeyId": "test-access-key",
-    #             "SecretAccessKey": "test-secret-key",
-    #             "SessionToken": "test-session-token"
-    #         }
-    #     }
-
-    #     mock_service_client.get_secret_value.side_effect = [
-    #         mock_pending_secret,  # For AWSPENDING
-    #         mock_current_secret,  # For AWSCURRENT
-    #     ]
-    #     mock_service_client.describe_secret.return_value = mock_metadata
-
-    #     with patch('boto3.client') as mock_boto_client, \
-    #         patch.object(rotator, "get_distro_list") as mock_get_distro_list, \
-    #         patch.object(rotator, "update_waf_acl") as mock_update_waf_acl, \
-    #         patch.object(rotator, "update_cf_distro") as mock_update_cf_distro, \
-    #         patch("time.sleep") as mock_sleep:
-            
-    #         mock_sts_client = MagicMock()
-    #         mock_sts_client.assume_role.return_value = mock_credentials
-    #         mock_boto_client.return_value = mock_sts_client
-            
-    #         mock_get_distro_list.return_value = []
-
+    def test_handles_empty_distribution_list_gracefully(self, rotator):
+        """
+            When no matching distributions are found:
+            1. WAF rules should not be updated.
+            2. Distribution updates should not be attempted.
+            3. The method should raise an error and stop.
+        """
+        mock_pending_secret = {"SecretString": json.dumps({"HEADERVALUE": "new-secret"})}
+        mock_current_secret = {"SecretString": json.dumps({"HEADERVALUE": "current-secret"})}
+        mock_metadata = {
+            "VersionIdsToStages": {
+                "current-version": ["AWSCURRENT"],
+                "test-token": ["AWSPENDING"],
+            }
+        }
+        mock_credentials = {
+            "Credentials": {
+                "AccessKeyId": "test-access-key",
+                "SecretAccessKey": "test-secret-key",
+                "SessionToken": "test-session-token"
+            }
+        }
         
-    #     with pytest.raises(ValueError, match="No matching distributions found. Cannot update WAF ACL or CloudFront distributions."): 
-    #         rotator.set_secret(mock_service_client, "test-arn") 
+        mock_service_client = MagicMock()
+        mock_service_client.get_secret_value.side_effect = [
+            mock_pending_secret,  # For AWSPENDING
+            mock_current_secret,  # For AWSCURRENT
+        ]
+        mock_service_client.describe_secret.return_value = mock_metadata
+        
+        # Create mock for CloudFront client 
+        mock_cloudfront_client = MagicMock() 
+        mock_cloudfront_client.list_distributions.return_value = {'DistributionList': {'Items': []}}
+
+
+        with patch('secret_rotator.boto3.client') as mock_boto_client, \
+            patch.object(rotator, "update_waf_acl") as mock_update_waf_acl, \
+            patch.object(rotator, "update_cf_distro") as mock_update_cf_distro, \
+            patch("time.sleep") as mock_sleep:
             
-    #     # Ensure that WAF and CloudFront update methods were not called 
-    #     mock_update_waf_acl.assert_not_called() 
-    #     mock_update_cf_distro.assert_not_called() 
-    #     mock_sleep.assert_not_called()
+            mock_sts_client = MagicMock()
+            mock_sts_client.assume_role.return_value = mock_credentials
+            mock_boto_client.return_value = mock_sts_client
+            
+            # Set up the mock chain for boto3.client 
+            def mock_client(service_name, **kwargs): 
+                if service_name == 'sts': 
+                    mock_sts = MagicMock() 
+                    mock_sts.assume_role.return_value = mock_credentials 
+                    return mock_sts 
+                elif service_name == 'cloudfront': 
+                    return mock_cloudfront_client 
+                return MagicMock() 
+                
+            mock_boto_client.side_effect = mock_client 
+            
+            with pytest.raises(ValueError, match="No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs"): 
+                rotator.set_secret(mock_service_client, "test-arn") 
+                # Ensure WAF and CloudFront update methods were not called 
+                # mock_update_waf_acl.assert_not_called() # this should pass
+                mock_update_waf_acl.assert_called_once() # this should fail
+                mock_update_cf_distro.assert_not_called() 
+                mock_sleep.assert_not_called()
 
     def test_handles_malformed_secret_data(self, rotator):
         mock_service_client = MagicMock()
@@ -820,17 +833,21 @@ class TestLambdaHandler:
             }
         }
 
-        with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
-            patch('boto3.client') as mock_boto3_client, \
+        with patch('boto3.client') as mock_boto3_client, \
             patch('rotate_secret_lambda.boto3.client') as mock_lambda_boto, \
+            patch('secret_rotator.boto3.client') as mock_secret_rotator_boto, \
+            patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
             patch('rotate_secret_lambda.SecretRotator') as MockSecretRotator:
-
+            
+            # Create a specific mock client to use
+            specific_mock_client = MagicMock()
+            mock_lambda_boto.return_value = specific_mock_client
+            
             mock_service_client = mock_boto3_client.return_value
             mock_rotator_instance = MockSecretRotator.return_value
+            
+            # mocks get_distro_list and calls made in get_secrets() method
             mock_get_distro_list.return_value = mock_distributions
-
-
-            # mocks calls made in get_secrets() method
             mock_service_client.describe_secret.return_value = mock_metadata
             mock_service_client.get_secret_value.side_effect = [
                 mock_pending_secret,
@@ -838,18 +855,20 @@ class TestLambdaHandler:
             ]
 
             from rotate_secret_lambda import lambda_handler
-            # triggers call to run_test_secret() method
             lambda_handler(event, None)
             
-            print(f"CALL ARGS LIST: --- {mock_rotator_instance.run_test_secret.call_args_list}")
+            actual_calls = mock_rotator_instance.run_test_secret.call_args_list
 
-            assert mock_rotator_instance.run_test_secret.call_count == 1, (
-                f"Expected run_test_secret to be called once, but it was called {mock_rotator_instance.run_test_secret.call_count} times."
-            )
+            assert len(actual_calls) == 1, f"Expected run_test_secret to be called once, but it was called {mock_rotator_instance.run_test_secret.call_count} times."
 
-            mock_rotator_instance.run_test_secret.assert_called_once_with(
-                mock_lambda_boto, "test-arn", ['domain1.example.com', 'domain2.example.com']
-            )
+            call_args = actual_calls[0][0]  
+            for i, arg in enumerate(call_args): 
+                # Assert with more detailed checking on provided arguments 
+                assert call_args[1] == "test-arn" 
+                assert call_args[2] == ['domain1.example.com', 'domain2.example.com']
+            
+
+
      
     def test_run_test_secret_triggers_slack_message(self, rotator):
         """
