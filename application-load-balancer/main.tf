@@ -450,7 +450,7 @@ resource "aws_lambda_invocation" "origin_secret_rotate_lambda_invocation" {
     create_before_destroy = true
   }
 
-  triggers = { always_run = "${timestamp()}" }
+  triggers = { always_run = timestamp() }
 
 
   depends_on = [
