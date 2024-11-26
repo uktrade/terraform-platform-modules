@@ -254,6 +254,194 @@ run "aws_s3_bucket_not_data_migration_unit_test" {
   }
 }
 
+run "aws_s3_bucket_external_role_access_read_write_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-external-role-access",
+      "type"        = "s3",
+      "external_role_access" = {
+        "test-access" = {
+          "role_arn"          = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
+          "read"              = true,
+          "write"             = true,
+          "cyber_sign_off_by" = "test@businessandtrade.gov.uk"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_s3_bucket_policy.bucket-policy) == 1
+    error_message = "Should be a bucket policy"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.bucket-policy.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = alltrue([
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
+    ])
+    error_message = "Should be: s3:Get*, s3:Put*, s3:ListBucket"
+  }
+
+  assert {
+    condition     = length(aws_kms_key_policy.key-policy) == 1
+    error_message = "Should be a single kms key policy"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.key-policy[0].statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = alltrue([
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:Decrypt"),
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:GenerateDataKey"),
+    ])
+    error_message = "Should be: kms:Decrypt, kms:GenerateDataKey"
+  }
+}
+
+run "aws_s3_bucket_external_role_access_read_only_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-external-role-access",
+      "type"        = "s3",
+      "external_role_access" = {
+        "test-access" = {
+          "role_arn"          = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
+          "read"              = true,
+          "write"             = false,
+          "cyber_sign_off_by" = "test@businessandtrade.gov.uk"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_s3_bucket_policy.bucket-policy) == 1
+    error_message = "Should be a bucket policy"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.bucket-policy.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = alltrue([
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
+      !contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
+    ])
+    error_message = "Should be: s3:Get*, s3:ListBucket"
+  }
+
+  assert {
+    condition     = length(aws_kms_key_policy.key-policy) == 1
+    error_message = "Should be a kms key policy"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.key-policy[0].statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = alltrue([
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:Decrypt"),
+      !contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:GenerateDataKey"),
+    ])
+    error_message = "Should be: kms:Decrypt"
+  }
+}
+
+run "aws_s3_bucket_external_role_access_write_only_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-external-role-access",
+      "type"        = "s3",
+      "external_role_access" = {
+        "test-access" = {
+          "role_arn"          = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
+          "read"              = false,
+          "write"             = true,
+          "cyber_sign_off_by" = "test@businessandtrade.gov.uk"
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_s3_bucket_policy.bucket-policy) == 1
+    error_message = "Should be a bucket policy"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.bucket-policy.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = alltrue([
+      !contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
+      !contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
+      contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
+    ])
+    error_message = "Should be: s3:Put*"
+  }
+
+  assert {
+    condition     = length(aws_kms_key_policy.key-policy) == 1
+    error_message = "Should be a kms key policy"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.key-policy[0].statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = alltrue([
+      !contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:Decrypt"),
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:GenerateDataKey"),
+    ])
+    error_message = "Should be: kms:GenerateDataKey"
+  }
+}
+
+run "aws_s3_bucket_external_role_access_invalid_cyber_sign_off" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-external-role-access",
+      "type"        = "s3",
+      "external_role_access" = {
+        "test-access" = {
+          "role_arn"          = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
+          "read"              = true,
+          "write"             = true,
+          "cyber_sign_off_by" = ""
+        }
+      }
+    }
+  }
+  expect_failures = [var.config.external_role_access.cyber_sign_off_by]
+}
+
 run "aws_s3_bucket_object_lock_configuration_governance_unit_test" {
   command = plan
 
