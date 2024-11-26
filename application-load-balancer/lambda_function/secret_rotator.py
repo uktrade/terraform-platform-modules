@@ -20,7 +20,7 @@ AWSCURRENT="AWSCURRENT"
 
 class SecretRotator:
     def __init__(self, **kwargs):
-        # Use provided values or default to environment variables
+        # Use provided values or default to provided Lambda environment variables
         self.secret_id = kwargs.get('secret_id', os.environ.get('SECRETID'))
         self.waf_acl_name = kwargs.get('waf_acl_name', os.environ.get('WAFACLNAME'))
         self.waf_acl_id = kwargs.get('waf_acl_id', os.environ.get('WAFACLID'))
@@ -41,22 +41,6 @@ class SecretRotator:
         self.slack_service = None
         if slack_token and slack_channel:
             self.slack_service = SlackNotificationService(slack_token, slack_channel,  self.aws_account)
-
-    def _get_aws_account_from_role_arn(self, role_arn: str) -> Optional[str]: 
-        """ 
-        Extracts and returns the AWS account ID from the RoleArn string. 
-        """ 
-        account_id = ""
-        if role_arn: 
-            try: 
-                account_id = role_arn.split(":")[4] # Account ID is the 5th segment in an ARN, remember the double ::
-                logger.info(f"Extracted Cloudfront AWS account ID: {account_id}")
-                return account_id
-            except IndexError: 
-                logger.error(f"Invalid RoleArn format: '{role_arn}' - Unable to extract AWS account ID.") 
-        else:
-            logger.warning("No RoleArn provided - AWS account ID cannot be set.") 
-            return None 
     
     def get_cloudfront_client(self) -> boto3.client:
         sts = boto3.client('sts')
@@ -197,7 +181,7 @@ class SecretRotator:
     
     def update_custom_headers(self, dist_config: Dict, header_value: str) -> bool:
         """
-        Updates or creates custom headers in the distribution config.
+        Updates or creates given custom header in the distribution config.
         Returns True if any headers were updated or created.
         """
         header_count = 0
@@ -359,7 +343,6 @@ class SecretRotator:
             logger.error(f"Failed to retrieve secret values: {e}")
             raise
             
-        # Parse secrets from JSON format
         pending_secret = json.loads(pending['SecretString'])
         current_secret = json.loads(current['SecretString'])
         
@@ -412,12 +395,13 @@ class SecretRotator:
         """Set the secret
         Updates the WAF ACL & the CloudFront distributions with the AWSPENDING & AWSCURRENT secret values.
         This method should set the AWSPENDING secret in the service that the secret belongs to. 
+        Sleep 75 seconds to allow resources to update
         Args:
             service_client (client): The secrets manager service client
             arn (string): The secret ARN or other identifier
             token (string): The ClientRequestToken associated with the secret version
         """
-    # Confirm CloudFront distribution is in Deployed state
+    # Confirm CloudFront distributions are in Deployed state
         matching_distributions = self.get_distro_list()
         
         if not matching_distributions:
@@ -464,7 +448,7 @@ class SecretRotator:
         """
         test_failures = []
         
-        # Check for TestDomains key in the Lambda event 
+        # Check for TestDomains key in the Lambda event - currently only used in console to test Slack message is emitted
         if test_domains: 
             logger.info(f"TestDomains key exists in Lambda event - testing provided dummy domains only")
             for test_domain in test_domains:
