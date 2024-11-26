@@ -109,18 +109,19 @@ def lambda_handler(event, context):
             raise ValueError(f"Invalid step parameter: {step}")
     else:
         logger.info("Step not found in event. Processing all steps manually.")
+        pending_version_token = ""
         steps = ["createSecret", "setSecret", "testSecret", "finishSecret"]
 
         for step in steps:
             logger.info(f"Processing step: {step} - manual invocation")
             if step == "createSecret":
-                rotator.create_secret(service_client, secret_id, token)
+                pending_version_token = rotator.create_secret(service_client, secret_id, token)
             elif step == "setSecret":
                 rotator.set_secret(service_client, secret_id, token)
             elif step == "testSecret":
                 rotator.run_test_secret(service_client, secret_id, token, event.get('TestDomains', []))
             elif step == "finishSecret":
-                rotator.finish_secret(service_client, secret_id, token)
+                rotator.finish_secret(service_client, secret_id, pending_version_token)
             else:
                 logger.error(f"Invalid step: {step}")
                 raise ValueError(f"Invalid step: {step}")

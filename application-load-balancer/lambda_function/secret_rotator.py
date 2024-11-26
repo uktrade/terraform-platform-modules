@@ -274,7 +274,7 @@ class SecretRotator:
             return False
 
         
-    def get_secrets(self, service_client, arn: str, token: str) -> Tuple[Dict, Dict]:
+    def get_secrets(self, service_client, arn: str) -> Tuple[Dict, Dict]:
         metadata = service_client.describe_secret(SecretId=arn)
         version_stages = metadata.get("VersionIdsToStages", {})
         current_version = None
@@ -321,7 +321,8 @@ class SecretRotator:
         
     def create_secret(self, service_client, arn, token):
         """Create the secret.
-        This method first checks for the existence of a current secret for the passed-in token. Irrespective of whether AWSPENDING
+        This method first checks for the existence of a current secret for the passed-in token. 
+        Irrespective of whether AWSPENDING
         exists or not, it will generate and create a new AWSPENDING secret with a random value.
         Args:
             service_client (client): The secrets manager service client
@@ -346,15 +347,17 @@ class SecretRotator:
         pending_token = str(uuid.uuid4())
 
         try:
-            service_client.put_secret_value(
+            response = service_client.put_secret_value(
                 SecretId=arn,
                 ClientRequestToken=pending_token,
                 SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
                 VersionStages=['AWSPENDING']
             )
-            logger.info(f"Successfully created or overwritten AWSPENDING version for secret with token {token}")
-        except Exception as e:
-            logger.error(f"Failed to create AWSPENDING version for secret: {str(e)}")
+            logger.info(f"Successfully created or overwritten AWSPENDING version for secret")
+            logger.info(f"RESPONSE ------ {response}")
+            return response['VersionId'] 
+        except Exception as e: 
+            logger.error(f"Failed to create AWSPENDING version for secret: {str(e)}") 
             raise
 
     def set_secret(self, service_client, arn, token):
@@ -383,7 +386,7 @@ class SecretRotator:
                 logger.info(f"Distro {distro['Id']} is deployed")
 
         # Use get_secrets to retrieve AWSPENDING and AWSCURRENT secrets
-        pendingsecret, currentsecret = self.get_secrets(service_client, arn, token)
+        pendingsecret, currentsecret = self.get_secrets(service_client, arn)
 
         # Update regional WAF WebACL rule and CloudFront custom header with AWSPENDING and AWSCURRENT
         try:
@@ -423,7 +426,7 @@ class SecretRotator:
                 test_failures.append({ 'domain': test_domain, 'error': error_msg, }) 
 
         else:
-            pendingsecret, currentsecret = self.get_secrets(service_client, arn, token)
+            pendingsecret, currentsecret = self.get_secrets(service_client, arn)
             secrets = [pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE']]
         
             distro_list = self.get_distro_list()
