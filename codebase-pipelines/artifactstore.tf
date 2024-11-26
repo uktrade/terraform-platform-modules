@@ -1,12 +1,28 @@
 resource "aws_s3_bucket" "artifact_store" {
-  # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
-  # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
-  # checkov:skip=CKV2_AWS_61: This bucket is only used for the pipeline artifacts, so no requirement for lifecycle configuration
-  # checkov:skip=CKV_AWS_21: This bucket is only used for the pipeline artifacts, so no requirement for versioning
-  # checkov:skip=CKV_AWS_18:  Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
+  # checkov:skip=CKV_AWS_144: It's just a pipeline artifacts bucket, cross-region replication is not needed.
+  # checkov:skip=CKV2_AWS_62: It's just a pipeline artifacts bucket, event notifications are not needed.
+  # checkov:skip=CKV_AWS_21: It's just a pipeline artifacts bucket, versioning is not needed.
+  # checkov:skip=CKV_AWS_18: It's just a pipeline artifacts bucket, access logging is not needed.
   bucket = "${var.application}-${var.codebase}-codebase-pipeline-artifact-store"
 
   tags = local.tags
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "lifecycle_rule" {
+  bucket = aws_s3_bucket.artifact_store.id
+
+  rule {
+    id     = "delete-after-7-days"
+    status = "Enabled"
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 1
+    }
+
+    expiration {
+      days = 7
+    }
+  }
 }
 
 data "aws_iam_policy_document" "artifact_store_bucket_policy" {
@@ -63,7 +79,6 @@ resource "aws_kms_key" "artifact_store_kms_key" {
   tags        = local.tags
 
   policy = jsonencode({
-    Id = "key-default-1"
     Statement = [
       {
         "Sid" : "Enable IAM User Permissions",

@@ -2,7 +2,12 @@ version: 0.2
 
 env:
   ${jsonencode({
-    exported-variables: flatten([ for env in environments : ["CLUSTER_NAME_${env}", [ for svc in services: "SERVICE_NAME_${env}_${svc}" ]]])
+    exported-variables: flatten([
+      for env in environments : [
+        "CLUSTER_NAME_${env}",
+        [ for svc in services: "SERVICE_NAME_${env}_${svc}" ]
+      ]
+    ])
   })}
 
 phases:
@@ -28,7 +33,7 @@ phases:
             fi
             SERVICE_NAME=$(aws ecs list-services --cluster $APPLICATION-$env | jq -r '.serviceArns[] | select(contains("'$APPLICATION-$env'-'$svc'-Service"))');       
             EXPORT_SVC="$(echo $EXPORT_ENV'_'$svc | tr - _ | tr '[:lower:]' '[:upper:]')";
-            export SERVICE_NAME_$EXPORT_SVC=$(echo $SERVICE_NAME | cut -d '/' -f3); 
+            export SERVICE_NAME_$EXPORT_SVC=$(echo $SERVICE_NAME | cut -d '/' -f3);
             cat image-definitions-$svc.json;
           done
         done
