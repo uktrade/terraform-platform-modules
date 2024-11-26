@@ -204,7 +204,7 @@ class SecretRotator:
         
         for origin in dist_config['DistributionConfig']['Origins']['Items']:
             if 'CustomHeaders' not in origin or origin['CustomHeaders']['Quantity'] == 0:
-                logger.info(f"No custom headers exist. Creating new custom header {self.header_name} for origin: {origin['Id']}")
+                logger.info(f"No custom headers exist. Creating new custom header for origin: {origin['Id']}")
                 origin['CustomHeaders'] = {
                     'Quantity': 1,
                     'Items': [{
@@ -218,14 +218,14 @@ class SecretRotator:
             found_header = False
             for header in origin['CustomHeaders']['Items']:
                 if header['HeaderName'] == self.header_name:
-                    logger.info(f"Updating existing custom header {self.header_name} for origin: {origin['Id']}")
+                    logger.info(f"Updating existing custom header for origin: {origin['Id']}")
                     header['HeaderValue'] = header_value
                     found_header = True
                     header_count += 1
                     break
                       
             if not found_header:
-                logger.info(f"Adding new custom header {self.header_name} to existing headers for origin: {origin['Id']}")
+                logger.info(f"Adding new custom header to existing headers for origin: {origin['Id']}")
                 origin['CustomHeaders']['Items'].append({
                     'HeaderName': self.header_name,
                     'HeaderValue': header_value
@@ -260,17 +260,66 @@ class SecretRotator:
         except Exception as e:
             logger.error(f"Error updating CloudFront distribution {distro_id}: {str(e)}")
             raise
-        
+    
     def run_test_origin_access(self, url: str, secret: str) -> bool:
         try:
             response = requests.get(
                 url,
-                headers={self.header_name: secret}, timeout=(3, 5) # 3-second connection timeout, 5-second read timeout
+                headers={self.header_name: secret}, 
+                timeout=(3, 5) # 3-second connection timeout, 5-second read timeout
             )
             logger.info(f"Testing URL, {url} - response code, {response.status_code}")
+            
+            # Log additional response details for debugging
+            if response.status_code != 200:
+                logger.error(f"Non-200 response for URL {url}")
+                logger.error(f"Response Status Code: {response.status_code}")
+                logger.error(f"Response Headers: {response.headers}")
+                try:
+                    logger.error(f"Response Content: {response.text[:500]}") # Limit content to first 500 chars
+                except Exception as content_error:
+                    logger.error(f"Could not log response content: {str(content_error)}")
+            
             return response.status_code == 200
-        except RequestException as e:
-            logger.error(f"Connection error for URL {url}: {str(e)}")
+        
+        except requests.exceptions.ConnectionError as conn_err:
+            logger.error(f"Connection error for URL {url}")
+            logger.error(f"Connection Error Details: {str(conn_err)}")
+            # Log more specific connection error details
+            if hasattr(conn_err, 'response'):
+                logger.error(f"Connection Error Response: {conn_err.response}")
+            return False
+        
+        except requests.exceptions.Timeout as timeout_err:
+            logger.error(f"Timeout error for URL {url}")
+            logger.error(f"Timeout Error Details: {str(timeout_err)}")
+            return False
+        
+        except requests.exceptions.TooManyRedirects as redirect_err:
+            logger.error(f"Too many redirects for URL {url}")
+            logger.error(f"Redirect Error Details: {str(redirect_err)}")
+            return False
+        
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Unhandled request error for URL {url}")
+            logger.error(f"Error Type: {type(e).__name__}")
+            logger.error(f"Error Details: {str(e)}")
+            
+            # Additional context if available
+            if hasattr(e, 'response'):
+                try:
+                    logger.error(f"Error Response Status Code: {e.response.status_code}")
+                    logger.error(f"Error Response Headers: {e.response.headers}")
+                    logger.error(f"Error Response Content: {e.response.text[:500]}") # Limit content to first 500 chars
+                except Exception as log_err:
+                    logger.error(f"Could not log error response details: {str(log_err)}")
+            
+            return False
+        
+        except Exception as unexpected_err:
+            logger.error(f"Unexpected error testing URL {url}")
+            logger.error(f"Unexpected Error Type: {type(unexpected_err).__name__}")
+            logger.error(f"Unexpected Error Details: {str(unexpected_err)}")
             return False
 
         
@@ -354,7 +403,6 @@ class SecretRotator:
                 VersionStages=['AWSPENDING']
             )
             logger.info(f"Successfully created or overwritten AWSPENDING version for secret")
-            logger.info(f"RESPONSE ------ {response}")
             return response['VersionId'] 
         except Exception as e: 
             logger.error(f"Failed to create AWSPENDING version for secret: {str(e)}") 
@@ -467,7 +515,7 @@ class SecretRotator:
 
     def finish_secret(self, service_client, arn, pending_version_token):
         """Finish the secret
-        This method finalizes the rotation process by marking the secret version passed in as the AWSCURRENT secret.
+        This method finalises the rotation process by marking the secret version passed in as the AWSCURRENT secret.
         Args:
             service_client (client): The secrets manager service client
             arn (string): The secret ARN or other identifier
