@@ -114,12 +114,16 @@ def lambda_handler(event, context):
         for step in steps:
             logger.info(f"Processing step: {step}")
             if step == "createSecret":
+                logger.info("Entered createSecret step - manual invocation")
                 rotator.create_secret(service_client, secret_id, token)
             elif step == "setSecret":
+                logger.info("Entered setSecret step - manual invocation")
                 rotator.set_secret(service_client, secret_id, token)
             elif step == "testSecret":
+                logger.info("Entered testSecret step - manual invocation")
                 rotator.run_test_secret(service_client, secret_id, token, event.get('TestDomains', []))
             elif step == "finishSecret":
+                logger.info("Entered finishSecret step - manual invocation")
                 rotator.finish_secret(service_client, secret_id, token)
             else:
                 logger.error(f"Invalid step: {step}")
