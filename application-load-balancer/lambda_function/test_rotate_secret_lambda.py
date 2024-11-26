@@ -400,7 +400,7 @@ class TestSecretManagement:
         mock_service_client.get_random_password.return_value = {"RandomPassword": "new-secret"}
         
         with patch("uuid.uuid4", return_value="test-token"): 
-            rotator.create_secret(mock_service_client, "test-arn", "test-token")
+            rotator.create_secret(mock_service_client, "test-arn")
     
 
         mock_service_client.get_secret_value.assert_called_once_with(
@@ -433,7 +433,7 @@ class TestSecretManagement:
         )
 
         with pytest.raises(mock_service_client.exceptions.ResourceNotFoundException):
-            rotator.create_secret(mock_service_client, "test-arn", "test-token")
+            rotator.create_secret(mock_service_client, "test-arn")
     
         mock_service_client.get_random_password.assert_not_called()
         mock_service_client.put_secret_value.assert_not_called()
@@ -786,7 +786,7 @@ class TestLambdaHandler:
 
             # Verify correct step was called
             mock_rotator.create_secret.assert_called_once_with(
-                mock_service_client, "test-arn", "test-token"
+                mock_service_client, "test-arn"
             )
             
             

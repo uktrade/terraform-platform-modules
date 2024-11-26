@@ -368,7 +368,7 @@ class SecretRotator:
         
         
         
-    def create_secret(self, service_client, arn, token):
+    def create_secret(self, service_client, arn):
         """Create the secret.
         This method first checks for the existence of a current secret for the passed-in token. 
         Irrespective of whether AWSPENDING

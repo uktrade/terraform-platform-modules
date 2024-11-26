@@ -33,7 +33,7 @@ def lambda_handler(event, context):
         logger.info(f"Processing specific step: {step}")
         if step == "createSecret":
             logger.info("Entered createSecret step")
-            pending_version_token = rotator.create_secret(service_client, secret_id, token)
+            pending_version_token = rotator.create_secret(service_client, secret_id)
         elif step == "setSecret":
             logger.info("Entered setSecret step")
             rotator.set_secret(service_client, secret_id, token)
@@ -53,7 +53,7 @@ def lambda_handler(event, context):
         for step in steps:
             logger.info(f"Processing step: {step} - manual invocation")
             if step == "createSecret":
-                pending_version_token = rotator.create_secret(service_client, secret_id, token)
+                pending_version_token = rotator.create_secret(service_client, secret_id)
             elif step == "setSecret":
                 rotator.set_secret(service_client, secret_id, token)
             elif step == "testSecret":
