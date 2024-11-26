@@ -391,7 +391,7 @@ class SecretRotator:
             logger.error(f"Failed to create AWSPENDING version for secret: {str(e)}") 
             raise
 
-    def set_secret(self, service_client, arn, token):
+    def set_secret(self, service_client, arn):
         """Set the secret
         Updates the WAF ACL & the CloudFront distributions with the AWSPENDING & AWSCURRENT secret values.
         This method should set the AWSPENDING secret in the service that the secret belongs to. 

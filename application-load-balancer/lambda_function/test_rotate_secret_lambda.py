@@ -488,7 +488,7 @@ class TestRotationProcess:
             mock_get_distro_list.return_value = mock_distributions
             mock_get_cf_distro.return_value = mock_get_distro
 
-            rotator.set_secret(mock_service_client, "test-arn", "test-token")
+            rotator.set_secret(mock_service_client, "test-arn")
 
             # Then verify correct sequence and timing
             operation_sequence = []
@@ -655,7 +655,7 @@ class TestErrorHandling:
             ]
 
             with pytest.raises(ValueError) as exc_info:
-                rotator.set_secret(mock_service_client, "test-arn", "test-token")
+                rotator.set_secret(mock_service_client, "test-arn")
 
             assert "status is not Deployed" in str(exc_info.value)
             mock_update_waf_acl.assert_not_called()
@@ -686,7 +686,7 @@ class TestErrorHandling:
             )
 
             with pytest.raises(ValueError):
-                rotator.set_secret(mock_service_client, "test-arn", "test-token")
+                rotator.set_secret(mock_service_client, "test-arn")
 
             mock_update_cf_distro.assert_not_called()
 
@@ -736,7 +736,7 @@ class TestEdgeCases:
 
         
     #     with pytest.raises(ValueError, match="No matching distributions found. Cannot update WAF ACL or CloudFront distributions."): 
-    #         rotator.set_secret(mock_service_client, "test-arn", "test-token") 
+    #         rotator.set_secret(mock_service_client, "test-arn") 
             
     #     # Ensure that WAF and CloudFront update methods were not called 
     #     mock_update_waf_acl.assert_not_called() 
