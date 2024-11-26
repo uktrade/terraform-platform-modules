@@ -301,72 +301,100 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
     }]
   })
 
-  inline_policy {
-    name = "OriginVerifyRotatePolicy"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = [
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents",
-            "logs:DescribeLogStreams"
-          ]
-          Resource = "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*origin-secret-rotate*"
-        },
-        {
-          Effect = "Allow"
-          Action = [
-            "secretsmanager:DescribeSecret",
-            "secretsmanager:GetSecretValue",
-            "secretsmanager:PutSecretValue",
-            "secretsmanager:UpdateSecretVersionStage"
-          ]
-          Resource = aws_secretsmanager_secret.origin-verify-secret.arn
-
-        },
-        {
-          Effect   = "Allow"
-          Action   = ["secretsmanager:GetRandomPassword"]
-          Resource = "*"
-        },
-        {
-          Effect = "Allow"
-          Action = [
-            "cloudfront:GetDistribution",
-            "cloudfront:GetDistributionConfig",
-            "cloudfront:ListDistributions",
-            "cloudfront:UpdateDistribution"
-          ]
-          Resource = "arn:aws:cloudfront::${var.dns_account_id}:distribution/*"
-        },
-        {
-          Effect   = "Allow"
-          Action   = ["wafv2:*"]
-          Resource = aws_wafv2_web_acl.waf-acl.arn
-        },
-        {
-          Effect   = "Allow"
-          Action   = ["wafv2:UpdateWebACL"]
-          Resource = "arn:aws:wafv2:eu-west-2:${data.aws_caller_identity.current.account_id}:regional/managedruleset/*/*"
-        },
-        {
-          Effect   = "Allow",
-          Action   = ["sts:AssumeRole"]
-          Resource = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
-        },
-        {
-          Effect   = "Allow",
-          Action   = ["kms:Decrypt", "kms:DescribeKey", "kms:Encrypt", "kms:GenerateDataKey"]
-          Resource = aws_kms_key.origin_verify_secret_key.arn
-        }
-      ]
-    })
-  }
   tags = local.tags
 }
+
+data "aws_iam_policy_document" "origin_verify_rotate_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+    resources = [
+      "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*origin-secret-rotate*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:UpdateSecretVersionStage"
+    ]
+    resources = [
+      aws_secretsmanager_secret.origin-verify-secret.arn
+    ]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetRandomPassword"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "cloudfront:GetDistribution",
+      "cloudfront:GetDistributionConfig",
+      "cloudfront:ListDistributions",
+      "cloudfront:UpdateDistribution"
+    ]
+    resources = [
+      "arn:aws:cloudfront::${var.dns_account_id}:distribution/*"
+    ]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["wafv2:*"]
+    resources = [
+      aws_wafv2_web_acl.waf-acl.arn
+    ]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["wafv2:UpdateWebACL"]
+    resources = [
+      "arn:aws:wafv2:eu-west-2:${data.aws_caller_identity.current.account_id}:regional/managedruleset/*/*"
+    ]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    resources = [
+      "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:GenerateDataKey"
+    ]
+    resources = [
+      aws_kms_key.origin_verify_secret_key.arn
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "origin_secret_rotate_policy" {
+  name   = "OriginVerifyRotatePolicy"
+  role   = aws_iam_role.origin-secret-rotate-execution-role.name
+  policy = data.aws_iam_policy_document.origin_verify_rotate_policy.json
+}
+
+
 
 # This file needs to exist, but it's not directly used in the Terraform so...
 # tflint-ignore: terraform_unused_declarations

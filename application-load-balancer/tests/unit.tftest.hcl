@@ -50,6 +50,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.origin_verify_rotate_policy
+  values = {
+    json = "{\"Sid\": \"LambdaExecutionRolePolicy\"}"
+  }
+}
+
 
 variables {
   application    = "app"
@@ -633,17 +640,6 @@ run "waf_and_rotate_lambda" {
     condition     = aws_iam_role.origin-secret-rotate-execution-role.assume_role_policy != null
     error_message = "Invalid assume_role_policy for aws_iam_role.origin-secret-rotate-execution-role"
   }
-
-  assert {
-    condition     = length(aws_iam_role.origin-secret-rotate-execution-role.inline_policy) == 1
-    error_message = "Invalid number of inline_policies for aws_iam_role.origin-secret-rotate-execution-role"
-  }
-
-  assert {
-    condition     = length([for p in aws_iam_role.origin-secret-rotate-execution-role.inline_policy : p.name if p.name == "OriginVerifyRotatePolicy"]) == 1
-    error_message = "Invalid name for inline_policy of aws_iam_role.origin-secret-rotate-execution-role"
-  }
-
 
   # Cannot assert against the arn in a plan. Requires an apply to evaluate.
   # assert {
