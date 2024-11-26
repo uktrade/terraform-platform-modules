@@ -751,8 +751,7 @@ class TestEdgeCases:
             with pytest.raises(ValueError, match="No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs"): 
                 rotator.set_secret(mock_service_client, "test-arn")
                  
-            # Ensure WAF and CloudFront update methods were not called 
-            mock_update_waf_acl.assert_not_called() # this should pass
+            mock_update_waf_acl.assert_not_called() 
             mock_update_cf_distro.assert_not_called() 
             mock_sleep.assert_not_called()
 
