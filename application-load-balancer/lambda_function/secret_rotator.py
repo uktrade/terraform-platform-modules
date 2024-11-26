@@ -20,6 +20,7 @@ AWSCURRENT="AWSCURRENT"
 class SecretRotator:
     def __init__(self, **kwargs):
         # Use provided values or default to environment variables
+        self.secret_id = kwargs.get('secret_id', os.environ.get('SECRETID'))
         self.waf_acl_name = kwargs.get('waf_acl_name', os.environ.get('WAFACLNAME'))
         self.waf_acl_id = kwargs.get('waf_acl_id', os.environ.get('WAFACLID'))
         waf_rule_priority = kwargs.get('waf_rule_priority', os.environ.get('WAFRULEPRI'))
@@ -364,6 +365,11 @@ class SecretRotator:
         """
     # Confirm CloudFront distribution is in Deployed state
         matching_distributions = self.get_distro_list()
+        
+        if not matching_distributions:
+            logger.error("No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs")
+            raise ValueError("No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs")
+        
         for distro in matching_distributions:
             logger.info(f"Getting status of distro: {distro['Id']}")
 
