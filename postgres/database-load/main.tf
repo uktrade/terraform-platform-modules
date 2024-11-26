@@ -63,7 +63,6 @@ data "aws_iam_policy_document" "data_load" {
   statement {
     sid    = "AllowReadFromS3"
     effect = "Allow"
-
     actions = [
       "s3:ListBucket",
       "s3:GetObject",
@@ -72,7 +71,6 @@ data "aws_iam_policy_document" "data_load" {
       "s3:GetObjectVersionTagging",
       "s3:DeleteObject"
     ]
-
     resources = [
       "arn:aws:s3:::demodjango-prod-demodjango-postgres-dump/*",
       "arn:aws:s3:::demodjango-prod-demodjango-postgres-dump",

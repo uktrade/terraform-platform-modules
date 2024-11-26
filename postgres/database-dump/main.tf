@@ -286,7 +286,6 @@ data "aws_iam_policy_document" "cross_account_access" {
   statement {
     sid    = "AllowReadFromS3"
     effect = "Allow"
-
     actions = [
       "s3:ListBucket",
       "s3:GetObject",
@@ -295,7 +294,6 @@ data "aws_iam_policy_document" "cross_account_access" {
       "s3:GetObjectVersionTagging",
       "s3:DeleteObject"
     ]
-
     resources = [
       aws_s3_bucket.data_dump_bucket.arn,
       "${aws_s3_bucket.data_dump_bucket.arn}/*",
@@ -305,11 +303,9 @@ data "aws_iam_policy_document" "cross_account_access" {
   statement {
     sid    = "AllowKMSDencryption"
     effect = "Allow"
-
     actions = [
       "kms:Decrypt",
     ]
-
     resources = [aws_kms_key.data_dump_kms_key.arn]
   }
 }
