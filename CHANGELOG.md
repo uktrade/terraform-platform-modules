@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.10.0](https://github.com/uktrade/terraform-platform-modules/compare/5.9.0...5.10.0) (2024-11-26)
+
+
+### Features
+
+* DBTP-1568 - Add s3 support for external role access ([#292](https://github.com/uktrade/terraform-platform-modules/issues/292)) ([f20e203](https://github.com/uktrade/terraform-platform-modules/commit/f20e2034d5ec51d59d3cafbe679432b51867798e))
+
 ## [5.9.0](https://github.com/uktrade/terraform-platform-modules/compare/5.8.1...5.9.0) (2024-11-21)
 
 
