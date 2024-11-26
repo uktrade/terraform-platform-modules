@@ -38,10 +38,10 @@ def lambda_handler(event, context):
             rotator.create_secret(service_client, secret_id)
         elif step == "setSecret":
             logger.info("Entered setSecret step")
-            rotator.set_secret(service_client, secret_id, token)
+            rotator.set_secret(service_client, secret_id)
         elif step == "testSecret":
             logger.info("Entered testSecret step")
-            rotator.run_test_secret(service_client, secret_id, token, event.get('TestDomains', []))
+            rotator.run_test_secret(service_client, secret_id, event.get('TestDomains', []))
         elif step == "finishSecret":
             logger.info("Entered finishSecret step")
             rotator.finish_secret(service_client, secret_id, pending_version_token)
@@ -57,9 +57,9 @@ def lambda_handler(event, context):
             if step == "createSecret":
                 pending_version_token = rotator.create_secret(service_client, secret_id)
             elif step == "setSecret":
-                rotator.set_secret(service_client, secret_id, token)
+                rotator.set_secret(service_client, secret_id)
             elif step == "testSecret":
-                rotator.run_test_secret(service_client, secret_id, token, event.get('TestDomains', []))
+                rotator.run_test_secret(service_client, secret_id, event.get('TestDomains', []))
             elif step == "finishSecret":
                 rotator.finish_secret(service_client, secret_id, pending_version_token)
             else:
