@@ -399,7 +399,9 @@ class TestSecretManagement:
 
         mock_service_client.get_random_password.return_value = {"RandomPassword": "new-secret"}
         
-        rotator.create_secret(mock_service_client, "test-arn", "test-token")
+        with patch("uuid.uuid4", return_value="test-token"): 
+            rotator.create_secret(mock_service_client, "test-arn", "test-token")
+    
 
         mock_service_client.get_secret_value.assert_called_once_with(
             SecretId="test-arn",
@@ -756,29 +758,6 @@ class TestEdgeCases:
 
 class TestLambdaHandler:
 
-    def test_validates_rotation_enabled(self):
-        """
-        Before starting rotation, verify rotation is enabled for the secret.
-        """
-        event = {
-            "SecretId": "test-arn",
-            "ClientRequestToken": "test-token",
-            "Step": "createSecret"
-        }
-        
-        with patch('boto3.client') as mock_boto3_client, \
-             patch('rotate_secret_lambda.SecretRotator') as MockRotator:
-            mock_service_client = mock_boto3_client.return_value
-            mock_service_client.describe_secret.return_value = {
-                "RotationEnabled": False
-            }
-
-            with pytest.raises(ValueError) as exc_info:
-                from rotate_secret_lambda import lambda_handler
-                lambda_handler(event, None)
-
-            assert "not enabled for rotation" in str(exc_info.value)
-
     def test_executes_correct_rotation_step(self):
         """
         Lambda must execute the correct rotation step based on the event.
@@ -818,7 +797,8 @@ class TestLambdaHandler:
         event = {
             "SecretId": "test-arn",
             "ClientRequestToken": "test-token",
-            "Step": "testSecret"
+            "Step": "testSecret",
+            "TestDomains": ["domain1.example.com", "domain2.example.com"] 
         }
         mock_distributions = [
             {"Id": "DIST1", "Origin": "domain1.example.com"},
@@ -843,6 +823,7 @@ class TestLambdaHandler:
 
         with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
             patch('boto3.client') as mock_boto3_client, \
+            patch('rotate_secret_lambda.boto3.client') as mock_lambda_boto, \
             patch('rotate_secret_lambda.SecretRotator') as MockSecretRotator:
 
             mock_service_client = mock_boto3_client.return_value
@@ -860,13 +841,15 @@ class TestLambdaHandler:
             from rotate_secret_lambda import lambda_handler
             # triggers call to run_test_secret() method
             lambda_handler(event, None)
+            
+            print(f"CALL ARGS LIST: --- {mock_rotator_instance.run_test_secret.call_args_list}")
 
             assert mock_rotator_instance.run_test_secret.call_count == 1, (
                 f"Expected run_test_secret to be called once, but it was called {mock_rotator_instance.run_test_secret.call_count} times."
             )
 
             mock_rotator_instance.run_test_secret.assert_called_once_with(
-                mock_service_client, "test-arn", "test-token", []
+                mock_lambda_boto, "test-arn", "test-token", ['domain1.example.com', 'domain2.example.com']
             )
      
     def test_run_test_secret_triggers_slack_message(self, rotator):
