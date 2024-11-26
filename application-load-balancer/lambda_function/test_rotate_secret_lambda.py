@@ -539,7 +539,7 @@ class TestRotationProcess:
             mock_get_distro_list.return_value = mock_distributions
             mock_run_test_origin_access.return_value = True
 
-            rotator.run_test_secret(mock_service_client, "test-arn", "test-token")
+            rotator.run_test_secret(mock_service_client, "test-arn")
 
             expected_test_calls = [
                 call("http://domain1.example.com", "new-secret"),
@@ -752,8 +752,7 @@ class TestEdgeCases:
         with pytest.raises(ValueError):
                 rotator.run_test_secret(
                     mock_service_client,
-                    "test-arn",
-                    "test-token"
+                    "test-arn"
                 )
 
 class TestLambdaHandler:
@@ -849,7 +848,7 @@ class TestLambdaHandler:
             )
 
             mock_rotator_instance.run_test_secret.assert_called_once_with(
-                mock_lambda_boto, "test-arn", "test-token", ['domain1.example.com', 'domain2.example.com']
+                mock_lambda_boto, "test-arn", ['domain1.example.com', 'domain2.example.com']
             )
      
     def test_run_test_secret_triggers_slack_message(self, rotator):
@@ -868,7 +867,6 @@ class TestLambdaHandler:
         rotator.run_test_secret(
             service_client=MagicMock(),
             arn="test-arn",
-            token="test-token",
             test_domains=test_domains
         )
 

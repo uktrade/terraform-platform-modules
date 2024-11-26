@@ -439,7 +439,7 @@ class SecretRotator:
                 f"Failed to update resources CloudFront Distro Id {distro['Id']} , WAF WebACL Id {self.waf_acl_id}") from e
 
 
-    def run_test_secret(self, service_client, arn, token, test_domains=[]):
+    def run_test_secret(self, service_client, arn, test_domains=[]):
         """Test the secret
         This method validates that the AWSPENDING secret works in the service.
         If any tests fail:
