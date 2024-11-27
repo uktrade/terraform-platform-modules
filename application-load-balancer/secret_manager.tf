@@ -73,7 +73,8 @@ resource "aws_kms_key" "origin_verify_secret_key" {
     ]
   })
 
-  tags = local.tags
+  tags       = local.tags
+  depends_on = [aws_iam_role.origin-secret-rotate-execution-role]
 }
 
 resource "aws_kms_alias" "origin_verify_secret_key_alias" {
