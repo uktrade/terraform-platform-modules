@@ -606,7 +606,7 @@ run "waf_and_rotate_lambda" {
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.SLACK_CHANNEL == data.aws_ssm_parameter.slack_alert_channel_alb_secret_rotation.value
+    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.SLACK_CHANNEL == local.config_with_defaults.slack_alert_channel_alb_secret_rotation
     error_message = "Invalid SLACK_CHANNEL environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
