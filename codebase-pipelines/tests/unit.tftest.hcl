@@ -426,7 +426,7 @@ run "test_iam" {
       "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/my-app-my-codebase-codebase-pipeline-image-build-*",
       "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/pipeline-my-app-*"
     ])
-    error_message = "Unexpected resources ${jsonencode(data.aws_iam_policy_document.log_access_for_codebuild.statement[1].resources)}"
+    error_message = "Unexpected resources"
   }
   assert {
     condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.name == "my-app-my-codebase-ecr-access-for-codebuild-images"

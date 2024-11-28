@@ -335,7 +335,7 @@ run "codebase_deploy_iam_test" {
   }
   assert {
     condition     = flatten([for el in data.aws_iam_policy_document.codebase_deploy_pipeline_assume_role_policy.statement[0].condition : el.values][0]) == ["arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline", "arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline-deploy-manifests"]
-    error_message = "Unexpected condition values ${jsonencode([for el in data.aws_iam_policy_document.codebase_deploy_pipeline_assume_role_policy.statement[0].condition : el.values][0])}"
+    error_message = "Unexpected condition values"
   }
   assert {
     condition     = jsonencode(aws_iam_role.codebase_pipeline_deploy_role.tags) == jsonencode(var.expected_tags)
