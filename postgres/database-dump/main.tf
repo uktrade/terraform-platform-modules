@@ -236,7 +236,10 @@ resource "aws_kms_key" "data_dump_kms_key" {
         "Sid" : "Enable IAM User Permissions",
         "Effect" : "Allow",
         "Principal" : {
-          "AWS" : "arn:aws:iam::${coalesce(var.task.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${var.task.to}-${var.database_name}-load-task"
+          "AWS" : [
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+            "arn:aws:iam::${coalesce(var.task.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${var.task.to}-${var.database_name}-load-task"
+          ]
         },
         "Action" : "kms:*",
         "Resource" : "*"
