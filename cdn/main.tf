@@ -90,12 +90,6 @@ resource "aws_cloudfront_distribution" "standard" {
       origin_ssl_protocols   = local.cdn_defaults.origin.custom_origin_config.origin_ssl_protocols
       origin_read_timeout    = local.cdn_defaults.origin.custom_origin_config.cdn_timeout_seconds
     }
-
-    # Entire CF distro resource must be reprovisioned for changes to custom_header to take effect
-    custom_header {
-      name  = "x-origin-verify"
-      value = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
-    }
   }
 
   default_cache_behavior {
