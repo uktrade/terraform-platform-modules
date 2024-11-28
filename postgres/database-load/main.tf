@@ -59,7 +59,6 @@ resource "aws_iam_role_policy" "allow_task_creation" {
 data "aws_iam_policy_document" "data_load" {
   policy_id = "data_load"
 
-  # TODO: Remove these permissions when the assume role is complete
   statement {
     sid    = "AllowReadFromS3"
     effect = "Allow"
@@ -72,19 +71,18 @@ data "aws_iam_policy_document" "data_load" {
       "s3:DeleteObject"
     ]
     resources = [
-      "arn:aws:s3:::demodjango-prod-demodjango-postgres-dump/*",
-      "arn:aws:s3:::demodjango-prod-demodjango-postgres-dump",
+      "arn:aws:s3:::${var.application}-${var.task.from}-${var.database_name}-dump/*",
+      "arn:aws:s3:::${var.application}-${var.task.from}-${var.database_name}-dump",
     ]
   }
+
   statement {
     sid    = "AllowKMSDencryption"
     effect = "Allow"
     actions = [
       "kms:Decrypt"
     ]
-    resources = [
-      "arn:aws:kms:eu-west-2:891377058512:key/d10f27ba-b846-4c69-855f-17ca267fbdc9"
-    ]
+    resources = ["arn:aws:kms:eu-west-2:${coalesce(var.task.from_account, data.aws_caller_identity.current.account_id)}:key/*"]
   }
 
   statement {
@@ -99,21 +97,6 @@ data "aws_iam_policy_document" "data_load" {
       "arn:aws:ecs:eu-west-2:${data.aws_caller_identity.current.account_id}:service/default/*",
       "arn:aws:ecs:eu-west-2:${data.aws_caller_identity.current.account_id}:service/${var.application}-${var.environment}/*"
     ]
-  }
-
-  dynamic "statement" {
-    for_each = toset(local.cross_account ? [""] : [])
-    content {
-      sid    = "AllowAssumeCrossAccountRole"
-      effect = "Allow"
-      actions = [
-        "sts:AssumeRole"
-      ]
-      resources = [
-        # TODO: How do we get the dump account id?
-        "arn:aws:iam::891377058512:role/${var.application}-${var.task.from}-${var.database_name}-dump-cross-account"
-      ]
-    }
   }
 }
 

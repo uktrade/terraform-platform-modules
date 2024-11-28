@@ -180,22 +180,39 @@ data "aws_iam_policy_document" "data_dump_bucket_policy" {
       type        = "*"
       identifiers = ["*"]
     }
-
     actions = [
       "s3:*",
     ]
-
     effect = "Deny"
-
     condition {
       test     = "Bool"
       variable = "aws:SecureTransport"
-
       values = [
         "false",
       ]
     }
+    resources = [
+      aws_s3_bucket.data_dump_bucket.arn,
+      "${aws_s3_bucket.data_dump_bucket.arn}/*",
+    ]
+  }
 
+  statement {
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${coalesce(var.task.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${var.task.to}-${var.database_name}-load-task"
+      ]
+    }
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging",
+      "s3:DeleteObject"
+    ]
     resources = [
       aws_s3_bucket.data_dump_bucket.arn,
       "${aws_s3_bucket.data_dump_bucket.arn}/*",
@@ -214,13 +231,12 @@ resource "aws_kms_key" "data_dump_kms_key" {
   tags        = local.tags
 
   policy = jsonencode({
-    Id = "key-default-1"
     Statement = [
       {
         "Sid" : "Enable IAM User Permissions",
         "Effect" : "Allow",
         "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" : "arn:aws:iam::${coalesce(var.task.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${var.task.to}-${var.database_name}-load-task"
         },
         "Action" : "kms:*",
         "Resource" : "*"
@@ -254,58 +270,4 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
-}
-
-resource "aws_iam_role" "cross_account_access" {
-  for_each           = toset(local.cross_account ? [""] : [])
-  name               = "${local.task_name}-cross-account"
-  assume_role_policy = data.aws_iam_policy_document.cross_account_access_assume_policy.json
-  tags               = local.tags
-}
-
-data "aws_iam_policy_document" "cross_account_access_assume_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type = "AWS"
-      # TODO: How do we get the load account id
-      identifiers = ["arn:aws:iam::563763463626:role/${var.application}-${var.task.to}-${var.database_name}-load-task"]
-    }
-  }
-}
-
-resource "aws_iam_role_policy" "cross_account_access" {
-  name   = "AllowDataLoad"
-  role   = aws_iam_role.cross_account_access[""].name
-  policy = data.aws_iam_policy_document.cross_account_access.json
-}
-
-data "aws_iam_policy_document" "cross_account_access" {
-  policy_id = "cross_account_data_load"
-  statement {
-    sid    = "AllowReadFromS3"
-    effect = "Allow"
-    actions = [
-      "s3:ListBucket",
-      "s3:GetObject",
-      "s3:GetObjectTagging",
-      "s3:GetObjectVersion",
-      "s3:GetObjectVersionTagging",
-      "s3:DeleteObject"
-    ]
-    resources = [
-      aws_s3_bucket.data_dump_bucket.arn,
-      "${aws_s3_bucket.data_dump_bucket.arn}/*",
-    ]
-  }
-
-  statement {
-    sid    = "AllowKMSDencryption"
-    effect = "Allow"
-    actions = [
-      "kms:Decrypt",
-    ]
-    resources = [aws_kms_key.data_dump_kms_key.arn]
-  }
 }

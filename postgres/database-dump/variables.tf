@@ -12,8 +12,9 @@ variable "database_name" {
 
 variable "task" {
   type = object({
-    from          = string
-    to            = string
-    cross_account = optional(bool)
+    from         = string
+    to           = string
+    from_account = optional(string)
+    to_account   = optional(string)
   })
 }

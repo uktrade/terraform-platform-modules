@@ -12,6 +12,4 @@ locals {
   dump_bucket_name   = local.task_name
 
   ecr_repository_arn = "arn:aws:ecr-public::763451185160:repository/database-copy"
-
-  cross_account = (var.task.from == var.environment && coalesce(var.task.cross_account, false))
 }
