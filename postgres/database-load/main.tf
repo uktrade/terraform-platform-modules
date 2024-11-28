@@ -71,8 +71,8 @@ data "aws_iam_policy_document" "data_load" {
       "s3:DeleteObject"
     ]
     resources = [
-      "arn:aws:s3:::${var.application}-${var.task.from}-${var.database_name}-dump/*",
-      "arn:aws:s3:::${var.application}-${var.task.from}-${var.database_name}-dump",
+      "arn:aws:s3:::${local.dump_bucket_name}/*",
+      "arn:aws:s3:::${local.dump_bucket_name}",
     ]
   }
 

@@ -7,7 +7,7 @@ locals {
     copilot-environment = var.environment
   }
 
-  task_name          = "${var.application}-${var.environment}-${var.database_name}-${var.task.from}-to-${var.task.to}-dump"
+  task_name          = "${var.application}-${var.environment}-${var.database_name}-dump"
   dump_kms_key_alias = "alias/${local.task_name}"
   dump_bucket_name   = local.task_name
 
