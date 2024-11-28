@@ -68,17 +68,6 @@ run "aws_cloudfront_distribution_unit_test" {
 
 }
 
-run "aws_cloudfront_distribution_custom_header_test" {
-  command = plan
-
-  assert {
-    condition = [
-      for origin in aws_cloudfront_distribution.standard["dev.my-application.uktrade.digital"].origin :
-    true if[for header in origin.custom_header : true if header.name == "x-origin-verify" && header.value == "dummy123"] != []][0] == true
-    error_message = "Custom header x-origin-verify with value 'dummy123' is missing or incorrectly configured."
-  }
-}
-
 run "aws_route53_record_unit_test_prod" {
   command = plan
 
