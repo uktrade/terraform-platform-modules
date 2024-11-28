@@ -99,6 +99,7 @@ resource "aws_iam_role_policy" "ecs_deploy_access_for_codebase_pipeline" {
 
 data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
   statement {
+    effect = "Allow"
     actions = [
       "ecs:UpdateService",
       "ecs:DescribeServices",
@@ -112,6 +113,7 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
   }
 
   statement {
+    effect = "Allow"
     actions = [
       "ecs:DescribeTasks",
       "ecs:TagResource"
@@ -123,6 +125,7 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
   }
 
   statement {
+    effect = "Allow"
     actions = [
       "ecs:RunTask",
       "ecs:TagResource"
@@ -133,6 +136,7 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
   }
 
   statement {
+    effect = "Allow"
     actions = [
       "ecs:ListTasks"
     ]
@@ -142,6 +146,7 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
   }
 
   statement {
+    effect = "Allow"
     actions = [
       "ecs:RegisterTaskDefinition",
       "ecs:DescribeTaskDefinition"
@@ -150,6 +155,7 @@ data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
   }
 
   statement {
+    effect = "Allow"
     actions = [
       "iam:PassRole"
     ]
