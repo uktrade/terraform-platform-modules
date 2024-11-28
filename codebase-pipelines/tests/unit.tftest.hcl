@@ -175,8 +175,8 @@ run "test_codebuild_images" {
   command = plan
 
   assert {
-    condition     = aws_codebuild_project.codebase_image_build.name == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: my-app-my-codebase-codebase-image-build"
+    condition     = aws_codebuild_project.codebase_image_build.name == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: my-app-my-codebase-codebase-pipeline-image-build"
   }
   assert {
     condition     = aws_codebuild_project.codebase_image_build.description == "Publish images on push to my-repository"
@@ -271,8 +271,8 @@ run "test_codebuild_images" {
 
   # Webhook config:
   assert {
-    condition     = aws_codebuild_webhook.codebuild_webhook.project_name == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_codebuild_webhook.codebuild_webhook.project_name == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
     condition     = aws_codebuild_webhook.codebuild_webhook.build_type == "BUILD"
@@ -363,8 +363,8 @@ run "test_iam" {
 
   # CodeBuild image build
   assert {
-    condition     = aws_iam_role.codebase_image_build.name == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_iam_role.codebase_image_build.name == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
     condition     = aws_iam_role.codebase_image_build.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
@@ -395,8 +395,8 @@ run "test_iam" {
     error_message = "Should be: 'my-app-my-codebase-log-access-for-codebuild-images'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_images.role == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_iam_role_policy.log_access_for_codebuild_images.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
     condition     = data.aws_iam_policy_document.log_access_for_codebuild.statement[0].effect == "Allow"
@@ -422,19 +422,19 @@ run "test_iam" {
   }
   assert {
     condition = data.aws_iam_policy_document.log_access_for_codebuild.statement[1].resources == toset([
-      "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/my-app-my-codebase-*-codebase-deploy-manifests-*",
-      "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/my-app-my-codebase-codebase-image-build-*",
+      "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/my-app-my-codebase-*-codebase-pipeline-deploy-manifests-*",
+      "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/my-app-my-codebase-codebase-pipeline-image-build-*",
       "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/pipeline-my-app-*"
     ])
-    error_message = "Unexpected resources"
+    error_message = "Unexpected resources ${jsonencode(data.aws_iam_policy_document.log_access_for_codebuild.statement[1].resources)}"
   }
   assert {
     condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.name == "my-app-my-codebase-ecr-access-for-codebuild-images"
     error_message = "Should be: 'my-app-my-codebase-ecr-access-for-codebuild-images'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.role == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
     condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[0].effect == "Allow"
@@ -523,8 +523,8 @@ run "test_iam" {
     error_message = "Should be: 'codestar-connection-policy'"
   }
   assert {
-    condition     = aws_iam_role_policy.codestar_connection_access.role == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_iam_role_policy.codestar_connection_access.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
     condition     = data.aws_iam_policy_document.codestar_connection_access.statement[0].effect == "Allow"
@@ -538,8 +538,8 @@ run "test_iam" {
     error_message = "Unexpected actions"
   }
   assert {
-    condition     = aws_iam_role_policy_attachment.ssm_access.role == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_iam_role_policy_attachment.ssm_access.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
     condition     = aws_iam_role_policy_attachment.ssm_access.policy_arn == "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
@@ -548,15 +548,15 @@ run "test_iam" {
 
   # CodeBuild deploy manifests
   assert {
-    condition     = aws_iam_role.codebuild_manifests.name == "my-app-my-codebase-codebase-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
+    condition     = aws_iam_role.codebase_deploy_manifests.name == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
   }
   assert {
-    condition     = aws_iam_role.codebuild_manifests.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
+    condition     = aws_iam_role.codebase_deploy_manifests.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
     error_message = "Should be: {\"Sid\": \"AssumeCodebuildRole\"}"
   }
   assert {
-    condition     = jsonencode(aws_iam_role.codebuild_manifests.tags) == jsonencode(var.expected_tags)
+    condition     = jsonencode(aws_iam_role.codebase_deploy_manifests.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
@@ -564,8 +564,8 @@ run "test_iam" {
     error_message = "Should be: 'my-app-my-codebase-artifact-store-access-for-codebuild-manifests'"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
   }
   assert {
     condition     = data.aws_iam_policy_document.access_artifact_store.statement[0].effect == "Allow"
@@ -612,40 +612,8 @@ run "test_iam" {
     error_message = "Should be: 'my-app-my-codebase-log-access-for-codebuild-manifests'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.ecs_access_for_codebuild_manifests.name == "my-app-my-codebase-ecs-access-for-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-ecs-access-for-codebuild-manifests'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.ecs_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-codebuild-manifests"
-    error_message = "Should be: 'my-app-my-codebase-codebase-codebuild-manifests'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.ecs_access_for_codebuild_manifests.policy == "{\"Sid\": \"CodeBuildDeployManifestECS\"}"
-    error_message = "Should be: {\"Sid\": \"CodeBuildDeployManifestECS\"}"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_access_for_codebuild_manifests.statement[0].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_access_for_codebuild_manifests.statement[0].actions) == "ecs:ListServices"
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_access_for_codebuild_manifests.statement[0].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/my-app-dev/*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_access_for_codebuild_manifests.statement[1].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/my-app-staging/*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_access_for_codebuild_manifests.statement[2].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/my-app-prod/*"
-    error_message = "Unexpected resources"
+    condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
   }
 
   # CodePipeline
@@ -701,258 +669,14 @@ run "test_iam" {
     condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
-  assert {
-    condition     = aws_iam_role_policy.ecs_deploy_access_for_codebase_pipeline.name == "my-app-my-codebase-ecs-deploy-access-for-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-ecs-deploy-access-for-codebase-pipeline'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.ecs_deploy_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.ecs_deploy_access_for_codebase_pipeline.policy == "{\"Sid\": \"CodePipelineECSDeploy\"}"
-    error_message = "Should be: {\"Sid\": \"CodePipelineECSDeploy\"}"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[0].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[0].actions == toset([
-      "ecs:UpdateService",
-      "ecs:DescribeServices",
-      "ecs:TagResource"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[0].resources == toset([
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/my-app-dev",
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/my-app-dev/*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[1].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[1].actions == toset([
-      "ecs:UpdateService",
-      "ecs:DescribeServices",
-      "ecs:TagResource"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[1].resources == toset([
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/my-app-staging",
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/my-app-staging/*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[2].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[2].actions == toset([
-      "ecs:UpdateService",
-      "ecs:DescribeServices",
-      "ecs:TagResource"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[2].resources == toset([
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/my-app-prod",
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/my-app-prod/*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[3].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[3].actions == toset([
-      "ecs:DescribeTasks",
-      "ecs:TagResource"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[3].resources == toset([
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/my-app-dev",
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/my-app-dev/*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[4].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[4].actions == toset([
-      "ecs:DescribeTasks",
-      "ecs:TagResource"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[4].resources == toset([
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/my-app-staging",
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/my-app-staging/*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[5].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[5].actions == toset([
-      "ecs:DescribeTasks",
-      "ecs:TagResource"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[5].resources == toset([
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/my-app-prod",
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/my-app-prod/*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[6].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[6].actions == toset([
-      "ecs:RunTask",
-      "ecs:TagResource"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[6].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/my-app-dev-*:*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[7].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[7].actions == toset([
-      "ecs:RunTask",
-      "ecs:TagResource"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[7].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/my-app-staging-*:*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[8].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[8].actions == toset([
-      "ecs:RunTask",
-      "ecs:TagResource"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[8].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/my-app-prod-*:*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[9].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[9].actions) == "ecs:ListTasks"
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[9].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container-instance/my-app-dev/*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[10].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[10].actions) == "ecs:ListTasks"
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[10].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container-instance/my-app-staging/*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[11].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[11].actions) == "ecs:ListTasks"
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[11].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container-instance/my-app-prod/*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[12].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[12].actions == toset([
-      "ecs:DescribeTaskDefinition",
-      "ecs:RegisterTaskDefinition"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[12].resources) == "*"
-    error_message = "Unexpected resources"
-  }
-
-  assert {
-    condition     = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[13].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[13].actions) == "iam:PassRole"
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[13].resources) == "*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = [for el in data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[13].condition : el.test][0] == "StringLike"
-    error_message = "Should be: aws:SecureTransport"
-  }
-  assert {
-    condition     = [for el in data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[13].condition : one(el.values)][0] == "ecs-tasks.amazonaws.com"
-    error_message = "Should be: aws:SecureTransport"
-  }
-  assert {
-    condition     = [for el in data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.statement[13].condition : el.variable][0] == "iam:PassedToService"
-    error_message = "Should be: aws:SecureTransport"
-  }
 }
 
 run "test_codebuild_manifests" {
   command = plan
 
   assert {
-    condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "my-app-my-codebase-main-codebase-deploy-manifests"
-    error_message = "Should be: 'my-app-my-codebase-main-codebase-deploy-manifests'"
+    condition     = aws_codebuild_project.codebase_deploy_manifests[0].name == "my-app-my-codebase-main-codebase-pipeline-deploy-manifests"
+    error_message = "Should be: 'my-app-my-codebase-main-codebase-pipeline-deploy-manifests'"
   }
   assert {
     condition     = aws_codebuild_project.codebase_deploy_manifests[0].description == "Create image deploy manifests to deploy services"
@@ -1168,7 +892,7 @@ run "test_main_pipeline" {
     error_message = "Should be: my-app-my-codebase-main-codebase-deploy-manifests"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1287,7 +1011,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: my-app-my-codebase-tagged-codebase-deploy-manifests"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"staging\\\",\\\"prod\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"staging\\\",\\\"requires_approval\\\":null},{\\\"account\\\":{\\\"id\\\":\\\"123456789000\\\",\\\"name\\\":\\\"prod\\\"},\\\"name\\\":\\\"prod\\\",\\\"requires_approval\\\":true}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1547,7 +1271,7 @@ run "test_pipeline_single_run_group" {
   }
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1628,7 +1352,7 @@ run "test_pipeline_multiple_run_groups" {
   }
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\",\\\"service-5\\\",\\\"service-6\\\",\\\"service-7\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\",\\\"service-5\\\",\\\"service-6\\\",\\\"service-7\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1738,7 +1462,7 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
   }
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\",\\\"prod\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null},{\\\"account\\\":{\\\"id\\\":\\\"123456789000\\\",\\\"name\\\":\\\"prod\\\"},\\\"name\\\":\\\"prod\\\",\\\"requires_approval\\\":true}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 

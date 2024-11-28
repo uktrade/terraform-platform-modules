@@ -59,9 +59,9 @@ data "aws_iam_policy_document" "log_access_for_codebuild" {
       "codebuild:BatchPutCodeCoverages"
     ]
     resources = [
-      "arn:aws:codebuild:${local.account_region}:report-group/${aws_codebuild_project.codebase_image_build.name}-*",
+      "arn:aws:codebuild:${local.account_region}:report-group/${var.application}-${var.codebase}-codebase-pipeline-image-build-*",
       "arn:aws:codebuild:${local.account_region}:report-group/pipeline-${var.application}-*",
-      "arn:aws:codebuild:${local.account_region}:report-group/${var.application}-${var.codebase}-*-codebase-deploy-manifests-*"
+      "arn:aws:codebuild:${local.account_region}:report-group/${var.application}-${var.codebase}-*-codebase-pipeline-deploy-manifests-*"
     ]
   }
 }
@@ -167,15 +167,15 @@ data "aws_iam_policy_document" "codestar_connection_access" {
   }
 }
 
-resource "aws_iam_role" "codebuild_manifests" {
-  name               = "${var.application}-${var.codebase}-codebase-codebuild-manifests"
+resource "aws_iam_role" "codebase_deploy_manifests" {
+  name               = "${var.application}-${var.codebase}-codebase-pipeline-deploy-manifests"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
   tags               = local.tags
 }
 
 resource "aws_iam_role_policy" "artifact_store_access_for_codebuild_manifests" {
   name   = "${var.application}-${var.codebase}-artifact-store-access-for-codebuild-manifests"
-  role   = aws_iam_role.codebuild_manifests.name
+  role   = aws_iam_role.codebase_deploy_manifests.name
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
 
