@@ -244,61 +244,6 @@ class SecretRotator:
         except Exception as e:
             logger.error(f"Error updating CloudFront distribution {distro_id}: {str(e)}")
             raise
-            
-    # def process_cf_distributions_and_WAF_rules(self, matching_distributions, pending_secret, current_secret):
-    #     """
-    #     Process CloudFront distributions based on whether the custom header is already present.
-    #     """
-    #     all_have_header = True
-
-    #     for distro in matching_distributions:
-    #         distro_id = distro['Id']
-    #         dist_config = self.get_cf_distro_config(distro_id)
-    #         logger.info(f"distro config --- {dist_config}")
-            
-    #         origins = dist_config['DistributionConfig']['Origins']['Items']
-
-    #         # Check if the custom header exists
-    #         header_found = all(
-    #             header['HeaderName'] == self.header_name
-    #             for origin in origins
-                
-                
-    #             for header in origin['CustomHeaders']['Items']
-    #         )
-    #         logger.info(f"All Cloudfront distributions already have custom header: {header_found}")
-
-    #         if not header_found:
-    #             all_have_header = False
-    #             break
-
-    #     if all_have_header:
-    #         # Update WAF first if all distributions have the header
-    #         logger.info("Updating WAF rule first. All Cloudfront distributions already have custom header")
-    #         self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
-
-    #         # Sleep for 75 seconds for regional WAF config propagation
-    #         logger.info("Sleeping for 75 seconds for WAF rule propagation.")
-    #         time.sleep(75)
-
-    #     # Update each CloudFront distribution 
-    #     for distro in matching_distributions: 
-    #         try: 
-    #             logger.info(f"Updating CloudFront distribution {distro['Id']}.") 
-    #             self.update_cf_distro(distro['Id'], pending_secret['HEADERVALUE']) 
-    #         except Exception as e: 
-    #             logger.error(f"Failed to update distribution {distro['Id']}: {e}") 
-    #             raise
-
-
-    #     if not all_have_header:
-    #         # Update WAF after updating CloudFront distributions with header
-    #         logger.info("Not all Cloudfront distributions have the header. Updating WAF last.")
-    #         self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
-
-    #         # Sleep for 75 seconds for regional WAF config propagation
-    #         logger.info("Sleeping for 75 seconds for WAF rule propagation.")
-    #         time.sleep(75)
     
     def process_cf_distributions_and_WAF_rules(self, matching_distributions, pending_secret, current_secret):
         """
@@ -482,10 +427,7 @@ class SecretRotator:
         current_secret = json.loads(current['SecretString'])
         
         return pending_secret, current_secret
-
-        
-        
-        
+    
     def create_secret(self, service_client, arn, token):
         # Make sure the current secret exists
         try:
@@ -497,21 +439,6 @@ class SecretRotator:
             
         except service_client.exceptions.ResourceNotFoundException:
             logger.error(f"AWSCURRENT version does not exist for secret")
-            
-            # passwd = service_client.get_random_password(
-            # ExcludePunctuation = True
-            # )
-            
-            # try:
-            #     # Put the secret
-            #     service_client.put_secret_value(
-            #     SecretId=arn, 
-            #     ClientRequestToken=token, 
-            #     SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
-            #     VersionStages=['AWSCURRENT'])
-            #     logger.info(f"Successfully created AWSCURRENT version stage and secret value for secret")
-            # except Exception as e:
-            #     logger.error(f"Failed to create AWSCURRENT version stage for secret. Error {e}")
             
         try:
             service_client.get_secret_value(
@@ -535,49 +462,7 @@ class SecretRotator:
             except Exception as e: 
                 logger.error(f"Failed to create AWSPENDING version for secret. Error: {e}") 
                 raise
-
                 
-                
-        
-        # """Create the secret.
-        # This method first checks for the existence of a current secret for the passed-in token. 
-        # Irrespective of whether AWSPENDING
-        # exists or not, it will generate and create a new AWSPENDING secret with a random value.
-        # Args:
-        #     service_client (client): The secrets manager service client
-        #     arn (string): The secret ARN or other identifier
-        #     token (string): The ClientRequestToken associated with the secret version
-        # Raises:
-        #     ResourceNotFoundException: If the secret with the specified arn and stage does not exist
-        # """
-        # try:
-        #     service_client.get_secret_value(
-        #         SecretId=arn,
-        #         VersionStage="AWSCURRENT"
-        #     )
-        # except service_client.exceptions.ResourceNotFoundException:
-        #     logger.error(f"AWSCURRENT version does not exist for secret")
-        #     raise
-
-        # passwd = service_client.get_random_password(
-        #     ExcludePunctuation=True
-        # )
-        
-        # pending_token = str(uuid.uuid4())
-
-        # try:
-        #     response = service_client.put_secret_value(
-        #         SecretId=arn,
-        #         ClientRequestToken=pending_token,
-        #         SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
-        #         VersionStages=['AWSPENDING']
-        #     )
-        #     logger.info(f"Successfully created or overwritten AWSPENDING version for secret")
-        #     return response['VersionId'] 
-        # except Exception as e: 
-        #     logger.error(f"Failed to create AWSPENDING version for secret: {str(e)}") 
-        #     raise
-
     def set_secret(self, service_client, arn, token):
         """Set the secret
         Updates the WAF ACL & the CloudFront distributions with the AWSPENDING & AWSCURRENT secret values.
@@ -629,63 +514,11 @@ class SecretRotator:
         # Update regional WAF WebACL rule and CloudFront custom header with AWSPENDING and AWSCURRENT
         try:
             self.process_cf_distributions_and_WAF_rules(matching_distributions, pendingsecret, currentsecret)
-        
-            # # WAF only needs setting once.
-            # self.update_waf_acl(pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE'])
-            
-            # # Sleep for 75 seconds for regional WAF config propagation
-            # logger.info(f"Sleep for 75 seconds while WAF rule updates")
-            # time.sleep(75)
-            
-            # # Update each CloudFront distribution with the new pending secret header
-            # for distro in matching_distributions:
-            #     logger.info(f"Updating {distro['Id']}")
-            #     self.update_cf_distro(distro['Id'], pendingsecret['HEADERVALUE'])
                 
         except ClientError as e:
             logger.error(f"Error updating resources: {e}")
             raise ValueError(
                 f"Failed to update resources CloudFront Distro Id {distro['Id']} , WAF WebACL Id {self.waf_acl_id}") from e
-
-        
-        
-    # # Confirm CloudFront distributions are in Deployed state
-    #     matching_distributions = self.get_distro_list()
-        
-    #     if not matching_distributions:
-    #         logger.error("No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs")
-    #         raise ValueError("No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs")
-        
-    #     for distro in matching_distributions:
-    #         logger.info(f"Getting status of distro: {distro['Id']}")
-
-    #         if not self.is_distribution_deployed(distro['Id']):
-    #             logger.error(f"Distribution Id, {distro['Id']} status is not Deployed.")
-    #             raise ValueError(f"Distribution Id, {distro['Id']} status is not Deployed.")
-    #         else:
-    #             logger.info(f"Distro {distro['Id']} is deployed")
-
-    #     # Use get_secrets to retrieve AWSPENDING and AWSCURRENT secrets
-    #     pendingsecret, currentsecret = self.get_secrets(service_client, arn)
-
-    #     # Update regional WAF WebACL rule and CloudFront custom header with AWSPENDING and AWSCURRENT
-    #     try:
-    #         # WAF only needs setting once.
-    #         self.update_waf_acl(pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE'])
-            
-    #         # Sleep for 75 seconds for regional WAF config propagation
-    #         time.sleep(75)
-            
-    #         # Update each CloudFront distribution with the new pending secret header
-    #         for distro in matching_distributions:
-    #             logger.info(f"Updating {distro['Id']}")
-    #             self.update_cf_distro(distro['Id'], pendingsecret['HEADERVALUE'])
-                
-    #     except ClientError as e:
-    #         logger.error(f"Error updating resources: {e}")
-    #         raise ValueError(
-    #             f"Failed to update resources CloudFront Distro Id {distro['Id']} , WAF WebACL Id {self.waf_acl_id}") from e
-
 
     def run_test_secret(self, service_client, arn, token, test_domains=[]):
         """Test the secret
@@ -764,63 +597,6 @@ class SecretRotator:
                     )
                 except Exception as e:
                         logger.error(f"Failure to send Slack notification{str(e)}")
-    
-        # """Test the secret
-        # This method validates that the AWSPENDING secret works in the service.
-        # If any tests fail:
-        # 1. Attempts to send a Slack notification (notification failure won't stop the rotation process)
-        # 2. If Lambda event contains key TestDomains and provided domains to test, then you can trigger a Slack notification to the configured Slack channel
-        # """
-        # test_failures = []
-        
-        # # Check for TestDomains key in the Lambda event - currently only used in console to test Slack message is emitted
-        # if test_domains: 
-        #     logger.info(f"TestDomains key exists in Lambda event - testing provided dummy domains only")
-        #     for test_domain in test_domains:
-        #         logger.info(f"Testing dummy distro: {test_domain}")
-        #         error_msg = f"Simulating test failure for domain: http://{test_domain}" 
-        #         logger.error(error_msg) 
-        #         test_failures.append({ 'domain': test_domain, 'error': error_msg, }) 
-
-        # else:
-        #     pendingsecret, currentsecret = self.get_secrets(service_client, arn)
-        #     secrets = [pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE']]
-        
-        #     distro_list = self.get_distro_list()
-        #     for distro in distro_list:
-        #         logger.info(f"Testing distro: {distro['Id']}")
-        #         try:
-        #             for s in secrets:
-        #                 if self.run_test_origin_access("http://" + distro["Domain"], s):
-        #                     logger.info(f"Domain ok for http://{distro['Domain']}")
-        #                     pass
-        #                 else:
-        #                     error_msg = f"Tests failed for URL, http://{distro['Domain']}"
-        #                     logger.error(error_msg)
-        #                     test_failures.append({
-        #                         'domain': distro["Domain"],
-        #                         'secret_type': 'PENDING' if s == pendingsecret['HEADERVALUE'] else 'CURRENT',
-        #                         'error': 'Connection failed or non-200 response'
-        #                     })
-        #         except Exception as e:
-        #             error_msg = f"Error testing {distro}: {str(e)}"
-        #             logger.error(error_msg)
-        #             test_failures.append({
-        #                 'domain': distro["Domain"],
-        #                 'error': str(e)
-        #             })
-
-        # if test_failures:
-        #     if self.slack_service:
-        #         try:
-        #             self.slack_service.send_test_failures(
-        #                 failures=test_failures,
-        #                 environment=self.environment,
-        #                 application=self.application
-        #             )
-        #         except Exception as e:
-        #                 logger.error(f"Failure to send Slack notification{str(e)}")
-
 
     def finish_secret(self, service_client, arn, token):
         """Finish the secret
