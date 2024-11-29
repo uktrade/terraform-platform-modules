@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.11.0](https://github.com/uktrade/terraform-platform-modules/compare/5.10.0...5.11.0) (2024-11-29)
+
+
+### Features
+
+* DBTP-1503 - Terraform codebase pipelines ([#276](https://github.com/uktrade/terraform-platform-modules/issues/276)) ([96b5935](https://github.com/uktrade/terraform-platform-modules/commit/96b593574db00c32c682726826ee765ebb561863))
+
+
+### Bug Fixes
+
+* Add missing environment pipeline permission ([#297](https://github.com/uktrade/terraform-platform-modules/issues/297)) ([57f4ea1](https://github.com/uktrade/terraform-platform-modules/commit/57f4ea11b6e99fef1f9d9b0a99c6a7085f463579))
+
 ## [5.10.0](https://github.com/uktrade/terraform-platform-modules/compare/5.9.0...5.10.0) (2024-11-26)
 
 
