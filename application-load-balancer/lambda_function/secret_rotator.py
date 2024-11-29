@@ -255,7 +255,6 @@ class SecretRotator:
         for distro in matching_distributions:
             distro_id = distro['Id']
             dist_config = self.get_cf_distro_config(distro_id)
-            logger.info(f"distro config --- {dist_config}")
 
             # Track if the header was found or added in this distribution
             header_found = False
