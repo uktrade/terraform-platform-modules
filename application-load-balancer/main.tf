@@ -185,7 +185,7 @@ resource "random_password" "origin-secret" {
 
 resource "aws_wafv2_web_acl" "waf-acl" {
   # checkov:skip=CKV2_AWS_31: Ensure WAF2 has a Logging Configuration to be done new ticket
-  depends_on = [data.aws_secretsmanager_secret_version.origin_verify_secret_version, random_password.origin-secret]
+  depends_on = [random_password.origin-secret]
 
   name        = "${var.application}-${var.environment}-ACL"
   description = "CloudFront Origin Verify"
@@ -217,21 +217,21 @@ resource "aws_wafv2_web_acl" "waf-acl" {
 
     statement {
       or_statement {
-        statement {
-          byte_match_statement {
-            field_to_match {
-              single_header {
-                name = "x-origin-verify"
-              }
-            }
-            positional_constraint = "EXACTLY"
-            search_string         = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
-            text_transformation {
-              priority = 0
-              type     = "NONE"
-            }
-          }
-        }
+        # statement {
+        #   byte_match_statement {
+        #     field_to_match {
+        #       single_header {
+        #         name = "x-origin-verify"
+        #       }
+        #     }
+        #     positional_constraint = "EXACTLY"
+        #     search_string         = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
+        #     text_transformation {
+        #       priority = 0
+        #       type     = "NONE"
+        #     }
+        #   }
+        # }
         statement {
           byte_match_statement {
             field_to_match {
@@ -452,35 +452,35 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   tags             = local.tags
 }
 
-resource "aws_lambda_invocation" "origin_secret_rotate_lambda_invocation" {
-  function_name = aws_lambda_function.origin-secret-rotate-function.function_name
+# resource "aws_lambda_invocation" "origin_secret_rotate_lambda_invocation" {
+#   function_name = aws_lambda_function.origin-secret-rotate-function.function_name
 
-  input = jsonencode({
-    SECRETID      = aws_secretsmanager_secret.origin-verify-secret.arn
-    WAFACLID      = aws_wafv2_web_acl.waf-acl.id,
-    WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0],
-    WAFRULEPRI    = "0",
-    DISTROIDLIST  = local.domain_list,
-    HEADERNAME    = "x-origin-verify",
-    APPLICATION   = var.application,
-    ENVIRONMENT   = var.environment,
-    ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation",
-    AWS_ACCOUNT   = data.aws_caller_identity.current.account_id,
-    SLACK_TOKEN   = data.aws_ssm_parameter.slack_token.value,
-    SLACK_CHANNEL = local.config_with_defaults.slack_alert_channel_alb_secret_rotation
-  })
+#   input = jsonencode({
+#     SECRETID      = aws_secretsmanager_secret.origin-verify-secret.arn
+#     WAFACLID      = aws_wafv2_web_acl.waf-acl.id,
+#     WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0],
+#     WAFRULEPRI    = "0",
+#     DISTROIDLIST  = local.domain_list,
+#     HEADERNAME    = "x-origin-verify",
+#     APPLICATION   = var.application,
+#     ENVIRONMENT   = var.environment,
+#     ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation",
+#     AWS_ACCOUNT   = data.aws_caller_identity.current.account_id,
+#     SLACK_TOKEN   = data.aws_ssm_parameter.slack_token.value,
+#     SLACK_CHANNEL = local.config_with_defaults.slack_alert_channel_alb_secret_rotation
+#   })
 
-  lifecycle {
-    create_before_destroy = true
-  }
+#   lifecycle {
+#     create_before_destroy = true
+#   }
 
-  triggers = { always_run = timestamp() }
+#   triggers = { always_run = timestamp() }
 
 
-  depends_on = [
-    aws_lambda_function.origin-secret-rotate-function
-  ]
-}
+#   depends_on = [
+#     aws_lambda_function.origin-secret-rotate-function
+#   ]
+# }
 
 # Lambda Permission for Secrets Manager Rotation
 resource "aws_lambda_permission" "rotate-function-invoke-permission" {
@@ -492,9 +492,6 @@ resource "aws_lambda_permission" "rotate-function-invoke-permission" {
   # chekov CKV_AWS_364 requirement: limit lambda invocation by secrets in the same AWS account
   source_account = data.aws_caller_identity.current.account_id
 }
-
-
-
 
 # Associate WAF ACL with ALB
 resource "aws_wafv2_web_acl_association" "waf-alb-association" {

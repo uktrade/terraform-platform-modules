@@ -1,8 +1,8 @@
-# Fetch the secret value from Secrets Manager
-data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
-  secret_id  = aws_secretsmanager_secret.origin-verify-secret.id
-  version_id = aws_secretsmanager_secret_version.secret-value.version_id
-}
+# # Fetch the secret value from Secrets Manager
+# data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
+#   secret_id  = aws_secretsmanager_secret.origin-verify-secret.id
+#   version_id = aws_secretsmanager_secret_version.secret-value.version_id
+# }
 
 resource "aws_secretsmanager_secret" "origin-verify-secret" {
   name                    = "${var.application}-${var.environment}-origin-verify-header-secret"
@@ -33,15 +33,15 @@ resource "aws_secretsmanager_secret_policy" "secret_policy" {
   policy     = data.aws_iam_policy_document.secret_manager_policy.json
 }
 
-resource "aws_secretsmanager_secret_version" "secret-value" {
-  secret_id     = aws_secretsmanager_secret.origin-verify-secret.id
-  secret_string = jsonencode({ "HEADERVALUE" = random_password.origin-secret.result })
+# resource "aws_secretsmanager_secret_version" "secret-value" {
+#   secret_id     = aws_secretsmanager_secret.origin-verify-secret.id
+#   secret_string = jsonencode({ "HEADERVALUE" = random_password.origin-secret.result })
 
-  lifecycle {
-    # Use `ignore_changes` to allow rotation without Terraform overwriting the value
-    ignore_changes = [secret_string]
-  }
-}
+#   lifecycle {
+#     # Use `ignore_changes` to allow rotation without Terraform overwriting the value
+#     ignore_changes = [secret_string]
+#   }
+# }
 
 resource "aws_kms_key" "origin_verify_secret_key" {
   description             = "KMS key for ${var.application}-${var.environment}-origin-verify-header-secret"
@@ -86,6 +86,7 @@ resource "aws_kms_alias" "origin_verify_secret_key_alias" {
 resource "aws_secretsmanager_secret_rotation" "origin-verify-rotate-schedule" {
   secret_id           = aws_secretsmanager_secret.origin-verify-secret.id
   rotation_lambda_arn = aws_lambda_function.origin-secret-rotate-function.arn
+  rotate_immediately  = true
   rotation_rules {
     automatically_after_days = 7
   }

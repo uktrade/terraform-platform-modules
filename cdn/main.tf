@@ -4,10 +4,10 @@ data "aws_wafv2_web_acl" "waf-default" {
   scope    = "CLOUDFRONT"
 }
 
-data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
-  secret_id     = var.origin_verify_secret_id
-  version_stage = "AWSCURRENT"
-}
+# data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
+#   secret_id     = var.origin_verify_secret_id
+#   version_stage = "AWSCURRENT"
+# }
 
 resource "aws_acm_certificate" "certificate" {
   provider = aws.domain-cdn
