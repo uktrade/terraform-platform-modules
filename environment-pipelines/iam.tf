@@ -849,6 +849,13 @@ data "aws_iam_policy_document" "cloudformation" {
       "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stackset/${var.application}-infrastructure:*",
     ]
   }
+
+  statement {
+    actions = [
+      "cloudformation:ListExports"
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "cloudformation" {
