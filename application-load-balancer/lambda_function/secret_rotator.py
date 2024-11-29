@@ -585,7 +585,7 @@ class SecretRotator:
                     VersionId=currenttoken, 
                     VersionStage="AWSCURRENT"
                     )
-                    logger.info("Getting current version %s for %s" % (version, arn))
+                    logger.info("Getting AWSCURRENT version")
 
             pendingsecret = json.loads(pending['SecretString'])
             currentsecret = json.loads(current['SecretString'])
