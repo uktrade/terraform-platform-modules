@@ -323,7 +323,7 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
       "secretsmanager:UpdateSecretVersionStage"
     ]
     resources = [
-      aws_secretsmanager_secret.origin-verify-secret.arn
+      "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${var.environment}-origin-verify-header-secret-*"
     ]
   }
 
