@@ -202,7 +202,8 @@ data "aws_iam_policy_document" "data_dump_bucket_policy" {
     principals {
       type = "AWS"
       identifiers = [
-        "arn:aws:iam::${coalesce(var.task.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${var.task.to}-${var.database_name}-load-task"
+        for el in var.tasks :
+        "arn:aws:iam::${coalesce(el.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${el.to}-${var.database_name}-load-task"
       ]
     }
     actions = [
@@ -236,10 +237,12 @@ resource "aws_kms_key" "data_dump_kms_key" {
         "Sid" : "Enable IAM User Permissions",
         "Effect" : "Allow",
         "Principal" : {
-          "AWS" : [
+          "AWS" : flatten([
             "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
-            "arn:aws:iam::${coalesce(var.task.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${var.task.to}-${var.database_name}-load-task"
-          ]
+            [for el in var.tasks :
+              "arn:aws:iam::${coalesce(el.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${el.to}-${var.database_name}-load-task"
+            ]
+          ])
         },
         "Action" : "kms:*",
         "Resource" : "*"

@@ -10,11 +10,11 @@ variable "database_name" {
   type = string
 }
 
-variable "task" {
-  type = object({
+variable "tasks" {
+  type = list(object({
     from         = string
     to           = string
     from_account = optional(string)
     to_account   = optional(string)
-  })
+  }))
 }

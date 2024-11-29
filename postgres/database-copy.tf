@@ -1,11 +1,11 @@
 module "database-dump" {
-  count  = length(local.data_dump_tasks)
+  count  = length(local.data_dump_tasks) > 0 ? 1 : 0
   source = "./database-dump"
 
   application   = var.application
   environment   = var.environment
   database_name = var.name
-  task          = local.data_dump_tasks[count.index]
+  tasks         = local.data_dump_tasks
 }
 
 
