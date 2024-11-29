@@ -452,36 +452,6 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   tags             = local.tags
 }
 
-# resource "aws_lambda_invocation" "origin_secret_rotate_lambda_invocation" {
-#   function_name = aws_lambda_function.origin-secret-rotate-function.function_name
-
-#   input = jsonencode({
-#     SECRETID      = aws_secretsmanager_secret.origin-verify-secret.arn
-#     WAFACLID      = aws_wafv2_web_acl.waf-acl.id,
-#     WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0],
-#     WAFRULEPRI    = "0",
-#     DISTROIDLIST  = local.domain_list,
-#     HEADERNAME    = "x-origin-verify",
-#     APPLICATION   = var.application,
-#     ENVIRONMENT   = var.environment,
-#     ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation",
-#     AWS_ACCOUNT   = data.aws_caller_identity.current.account_id,
-#     SLACK_TOKEN   = data.aws_ssm_parameter.slack_token.value,
-#     SLACK_CHANNEL = local.config_with_defaults.slack_alert_channel_alb_secret_rotation
-#   })
-
-#   lifecycle {
-#     create_before_destroy = true
-#   }
-
-#   triggers = { always_run = timestamp() }
-
-
-#   depends_on = [
-#     aws_lambda_function.origin-secret-rotate-function
-#   ]
-# }
-
 # Lambda Permission for Secrets Manager Rotation
 resource "aws_lambda_permission" "rotate-function-invoke-permission" {
   statement_id  = "AllowSecretsManagerInvocation"

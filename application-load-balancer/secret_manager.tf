@@ -1,8 +1,3 @@
-# # Fetch the secret value from Secrets Manager
-# data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
-#   secret_id  = aws_secretsmanager_secret.origin-verify-secret.id
-#   version_id = aws_secretsmanager_secret_version.secret-value.version_id
-# }
 
 resource "aws_secretsmanager_secret" "origin-verify-secret" {
   name                    = "${var.application}-${var.environment}-origin-verify-header-secret"
@@ -32,16 +27,6 @@ resource "aws_secretsmanager_secret_policy" "secret_policy" {
   secret_arn = aws_secretsmanager_secret.origin-verify-secret.arn
   policy     = data.aws_iam_policy_document.secret_manager_policy.json
 }
-
-# resource "aws_secretsmanager_secret_version" "secret-value" {
-#   secret_id     = aws_secretsmanager_secret.origin-verify-secret.id
-#   secret_string = jsonencode({ "HEADERVALUE" = random_password.origin-secret.result })
-
-#   lifecycle {
-#     # Use `ignore_changes` to allow rotation without Terraform overwriting the value
-#     ignore_changes = [secret_string]
-#   }
-# }
 
 resource "aws_kms_key" "origin_verify_secret_key" {
   description             = "KMS key for ${var.application}-${var.environment}-origin-verify-header-secret"
