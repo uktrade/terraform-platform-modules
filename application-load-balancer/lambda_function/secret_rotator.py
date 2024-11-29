@@ -245,52 +245,134 @@ class SecretRotator:
             logger.error(f"Error updating CloudFront distribution {distro_id}: {str(e)}")
             raise
             
+    # def process_cf_distributions_and_WAF_rules(self, matching_distributions, pending_secret, current_secret):
+    #     """
+    #     Process CloudFront distributions based on whether the custom header is already present.
+    #     """
+    #     all_have_header = True
+
+    #     for distro in matching_distributions:
+    #         distro_id = distro['Id']
+    #         dist_config = self.get_cf_distro_config(distro_id)
+    #         logger.info(f"distro config --- {dist_config}")
+            
+    #         origins = dist_config['DistributionConfig']['Origins']['Items']
+
+    #         # Check if the custom header exists
+    #         header_found = all(
+    #             header['HeaderName'] == self.header_name
+    #             for origin in origins
+                
+                
+    #             for header in origin['CustomHeaders']['Items']
+    #         )
+    #         logger.info(f"All Cloudfront distributions already have custom header: {header_found}")
+
+    #         if not header_found:
+    #             all_have_header = False
+    #             break
+
+    #     if all_have_header:
+    #         # Update WAF first if all distributions have the header
+    #         logger.info("Updating WAF rule first. All Cloudfront distributions already have custom header")
+    #         self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
+
+    #         # Sleep for 75 seconds for regional WAF config propagation
+    #         logger.info("Sleeping for 75 seconds for WAF rule propagation.")
+    #         time.sleep(75)
+
+    #     # Update each CloudFront distribution 
+    #     for distro in matching_distributions: 
+    #         try: 
+    #             logger.info(f"Updating CloudFront distribution {distro['Id']}.") 
+    #             self.update_cf_distro(distro['Id'], pending_secret['HEADERVALUE']) 
+    #         except Exception as e: 
+    #             logger.error(f"Failed to update distribution {distro['Id']}: {e}") 
+    #             raise
+
+
+    #     if not all_have_header:
+    #         # Update WAF after updating CloudFront distributions with header
+    #         logger.info("Not all Cloudfront distributions have the header. Updating WAF last.")
+    #         self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
+
+    #         # Sleep for 75 seconds for regional WAF config propagation
+    #         logger.info("Sleeping for 75 seconds for WAF rule propagation.")
+    #         time.sleep(75)
+    
     def process_cf_distributions_and_WAF_rules(self, matching_distributions, pending_secret, current_secret):
         """
         Process CloudFront distributions based on whether the custom header is already present.
+        If the custom header is missing, it will be added to the distribution.
         """
-        all_have_header = True
+        all_have_header = True  # Assume all distributions have the header initially
 
         for distro in matching_distributions:
             distro_id = distro['Id']
             dist_config = self.get_cf_distro_config(distro_id)
             logger.info(f"distro config --- {dist_config}")
 
-            # Check if the custom header exists
-            header_found = all(
-                header['HeaderName'] == self.header_name
-                for origin in dist_config['DistributionConfig']['Origins']['Items']
-                if 'CustomHeaders' in origin
-                for header in origin['CustomHeaders']['Items']
-            )
-            logger.info(f"All Cloudfront distributions already have custom header: {header_found}")
+            # Track if the header was found or added in this distribution
+            header_found = False
 
+            for origin in dist_config['DistributionConfig']['Origins']['Items']:
+                # Check if 'Items' exists inside 'CustomHeaders', if not, initialize it
+                if 'Items' not in origin['CustomHeaders']:
+                    logger.info(f"CustomHeaders empty for origin {origin['Id']}, adding custom header.")
+                    origin['CustomHeaders']['Items'] = [{
+                        'HeaderName': self.header_name,
+                        'HeaderValue': pending_secret['HEADERVALUE']
+                    }]
+                    logger.info(f"Custom header added in CloudFront distribution: {origin['Id']}")
+                    # Mark that we modified this distribution by adding the header
+                    all_have_header = False
+                else:
+                    # If 'Items' exists, check if the custom header is present
+                    header_found = any(
+                        header['HeaderName'] == self.header_name
+                        for header in origin['CustomHeaders']['Items']
+                    )
+
+                    # If the header is not found, add it
+                    if not header_found:
+                        logger.info(f"Custom header not found in origin {origin['Id']}, adding header.")
+                        origin['CustomHeaders']['Items'].append({
+                            'HeaderName': self.header_name,
+                            'HeaderValue': pending_secret['HEADERVALUE']
+                        })
+                        
+                        logger.info(f"Custom header found/added in CloudFront distribution: {origin['Id']}")
+                        all_have_header = False  # Mark this as needing update, since we added it
+
+                # If header is found in the Items, we can break out of the loop for this origin
+                if header_found:
+                    break
+
+            # If header was not found and added in any of the origins, we mark all_have_header as False
             if not header_found:
                 all_have_header = False
-                break
 
         if all_have_header:
-            # Update WAF first if all distributions have the header
-            logger.info("Updating WAF rule first. All Cloudfront distributions already have custom header")
+            # If all CF distributions have the header, update WAF rule first
+            logger.info("Updating WAF rule first. All CloudFront distributions already have custom header.")
             self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
 
             # Sleep for 75 seconds for regional WAF config propagation
-            logger.info("Sleeping for 75 seconds for WAF rule propagation.")
+            logger.info("Sleeping for 75 seconds for updated WAF rule propagation.")
             time.sleep(75)
-
-        # Update each CloudFront distribution 
-        for distro in matching_distributions: 
-            try: 
-                logger.info(f"Updating CloudFront distribution {distro['Id']}.") 
-                self.update_cf_distro(distro['Id'], pending_secret['HEADERVALUE']) 
-            except Exception as e: 
-                logger.error(f"Failed to update distribution {distro['Id']}: {e}") 
+            
+        # Update each CloudFront distribution
+        for distro in matching_distributions:
+            try:
+                logger.info(f"Updating CloudFront distribution {distro['Id']}.")
+                self.update_cf_distro(distro['Id'], pending_secret['HEADERVALUE'])
+            except Exception as e:
+                logger.error(f"Failed to update distribution {distro['Id']}: {e}")
                 raise
 
-
         if not all_have_header:
-            # Update WAF after updating CloudFront distributions with header
-            logger.info("Not all Cloudfront distributions have the header. Updating WAF last.")
+            # If not all CF distributions had the header, update WAF last
+            logger.info("Not all CloudFront distributions have the header. Updating WAF last.")
             self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
 
             # Sleep for 75 seconds for regional WAF config propagation
