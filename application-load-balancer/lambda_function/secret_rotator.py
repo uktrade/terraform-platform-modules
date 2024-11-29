@@ -254,6 +254,7 @@ class SecretRotator:
         for distro in matching_distributions:
             distro_id = distro['Id']
             dist_config = self.get_cf_distro_config(distro_id)
+            logger.info(f"distro config --- {dist_config}")
 
             # Check if the custom header exists
             header_found = all(
@@ -262,6 +263,7 @@ class SecretRotator:
                 if 'CustomHeaders' in origin
                 for header in origin['CustomHeaders']['Items']
             )
+            logger.info(f"All Cloudfront distributions already have custom header: {header_found}")
 
             if not header_found:
                 all_have_header = False
@@ -269,7 +271,7 @@ class SecretRotator:
 
         if all_have_header:
             # Update WAF first if all distributions have the header
-            logger.info(" Updating WAF rule first.")
+            logger.info("Updating WAF rule first. All Cloudfront distributions already have custom header")
             self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
 
             # Sleep for 75 seconds for regional WAF config propagation
@@ -530,7 +532,7 @@ class SecretRotator:
         # Obtain secret value for AWSCURRENT
         metadata = service_client.describe_secret(SecretId=arn)
         for version in metadata["VersionIdsToStages"]:
-            logger.info(f"Getting current version")
+            logger.info(f"Getting AWSCURRENT version")
             if "AWSCURRENT" in metadata["VersionIdsToStages"][version]:
                 currenttoken = version
                 current = service_client.get_secret_value(
