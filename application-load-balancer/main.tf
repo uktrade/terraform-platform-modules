@@ -418,7 +418,7 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   # checkov:skip=CKV_AWS_173:Encryption of environmental variables is not configured with KMS key
   # checkov:skip=CKV_AWS_117:Run Lambda inside VPC with security groups & private subnets not necessary
   # checkov:skip=CKV_AWS_50:XRAY tracing not used
-  depends_on    = [data.archive_file.lambda]
+  depends_on    = [data.archive_file.lambda, aws_iam_role.origin-secret-rotate-execution-role]
   filename      = data.archive_file.lambda.output_path
   function_name = "${var.application}-${var.environment}-origin-secret-rotate"
   description   = "Secrets Manager Rotation Lambda Function"

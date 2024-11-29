@@ -244,6 +244,57 @@ class SecretRotator:
         except Exception as e:
             logger.error(f"Error updating CloudFront distribution {distro_id}: {str(e)}")
             raise
+            
+    def process_cf_distributions_and_WAF_rules(self, matching_distributions, pending_secret, current_secret):
+        """
+        Process CloudFront distributions based on whether the custom header is already present.
+        """
+        all_have_header = True
+
+        for distro in matching_distributions:
+            distro_id = distro['Id']
+            dist_config = self.get_cf_distro_config(distro_id)
+
+            # Check if the custom header exists
+            header_found = all(
+                header['HeaderName'] == self.header_name
+                for origin in dist_config['DistributionConfig']['Origins']['Items']
+                if 'CustomHeaders' in origin
+                for header in origin['CustomHeaders']['Items']
+            )
+
+            if not header_found:
+                all_have_header = False
+                break
+
+        if all_have_header:
+            # Update WAF first if all distributions have the header
+            logger.info(" Updating WAF rule first.")
+            self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
+
+            # Sleep for 75 seconds for regional WAF config propagation
+            logger.info("Sleeping for 75 seconds for WAF rule propagation.")
+            time.sleep(75)
+
+        # Update each CloudFront distribution 
+        for distro in matching_distributions: 
+            try: 
+                logger.info(f"Updating CloudFront distribution {distro['Id']}.") 
+                self.update_cf_distro(distro['Id'], pending_secret['HEADERVALUE']) 
+            except Exception as e: 
+                logger.error(f"Failed to update distribution {distro['Id']}: {e}") 
+                raise
+
+
+        if not all_have_header:
+            # Update WAF after updating CloudFront distributions with header
+            logger.info("Not all Cloudfront distributions have the header. Updating WAF last.")
+            self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
+
+            # Sleep for 75 seconds for regional WAF config propagation
+            logger.info("Sleeping for 75 seconds for WAF rule propagation.")
+            time.sleep(75)
+
     
     def run_test_origin_access(self, url: str, secret: str) -> bool:
         try:
@@ -363,43 +414,43 @@ class SecretRotator:
         except service_client.exceptions.ResourceNotFoundException:
             logger.error(f"AWSCURRENT version does not exist for secret")
             
-            passwd = service_client.get_random_password(
-            ExcludePunctuation = True
-            )
+            # passwd = service_client.get_random_password(
+            # ExcludePunctuation = True
+            # )
             
-            try:
-                # Put the secret
-                service_client.put_secret_value(
+            # try:
+            #     # Put the secret
+            #     service_client.put_secret_value(
+            #     SecretId=arn, 
+            #     ClientRequestToken=token, 
+            #     SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
+            #     VersionStages=['AWSCURRENT'])
+            #     logger.info(f"Successfully created AWSCURRENT version stage and secret value for secret")
+            # except Exception as e:
+            #     logger.error(f"Failed to create AWSCURRENT version stage for secret. Error {e}")
+            
+        try:
+            service_client.get_secret_value(
+                SecretId=arn, 
+                VersionId=token, 
+                VersionStage="AWSPENDING"
+                )
+            logger.info(f"Successfully retrieved AWSPENDING version for secret")
+        except service_client.exceptions.ResourceNotFoundException:
+            # Generate a random password for AWSPENDING 
+            passwd = service_client.get_random_password(ExcludePunctuation=True) 
+            logger.info(f"Generate new password for AWSPENDING for secret") 
+            
+            try: 
+                service_client.put_secret_value( 
                 SecretId=arn, 
                 ClientRequestToken=token, 
-                SecretString='{\"HEADERVALUE\":\"%s\"}' % passwd['RandomPassword'],
-                VersionStages=['AWSCURRENT'])
-                logger.info(f"Successfully created AWSCURRENT version stage and secret value for secret")
-            except Exception as e:
-                logger.error(f"Failed to create AWSCURRENT version stage for secret. Error {e}")
-            
-            try:
-                service_client.get_secret_value(
-                    SecretId=arn, 
-                    VersionId=token, 
-                    VersionStage="AWSPENDING"
-                    )
-                logger.info(f"Successfully retrieved AWSPENDING version for secret")
-            except service_client.exceptions.ResourceNotFoundException:
-                # Generate a random password for AWSPENDING 
-                passwd = service_client.get_random_password(ExcludePunctuation=True) 
-                logger.info(f"Generate new password for AWSPENDING for secret") 
-                
-                try: 
-                    service_client.put_secret_value( 
-                    SecretId=arn, 
-                    ClientRequestToken=token, 
-                    SecretString=json.dumps({"HEADERVALUE": passwd['RandomPassword']}), 
-                    VersionStages=['AWSPENDING']) 
-                    logger.info(f"Successfully created AWSPENDING version stage and secret value for secret") 
-                except Exception as e: 
-                    logger.error(f"Failed to create AWSPENDING version for secret. Error: {e}") 
-                    raise
+                SecretString=json.dumps({"HEADERVALUE": passwd['RandomPassword']}), 
+                VersionStages=['AWSPENDING']) 
+                logger.info(f"Successfully created AWSPENDING version stage and secret value for secret") 
+            except Exception as e: 
+                logger.error(f"Failed to create AWSPENDING version for secret. Error: {e}") 
+                raise
 
                 
                 
@@ -493,16 +544,19 @@ class SecretRotator:
         
         # Update regional WAF WebACL rule and CloudFront custom header with AWSPENDING and AWSCURRENT
         try:
-            # WAF only needs setting once.
-            self.update_waf_acl(pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE'])
+            self.process_cf_distributions_and_WAF_rules(matching_distributions, pendingsecret, currentsecret)
+        
+            # # WAF only needs setting once.
+            # self.update_waf_acl(pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE'])
             
-            # Sleep for 75 seconds for regional WAF config propagation
-            time.sleep(75)
+            # # Sleep for 75 seconds for regional WAF config propagation
+            # logger.info(f"Sleep for 75 seconds while WAF rule updates")
+            # time.sleep(75)
             
-            # Update each CloudFront distribution with the new pending secret header
-            for distro in matching_distributions:
-                logger.info(f"Updating {distro['Id']}")
-                self.update_cf_distro(distro['Id'], pendingsecret['HEADERVALUE'])
+            # # Update each CloudFront distribution with the new pending secret header
+            # for distro in matching_distributions:
+            #     logger.info(f"Updating {distro['Id']}")
+            #     self.update_cf_distro(distro['Id'], pendingsecret['HEADERVALUE'])
                 
         except ClientError as e:
             logger.error(f"Error updating resources: {e}")
