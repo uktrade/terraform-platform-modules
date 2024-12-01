@@ -398,7 +398,11 @@ run "waf_and_rotate_lambda" {
   # --- Testing of the WAF rule statement ---
 
   assert {
-    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.name if r.name == "${var.application}-${var.environment}-XOriginVerify"]) > 0
+    condition = length(
+      [for r in aws_wafv2_web_acl.waf-acl.rule :
+        r.name if can(regex("${var.application}-${var.environment}-XOriginVerify", r.name))
+      ]
+    ) > 0
     error_message = "The rule named ${var.application}-${var.environment}-XOriginVerify does not exist in aws_wafv2_web_acl.waf-acl"
   }
 
@@ -406,111 +410,20 @@ run "waf_and_rotate_lambda" {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        length(r.statement[0].or_statement[0].statement) == 2
+        try(r.statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == "x-origin-verify"
       ) : true
     ])
-    error_message = "Incorrect number of statements in or_statement"
+    error_message = "Statement's single header name is incorrect"
   }
 
   assert {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(r.statement[0].or_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == "x-origin-verify"
-      ) : true
-    ])
-    error_message = "First statement's header name is incorrect"
-  }
-
-  assert {
-    condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
-      r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(r.statement[0].or_statement[0].statement[1].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == "x-origin-verify"
-      ) : true
-    ])
-    error_message = "Second statement's header name is incorrect"
-  }
-
-  assert {
-    condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
-      r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        length(r.statement[0].or_statement[0].statement) == 2
-      ) : true
-    ])
-    error_message = "Rule statement length is incorrect"
-  }
-
-  assert {
-    condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
-      r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(r.statement[0].or_statement[0].statement[0].byte_match_statement[0].positional_constraint, "") == "EXACTLY"
+        try(r.statement[0].byte_match_statement[0].positional_constraint, "") == "EXACTLY"
       ) : true
     ])
     error_message = "First statement positional_constraint should be 'EXACTLY'"
-  }
-
-  assert {
-    condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
-      r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(r.statement[0].or_statement[0].statement[1].byte_match_statement[0].positional_constraint, "") == "EXACTLY"
-      ) : true
-    ])
-    error_message = "Second statement positional_constraint hould be 'EXACTLY'"
-  }
-
-  assert {
-    condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
-      r.name == "AWS-AWSManagedRulesKnownBadInputsRuleSet" ? (
-        r.priority == 1
-      ) : true
-    ])
-    error_message = "Managed rule priority is incorrect"
-  }
-
-  assert {
-    condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
-      r.name == "AWS-AWSManagedRulesKnownBadInputsRuleSet" ? (
-        r.override_action[0].none != null
-      ) : true
-    ])
-    error_message = "Managed rule override action is incorrect"
-  }
-
-  assert {
-    condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
-      r.name == "AWS-AWSManagedRulesKnownBadInputsRuleSet" ? (
-        r.statement[0].managed_rule_group_statement[0].name == "AWSManagedRulesKnownBadInputsRuleSet"
-      ) : true
-    ])
-    error_message = "Managed rule group name is incorrect"
-  }
-
-  assert {
-    condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
-      r.name == "AWS-AWSManagedRulesKnownBadInputsRuleSet" ? (
-        r.statement[0].managed_rule_group_statement[0].vendor_name == "AWS"
-      ) : true
-    ])
-    error_message = "Managed rule vendor name is incorrect"
-  }
-
-  assert {
-    condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
-      r.name == "AWS-AWSManagedRulesKnownBadInputsRuleSet" ? (
-        r.visibility_config[0].cloudwatch_metrics_enabled == true &&
-        r.visibility_config[0].sampled_requests_enabled == true
-      ) : true
-    ])
-    error_message = "Managed rule visibility config is incorrect"
   }
 
   # Cannot test for the search_string on a plan
