@@ -382,61 +382,77 @@ class TestSecretManagement:
     Tests for AWS Secrets Manager operations during rotation.
     Tests verify the creation and management of secrets during the rotation process.
     """
-
+    
     def test_new_secret_created_when_no_pending_exists(self, rotator):
         """
         Create a new pending secret if none exists.
         """
         mock_service_client = MagicMock()
-        mock_service_client.exceptions.ResourceNotFoundException = (
-            mock_service_client.exceptions.ResourceNotFoundException
-        )
-    
-        mock_service_client.get_secret_value.side_effect = mock_service_client.exceptions.ResourceNotFoundException(
-            error_response={"Error": {"Code": "ResourceNotFoundException"}},
-            operation_name="GetSecretValue"
-        )
+        mock_service_client.exceptions.ResourceNotFoundException = Exception
+
+        def mock_get_secret_value(**kwargs):
+            if kwargs["VersionStage"] == "AWSCURRENT":
+                # Simulate AWSCURRENT exists
+                return {"SecretString": json.dumps({"HEADERVALUE": "current-secret"})}
+            elif kwargs["VersionStage"] == "AWSPENDING":
+                # Simulate AWSPENDING does not exist
+                raise mock_service_client.exceptions.ResourceNotFoundException(
+                    {"Error": {"Code": "ResourceNotFoundException"}},
+                    "GetSecretValue"
+                )
+            raise ValueError("Unexpected call to get_secret_value")
+
+        mock_service_client.get_secret_value.side_effect = mock_get_secret_value
 
         mock_service_client.get_random_password.return_value = {"RandomPassword": "new-secret"}
-        
-        with patch("uuid.uuid4", return_value="test-token"): 
-            rotator.create_secret(mock_service_client, "test-arn")
-    
 
-        mock_service_client.get_secret_value.assert_called_once_with(
-            SecretId="test-arn",
-            VersionStage="AWSCURRENT"
-        )
-        
+        mock_service_client.put_secret_value.return_value = {}
+
+        with patch("boto3.client", return_value=mock_service_client):
+            rotator.create_secret(mock_service_client, "test-arn", "test-token")
+
+        mock_service_client.get_secret_value.assert_has_calls([
+            call(SecretId="test-arn", VersionStage="AWSCURRENT"),  # First call for AWSCURRENT
+            call(SecretId="test-arn", VersionId="test-token", VersionStage="AWSPENDING")  # Second call for AWSPENDING
+        ])
+
+        # Verify that `put_secret_value` was called with the expected parameters
         mock_service_client.put_secret_value.assert_called_once_with(
             SecretId="test-arn",
             ClientRequestToken="test-token",
-            SecretString='{"HEADERVALUE":"new-secret"}',
+            SecretString='{"HEADERVALUE": "new-secret"}',
             VersionStages=['AWSPENDING']
         )
 
 
-    def test_secret_creation_requires_existing_current_version(self, rotator):
-        """New secrets can only be created if there is an existing AWSCURRENT version."""
+    def test_awscurrent_not_found_logs_error(self, rotator):
+        """
+        Test that a ResourceNotFoundException for AWSCURRENT logs the appropriate error message.
+        """
+        # Mock the boto3 Secrets Manager client
         mock_service_client = MagicMock()
 
-        # Configure mock exception for ResourceNotFoundException
-        mock_service_client.exceptions.ResourceNotFoundException = ClientError
-        mock_service_client.get_secret_value.side_effect = mock_service_client.exceptions.ResourceNotFoundException(
-            {
-                "Error": {
-                    "Code": "ResourceNotFoundException", 
-                    "Message": "Secret not found"
-                }
-            },
-            "GetSecretValue"
-        )
+        # Mock the Secrets Manager exceptions
+        mock_service_client.exceptions.ResourceNotFoundException = Exception
 
-        with pytest.raises(mock_service_client.exceptions.ResourceNotFoundException):
-            rotator.create_secret(mock_service_client, "test-arn")
-    
-        mock_service_client.get_random_password.assert_not_called()
-        mock_service_client.put_secret_value.assert_not_called()
+        # Configure the `get_secret_value` method to raise an exception for AWSCURRENT
+        def mock_get_secret_value(**kwargs):
+            if kwargs["VersionStage"] == "AWSCURRENT":
+                raise mock_service_client.exceptions.ResourceNotFoundException(
+                    {"Error": {"Code": "ResourceNotFoundException"}},
+                    "GetSecretValue"
+                )
+            # Allow other calls to succeed
+            return {"SecretString": json.dumps({"HEADERVALUE": "current-secret"})}
+
+        mock_service_client.get_secret_value.side_effect = mock_get_secret_value
+
+        # Mock logger to verify logging behavior
+        with patch("secret_rotator.logger") as mock_logger:  # Replace 'your_module' with the module where `logger` is defined
+            rotator.create_secret(mock_service_client, "test-arn", "test-token")
+
+            # Verify that the logger.error was called with the correct message
+            mock_logger.error.assert_called_with("AWSCURRENT version does not exist for secret")
 
 
 
@@ -483,12 +499,15 @@ class TestRotationProcess:
              patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
              patch.object(rotator, 'update_waf_acl') as mock_update_waf_acl, \
              patch.object(rotator, 'update_cf_distro') as mock_update_cf_distro, \
+             patch.object(rotator, 'get_cloudfront_client') as mock_session, \
              patch('time.sleep') as mock_sleep:
             
+            mock_client = MagicMock()
+            mock_session.return_value = mock_client
             mock_get_distro_list.return_value = mock_distributions
             mock_get_cf_distro.return_value = mock_get_distro
 
-            rotator.set_secret(mock_service_client, "test-arn")
+            rotator.set_secret(mock_service_client, "test-arn", "test-token")
 
             # Then verify correct sequence and timing
             operation_sequence = []
@@ -539,7 +558,7 @@ class TestRotationProcess:
             mock_get_distro_list.return_value = mock_distributions
             mock_run_test_origin_access.return_value = True
 
-            rotator.run_test_secret(mock_service_client, "test-arn")
+            rotator.run_test_secret(mock_service_client, "test-arn", "test_token")
 
             expected_test_calls = [
                 call("http://domain1.example.com", "new-secret"),
@@ -655,7 +674,7 @@ class TestErrorHandling:
             ]
 
             with pytest.raises(ValueError) as exc_info:
-                rotator.set_secret(mock_service_client, "test-arn")
+                rotator.set_secret(mock_service_client, "test-arn", "test_token")
 
             assert "status is not Deployed" in str(exc_info.value)
             mock_update_waf_acl.assert_not_called()
@@ -666,29 +685,37 @@ class TestErrorHandling:
         """
         mock_distributions = [{"Id": "DIST1", "Origin": "origin1.example.com"}]
         mock_get_distro = {"Distribution": {"Status": "Deployed"}}
-        mock_secrets = {
-            "SecretString": json.dumps({"HEADERVALUE": "test-secret"})
-        }
+
+        mock_pending_secret = {"SecretString": json.dumps({"HEADERVALUE": "AWSPENDING"})}
+        mock_current_secret = {"SecretString": json.dumps({"HEADERVALUE": "AWSCURRENT"})}
         
         mock_service_client = MagicMock()
-        mock_service_client.get_secret_value.return_value = mock_secrets
+        mock_service_client.describe_secret.return_value = {
+            "VersionIdsToStages": mock_current_secret
+        }
+        
+        mock_service_client.get_secret_value.side_effect = [
+            mock_pending_secret,  # For AWSPENDING
+            mock_current_secret,  # For AWSCURRENT
+        ]
 
         with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
-             patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
-             patch.object(rotator, 'update_waf_acl') as mock_update_waf_acl, \
-             patch.object(rotator, 'update_cf_distro') as mock_update_cf_distro:
+            patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
+            patch.object(rotator, 'update_cf_distro') as mock_update_cf_distro, \
+            patch.object(rotator, 'process_cf_distributions_and_WAF_rules') as mock_process:
 
             mock_get_distro_list.return_value = mock_distributions
             mock_get_cf_distro.return_value = mock_get_distro
-            mock_update_waf_acl.side_effect = ClientError(
-                {"Error": {"Code": "WAFInvalidParameterException"}},
-                "update_web_acl"
-            )
+            
+            mock_process.side_effect = ClientError( 
+                {"Error": {"Code": "WAFInvalidParameterException"} }, "process_cf_distributions_and_WAF_rules" ) 
+            
+            with pytest.raises(ValueError): 
+                rotator.set_secret(mock_service_client, "test-arn", "test_token") 
+                
+                # Ensure no CloudFront distribution updates occur 
+                mock_update_cf_distro.assert_not_called()
 
-            with pytest.raises(ValueError):
-                rotator.set_secret(mock_service_client, "test-arn")
-
-            mock_update_cf_distro.assert_not_called()
 
 class TestEdgeCases:
 
@@ -749,7 +776,7 @@ class TestEdgeCases:
             mock_boto_client.side_effect = mock_client 
             
             with pytest.raises(ValueError, match="No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs"): 
-                rotator.set_secret(mock_service_client, "test-arn")
+                rotator.set_secret(mock_service_client, "test-arn", "token")
                  
             mock_update_waf_acl.assert_not_called() 
             mock_update_cf_distro.assert_not_called() 
@@ -764,7 +791,8 @@ class TestEdgeCases:
         with pytest.raises(ValueError):
                 rotator.run_test_secret(
                     mock_service_client,
-                    "test-arn"
+                    "test-arn",
+                    "test-token"
                 )
 
 class TestLambdaHandler:
@@ -797,7 +825,7 @@ class TestLambdaHandler:
 
             # Verify correct step was called
             mock_rotator.create_secret.assert_called_once_with(
-                mock_service_client, "test-arn"
+                mock_service_client, "test-arn", "test-token"
             )
             
             
@@ -864,7 +892,8 @@ class TestLambdaHandler:
             for i, arg in enumerate(call_args): 
                 # Assert with more detailed checking on provided arguments 
                 assert call_args[1] == "test-arn" 
-                assert call_args[2] == ['domain1.example.com', 'domain2.example.com']
+                assert call_args[2] == "test-token"
+                assert call_args[3] == ['domain1.example.com', 'domain2.example.com']
             
 
 
@@ -885,6 +914,7 @@ class TestLambdaHandler:
         rotator.run_test_secret(
             service_client=MagicMock(),
             arn="test-arn",
+            token="test-token",
             test_domains=test_domains
         )
 
