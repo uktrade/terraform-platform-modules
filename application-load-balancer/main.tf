@@ -185,6 +185,7 @@ resource "random_password" "origin-secret" {
 
 resource "aws_wafv2_web_acl" "waf-acl" {
   # checkov:skip=CKV2_AWS_31: Ensure WAF2 has a Logging Configuration to be done new ticket
+  # checkov:skip=CKV_AWS_192: AWSManagedRulesKnownBadInputsRuleSet handles on the CDN
   depends_on = [random_password.origin-secret]
 
   name        = "${var.application}-${var.environment}-ACL"
@@ -216,60 +217,18 @@ resource "aws_wafv2_web_acl" "waf-acl" {
     }
 
     statement {
-      or_statement {
-        # statement {
-        #   byte_match_statement {
-        #     field_to_match {
-        #       single_header {
-        #         name = "x-origin-verify"
-        #       }
-        #     }
-        #     positional_constraint = "EXACTLY"
-        #     search_string         = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
-        #     text_transformation {
-        #       priority = 0
-        #       type     = "NONE"
-        #     }
-        #   }
-        # }
-        statement {
-          byte_match_statement {
-            field_to_match {
-              single_header {
-                name = "x-origin-verify"
-              }
-            }
-            positional_constraint = "EXACTLY"
-            search_string         = random_password.origin-secret.result
-            text_transformation {
-              priority = 0
-              type     = "NONE"
-            }
+      byte_match_statement {
+        field_to_match {
+          single_header {
+            name = "x-origin-verify"
           }
         }
-      }
-    }
-  }
-
-  # Add the Managed Rule Group for Log4j2 protection
-  rule {
-    name     = "AWS-AWSManagedRulesKnownBadInputsRuleSet"
-    priority = 1
-
-    override_action {
-      none {}
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "${var.application}-${var.environment}-WAF-ACL-ManagedBadInputs"
-      sampled_requests_enabled   = true
-    }
-
-    statement {
-      managed_rule_group_statement {
-        name        = "AWSManagedRulesKnownBadInputsRuleSet"
-        vendor_name = "AWS"
+        positional_constraint = "EXACTLY"
+        search_string         = random_password.origin-secret.result
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
       }
     }
   }
