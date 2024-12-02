@@ -5,13 +5,14 @@ from typing import List, Dict, Tuple
 
 logger = logging.getLogger()
 
+
 class SlackNotificationService:
     def __init__(self, slack_token: str, slack_channel: str, aws_account: str):
         self.slack_token = slack_token
         self.slack_channel = slack_channel
         self.aws_account = aws_account
         self.slack_api_url = "https://slack.com/api/chat.postMessage"
-    
+
     def send_test_failures(self, failures: List[Dict], environment: str, application: str, channel: str = None) -> None:
         """
         Send formatted test failure notifications to Slack

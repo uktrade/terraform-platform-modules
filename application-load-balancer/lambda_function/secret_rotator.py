@@ -4,7 +4,7 @@ import boto3
 import logging
 import requests
 import time
-import uuid
+#import uuid
 from typing import Tuple, Dict, Any, List, Optional
 from slack_service import SlackNotificationService
 from requests.exceptions import RequestException
@@ -14,8 +14,8 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-AWSPENDING="AWSPENDING"
-AWSCURRENT="AWSCURRENT"
+AWSPENDING = "AWSPENDING"
+AWSCURRENT = "AWSCURRENT"
 
 
 class SecretRotator:
@@ -35,13 +35,13 @@ class SecretRotator:
         self.role_arn = kwargs.get('role_arn', os.environ.get('ROLEARN'))
         self.distro_list = kwargs.get('distro_list', os.environ.get('DISTROIDLIST'))
         self.aws_account = kwargs.get('aws_account', os.environ.get('AWS_ACCOUNT'))
-        
+
         slack_token = kwargs.get('slack_token', os.environ.get('SLACK_TOKEN'))
         slack_channel = kwargs.get('slack_channel', os.environ.get('SLACK_CHANNEL'))
         self.slack_service = None
         if slack_token and slack_channel:
             self.slack_service = SlackNotificationService(slack_token, slack_channel,  self.aws_account)
-    
+
     def get_cloudfront_client(self) -> boto3.client:
         sts = boto3.client('sts')
         credentials = sts.assume_role(RoleArn=self.role_arn, RoleSessionName='rotation_session')["Credentials"]
@@ -49,7 +49,7 @@ class SecretRotator:
                             aws_access_key_id=credentials["AccessKeyId"],
                             aws_secret_access_key=credentials["SecretAccessKey"],
                             aws_session_token=credentials["SessionToken"])
-        
+
     def get_distro_list(self) -> List[Dict[str, Any]]:
         client = self.get_cloudfront_client()
         paginator = client.get_paginator("list_distributions")
@@ -64,15 +64,13 @@ class SecretRotator:
                         "Origin": distribution['Origins']['Items'][0]['DomainName'],
                         "Domain": distribution['Aliases']['Items'][0]
                     })
-        logger.info(f"Matched cloudfront distributions: {matching_distributions}")           
+        logger.info(f"Matched cloudfront distributions: {matching_distributions}")
         return matching_distributions
 
-        
     def get_waf_acl(self) -> Dict[str, Any]:
         client = boto3.client('wafv2')
         return client.get_web_acl(Name=self.waf_acl_name, Scope='REGIONAL', Id=self.waf_acl_id)
 
-    
     def _create_byte_match_statement(self, search_string: str) -> Dict[str, Any]:
         return {
             'ByteMatchStatement': {
@@ -82,7 +80,7 @@ class SecretRotator:
                 'TextTransformations': [{'Type': 'NONE', 'Priority': 0}]
             }
         }
-        
+
     def update_waf_acl(self, new_secret: str, prev_secret: str) -> None:
         client = boto3.client('wafv2')
         waf_acl = self.get_waf_acl()
@@ -109,7 +107,7 @@ class SecretRotator:
 
         new_rules = [rule] + [r for r in waf_acl['WebACL']['Rules'] if r['Priority'] != self.waf_rule_priority]
         logger.info("Updating WAF WebACL with new rules.")
-        
+
         response = client.update_web_acl(
             Name=self.waf_acl_name,
             Scope='REGIONAL',
@@ -124,25 +122,25 @@ class SecretRotator:
             },
             Rules=new_rules
         )
-        
+
         if response['ResponseMetadata']['HTTPStatusCode'] == 200:
             logger.info("WAF WebACL rules updated")
-        
+
     def get_cf_distro(self, distro_id: str) -> Dict:
         """
         Fetches the CloudFront distribution details.
         """
         client = self.get_cloudfront_client()
         return client.get_distribution(Id=distro_id)
-        
-        
+
+
     def get_cf_distro_config(self, distro_id: str) -> Dict:
         """
         Fetches the configuration of a CloudFront distribution.
         """
         client = self.get_cloudfront_client()
         return client.get_distribution_config(Id=distro_id)
-        
+
 
     def update_cf_distro(self, distro_id: str, header_value: str) -> Dict:
         """
@@ -162,12 +160,12 @@ class SecretRotator:
 
         self.update_custom_headers(dist_config, header_value)
 
-        # Update the distribution 
-        try: 
-            return self.apply_distribution_update(client, distro_id, dist_config) 
-            
-        except RuntimeError as e: 
-            logger.error(f"Failed to update custom headers for distribution Id {distro_id}: {e}") 
+        # Update the distribution
+        try:
+            return self.apply_distribution_update(client, distro_id, dist_config)
+
+        except RuntimeError as e:
+            logger.error(f"Failed to update custom headers for distribution Id {distro_id}: {e}")
             raise
 
 
@@ -178,14 +176,14 @@ class SecretRotator:
         """
         dist_status = self.get_cf_distro(distro_id)
         return 'Deployed' in dist_status['Distribution']['Status']
-    
+
     def update_custom_headers(self, dist_config: Dict, header_value: str) -> bool:
         """
         Updates or creates given custom header in the distribution config.
         Returns True if any headers were updated or created.
         """
         header_count = 0
-        
+
         for origin in dist_config['DistributionConfig']['Origins']['Items']:
             if 'CustomHeaders' not in origin or origin['CustomHeaders']['Quantity'] == 0:
                 logger.info(f"No custom headers exist. Creating new custom header for origin: {origin['Id']}")
@@ -198,7 +196,7 @@ class SecretRotator:
                 }
                 header_count += 1
                 continue
-                
+
             found_header = False
             for header in origin['CustomHeaders']['Items']:
                 if header['HeaderName'] == self.header_name:
@@ -207,7 +205,7 @@ class SecretRotator:
                     found_header = True
                     header_count += 1
                     break
-                      
+
             if not found_header:
                 logger.info(f"Adding new custom header to existing headers for origin: {origin['Id']}")
                 origin['CustomHeaders']['Items'].append({
@@ -216,10 +214,9 @@ class SecretRotator:
                 })
                 origin['CustomHeaders']['Quantity'] += 1
                 header_count += 1
-                
+
         return header_count > 0
 
-            
     def apply_distribution_update(self, client, distro_id: str, dist_config: Dict) -> Dict:
         """
         Applies the distribution update to CloudFront.
@@ -230,21 +227,21 @@ class SecretRotator:
                 IfMatch=dist_config['ResponseMetadata']['HTTPHeaders']['etag'],
                 DistributionConfig=dist_config['DistributionConfig']
             )
-            
+
             status_code = response['ResponseMetadata']['HTTPStatusCode']
-            
+
             if status_code == 200:
                 logger.info(f"CloudFront distribution {distro_id} updated successfully")
             else:
                 logger.warning(f"Failed to update CloudFront distribution {distro_id}. Status code: {status_code}")
                 raise RuntimeError(f"Failed to update CloudFront distribution {distro_id}. Status code: {status_code}")
-            
+
             return response
 
         except Exception as e:
             logger.error(f"Error updating CloudFront distribution {distro_id}: {str(e)}")
             raise
-    
+
     def process_cf_distributions_and_WAF_rules(self, matching_distributions, pending_secret, current_secret):
         """
         Process CloudFront distributions based on whether the custom header is already present.
@@ -284,7 +281,7 @@ class SecretRotator:
                             'HeaderName': self.header_name,
                             'HeaderValue': pending_secret['HEADERVALUE']
                         })
-                        
+
                         logger.info(f"Custom header found/added in CloudFront distribution: {origin['Id']}")
                         all_have_header = False  # Mark this as needing update, since we added it
 
@@ -304,7 +301,7 @@ class SecretRotator:
             # Sleep for 75 seconds for regional WAF config propagation
             logger.info("Sleeping for 75 seconds for updated WAF rule propagation.")
             time.sleep(75)
-            
+
         # Update each CloudFront distribution
         for distro in matching_distributions:
             try:
@@ -323,28 +320,27 @@ class SecretRotator:
             logger.info("Sleeping for 75 seconds for WAF rule propagation.")
             time.sleep(75)
 
-    
     def run_test_origin_access(self, url: str, secret: str) -> bool:
         try:
             response = requests.get(
                 url,
                 headers={self.header_name: secret}, 
-                timeout=(3, 5) # 3-second connection timeout, 5-second read timeout
+                timeout=(3, 5)  # 3-second connection timeout, 5-second read timeout
             )
             logger.info(f"Testing URL, {url} - response code, {response.status_code}")
-            
+
             # Log additional response details for debugging
             if response.status_code != 200:
                 logger.error(f"Non-200 response for URL {url}")
                 logger.error(f"Response Status Code: {response.status_code}")
                 logger.error(f"Response Headers: {response.headers}")
                 try:
-                    logger.error(f"Response Content: {response.text[:500]}") # Limit content to first 500 chars
+                    logger.error(f"Response Content: {response.text[:500]}")  # Limit content to first 500 chars
                 except Exception as content_error:
                     logger.error(f"Could not log response content: {str(content_error)}")
-            
+
             return response.status_code == 200
-        
+
         except requests.exceptions.ConnectionError as conn_err:
             logger.error(f"Connection error for URL {url}")
             logger.error(f"Connection Error Details: {str(conn_err)}")
@@ -352,22 +348,22 @@ class SecretRotator:
             if hasattr(conn_err, 'response'):
                 logger.error(f"Connection Error Response: {conn_err.response}")
             return False
-        
+
         except requests.exceptions.Timeout as timeout_err:
             logger.error(f"Timeout error for URL {url}")
             logger.error(f"Timeout Error Details: {str(timeout_err)}")
             return False
-        
+
         except requests.exceptions.TooManyRedirects as redirect_err:
             logger.error(f"Too many redirects for URL {url}")
             logger.error(f"Redirect Error Details: {str(redirect_err)}")
             return False
-        
+
         except requests.exceptions.RequestException as e:
             logger.error(f"Unhandled request error for URL {url}")
             logger.error(f"Error Type: {type(e).__name__}")
             logger.error(f"Error Details: {str(e)}")
-            
+
             # Additional context if available
             if hasattr(e, 'response'):
                 try:
@@ -376,22 +372,21 @@ class SecretRotator:
                     logger.error(f"Error Response Content: {e.response.text[:500]}") # Limit content to first 500 chars
                 except Exception as log_err:
                     logger.error(f"Could not log error response details: {str(log_err)}")
-            
+
             return False
-        
+
         except Exception as unexpected_err:
             logger.error(f"Unexpected error testing URL {url}")
             logger.error(f"Unexpected Error Type: {type(unexpected_err).__name__}")
             logger.error(f"Unexpected Error Details: {str(unexpected_err)}")
             return False
 
-        
     def get_secrets(self, service_client, arn: str) -> Tuple[Dict, Dict]:
         metadata = service_client.describe_secret(SecretId=arn)
         version_stages = metadata.get("VersionIdsToStages", {})
         current_version = None
         pending_version = None
-        
+
         for version, stages in version_stages.items():
             if AWSCURRENT in stages:
                 current_version = version
@@ -399,20 +394,20 @@ class SecretRotator:
             if AWSPENDING in stages:
                 pending_version = version
                 logger.info(f"Found AWSPENDING version: {version}")
-        
+
         if not current_version:
             raise ValueError("No AWSCURRENT version found")
-            
+
         if not pending_version:
             raise ValueError("No AWSPENDING version found")
-        
+
         try:
             current = service_client.get_secret_value(
                 SecretId=arn,
                 VersionId=current_version,
                 VersionStage=AWSCURRENT
             )
-            
+
             pending = service_client.get_secret_value(
                 SecretId=arn,
                 VersionId=pending_version,
@@ -421,51 +416,51 @@ class SecretRotator:
         except service_client.exceptions.ResourceNotFoundException as e:
             logger.error(f"Failed to retrieve secret values: {e}")
             raise
-            
+
         pending_secret = json.loads(pending['SecretString'])
         current_secret = json.loads(current['SecretString'])
-        
+
         return pending_secret, current_secret
-    
+
     def create_secret(self, service_client, arn, token):
         # Make sure the current secret exists
         try:
             service_client.get_secret_value(
-                    SecretId=arn, 
+                    SecretId=arn,
                     VersionStage="AWSCURRENT"
                     )
-            logger.info(f"Successfully retrieved AWSCURRENT version for secret")
-            
+            logger.info("Successfully retrieved AWSCURRENT version for secret")
+
         except service_client.exceptions.ResourceNotFoundException:
-            logger.error(f"AWSCURRENT version does not exist for secret")
-            
+            logger.error("AWSCURRENT version does not exist for secret")
+
         try:
             service_client.get_secret_value(
-                SecretId=arn, 
-                VersionId=token, 
+                SecretId=arn,
+                VersionId=token,
                 VersionStage="AWSPENDING"
                 )
-            logger.info(f"Successfully retrieved AWSPENDING version for secret")
+            logger.info("Successfully retrieved AWSPENDING version for secret")
         except service_client.exceptions.ResourceNotFoundException:
-            # Generate a random password for AWSPENDING 
-            passwd = service_client.get_random_password(ExcludePunctuation=True) 
-            logger.info(f"Generate new password for AWSPENDING for secret") 
-            
-            try: 
-                service_client.put_secret_value( 
-                SecretId=arn, 
-                ClientRequestToken=token, 
-                SecretString=json.dumps({"HEADERVALUE": passwd['RandomPassword']}), 
-                VersionStages=['AWSPENDING']) 
-                logger.info(f"Successfully created AWSPENDING version stage and secret value for secret") 
-            except Exception as e: 
-                logger.error(f"Failed to create AWSPENDING version for secret. Error: {e}") 
+            # Generate a random password for AWSPENDING
+            passwd = service_client.get_random_password(ExcludePunctuation=True)
+            logger.info("Generate new password for AWSPENDING for secret")
+
+            try:
+                service_client.put_secret_value(
+                SecretId=arn,
+                ClientRequestToken=token,
+                SecretString=json.dumps({"HEADERVALUE": passwd['RandomPassword']}),
+                VersionStages=['AWSPENDING'])
+                logger.info("Successfully created AWSPENDING version stage and secret value for secret")
+            except Exception as e:
+                logger.error(f"Failed to create AWSPENDING version for secret. Error: {e}")
                 raise
-                
+
     def set_secret(self, service_client, arn, token):
         """Set the secret
         Updates the WAF ACL & the CloudFront distributions with the AWSPENDING & AWSCURRENT secret values.
-        This method should set the AWSPENDING secret in the service that the secret belongs to. 
+        This method should set the AWSPENDING secret in the service that the secret belongs to.
         Sleep 75 seconds to allow resources to update
         Args:
             service_client (client): The secrets manager service client
@@ -474,11 +469,11 @@ class SecretRotator:
         """
         # Confirm CloudFront distributions are in Deployed state
         matching_distributions = self.get_distro_list()
-        
+
         if not matching_distributions:
             logger.error("No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs")
             raise ValueError("No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs")
-        
+
         for distro in matching_distributions:
             logger.info(f"Getting status of distro: {distro['Id']}")
 
@@ -487,33 +482,33 @@ class SecretRotator:
                 raise ValueError(f"Distribution Id, {distro['Id']} status is not Deployed.")
             else:
                 logger.info(f"Distro {distro['Id']} is deployed")
-                
+
         # Obtain secret value for AWSPENDING
         pending = service_client.get_secret_value(
-            SecretId=arn, 
-            VersionId=token, 
+            SecretId=arn,
+            VersionId=token,
             VersionStage="AWSPENDING"
             )
-        
+
         # Obtain secret value for AWSCURRENT
         metadata = service_client.describe_secret(SecretId=arn)
         for version in metadata["VersionIdsToStages"]:
-            logger.info(f"Getting AWSCURRENT version")
+            logger.info("Getting AWSCURRENT version")
             if "AWSCURRENT" in metadata["VersionIdsToStages"][version]:
                 currenttoken = version
                 current = service_client.get_secret_value(
-                SecretId=arn, 
-                VersionId=currenttoken, 
+                SecretId=arn,
+                VersionId=currenttoken,
                 VersionStage="AWSCURRENT"
                 )
 
         pendingsecret = json.loads(pending['SecretString'])
         currentsecret = json.loads(current['SecretString'])
-        
+
         # Update regional WAF WebACL rule and CloudFront custom header with AWSPENDING and AWSCURRENT
         try:
             self.process_cf_distributions_and_WAF_rules(matching_distributions, pendingsecret, currentsecret)
-                
+
         except ClientError as e:
             logger.error(f"Error updating resources: {e}")
             raise ValueError(
@@ -527,21 +522,21 @@ class SecretRotator:
         2. If Lambda event contains key TestDomains and provided domains to test, then you can trigger a Slack notification to the configured Slack channel
         """
         test_failures = []
-    
-         # # Check for TestDomains key in the Lambda event - currently only used in console to test Slack message is emitted
+
+         # Check for TestDomains key in the Lambda event - currently only used in console to test Slack message is emitted
         if test_domains: 
-            logger.info(f"TestDomains key exists in Lambda event - testing provided dummy domains only")
+            logger.info("TestDomains key exists in Lambda event - testing provided dummy domains only")
             for test_domain in test_domains:
                 logger.info(f"Testing dummy distro: {test_domain}")
-                error_msg = f"Simulating test failure for domain: http://{test_domain}" 
-                logger.error(error_msg) 
-                test_failures.append({ 'domain': test_domain, 'error': error_msg, }) 
+                error_msg = f"Simulating test failure for domain: http://{test_domain}"
+                logger.error(error_msg)
+                test_failures.append({'domain': test_domain, 'error': error_msg, })
 
         else:
             # Obtain secret value for AWSPENDING
             pending = service_client.get_secret_value(
-            SecretId=arn, 
-            VersionId=token, 
+            SecretId=arn,
+            VersionId=token,
             VersionStage="AWSPENDING"
             )
 
@@ -559,9 +554,9 @@ class SecretRotator:
 
             pendingsecret = json.loads(pending['SecretString'])
             currentsecret = json.loads(current['SecretString'])
-            
+
             secrets = [pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE']]
-        
+
             distro_list = self.get_distro_list()
             for distro in distro_list:
                 logger.info(f"Testing distro: {distro['Id']}")

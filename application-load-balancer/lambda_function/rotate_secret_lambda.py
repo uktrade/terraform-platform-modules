@@ -1,5 +1,5 @@
-import os
-import json
+# import os
+# import json
 import boto3
 import logging
 
@@ -10,8 +10,8 @@ logger.setLevel(logging.INFO)
 
 service_client = boto3.client('secretsmanager')
 
-AWSPENDING="AWSPENDING"
-AWSCURRENT="AWSCURRENT"
+AWSPENDING = "AWSPENDING"
+AWSCURRENT = "AWSCURRENT"
 
 
 def lambda_handler(event, context):
@@ -22,22 +22,21 @@ def lambda_handler(event, context):
     if not secret_id:
         logger.error("Unable to determine SecretId.")
         raise ValueError("Unable to determine SecretId.")
-        
+
     rotator = SecretRotator()
-    
+
     if step == "createSecret":
-            logger.info("Entered createSecret step")
-            rotator.create_secret(service_client, secret_id, token)
+        logger.info("Entered createSecret step")
+        rotator.create_secret(service_client, secret_id, token)
     elif step == "setSecret":
-            logger.info("Entered setSecret step")
-            rotator.set_secret(service_client, secret_id, token)
+        logger.info("Entered setSecret step")
+        rotator.set_secret(service_client, secret_id, token)
     elif step == "testSecret":
-            logger.info("Entered testSecret step")
-            rotator.run_test_secret(service_client, secret_id, token, event.get('TestDomains', []))
+        logger.info("Entered testSecret step")
+        rotator.run_test_secret(service_client, secret_id, token, event.get('TestDomains', []))
     elif step == "finishSecret":
-            logger.info("Entered finishSecret step")
-            rotator.finish_secret(service_client, secret_id, token)
+        logger.info("Entered finishSecret step")
+        rotator.finish_secret(service_client, secret_id, token)
     else:
         logger.error(f"Invalid step parameter: {step}")
         raise ValueError(f"Invalid step parameter: {step}")
-   
