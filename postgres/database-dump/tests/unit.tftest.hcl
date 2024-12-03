@@ -2,6 +2,12 @@ variables {
   application   = "test-app"
   environment   = "test-env"
   database_name = "test-db"
+  tasks = [
+    {
+      from : "prod"
+      to : "dev"
+    }
+  ]
 }
 
 mock_provider "aws" {}
@@ -68,8 +74,12 @@ run "data_dump_unit_test" {
       for el in data.aws_iam_policy_document.assume_ecs_task_role.statement[0].principals :
       true if el.type == "Service" && [
         for identifier in el.identifiers : true if identifier == "ecs-tasks.amazonaws.com"
-      ][0] == true
-    ][0] == true
+        ][
+        0
+      ] == true
+      ][
+      0
+    ] == true
     error_message = "Principal identifier should be: 'ecs-tasks.amazonaws.com'"
   }
 
@@ -142,7 +152,7 @@ run "data_dump_unit_test" {
 
   assert {
     condition     = contains(data.aws_iam_policy_document.data_dump.statement[1].actions, "kms:Decrypt")
-    error_message = "Permission not found: kms:Encrypt"
+    error_message = "Permission not found: kms:Decrypt"
   }
 
   assert {
@@ -262,13 +272,37 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = [for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[0].condition : true if(el.variable == "aws:SecureTransport" && contains(el.values, "false"))] == [true]
+    condition = [
+      for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[0].condition : true
+      if(el.variable == "aws:SecureTransport" && contains(el.values, "false"))
+    ] == [true]
     error_message = "Should be denied if not aws:SecureTransport"
   }
 
-  # aws_s3_bucket_policy.data_dump_bucket_policy.policy cannot be tested with plan
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].principals : el.type][0] == "AWS"
+    error_message = "Should be: AWS"
+  }
 
-  # aws_kms_key.data_dump_kms_key policy cannot be tested with plan
+  assert {
+    condition     = flatten([for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-dev-test-db-load-task"]
+    error_message = "Bucket policy principals incorrect"
+  }
+
+  assert {
+    condition = data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].actions == toset(["s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging",
+    "s3:DeleteObject"])
+    error_message = "Unexpected actions"
+  }
+
+  assert {
+    condition     = strcontains(aws_kms_key.data_dump_kms_key.policy, "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root") && !strcontains(aws_kms_key.data_dump_kms_key.policy, "arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task")
+    error_message = "Unexpected KMS key policy principal"
+  }
 
   assert {
     condition     = aws_kms_alias.data_dump_kms_alias.name == "alias/test-app-test-env-test-db-dump"
@@ -281,7 +315,10 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = [for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule : el.apply_server_side_encryption_by_default[0].sse_algorithm] == ["aws:kms"]
+    condition = [
+      for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule :
+      el.apply_server_side_encryption_by_default[0].sse_algorithm
+    ] == ["aws:kms"]
     error_message = "Server side encryption algorithm should be: aws:kms"
   }
 
@@ -293,5 +330,42 @@ run "data_dump_unit_test" {
       aws_s3_bucket_public_access_block.public_access_block.restrict_public_buckets == true
     )
     error_message = "Public access block has expected conditions"
+  }
+}
+
+run "cross_account_data_dump_unit_test" {
+  command = plan
+
+  variables {
+    tasks = [
+      {
+        from : "prod"
+        from_account : "123456789000"
+        to : "dev"
+        to_account : "000123456789"
+      }
+    ]
+  }
+
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].principals : el.type][0] == "AWS"
+    error_message = "Should be: AWS"
+  }
+  assert {
+    condition     = flatten([for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task"]
+    error_message = "Bucket policy principals incorrect"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].actions == toset(["s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging",
+    "s3:DeleteObject"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = strcontains(aws_kms_key.data_dump_kms_key.policy, "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root") && strcontains(aws_kms_key.data_dump_kms_key.policy, "arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task")
+    error_message = "Unexpected KMS key policy principal"
   }
 }

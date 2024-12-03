@@ -362,21 +362,6 @@ run "aws_db_instance_unit_test" {
 run "aws_db_instance_unit_test_database_dump_created" {
   command = plan
 
-  override_data {
-    target = module.database-load[0].data.aws_s3_bucket.data_dump_bucket
-    values = {
-      bucket = "mock-dump-bucket"
-      arn    = "arn://mock-dump-bucket"
-    }
-  }
-
-  override_data {
-    target = module.database-load[0].data.aws_kms_key.data_dump_kms_key
-    values = {
-      arn = "arn://mock-dump-bucket-kms-key"
-    }
-  }
-
   variables {
     config = {
       version = 14,
@@ -400,23 +385,43 @@ run "aws_db_instance_unit_test_database_dump_created" {
   }
 }
 
-run "aws_db_instance_unit_test_database_dump_not_created_if_to_env_is_prod" {
+run "aws_db_instance_unit_test_database_dump_multiple_source" {
   command = plan
 
-  override_data {
-    target = module.database-load[0].data.aws_s3_bucket.data_dump_bucket
-    values = {
-      bucket = "mock-dump-bucket"
-      arn    = "arn://mock-dump-bucket"
+  variables {
+    config = {
+      version = 14,
+      database_copy = [
+        {
+          from = "test-environment"
+          to   = "some-other-environment"
+        },
+        {
+          from = "test-environment"
+          to   = "some-other-environment-2"
+        }
+      ]
     }
   }
 
-  override_data {
-    target = module.database-load[0].data.aws_kms_key.data_dump_kms_key
-    values = {
-      arn = "arn://mock-dump-bucket-kms-key"
-    }
+  assert {
+    condition     = length(module.database-dump) == 1
+    error_message = "One database-dump module should be created"
   }
+
+  assert {
+    condition     = length(local.data_dump_tasks) == 2
+    error_message = "There should be 2 database dump tasks"
+  }
+
+  assert {
+    condition     = length(module.database-load) == 0
+    error_message = "database-load module should not be created"
+  }
+}
+
+run "aws_db_instance_unit_test_database_dump_not_created_if_to_env_is_prod" {
+  command = plan
 
   variables {
     config = {
@@ -443,21 +448,6 @@ run "aws_db_instance_unit_test_database_dump_not_created_if_to_env_is_prod" {
 
 run "aws_db_instance_unit_test_database_load_created" {
   command = plan
-
-  override_data {
-    target = module.database-load[0].data.aws_s3_bucket.data_dump_bucket
-    values = {
-      bucket = "mock-dump-bucket"
-      arn    = "arn://mock-dump-bucket"
-    }
-  }
-
-  override_data {
-    target = module.database-load[0].data.aws_kms_key.data_dump_kms_key
-    values = {
-      arn = "arn://mock-dump-bucket-kms-key"
-    }
-  }
 
   variables {
     config = {
@@ -489,21 +479,6 @@ run "aws_db_instance_unit_test_database_load_created" {
 
 run "aws_db_instance_unit_test_database_load_not_created_if_to_env_is_prod" {
   command = plan
-
-  override_data {
-    target = module.database-load[0].data.aws_s3_bucket.data_dump_bucket
-    values = {
-      bucket = "mock-dump-bucket"
-      arn    = "arn://mock-dump-bucket"
-    }
-  }
-
-  override_data {
-    target = module.database-load[0].data.aws_kms_key.data_dump_kms_key
-    values = {
-      arn = "arn://mock-dump-bucket-kms-key"
-    }
-  }
 
   variables {
     config = {
