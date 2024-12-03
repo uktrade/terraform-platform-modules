@@ -4,7 +4,6 @@ import boto3
 import logging
 import requests
 import time
-#import uuid
 from typing import Tuple, Dict, Any, List, Optional
 from slack_service import SlackNotificationService
 from requests.exceptions import RequestException
