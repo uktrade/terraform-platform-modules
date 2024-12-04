@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.12.0](https://github.com/uktrade/terraform-platform-modules/compare/5.11.0...5.12.0) (2024-12-03)
+
+
+### Features
+
+* DBTP-1299 - Cross account database copy ([#294](https://github.com/uktrade/terraform-platform-modules/issues/294)) ([ac84ca8](https://github.com/uktrade/terraform-platform-modules/commit/ac84ca8690ab530e74efadabf179fa8b38059c70))
+
 ## [5.11.0](https://github.com/uktrade/terraform-platform-modules/compare/5.10.0...5.11.0) (2024-11-29)
 
 
