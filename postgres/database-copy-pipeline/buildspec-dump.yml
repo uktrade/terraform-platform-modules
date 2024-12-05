@@ -2,47 +2,29 @@ version: 0.2
 
 env:
   parameter-store:
-    SLACK_CHANNEL_ID: /codebuild/slack_oauth_channel
+#    SLACK_CHANNEL_ID: /codebuild/slack_oauth_channel
+    SLACK_CHANNEL_ID: /codebuild/slack_test_pipeline_channel
     SLACK_TOKEN: /codebuild/slack_oauth_token
 
 phases:
   install:
     commands:
-      - >
-        if [ -f .copilot/phases/install.sh ]; then 
-          bash .copilot/phases/install.sh; 
-        fi
-
-  pre_build:
-    commands:
-      - >
-        if [ -f .copilot/phases/pre_build.sh ]; then 
-          bash .copilot/phases/pre_build.sh; 
-        fi
+      - export PATH="${CODEBUILD_SRC_DIR}/build-tools/bin:$PATH"
+      - export PYTHONPATH="${CODEBUILD_SRC_DIR}/build-tools"
 
   build:
     commands:
-      - >
-        if [ -f .copilot/phases/build.sh ]; then 
-          bash .copilot/phases/build.sh; 
-        fi
-      - /work/cli build --publish --send-notifications
+      - platform-helper database dump --app ${APPLICATION} --database ${DATABASE_NAME} --from ${FROM_ENVIRONMENT}
 
   post_build:
     commands:
-      - >
-        if [ -f .copilot/phases/post_build.sh ]; then 
-          bash .copilot/phases/post_build.sh; 
+      - export BUILD_ID="$CODEBUILD_BUILD_ID"
+      - |
+        if [ "${CODEBUILD_BUILD_SUCCEEDING}" == "1" ]; then
+          MESSAGE="Database dump complete for ${DATABASE_NAME} in environment ${FROM_ENVIRONMENT}."
+          ADDITIONAL_OPTIONS=""
+        else
+          MESSAGE=":alert: Database dump FAILED for ${DATABASE_NAME} in environment ${FROM_ENVIRONMENT}."
+          ADDITIONAL_OPTIONS="--send-to-main-channel true"
         fi
-        
-        if [ "${CODEBUILD_BUILD_SUCCEEDING}" != "1" ]; then
-          BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)
-          echo "BUILD_ID_PREFIX - ${BUILD_ID_PREFIX}"
-
-          echo -e "\nInstalling dependencies"
-          pip install dbt-platform-helper
-
-          MESSAGE=":no_entry::building_construction: Image build failure in codebuild project: <https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=eu-west-2|${BUILD_ID_PREFIX} - build ${CODEBUILD_BUILD_NUMBER}>"
-
-          platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "" "${MESSAGE}"
-        fi
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}" ${ADDITIONAL_OPTIONS}

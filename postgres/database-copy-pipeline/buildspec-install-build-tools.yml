@@ -2,9 +2,9 @@ version: 0.2
 
 env:
   parameter-store:
+#    SLACK_CHANNEL_ID: /codebuild/slack_oauth_channel
+    SLACK_CHANNEL_ID: /codebuild/slack_test_pipeline_channel
     SLACK_TOKEN: /codebuild/slack_oauth_token
-  variables:
-    TERRAFORM_VERSION: 1.8.1
   exported-variables:
     - SLACK_REF
 
@@ -12,17 +12,11 @@ phases:
   install:
     commands:
       - set -e
-      - echo "Deploying ${APPLICATION} environments"
-      - |
-          if [ ! -f .copilot-version ]; then
-            echo "Cannot find .copilot-version file"
-            exit 1
-          fi
-      - COPILOT_VERSION=`cat .copilot-version`
+      - echo "Installing tools for ${PIPELINE_NAME}"
       - cd "${CODEBUILD_SRC_DIR}"
       - echo "Installing latest version of platform-helper to get required version for the project."
-      - pip install dbt-platform-helper
-      - REQUIRED_VERSION=$(platform-helper version get-platform-helper-for-project --pipeline "${PIPELINE_NAME}")
+      - pip install dbt-platform-helper --quiet
+      - REQUIRED_VERSION=$(platform-helper version get-platform-helper-for-project)
       - COMMIT_TYPE=$(python -c "import re, sys; print('tag' if re.match(r'\\d+\\.\\d+\\.\\d+', '${REQUIRED_VERSION}') else 'commit')")
       - echo "Installing build tools"
       - mkdir ./build-tools
@@ -44,10 +38,9 @@ phases:
             git config --global credential.UseHttpPath true
             git clone -b "${REQUIRED_VERSION}" "${GIT_CLONE_BASE_URL}/platform-tools.git"
             cd platform-tools
-            pip install poetry
+            pip install poetry --quiet
             poetry build --no-interaction --format sdist --no-ansi | tee build-log.txt
             ARTIFACT=$(grep "Built dbt_platform_helper-.*tar.gz" build-log.txt | sed "s/.*Built //")
-            echo "Art: $ARTIFACT"
             cd "${CODEBUILD_SRC_DIR}/build-tools"
             pip install --target . --quiet "${CODEBUILD_SRC_DIR}/platform-tools/dist/${ARTIFACT}"
           fi
@@ -56,31 +49,8 @@ phases:
       - export PYTHONPATH=$(pwd)
       - platform-helper --version
       - | 
-          if [ "${SLACK_THREAD_ID}" == "NONE" ]
-          then
-            export SLACK_REF=$(platform-helper notify environment-progress "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" \
-            "*Pipeline ${PIPELINE_NAME}* is deploying ${APPLICATION} environments" \
-            --build-arn "${CODEBUILD_BUILD_ARN}" \
-            --repository "${REPOSITORY}" \
-            --commit-sha "${CODEBUILD_RESOLVED_SOURCE_VERSION: -7}")
-          else
-            export SLACK_REF="${SLACK_THREAD_ID}"
-          fi
-      - echo "Build SLACK_REF is - ${SLACK_REF}"
-      - cd bin
-      - curl -s -qL -o terraform_install.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-      - unzip terraform_install.zip
-      - chmod +x terraform
-      - rm terraform_install.zip
-      - curl -s -qL -o copilot https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION}
-      - chmod +x copilot
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Starting install phase"
-      - VERSION_OUTPUT+="\n$(terraform --version)"
-      - VERSION_OUTPUT+="\n$(platform-helper --version)"
-      - if [ "${COMMIT_TYPE}" != "tag" ]; then VERSION_OUTPUT+=" (from git ref ${REQUIRED_VERSION})"; fi
-      - VERSION_OUTPUT+="\n$(python3 --version)"
-      - VERSION_OUTPUT+="\n$(pip --version)"
-      - echo -e "=============\nTool Versions\n-------------\n$VERSION_OUTPUT"
+          export SLACK_REF=$(platform-helper notify environment-progress "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" \
+          "Starting database copy for ${DATABASE_NAME} from ${FROM_ENVIRONMENT} to ${TO_ENVIRONMENT}")
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Install phase complete"
 artifacts:
   files:

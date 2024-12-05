@@ -114,9 +114,23 @@ override_data {
 }
 
 override_data {
-  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.database_copy_policy
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.database_copy
   values = {
     json = "{\"Sid\": \"DatabaseCopyAccess\"}"
+  }
+}
+
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.ssm_access
+  values = {
+    json = "{\"Sid\": \"SSMAccess\"}"
+  }
+}
+
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.iam_access
+  values = {
+    json = "{\"Sid\": \"IAMAccess\"}"
   }
 }
 
@@ -814,10 +828,4 @@ run "aws_db_instance_database_copy_pipeline" {
     condition     = length(module.database-copy-pipeline) == 1
     error_message = "database-copy-pipeline module should be created"
   }
-
-  #   assert {
-  #     condition     = aws_iam_role.lambda-execution-role.assume_role_policy == "{\"Sid\": \"AllowLamsbdaAssumeRole\"}"
-  #     error_message = "Should be: ${jsonencode(length(local.pipeline_tasks))}"
-  #   }
-
 }

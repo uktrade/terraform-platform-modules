@@ -13,7 +13,7 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
     effect = "Allow"
 
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = ["codepipeline.amazonaws.com"]
     }
 
@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
 }
 
 resource "aws_iam_role_policy" "artifact_store_access_for_database_pipeline" {
-  name   = "${local.pipeline_name}-artifact-store-access"
+  name   = "${local.pipeline_name}-artifact-store-access-pipeline"
   role   = aws_iam_role.database_pipeline_codepipeline.name
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
@@ -48,14 +48,14 @@ data "aws_iam_policy_document" "access_artifact_store" {
   }
 
   statement {
-    effect    = "Allow"
-    actions   = ["codestar-connections:UseConnection"]
+    effect = "Allow"
+    actions = ["codestar-connections:UseConnection"]
     resources = [data.aws_codestarconnections_connection.github_codestar_connection.arn]
   }
 
   statement {
-    effect    = "Allow"
-    actions   = ["codestar-connections:ListConnections"]
+    effect = "Allow"
+    actions = ["codestar-connections:ListConnections"]
     resources = ["arn:aws:codestar-connections:eu-west-2:${data.aws_caller_identity.current.account_id}:*"]
   }
 
@@ -94,12 +94,18 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
     effect = "Allow"
 
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = ["codebuild.amazonaws.com"]
     }
 
     actions = ["sts:AssumeRole"]
   }
+}
+
+resource "aws_iam_role_policy" "artifact_store_access_for_codebuild" {
+  name   = "${local.pipeline_name}-artifact-store-access-codebuild"
+  role   = aws_iam_role.database_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.access_artifact_store.json
 }
 
 resource "aws_iam_role_policy" "log_access_for_codebuild" {
@@ -126,13 +132,13 @@ data "aws_iam_policy_document" "log_access_for_codebuild" {
   }
 }
 
-resource "aws_iam_role_policy" "ssm_read_access" {
+resource "aws_iam_role_policy" "ssm_read_access_for_codebuild" {
   name   = "${local.pipeline_name}-ssm-access"
   role   = aws_iam_role.database_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.ssm_read_access.json
+  policy = data.aws_iam_policy_document.ssm_access.json
 }
 
-data "aws_iam_policy_document" "ssm_read_access" {
+data "aws_iam_policy_document" "ssm_access" {
   statement {
     actions = [
       "ssm:GetParameter",
@@ -142,15 +148,58 @@ data "aws_iam_policy_document" "ssm_read_access" {
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/codebuild/slack_*"
     ]
   }
+
+  statement {
+    actions = [
+      "ssm:DescribeParameters"
+    ]
+    resources = [
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:PutParameter",
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:GetParametersByPath",
+      "ssm:DeleteParameter",
+      "ssm:AddTagsToResource",
+      "ssm:ListTagsForResource"
+    ]
+    resources = [
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/${var.application}/*/secrets/*",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/*"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "iam_access_for_codebuild" {
+  name   = "${local.pipeline_name}-iam-access"
+  role   = aws_iam_role.database_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.iam_access.json
+}
+
+data "aws_iam_policy_document" "iam_access" {
+  statement {
+    actions = [
+      "iam:ListAccountAliases"
+    ]
+    resources = [
+      "*"
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "database_copy_access_for_database_pipeline" {
   name   = "${local.pipeline_name}-database-copy"
   role   = aws_iam_role.database_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.access_artifact_store.json
+  policy = data.aws_iam_policy_document.database_copy.json
 }
 
-data "aws_iam_policy_document" "database_copy_policy" {
+data "aws_iam_policy_document" "database_copy" {
   statement {
     sid    = "AllowReadOnRDSSecrets"
     effect = "Allow"
