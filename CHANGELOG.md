@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.12.1](https://github.com/uktrade/terraform-platform-modules/compare/5.12.0...5.12.1) (2024-12-04)
+
+
+### Bug Fixes
+
+* Environment pipeline permissions ([#299](https://github.com/uktrade/terraform-platform-modules/issues/299)) ([7eb1a63](https://github.com/uktrade/terraform-platform-modules/commit/7eb1a63c5ffde9767ed9a71fd9739378fd56976d))
+
 ## [5.12.0](https://github.com/uktrade/terraform-platform-modules/compare/5.11.0...5.12.0) (2024-12-03)
 
 
