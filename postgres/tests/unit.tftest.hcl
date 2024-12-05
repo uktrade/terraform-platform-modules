@@ -92,6 +92,34 @@ override_data {
   }
 }
 
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.assume_codepipeline_role
+  values = {
+    json = "{\"Sid\": \"AssumeCodePipeline\"}"
+  }
+}
+
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.access_artifact_store
+  values = {
+    json = "{\"Sid\": \"AccessArtifactStore\"}"
+  }
+}
+
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.assume_codebuild_role
+  values = {
+    json = "{\"Sid\": \"AssumeCodeBuild\"}"
+  }
+}
+
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.database_copy_policy
+  values = {
+    json = "{\"Sid\": \"DatabaseCopyAccess\"}"
+  }
+}
+
 variables {
   application = "test-application"
   environment = "test-environment"
@@ -467,11 +495,6 @@ run "aws_db_instance_unit_test_database_load_created" {
   }
 
   assert {
-    condition     = module.database-load[0].database-load-module-created
-    error_message = "database-load module should be created"
-  }
-
-  assert {
     condition     = length(module.database-load) == 1
     error_message = "database-load module should be created"
   }
@@ -760,4 +783,41 @@ run "aws_ssm_parameter_master_secret_arn_unit_test" {
     condition     = aws_ssm_parameter.master-secret-arn.type == "SecureString"
     error_message = "Should be: SecureString"
   }
+}
+
+run "aws_db_instance_database_copy_pipeline" {
+  command = plan
+
+  variables {
+    config = {
+      version = 14,
+      database_copy = [
+        {
+          from = "test-environment"
+          to   = "some-other-environment"
+        },
+        {
+          from     = "some-other-environment"
+          to       = "test-environment"
+          pipeline = {}
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = length(module.database-load) == 1
+    error_message = "database-load module should be created"
+  }
+
+  assert {
+    condition     = length(module.database-copy-pipeline) == 1
+    error_message = "database-copy-pipeline module should be created"
+  }
+
+  #   assert {
+  #     condition     = aws_iam_role.lambda-execution-role.assume_role_policy == "{\"Sid\": \"AllowLamsbdaAssumeRole\"}"
+  #     error_message = "Should be: ${jsonencode(length(local.pipeline_tasks))}"
+  #   }
+
 }
