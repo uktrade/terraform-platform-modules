@@ -42,6 +42,20 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.assume_database_pipeline_scheduler_role
+  values = {
+    json = "{\"Sid\": \"AssumePipelineScheduler\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.pipeline_access_for_database_pipeline_scheduler
+  values = {
+    json = "{\"Sid\": \"SchedulerPipelineAccess\"}"
+  }
+}
+
 variables {
   application   = "test-app"
   environment   = "test-env"
@@ -49,7 +63,9 @@ variables {
   task = {
     from : "prod"
     to : "dev"
-    pipeline : {}
+    pipeline : {
+      schedule: "0 1 * * ? *"
+    }
   }
   expected_tags = {
     application         = "test-app"

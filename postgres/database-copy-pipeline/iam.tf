@@ -13,7 +13,7 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
     effect = "Allow"
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["codepipeline.amazonaws.com"]
     }
 
@@ -48,14 +48,14 @@ data "aws_iam_policy_document" "access_artifact_store" {
   }
 
   statement {
-    effect = "Allow"
-    actions = ["codestar-connections:UseConnection"]
+    effect    = "Allow"
+    actions   = ["codestar-connections:UseConnection"]
     resources = [data.aws_codestarconnections_connection.github_codestar_connection.arn]
   }
 
   statement {
-    effect = "Allow"
-    actions = ["codestar-connections:ListConnections"]
+    effect    = "Allow"
+    actions   = ["codestar-connections:ListConnections"]
     resources = ["arn:aws:codestar-connections:eu-west-2:${data.aws_caller_identity.current.account_id}:*"]
   }
 
@@ -94,7 +94,7 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
     effect = "Allow"
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["codebuild.amazonaws.com"]
     }
 
