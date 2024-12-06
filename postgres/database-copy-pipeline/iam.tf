@@ -259,4 +259,41 @@ data "aws_iam_policy_document" "database_copy" {
       "arn:aws:logs:eu-west-2:${local.to_account}:log-group::log-stream:"
     ]
   }
+
+  statement {
+    sid = "AllowRedisListVersions"
+    actions = [
+      "elasticache:DescribeCacheEngineVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    sid = "AllowOpensearchListVersions"
+    actions = [
+      "es:ListVersions",
+      "es:ListElasticsearchVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowDescribeVPCsAndSubnets"
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeRouteTables",
+      "ec2:DescribeSecurityGroups"
+    ]
+    resources = [
+      "*",
+    ]
+  }
 }

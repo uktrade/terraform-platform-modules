@@ -85,6 +85,7 @@ resource "aws_codepipeline" "database_copy_pipeline" {
           { name : "APPLICATION", value : var.application },
           { name : "DATABASE_NAME", value : var.database_name },
           { name : "FROM_ENVIRONMENT", value : var.task.from },
+          { name : "TO_ENVIRONMENT", value : var.task.to },
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" }
         ])
       }
@@ -109,7 +110,8 @@ resource "aws_codepipeline" "database_copy_pipeline" {
         EnvironmentVariables : jsonencode([
           { name : "APPLICATION", value : var.application },
           { name : "DATABASE_NAME", value : var.database_name },
-          { name : "TO_ENVIRONMENT", value : var.task.from },
+          { name : "FROM_ENVIRONMENT", value : var.task.from },
+          { name : "TO_ENVIRONMENT", value : var.task.to },
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" }
         ])
       }
