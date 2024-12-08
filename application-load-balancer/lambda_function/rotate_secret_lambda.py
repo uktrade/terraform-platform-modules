@@ -8,9 +8,6 @@ logger.setLevel(logging.INFO)
 
 service_client = boto3.client('secretsmanager')
 
-AWSPENDING = "AWSPENDING"
-AWSCURRENT = "AWSCURRENT"
-
 
 def lambda_handler(event, context):
     secret_id = event.get('SecretId')
