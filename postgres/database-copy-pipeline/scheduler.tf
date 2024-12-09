@@ -1,5 +1,6 @@
 resource "aws_scheduler_schedule" "database_pipeline_schedule" {
-  name = local.pipeline_name
+  for_each = toset(var.task.pipeline.schedule != null ? [""] : [])
+  name     = local.pipeline_name
 
   flexible_time_window {
     mode = "OFF"
@@ -9,20 +10,22 @@ resource "aws_scheduler_schedule" "database_pipeline_schedule" {
 
   target {
     arn      = aws_codepipeline.database_copy_pipeline.arn
-    role_arn = aws_iam_role.database_pipeline_schedule.arn
+    role_arn = aws_iam_role.database_pipeline_schedule[""].arn
   }
 }
 
 resource "aws_iam_role" "database_pipeline_schedule" {
+  for_each           = toset(var.task.pipeline.schedule != null ? [""] : [])
   name               = "${local.pipeline_name}-scheduler"
   assume_role_policy = data.aws_iam_policy_document.assume_database_pipeline_scheduler_role.json
   tags               = local.tags
 }
 
 resource "aws_iam_role_policy" "database_pipeline_schedule" {
-  name   = "${local.pipeline_name}-scheduler-access"
-  role   = aws_iam_role.database_pipeline_schedule.name
-  policy = data.aws_iam_policy_document.pipeline_access_for_database_pipeline_scheduler.json
+  for_each = toset(var.task.pipeline.schedule != null ? [""] : [])
+  name     = "${local.pipeline_name}-scheduler-access"
+  role     = aws_iam_role.database_pipeline_schedule[""].name
+  policy   = data.aws_iam_policy_document.pipeline_access_for_database_pipeline_scheduler.json
 }
 
 data "aws_iam_policy_document" "assume_database_pipeline_scheduler_role" {
