@@ -87,5 +87,4 @@ variable "config" {
     error_message = "All instances of cross_environment_service_access must be approved by cyber, and a cyber rep's email address entered."
   }
 
-
 }

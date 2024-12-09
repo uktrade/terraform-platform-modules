@@ -1,5 +1,46 @@
 # Changelog
 
+## [5.12.1](https://github.com/uktrade/terraform-platform-modules/compare/5.12.0...5.12.1) (2024-12-04)
+
+
+### Bug Fixes
+
+* Environment pipeline permissions ([#299](https://github.com/uktrade/terraform-platform-modules/issues/299)) ([7eb1a63](https://github.com/uktrade/terraform-platform-modules/commit/7eb1a63c5ffde9767ed9a71fd9739378fd56976d))
+
+## [5.12.0](https://github.com/uktrade/terraform-platform-modules/compare/5.11.0...5.12.0) (2024-12-03)
+
+
+### Features
+
+* DBTP-1299 - Cross account database copy ([#294](https://github.com/uktrade/terraform-platform-modules/issues/294)) ([ac84ca8](https://github.com/uktrade/terraform-platform-modules/commit/ac84ca8690ab530e74efadabf179fa8b38059c70))
+
+## [5.11.0](https://github.com/uktrade/terraform-platform-modules/compare/5.10.0...5.11.0) (2024-11-29)
+
+
+### Features
+
+* DBTP-1503 - Terraform codebase pipelines ([#276](https://github.com/uktrade/terraform-platform-modules/issues/276)) ([96b5935](https://github.com/uktrade/terraform-platform-modules/commit/96b593574db00c32c682726826ee765ebb561863))
+
+
+### Bug Fixes
+
+* Add missing environment pipeline permission ([#297](https://github.com/uktrade/terraform-platform-modules/issues/297)) ([57f4ea1](https://github.com/uktrade/terraform-platform-modules/commit/57f4ea11b6e99fef1f9d9b0a99c6a7085f463579))
+
+## [5.10.0](https://github.com/uktrade/terraform-platform-modules/compare/5.9.0...5.10.0) (2024-11-26)
+
+
+### Features
+
+* DBTP-1568 - Add s3 support for external role access ([#292](https://github.com/uktrade/terraform-platform-modules/issues/292)) ([f20e203](https://github.com/uktrade/terraform-platform-modules/commit/f20e2034d5ec51d59d3cafbe679432b51867798e))
+
+## [5.9.0](https://github.com/uktrade/terraform-platform-modules/compare/5.8.1...5.9.0) (2024-11-21)
+
+
+### Features
+
+* DBTP 1433 cdn cache on paths ([#291](https://github.com/uktrade/terraform-platform-modules/issues/291)) ([c456564](https://github.com/uktrade/terraform-platform-modules/commit/c4565641e91369c309bdec2adaf46127c9d5f6a4))
+* DBTP-1380 Get Opensearch/Redis versions from AWS API - Permissions on env pipeline ([#275](https://github.com/uktrade/terraform-platform-modules/issues/275)) ([aca4cc4](https://github.com/uktrade/terraform-platform-modules/commit/aca4cc4dfe6a52f19a65cc3c107f0ca5500c19ba))
+
 ## [5.8.1](https://github.com/uktrade/terraform-platform-modules/compare/5.8.0...5.8.1) (2024-11-14)
 
 

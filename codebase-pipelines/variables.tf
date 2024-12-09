@@ -15,5 +15,21 @@ variable "additional_ecr_repository" {
 }
 
 variable "pipelines" {
+  type = list(object(
+    {
+      name   = string
+      branch = optional(string)
+      tag    = optional(bool)
+      environments = list(object(
+        {
+          name              = string
+          requires_approval = optional(bool)
+        }
+      ))
+    }
+  ))
+}
+
+variable "services" {
   type = any
 }

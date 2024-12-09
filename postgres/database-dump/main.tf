@@ -56,7 +56,6 @@ resource "aws_iam_role_policy" "allow_task_creation" {
   policy = data.aws_iam_policy_document.allow_task_creation.json
 }
 
-
 data "aws_iam_policy_document" "data_dump" {
   policy_id = "data_dump"
   statement {
@@ -163,7 +162,6 @@ resource "aws_ecs_task_definition" "service" {
   }
 }
 
-
 resource "aws_s3_bucket" "data_dump_bucket" {
   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
@@ -182,22 +180,40 @@ data "aws_iam_policy_document" "data_dump_bucket_policy" {
       type        = "*"
       identifiers = ["*"]
     }
-
     actions = [
       "s3:*",
     ]
-
     effect = "Deny"
-
     condition {
       test     = "Bool"
       variable = "aws:SecureTransport"
-
       values = [
         "false",
       ]
     }
+    resources = [
+      aws_s3_bucket.data_dump_bucket.arn,
+      "${aws_s3_bucket.data_dump_bucket.arn}/*",
+    ]
+  }
 
+  statement {
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [
+        for el in var.tasks :
+        "arn:aws:iam::${coalesce(el.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${el.to}-${var.database_name}-load-task"
+      ]
+    }
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging",
+      "s3:DeleteObject"
+    ]
     resources = [
       aws_s3_bucket.data_dump_bucket.arn,
       "${aws_s3_bucket.data_dump_bucket.arn}/*",
@@ -216,13 +232,17 @@ resource "aws_kms_key" "data_dump_kms_key" {
   tags        = local.tags
 
   policy = jsonencode({
-    Id = "key-default-1"
     Statement = [
       {
         "Sid" : "Enable IAM User Permissions",
         "Effect" : "Allow",
         "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" : flatten([
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+            [for el in var.tasks :
+              "arn:aws:iam::${coalesce(el.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${el.to}-${var.database_name}-load-task"
+            ]
+          ])
         },
         "Action" : "kms:*",
         "Resource" : "*"

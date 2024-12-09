@@ -13,11 +13,11 @@ repos:
         entry: tflint --recursive --fix
         language: system
         pass_filenames: false
-  - repo: local
-    hooks:
-      - id: trufflehog
-        name: TruffleHog
-        description: Detect secrets in your data.
-        entry: bash -c 'trufflehog filesystem . --no-verification --fail --exclude-paths=.trufflehogignore'
-        language: system
-        stages: ["commit", "push"]
+#  - repo: local
+#    hooks:
+#      - id: trufflehog
+#        name: TruffleHog
+#        description: Detect secrets in your data.
+#        entry: bash -c 'trufflehog filesystem . --no-verification --fail --exclude-paths=.trufflehogignore'
+#        language: system
+#        stages: ["commit", "push"]

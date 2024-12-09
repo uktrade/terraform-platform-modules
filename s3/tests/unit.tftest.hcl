@@ -263,13 +263,18 @@ run "aws_s3_bucket_external_role_access_read_write_unit_test" {
       "type"        = "s3",
       "external_role_access" = {
         "test-access" = {
-          "role_arn"    = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
-          "read" = true,
-          "write" = true,
-          "cyber_sign_off_by"  = "test@businessandtrade.gov.uk"
+          "role_arn"          = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
+          "read"              = true,
+          "write"             = true,
+          "cyber_sign_off_by" = "test@businessandtrade.gov.uk"
         }
       }
     }
+  }
+
+  assert {
+    condition     = length(aws_s3_bucket_policy.bucket-policy) == 1
+    error_message = "Should be a bucket policy"
   }
 
   assert {
@@ -278,12 +283,30 @@ run "aws_s3_bucket_external_role_access_read_write_unit_test" {
   }
 
   assert {
-    condition     = alltrue([
+    condition = alltrue([
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
-    ]) 
+    ])
     error_message = "Should be: s3:Get*, s3:Put*, s3:ListBucket"
+  }
+
+  assert {
+    condition     = length(aws_kms_key_policy.key-policy) == 1
+    error_message = "Should be a single kms key policy"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.key-policy[0].statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = alltrue([
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:Decrypt"),
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:GenerateDataKey"),
+    ])
+    error_message = "Should be: kms:Decrypt, kms:GenerateDataKey"
   }
 }
 
@@ -296,13 +319,18 @@ run "aws_s3_bucket_external_role_access_read_only_unit_test" {
       "type"        = "s3",
       "external_role_access" = {
         "test-access" = {
-          "role_arn"    = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
-          "read" = true,
-          "write" = false,
-          "cyber_sign_off_by"  = "test@businessandtrade.gov.uk"
+          "role_arn"          = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
+          "read"              = true,
+          "write"             = false,
+          "cyber_sign_off_by" = "test@businessandtrade.gov.uk"
         }
       }
     }
+  }
+
+  assert {
+    condition     = length(aws_s3_bucket_policy.bucket-policy) == 1
+    error_message = "Should be a bucket policy"
   }
 
   assert {
@@ -311,12 +339,30 @@ run "aws_s3_bucket_external_role_access_read_only_unit_test" {
   }
 
   assert {
-    condition     = alltrue([
+    condition = alltrue([
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
-      ! contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
-    ]) 
+      !contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
+    ])
     error_message = "Should be: s3:Get*, s3:ListBucket"
+  }
+
+  assert {
+    condition     = length(aws_kms_key_policy.key-policy) == 1
+    error_message = "Should be a kms key policy"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.key-policy[0].statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = alltrue([
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:Decrypt"),
+      !contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:GenerateDataKey"),
+    ])
+    error_message = "Should be: kms:Decrypt"
   }
 }
 
@@ -329,13 +375,18 @@ run "aws_s3_bucket_external_role_access_write_only_unit_test" {
       "type"        = "s3",
       "external_role_access" = {
         "test-access" = {
-          "role_arn"    = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
-          "read" = false,
-          "write" = true,
-          "cyber_sign_off_by"  = "test@businessandtrade.gov.uk"
+          "role_arn"          = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
+          "read"              = false,
+          "write"             = true,
+          "cyber_sign_off_by" = "test@businessandtrade.gov.uk"
         }
       }
     }
+  }
+
+  assert {
+    condition     = length(aws_s3_bucket_policy.bucket-policy) == 1
+    error_message = "Should be a bucket policy"
   }
 
   assert {
@@ -344,12 +395,30 @@ run "aws_s3_bucket_external_role_access_write_only_unit_test" {
   }
 
   assert {
-    condition     = alltrue([
-      ! contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
-      ! contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
+    condition = alltrue([
+      !contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
+      !contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
-    ]) 
+    ])
     error_message = "Should be: s3:Put*"
+  }
+
+  assert {
+    condition     = length(aws_kms_key_policy.key-policy) == 1
+    error_message = "Should be a kms key policy"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.key-policy[0].statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = alltrue([
+      !contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:Decrypt"),
+      contains(data.aws_iam_policy_document.key-policy[0].statement[1].actions, "kms:GenerateDataKey"),
+    ])
+    error_message = "Should be: kms:GenerateDataKey"
   }
 }
 
@@ -362,10 +431,10 @@ run "aws_s3_bucket_external_role_access_invalid_cyber_sign_off" {
       "type"        = "s3",
       "external_role_access" = {
         "test-access" = {
-          "role_arn"    = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
-          "read" = true,
-          "write" = true,
-          "cyber_sign_off_by"  = ""
+          "role_arn"          = "arn:aws:iam::123456789012:role/service-role/my-privileged-arn",
+          "read"              = true,
+          "write"             = true,
+          "cyber_sign_off_by" = ""
         }
       }
     }
@@ -383,13 +452,13 @@ run "aws_s3_bucket_cross_environment_service_access_read_write_unit_test" {
       "type"        = "s3",
       "cross_environment_service_access" = {
         "test-access" = {
-          "application" = "app",
-          "environment" = "test",
-          "account"     = "123456789012",
-          "service"     = "service",
-          "read"        = true,
-          "write"       = true,
-          "cyber_sign_off_by"  = "test@businessandtrade.gov.uk"
+          "application"       = "app",
+          "environment"       = "test",
+          "account"           = "123456789012",
+          "service"           = "service",
+          "read"              = true,
+          "write"             = true,
+          "cyber_sign_off_by" = "test@businessandtrade.gov.uk"
         }
       }
     }
@@ -401,11 +470,11 @@ run "aws_s3_bucket_cross_environment_service_access_read_write_unit_test" {
   }
 
   assert {
-    condition     = alltrue([
+    condition = alltrue([
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
-    ]) 
+    ])
     error_message = "Should be: s3:Get*, s3:Put*, s3:ListBucket"
   }
 }
@@ -419,13 +488,13 @@ run "aws_s3_bucket_cross_environment_service_access_read_only_unit_test" {
       "type"        = "s3",
       "cross_environment_service_access" = {
         "test-access" = {
-          "application" = "app",
-          "environment" = "test",
-          "account"     = "123456789012",
-          "service"     = "service",
-          "read"        = true,
-          "write"       = false,
-          "cyber_sign_off_by"  = "test@businessandtrade.gov.uk"
+          "application"       = "app",
+          "environment"       = "test",
+          "account"           = "123456789012",
+          "service"           = "service",
+          "read"              = true,
+          "write"             = false,
+          "cyber_sign_off_by" = "test@businessandtrade.gov.uk"
         }
       }
     }
@@ -437,11 +506,11 @@ run "aws_s3_bucket_cross_environment_service_access_read_only_unit_test" {
   }
 
   assert {
-    condition     = alltrue([
+    condition = alltrue([
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
-      ! contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
-    ]) 
+      !contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
+    ])
     error_message = "Should be: s3:Get*, s3:ListBucket"
   }
 }
@@ -455,13 +524,13 @@ run "aws_s3_bucket_cross_environment_service_access_write_only_unit_test" {
       "type"        = "s3",
       "cross_environment_service_access" = {
         "test-access" = {
-          "application" = "app",
-          "environment" = "test",
-          "account"     = "123456789012",
-          "service"     = "service",
-          "read"        = false,
-          "write"       = true,
-          "cyber_sign_off_by"  = "test@businessandtrade.gov.uk"
+          "application"       = "app",
+          "environment"       = "test",
+          "account"           = "123456789012",
+          "service"           = "service",
+          "read"              = false,
+          "write"             = true,
+          "cyber_sign_off_by" = "test@businessandtrade.gov.uk"
         }
       }
     }
@@ -473,11 +542,11 @@ run "aws_s3_bucket_cross_environment_service_access_write_only_unit_test" {
   }
 
   assert {
-    condition     = alltrue([
-      ! contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
-      ! contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
+    condition = alltrue([
+      !contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Get*"),
+      !contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:ListBucket"),
       contains(data.aws_iam_policy_document.bucket-policy.statement[1].actions, "s3:Put*"),
-    ]) 
+    ])
     error_message = "Should be: s3:Put*"
   }
 }
@@ -491,13 +560,13 @@ run "aws_s3_bucket_cross_environment_service_access_invalid_cyber_sign_off" {
       "type"        = "s3",
       "cross_environment_service_access" = {
         "test-access" = {
-          "application" = "app",
-          "environment" = "test",
-          "account"     = "123456789012",
-          "service"     = "service",
-          "read"        = true,
-          "write"       = true,
-          "cyber_sign_off_by"  = "no-one"
+          "application"       = "app",
+          "environment"       = "test",
+          "account"           = "123456789012",
+          "service"           = "service",
+          "read"              = true,
+          "write"             = true,
+          "cyber_sign_off_by" = "no-one"
         }
       }
     }
