@@ -56,7 +56,7 @@ data "aws_iam_policy_document" "access_artifact_store" {
   statement {
     effect    = "Allow"
     actions   = ["codestar-connections:ListConnections"]
-    resources = ["arn:aws:codestar-connections:eu-west-2:${data.aws_caller_identity.current.account_id}:*"]
+    resources = ["arn:aws:codestar-connections:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
   }
 
   statement {
@@ -140,6 +140,7 @@ resource "aws_iam_role_policy" "ssm_read_access_for_codebuild" {
 
 data "aws_iam_policy_document" "ssm_access" {
   statement {
+    effect = "Allow"
     actions = [
       "ssm:GetParameter",
       "ssm:GetParameters"
@@ -150,6 +151,7 @@ data "aws_iam_policy_document" "ssm_access" {
   }
 
   statement {
+    effect = "Allow"
     actions = [
       "ssm:DescribeParameters"
     ]
@@ -159,6 +161,7 @@ data "aws_iam_policy_document" "ssm_access" {
   }
 
   statement {
+    effect = "Allow"
     actions = [
       "ssm:PutParameter",
       "ssm:GetParameter",
@@ -184,6 +187,7 @@ resource "aws_iam_role_policy" "iam_access_for_codebuild" {
 
 data "aws_iam_policy_document" "iam_access" {
   statement {
+    effect = "Allow"
     actions = [
       "iam:ListAccountAliases"
     ]
@@ -207,8 +211,8 @@ data "aws_iam_policy_document" "database_copy" {
       "secretsmanager:GetSecretValue",
     ]
     resources = [
-      "arn:aws:secretsmanager:eu-west-2:${local.from_account}:secret:rds*",
-      "arn:aws:secretsmanager:eu-west-2:${local.to_account}:secret:rds*"
+      "arn:aws:secretsmanager:${data.aws_region.current.name}:${local.from_account}:secret:rds*",
+      "arn:aws:secretsmanager:${data.aws_region.current.name}:${local.to_account}:secret:rds*"
     ]
   }
 
@@ -219,8 +223,8 @@ data "aws_iam_policy_document" "database_copy" {
       "ecs:RunTask",
     ]
     resources = [
-      "arn:aws:ecs:eu-west-2:${local.from_account}:task-definition/*-dump:*",
-      "arn:aws:ecs:eu-west-2:${local.to_account}:task-definition/*-load:*",
+      "arn:aws:ecs:${data.aws_region.current.name}:${local.from_account}:task-definition/*-dump:*",
+      "arn:aws:ecs:${data.aws_region.current.name}:${local.to_account}:task-definition/*-load:*",
     ]
   }
 
@@ -231,8 +235,8 @@ data "aws_iam_policy_document" "database_copy" {
       "logs:StartLiveTail",
     ]
     resources = [
-      "arn:aws:logs:eu-west-2:${local.from_account}:log-group:/ecs/*-dump",
-      "arn:aws:logs:eu-west-2:${local.to_account}:log-group:/ecs/*-load"
+      "arn:aws:logs:${data.aws_region.current.name}:${local.from_account}:log-group:/ecs/*-dump",
+      "arn:aws:logs:${data.aws_region.current.name}:${local.to_account}:log-group:/ecs/*-load"
     ]
   }
 
@@ -255,8 +259,8 @@ data "aws_iam_policy_document" "database_copy" {
       "logs:DescribeLogGroups",
     ]
     resources = [
-      "arn:aws:logs:eu-west-2:${local.from_account}:log-group::log-stream:",
-      "arn:aws:logs:eu-west-2:${local.to_account}:log-group::log-stream:"
+      "arn:aws:logs:${data.aws_region.current.name}:${local.from_account}:log-group::log-stream:",
+      "arn:aws:logs:${data.aws_region.current.name}:${local.to_account}:log-group::log-stream:"
     ]
   }
 
