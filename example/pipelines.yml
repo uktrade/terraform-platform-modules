@@ -1,4 +1,12 @@
 environments:
+  - name: default
+    accounts:
+      deploy:
+        name: "sandbox"
+        id: "000123456789"
+      dns:
+        name: "dev"
+        id: "000123456789"
   - name: my-environment
     accounts:
       deploy:
