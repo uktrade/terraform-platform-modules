@@ -245,6 +245,9 @@ class SecretRotator:
         """
         Process CloudFront distributions based on whether the custom header is already present.
         If the custom header is missing, it will be added to the distribution.
+        Updates the WAF ACL & the CloudFront distributions with the AWSPENDING & AWSCURRENT secret values.
+        This method should set the AWSPENDING secret in the service that the secret belongs to.
+        Sleep 75 seconds to allow resources to update
         """
         all_have_header = True  # Assume all distributions have the header initially
 
