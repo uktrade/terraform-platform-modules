@@ -216,18 +216,23 @@ resource "aws_wafv2_web_acl" "waf-acl" {
       sampled_requests_enabled   = true
     }
 
+    # This is just a holding rule, it needs to initially not block any traffic.
     statement {
-      byte_match_statement {
-        field_to_match {
-          single_header {
-            name = "x-origin-verify"
+      not_statement {
+        statement {
+          byte_match_statement {
+            field_to_match {
+              single_header {
+                name = "x-origin-verify"
+              }
+            }
+            positional_constraint = "EXACTLY"
+            search_string         = "initial"
+            text_transformation {
+              priority = 0
+              type     = "NONE"
+            }
           }
-        }
-        positional_constraint = "EXACTLY"
-        search_string         = random_password.origin-secret.result
-        text_transformation {
-          priority = 0
-          type     = "NONE"
         }
       }
     }

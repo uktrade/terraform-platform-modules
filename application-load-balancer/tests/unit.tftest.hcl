@@ -63,6 +63,7 @@ variables {
   environment    = "env"
   vpc_name       = "vpc-name"
   dns_account_id = "123456789012"
+  cloudfront_id  = ["123456789"]
   config = {
     domain_prefix = "dom-prefix",
     cdn_domains_list = {
@@ -410,7 +411,7 @@ run "waf_and_rotate_lambda" {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(r.statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == "x-origin-verify"
+        try(r.statement[0].not_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == "x-origin-verify"
       ) : true
     ])
     error_message = "Statement's single header name is incorrect"
@@ -420,24 +421,11 @@ run "waf_and_rotate_lambda" {
     condition = alltrue([
       for r in aws_wafv2_web_acl.waf-acl.rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
-        try(r.statement[0].byte_match_statement[0].positional_constraint, "") == "EXACTLY"
+        try(r.statement[0].not_statement[0].statement[0].byte_match_statement[0].positional_constraint, "") == "EXACTLY"
       ) : true
     ])
     error_message = "First statement positional_constraint should be 'EXACTLY'"
   }
-
-  # Cannot test for the search_string on a plan
-  # Testing search_string from origin-secret (second statement in rule)
-  # assert {
-  #   condition = alltrue([
-  #     for r in aws_wafv2_web_acl.waf-acl.rule :
-  #       # Ensure we have exactly 2 statements in or_statement
-  #       length(r.statement[0].or_statement[0].statement) == 2 &&
-  #       # Check if the second statement's search_string matches the expected value
-  #       r.statement[0].or_statement[0].statement[1].byte_match_statement[0].search_string == random_password.origin-secret.result
-  #   ])
-  #   error_message = "Invalid search_string for origin-secret in the second byte_match_statement of aws_wafv2_web_acl.waf-acl rule"
-  # } 
 
   # --- End testing of the WAF rule statement ---
 

@@ -4,11 +4,6 @@ data "aws_wafv2_web_acl" "waf-default" {
   scope    = "CLOUDFRONT"
 }
 
-# data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
-#   secret_id     = var.origin_verify_secret_id
-#   version_stage = "AWSCURRENT"
-# }
-
 resource "aws_acm_certificate" "certificate" {
   provider = aws.domain-cdn
   for_each = local.cdn_domains_list
@@ -62,6 +57,10 @@ data "aws_cloudfront_origin_request_policy" "request-policy-name" {
   depends_on = [aws_cloudfront_origin_request_policy.origin_request_policy]
 }
 
+data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
+  secret_id = var.origin_verify_secret_id
+}
+
 resource "aws_cloudfront_distribution" "standard" {
   # checkov:skip=CKV_AWS_305:This is managed in the application.
   # checkov:skip=CKV_AWS_310:No fail-over origin required.
@@ -89,6 +88,10 @@ resource "aws_cloudfront_distribution" "standard" {
       origin_protocol_policy = local.cdn_defaults.origin.custom_origin_config.origin_protocol_policy
       origin_ssl_protocols   = local.cdn_defaults.origin.custom_origin_config.origin_ssl_protocols
       origin_read_timeout    = local.cdn_defaults.origin.custom_origin_config.cdn_timeout_seconds
+    }
+    custom_header {
+      name  = "x-origin-verify"
+      value = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
     }
   }
 

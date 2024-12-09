@@ -76,3 +76,9 @@ resource "aws_secretsmanager_secret_rotation" "origin-verify-rotate-schedule" {
     automatically_after_days = 7
   }
 }
+
+# Output used in CDN module
+output "origin_verify_secret_id" {
+  value       = aws_secretsmanager_secret.origin-verify-secret.id
+  description = "The secret ID for origin verification header."
+}

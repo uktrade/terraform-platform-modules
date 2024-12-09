@@ -46,7 +46,8 @@ variable "config" {
 
 }
 
-# variable "origin_verify_secret_id" {
-#   description = "The ID of the secret used for origin verification"
-#   type        = string
-# }
+# Pulled in from output in ALB module
+variable "origin_verify_secret_id" {
+  description = "The ID of the secret used for origin verification"
+  type        = string
+}
