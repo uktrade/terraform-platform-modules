@@ -13,11 +13,14 @@ data "aws_iam_policy_document" "secret_manager_policy" {
     effect = "Allow"
 
     principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${var.dns_account_id}:role/environment-pipeline-assumed-role"]
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${var.dns_account_id}:role/environment-pipeline-assumed-role"
+      ]
     }
 
-    actions = ["secretsmanager:GetSecretValue",
+    actions = [
+      "secretsmanager:GetSecretValue",
     "secretsmanager:DescribeSecret"]
     resources = [aws_secretsmanager_secret.origin-verify-secret.arn]
   }
