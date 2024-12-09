@@ -1,6 +1,8 @@
 resource "aws_scheduler_schedule" "database_pipeline_schedule" {
+  # checkov:skip=CKV_AWS_297:Schedule encrypted using default encryption key instead of KMS CMK
   for_each = toset(var.task.pipeline.schedule != null ? [""] : [])
   name     = local.pipeline_name
+  kms_key_arn = ""
 
   flexible_time_window {
     mode = "OFF"
