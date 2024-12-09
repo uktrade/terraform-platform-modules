@@ -14,5 +14,4 @@ locals {
   dump_bucket_name   = local.dump_task_name
 
   ecr_repository_arn = "arn:aws:ecr-public::763451185160:repository/database-copy"
-
 }

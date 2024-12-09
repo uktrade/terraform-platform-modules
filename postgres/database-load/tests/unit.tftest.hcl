@@ -11,21 +11,6 @@ variables {
 mock_provider "aws" {}
 
 override_data {
-  target = data.aws_s3_bucket.data_dump_bucket
-  values = {
-    bucket = "mock-dump-bucket"
-    arn    = "arn://mock-dump-bucket"
-  }
-}
-
-override_data {
-  target = data.aws_kms_key.data_dump_kms_key
-  values = {
-    arn = "arn://mock-dump-bucket-kms-key"
-  }
-}
-
-override_data {
   target = data.aws_iam_policy_document.assume_ecs_task_role
   values = {
     json = "{\"Sid\": \"AllowECSAssumeRole\"}"
@@ -149,7 +134,10 @@ run "data_load_unit_test" {
     error_message = "Permissions not found"
   }
 
-  #  data.aws_iam_policy_document.data_load.statement[0].resources cannot be tested on a 'plan'
+  assert {
+    condition     = data.aws_iam_policy_document.data_load.statement[0].resources == toset(["arn:aws:s3:::test-app-some-other-env-test-db-dump", "arn:aws:s3:::test-app-some-other-env-test-db-dump/*"])
+    error_message = "Unexpected resources"
+  }
 
   assert {
     condition     = length(data.aws_iam_policy_document.data_load.statement[1].actions) == 3
@@ -161,7 +149,10 @@ run "data_load_unit_test" {
     error_message = "Permissions not found"
   }
 
-  # data.aws_iam_policy_document.data_load.statement[1].resources cannot be tested on a 'plan'
+  assert {
+    condition     = data.aws_iam_policy_document.data_load.statement[1].resources == toset(["arn:aws:ecs:eu-west-2:${data.aws_caller_identity.current.account_id}:service/default/*", "arn:aws:ecs:eu-west-2:${data.aws_caller_identity.current.account_id}:service/test-app-test-env/*"])
+    error_message = "Unexpected resources"
+  }
 
   assert {
     condition     = length(data.aws_iam_policy_document.data_load.statement[2].actions) == 1
@@ -173,7 +164,10 @@ run "data_load_unit_test" {
     error_message = "Permission not found: kms:Decrypt"
   }
 
-  # data.aws_iam_policy_document.data_load.statement[2].resources cannot be tested on a 'plan'
+  assert {
+    condition     = one(data.aws_iam_policy_document.data_load.statement[2].resources) == "arn:aws:kms:eu-west-2:${data.aws_caller_identity.current.account_id}:key/*"
+    error_message = "Unexpected resources"
+  }
 
   assert {
     condition     = aws_iam_role.data_load.name == "test-app-test-env-test-db-load-task"
@@ -248,5 +242,22 @@ run "data_load_unit_test" {
     condition     = aws_ecs_task_definition.service.runtime_platform[0].operating_system_family == "LINUX"
     error_message = "OS family should be LINUX"
   }
+}
 
+run "cross_account_data_load_unit_test" {
+  command = plan
+
+  variables {
+    task = {
+      from         = "some-other-env"
+      from_account = "123456789000"
+      to           = "test-env"
+      to_account   = "000123456789"
+    }
+  }
+
+  assert {
+    condition     = one(data.aws_iam_policy_document.data_load.statement[2].resources) == "arn:aws:kms:eu-west-2:123456789000:key/*"
+    error_message = "Unexpected resources"
+  }
 }
