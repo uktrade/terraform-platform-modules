@@ -43,4 +43,11 @@ variable "config" {
     ])
     error_message = "Items in cdn_domains_list should be between 3 and 63 characters long."
   }
+
+}
+
+# Pulled in from output in ALB module
+variable "origin_verify_secret_id" {
+  description = "The ID of the secret used for origin verification"
+  type        = string
 }

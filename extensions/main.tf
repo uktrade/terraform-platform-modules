@@ -61,9 +61,10 @@ module "alb" {
   providers = {
     aws.domain = aws.domain
   }
-  application = var.args.application
-  environment = var.environment
-  vpc_name    = var.vpc_name
+  application    = var.args.application
+  environment    = var.environment
+  vpc_name       = var.vpc_name
+  dns_account_id = var.args.dns_account_id
 
   config = each.value
 }
@@ -77,6 +78,8 @@ module "cdn" {
   }
   application = var.args.application
   environment = var.environment
+
+  origin_verify_secret_id = one(values(module.alb)).origin_verify_secret_id
 
   config = each.value
 }
