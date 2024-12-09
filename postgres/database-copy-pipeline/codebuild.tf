@@ -24,10 +24,9 @@ resource "aws_kms_key" "codebuild_kms_key" {
 
 resource "aws_cloudwatch_log_group" "database_pipeline_codebuild" {
   # checkov:skip=CKV_AWS_338:Retains logs for 3 months instead of 1 year
-  # checkov:skip=CKV_AWS_158: To be reworked
+  # checkov:skip=CKV_AWS_158:Log groups encrypted using default encryption key instead of KMS CMK
   name              = "codebuild/${local.pipeline_name}/log-group"
   retention_in_days = 90
-  # kms_key_id        = aws_kms_key.codebuild_kms_key.arn
 }
 
 resource "aws_cloudwatch_log_stream" "database_pipeline_codebuild" {
@@ -78,7 +77,7 @@ resource "aws_codebuild_project" "database_pipeline_build" {
 resource "aws_codebuild_project" "database_pipeline_dump" {
   name           = "${local.pipeline_name}-dump"
   description    = "Dump the ${var.database_name} database from ${var.task.from}"
-  build_timeout  = 5
+  build_timeout  = 60
   service_role   = aws_iam_role.database_pipeline_codebuild.arn
   encryption_key = aws_kms_key.artifact_store_kms_key.arn
 
@@ -117,7 +116,7 @@ resource "aws_codebuild_project" "database_pipeline_dump" {
 resource "aws_codebuild_project" "database_pipeline_load" {
   name           = "${local.pipeline_name}-load"
   description    = "Load the ${var.database_name} database to ${var.task.to}"
-  build_timeout  = 5
+  build_timeout  = 60
   service_role   = aws_iam_role.database_pipeline_codebuild.arn
   encryption_key = aws_kms_key.artifact_store_kms_key.arn
 
