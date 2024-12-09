@@ -503,7 +503,7 @@ data "aws_iam_policy_document" "kms_key" {
         "kms:DeleteAlias"
       ]
       resources = [
-        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-${statement.value.name}-*-key"
+        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-${statement.value.name}-*",
       ]
     }
   }
@@ -746,14 +746,23 @@ data "aws_iam_policy_document" "ecs" {
   }
 
   statement {
-    sid = "AllowRegisterAndDeregister"
+    sid = "AllowRegister"
     actions = [
-      "ecs:DeregisterTaskDefinition",
       "ecs:RegisterTaskDefinition",
     ]
     resources = [
       "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*",
       "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/"
+    ]
+  }
+
+  statement {
+    sid = "AllowDeregister"
+    actions = [
+      "ecs:DeregisterTaskDefinition"
+    ]
+    resources = [
+      "*"
     ]
   }
 }

@@ -1,5 +1,3 @@
-# import os
-# import json
 import boto3
 import logging
 
@@ -9,9 +7,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 service_client = boto3.client('secretsmanager')
-
-AWSPENDING = "AWSPENDING"
-AWSCURRENT = "AWSCURRENT"
 
 
 def lambda_handler(event, context):
