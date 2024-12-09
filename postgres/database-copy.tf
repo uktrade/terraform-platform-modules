@@ -8,7 +8,6 @@ module "database-dump" {
   tasks         = local.data_dump_tasks
 }
 
-
 module "database-load" {
   count  = length(local.data_load_tasks)
   source = "./database-load"

@@ -67,7 +67,7 @@ resource "aws_codepipeline" "database_copy_pipeline" {
   }
 
   stage {
-    name = "Database-Dump"
+    name = "Database-Dump-${var.task.from}"
 
     action {
       name             = "Dump"
@@ -93,7 +93,7 @@ resource "aws_codepipeline" "database_copy_pipeline" {
   }
 
   stage {
-    name = "Database-Load"
+    name = "Database-Load-${var.task.to}"
 
     action {
       name             = "Load"
