@@ -155,6 +155,11 @@ resource "aws_cloudfront_distribution" "standard" {
     }
   }
 
+  lifecycle {
+    # Use `ignore_changes` to allow custom_header secret rotation without Terraform overwriting the value
+    ignore_changes = [origin]
+  }
+
   tags = local.tags
 }
 

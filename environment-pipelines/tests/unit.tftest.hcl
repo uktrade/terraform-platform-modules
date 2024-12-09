@@ -217,6 +217,34 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.lambda_policy_access
+  values = {
+    json = "{\"Sid\": \"LambdaPolicyAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.wafv2_read_access
+  values = {
+    json = "{\"Sid\": \"WAFv2ReadAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.secret_manager_read_access
+  values = {
+    json = "{\"Sid\": \"SecretManagerReadAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.origin_secret_rotation_role_access
+  values = {
+    json = "{\"Sid\": \"SecretRotationRolePolicy\"}"
+  }
+}
+
 variables {
   application   = "my-app"
   repository    = "my-repository"
