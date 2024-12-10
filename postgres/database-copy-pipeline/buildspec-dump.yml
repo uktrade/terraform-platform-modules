@@ -14,6 +14,10 @@ phases:
 
   build:
     commands:
+      - assumed_role=$(aws sts assume-role --role-arn "${DUMP_ROLE_ARN}" --role-session-name "database-copy-pipeline-${FROM_ENVIRONMENT}-${TO_ENVIRONMENT}")
+      - export AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $assumed_role | jq -r .Credentials.SessionToken)
       - platform-helper database dump --app ${APPLICATION} --database ${DATABASE_NAME} --from ${FROM_ENVIRONMENT} --filename "data_dump_${TO_ENVIRONMENT}"
 
   post_build:

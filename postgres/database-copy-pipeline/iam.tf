@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
 }
 
 resource "aws_iam_role_policy" "artifact_store_access_for_database_pipeline" {
-  name   = "${local.pipeline_name}-artifact-store-access-pipeline"
+  name   = "ArtifactStoreAccess"
   role   = aws_iam_role.database_pipeline_codepipeline.name
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
@@ -56,7 +56,7 @@ data "aws_iam_policy_document" "access_artifact_store" {
   statement {
     effect    = "Allow"
     actions   = ["codestar-connections:ListConnections"]
-    resources = ["arn:aws:codestar-connections:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+    resources = ["arn:aws:codestar-connections:${local.region_account}:*"]
   }
 
   statement {
@@ -103,13 +103,13 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
 }
 
 resource "aws_iam_role_policy" "artifact_store_access_for_codebuild" {
-  name   = "${local.pipeline_name}-artifact-store-access-codebuild"
+  name   = "ArtifactStoreAccess"
   role   = aws_iam_role.database_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
 
 resource "aws_iam_role_policy" "log_access_for_codebuild" {
-  name   = "${local.pipeline_name}-log-access"
+  name   = "LogAccess"
   role   = aws_iam_role.database_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.log_access_for_codebuild.json
 }
@@ -127,13 +127,13 @@ data "aws_iam_policy_document" "log_access_for_codebuild" {
     resources = [
       aws_cloudwatch_log_group.database_pipeline_codebuild.arn,
       "${aws_cloudwatch_log_group.database_pipeline_codebuild.arn}:*",
-      "arn:aws:logs:${data.aws_region.current.name}:${local.to_account}:log-group:*"
+      "arn:aws:logs:${local.region_account}:log-group:*"
     ]
   }
 }
 
 resource "aws_iam_role_policy" "ssm_read_access_for_codebuild" {
-  name   = "${local.pipeline_name}-ssm-access"
+  name   = "SSMAccess"
   role   = aws_iam_role.database_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.ssm_access.json
 }
@@ -146,7 +146,7 @@ data "aws_iam_policy_document" "ssm_access" {
       "ssm:GetParameters"
     ]
     resources = [
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/codebuild/slack_*"
+      "arn:aws:ssm:${local.region_account}:parameter/codebuild/slack_*"
     ]
   }
 
@@ -156,7 +156,7 @@ data "aws_iam_policy_document" "ssm_access" {
       "ssm:DescribeParameters"
     ]
     resources = [
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "arn:aws:ssm:${local.region_account}:*"
     ]
   }
 
@@ -172,15 +172,15 @@ data "aws_iam_policy_document" "ssm_access" {
       "ssm:ListTagsForResource"
     ]
     resources = [
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/${var.application}/*/secrets/*",
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}",
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/*"
+      "arn:aws:ssm:${local.region_account}:parameter/copilot/${var.application}/*/secrets/*",
+      "arn:aws:ssm:${local.region_account}:parameter/copilot/applications/${var.application}",
+      "arn:aws:ssm:${local.region_account}:parameter/copilot/applications/${var.application}/*"
     ]
   }
 }
 
 resource "aws_iam_role_policy" "iam_access_for_codebuild" {
-  name   = "${local.pipeline_name}-iam-access"
+  name   = "IAMAccess"
   role   = aws_iam_role.database_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.iam_access.json
 }
@@ -197,8 +197,8 @@ data "aws_iam_policy_document" "iam_access" {
   }
 }
 
-resource "aws_iam_role_policy" "database_copy_access_for_database_pipeline" {
-  name   = "${local.pipeline_name}-database-copy"
+resource "aws_iam_role_policy" "database_copy_access_for_codebuild" {
+  name   = "DatabaseCopy"
   role   = aws_iam_role.database_pipeline_codebuild.name
   policy = data.aws_iam_policy_document.database_copy.json
 }
@@ -211,8 +211,7 @@ data "aws_iam_policy_document" "database_copy" {
       "secretsmanager:GetSecretValue",
     ]
     resources = [
-      "arn:aws:secretsmanager:${data.aws_region.current.name}:${local.from_account}:secret:rds*",
-      "arn:aws:secretsmanager:${data.aws_region.current.name}:${local.to_account}:secret:rds*"
+      "arn:aws:secretsmanager:${local.region_account}:secret:rds*"
     ]
   }
 
@@ -223,8 +222,7 @@ data "aws_iam_policy_document" "database_copy" {
       "ecs:RunTask",
     ]
     resources = [
-      "arn:aws:ecs:${data.aws_region.current.name}:${local.from_account}:task-definition/*-dump:*",
-      "arn:aws:ecs:${data.aws_region.current.name}:${local.to_account}:task-definition/*-load:*",
+      "arn:aws:ecs:${local.region_account}:task-definition/*-load:*"
     ]
   }
 
@@ -235,8 +233,7 @@ data "aws_iam_policy_document" "database_copy" {
       "logs:StartLiveTail",
     ]
     resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${local.from_account}:log-group:/ecs/*-dump",
-      "arn:aws:logs:${data.aws_region.current.name}:${local.to_account}:log-group:/ecs/*-load"
+      "arn:aws:logs:${local.region_account}:log-group:/ecs/*-load"
     ]
   }
 
@@ -247,8 +244,7 @@ data "aws_iam_policy_document" "database_copy" {
       "iam:PassRole",
     ]
     resources = [
-      "arn:aws:iam::${local.from_account}:role/*-dump-exec",
-      "arn:aws:iam::${local.to_account}:role/*-load-exec",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-load-exec"
     ]
   }
 
@@ -259,8 +255,7 @@ data "aws_iam_policy_document" "database_copy" {
       "logs:DescribeLogGroups",
     ]
     resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${local.from_account}:log-group::log-stream:",
-      "arn:aws:logs:${data.aws_region.current.name}:${local.to_account}:log-group::log-stream:"
+      "arn:aws:logs:${local.region_account}:log-group::log-stream:"
     ]
   }
 
@@ -298,6 +293,25 @@ data "aws_iam_policy_document" "database_copy" {
     ]
     resources = [
       "*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "assume_dump_account_role_access_for_codebuild" {
+  name   = "AssumeDumpAccountRole"
+  role   = aws_iam_role.database_pipeline_codebuild.name
+  policy = data.aws_iam_policy_document.assume_dump_account_role.json
+}
+
+data "aws_iam_policy_document" "assume_dump_account_role" {
+  statement {
+    sid    = "AllowAssumeDumpAccountRole"
+    effect = "Allow"
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = [
+      local.dump_role_arn
     ]
   }
 }

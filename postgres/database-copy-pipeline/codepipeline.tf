@@ -86,6 +86,7 @@ resource "aws_codepipeline" "database_copy_pipeline" {
           { name : "DATABASE_NAME", value : var.database_name },
           { name : "FROM_ENVIRONMENT", value : var.task.from },
           { name : "TO_ENVIRONMENT", value : var.task.to },
+          { name : "DUMP_ROLE_ARN", value : local.dump_role_arn },
           { name : "SLACK_REF", value : "#{slack.SLACK_REF}" }
         ])
       }
