@@ -134,6 +134,13 @@ override_data {
   }
 }
 
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.assume_dump_account_role
+  values = {
+    json = "{\"Sid\": \"AllowAssumeDumpAccountRole\"}"
+  }
+}
+
 variables {
   application = "test-application"
   environment = "test-environment"
