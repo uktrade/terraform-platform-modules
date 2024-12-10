@@ -56,6 +56,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.assume_dump_account_role
+  values = {
+    json = "{\"Sid\": \"AllowAssumeDumpAccountRole\"}"
+  }
+}
+
 variables {
   application   = "test-app"
   environment   = "test-env"
@@ -230,7 +237,7 @@ run "test_pipeline" {
     error_message = "Should be: build_output"
   }
   assert {
-    condition     = aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    condition     = aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"DUMP_ROLE_ARN\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-prod-test-db-dump-task\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
@@ -527,8 +534,8 @@ run "test_iam" {
     error_message = "Should contain: codepipeline.amazonaws.com"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_database_pipeline.name == "test-db-prod-to-dev-copy-pipeline-artifact-store-access-pipeline"
-    error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-artifact-store-access-pipeline'"
+    condition     = aws_iam_role_policy.artifact_store_access_for_database_pipeline.name == "ArtifactStoreAccess"
+    error_message = "Should be: 'ArtifactStoreAccess'"
   }
   assert {
     condition     = aws_iam_role_policy.artifact_store_access_for_database_pipeline.role == "test-db-prod-to-dev-copy-pipeline-codepipeline"
@@ -565,16 +572,16 @@ run "test_iam" {
     error_message = "Should contain: codebuild.amazonaws.com"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild.name == "test-db-prod-to-dev-copy-pipeline-artifact-store-access-codebuild"
-    error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-artifact-store-access-codebuild'"
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild.name == "ArtifactStoreAccess"
+    error_message = "Should be: 'ArtifactStoreAccess'"
   }
   assert {
     condition     = aws_iam_role_policy.artifact_store_access_for_codebuild.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
     error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-codebuild'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild.name == "test-db-prod-to-dev-copy-pipeline-log-access"
-    error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-log-access'"
+    condition     = aws_iam_role_policy.log_access_for_codebuild.name == "LogAccess"
+    error_message = "Should be: 'LogAccess'"
   }
   assert {
     condition     = aws_iam_role_policy.log_access_for_codebuild.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
@@ -589,8 +596,8 @@ run "test_iam" {
     error_message = "Unexpected actions"
   }
   assert {
-    condition     = aws_iam_role_policy.ssm_read_access_for_codebuild.name == "test-db-prod-to-dev-copy-pipeline-ssm-access"
-    error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-ssm-access'"
+    condition     = aws_iam_role_policy.ssm_read_access_for_codebuild.name == "SSMAccess"
+    error_message = "Should be: 'SSMAccess'"
   }
   assert {
     condition     = aws_iam_role_policy.ssm_read_access_for_codebuild.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
@@ -649,8 +656,8 @@ run "test_iam" {
     error_message = "Unexpected resources"
   }
   assert {
-    condition     = aws_iam_role_policy.iam_access_for_codebuild.name == "test-db-prod-to-dev-copy-pipeline-iam-access"
-    error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-iam-access'"
+    condition     = aws_iam_role_policy.iam_access_for_codebuild.name == "IAMAccess"
+    error_message = "Should be: 'IAMAccess'"
   }
   assert {
     condition     = aws_iam_role_policy.iam_access_for_codebuild.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
@@ -671,11 +678,11 @@ run "test_iam" {
     error_message = "Unexpected resources"
   }
   assert {
-    condition     = aws_iam_role_policy.database_copy_access_for_database_pipeline.name == "test-db-prod-to-dev-copy-pipeline-database-copy"
-    error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-database-copy'"
+    condition     = aws_iam_role_policy.database_copy_access_for_codebuild.name == "DatabaseCopy"
+    error_message = "Should be: 'DatabaseCopy'"
   }
   assert {
-    condition     = aws_iam_role_policy.database_copy_access_for_database_pipeline.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
+    condition     = aws_iam_role_policy.database_copy_access_for_codebuild.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
     error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-codebuild'"
   }
   assert {
@@ -688,7 +695,6 @@ run "test_iam" {
   }
   assert {
     condition = data.aws_iam_policy_document.database_copy.statement[0].resources == toset([
-      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:rds*",
       "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:rds*"
     ])
     error_message = "Unexpected resources"
@@ -703,7 +709,6 @@ run "test_iam" {
   }
   assert {
     condition = data.aws_iam_policy_document.database_copy.statement[1].resources == toset([
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*-dump:*",
       "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*-load:*"
     ])
     error_message = "Unexpected resources"
@@ -718,7 +723,6 @@ run "test_iam" {
   }
   assert {
     condition = data.aws_iam_policy_document.database_copy.statement[2].resources == toset([
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/*-dump",
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/*-load"
     ])
     error_message = "Unexpected resources"
@@ -733,7 +737,6 @@ run "test_iam" {
   }
   assert {
     condition = data.aws_iam_policy_document.database_copy.statement[3].resources == toset([
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-dump-exec",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-load-exec"
     ])
     error_message = "Unexpected resources"
@@ -748,7 +751,6 @@ run "test_iam" {
   }
   assert {
     condition = data.aws_iam_policy_document.database_copy.statement[4].resources == toset([
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:",
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
     ])
     error_message = "Unexpected resources"
@@ -798,6 +800,28 @@ run "test_iam" {
     ])
     error_message = "Unexpected resources"
   }
+  assert {
+    condition     = aws_iam_role_policy.assume_dump_account_role_access_for_codebuild.name == "AssumeDumpAccountRole"
+    error_message = "Should be: 'AssumeDumpAccountRole'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.assume_dump_account_role_access_for_codebuild.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
+    error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-codebuild'"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.assume_dump_account_role.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.assume_dump_account_role.statement[0].actions == toset(["sts:AssumeRole"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.assume_dump_account_role.statement[0].resources == toset([
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-prod-test-db-dump-task"
+    ])
+    error_message = "Unexpected resources"
+  }
 }
 
 run "test_cross_account_iam" {
@@ -814,37 +838,12 @@ run "test_cross_account_iam" {
   }
 
   assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[0].resources == toset([
-      "arn:aws:secretsmanager:${data.aws_region.current.name}:123456789000:secret:rds*",
-      "arn:aws:secretsmanager:${data.aws_region.current.name}:000123456789:secret:rds*"
-    ])
-    error_message = "Unexpected resources"
+    condition     = aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"DUMP_ROLE_ARN\",\"value\":\"arn:aws:iam::123456789000:role/test-app-prod-test-db-dump-task\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    error_message = "Configuration Env Vars incorrect"
   }
   assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[1].resources == toset([
-      "arn:aws:ecs:${data.aws_region.current.name}:123456789000:task-definition/*-dump:*",
-      "arn:aws:ecs:${data.aws_region.current.name}:000123456789:task-definition/*-load:*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[2].resources == toset([
-      "arn:aws:logs:${data.aws_region.current.name}:123456789000:log-group:/ecs/*-dump",
-      "arn:aws:logs:${data.aws_region.current.name}:000123456789:log-group:/ecs/*-load"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[3].resources == toset([
-      "arn:aws:iam::123456789000:role/*-dump-exec",
-      "arn:aws:iam::000123456789:role/*-load-exec"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[4].resources == toset([
-      "arn:aws:logs:${data.aws_region.current.name}:123456789000:log-group::log-stream:",
-      "arn:aws:logs:${data.aws_region.current.name}:000123456789:log-group::log-stream:"
+    condition = data.aws_iam_policy_document.assume_dump_account_role.statement[0].resources == toset([
+      "arn:aws:iam::123456789000:role/test-app-prod-test-db-dump-task"
     ])
     error_message = "Unexpected resources"
   }
@@ -915,8 +914,8 @@ run "test_pipeline_schedule" {
     error_message = "Should contain: scheduler.amazonaws.com"
   }
   assert {
-    condition     = aws_iam_role_policy.database_pipeline_schedule[""].name == "test-db-prod-to-dev-copy-pipeline-scheduler-access"
-    error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-scheduler-access'"
+    condition     = aws_iam_role_policy.database_pipeline_schedule[""].name == "SchedulerAccess"
+    error_message = "Should be: 'SchedulerAccess'"
   }
   assert {
     condition     = aws_iam_role_policy.database_pipeline_schedule[""].role == "test-db-prod-to-dev-copy-pipeline-scheduler"
