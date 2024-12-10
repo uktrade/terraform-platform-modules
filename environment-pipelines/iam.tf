@@ -41,8 +41,11 @@ data "aws_iam_policy_document" "access_artifact_store" {
   }
 
   statement {
-    effect    = "Allow"
-    actions   = ["codestar-connections:ListConnections"]
+    effect = "Allow"
+    actions = [
+      "codestar-connections:ListConnections",
+      "codestar-connections:ListTagsForResource"
+    ]
     resources = ["arn:aws:codestar-connections:eu-west-2:${data.aws_caller_identity.current.account_id}:*"]
   }
 
@@ -468,7 +471,9 @@ data "aws_iam_policy_document" "logs" {
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*",
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/rds/*",
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*"
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/*"
     ]
   }
 }
@@ -493,17 +498,14 @@ data "aws_iam_policy_document" "kms_key" {
     ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "kms:CreateAlias",
-        "kms:DeleteAlias"
-      ]
-      resources = [
-        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-${statement.value.name}-*",
-      ]
-    }
+  statement {
+    actions = [
+      "kms:CreateAlias",
+      "kms:DeleteAlias"
+    ]
+    resources = [
+      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-*"
+    ]
   }
 }
 
@@ -898,6 +900,9 @@ data "aws_iam_policy_document" "iam" {
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-CFNExecutionRole",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-*-exec",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-*-task",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-*"
       ]
     }
   }
