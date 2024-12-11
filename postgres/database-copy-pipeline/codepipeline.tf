@@ -34,7 +34,7 @@ resource "aws_codepipeline" "database_copy_pipeline" {
       configuration = {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
         FullRepositoryId = "uktrade/${var.application}-deploy"
-        BranchName       = "main"
+        BranchName       = "DBTP-1498-database-copy-pipeline"
         DetectChanges    = false
       }
     }
