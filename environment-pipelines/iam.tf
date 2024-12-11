@@ -475,7 +475,6 @@ data "aws_iam_policy_document" "logs" {
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*",
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/rds/*",
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*",
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*",
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/*"
     ]
   }
@@ -576,9 +575,7 @@ data "aws_iam_policy_document" "postgres" {
     ]
     resources = [
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-adminrole",
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-codepipeline",
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-codebuild",
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-scheduler"
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-*"
     ]
   }
 
