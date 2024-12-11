@@ -1,0 +1,30 @@
+version: 0.2
+
+env:
+  parameter-store:
+    SLACK_CHANNEL_ID: /codebuild/slack_test_pipeline_channel
+#    SLACK_CHANNEL_ID: /codebuild/slack_oauth_channel
+    SLACK_TOKEN: /codebuild/slack_oauth_token
+
+phases:
+  install:
+    commands:
+      - export PATH="${CODEBUILD_SRC_DIR}/build-tools/bin:$PATH"
+      - export PYTHONPATH="${CODEBUILD_SRC_DIR}/build-tools"
+
+  build:
+    commands:
+      - platform-helper database load --app ${APPLICATION} --database ${DATABASE_NAME} --to ${TO_ENVIRONMENT} --filename "data_dump_${TO_ENVIRONMENT}" --auto-approve
+
+  post_build:
+    commands:
+      - export BUILD_ID="$CODEBUILD_BUILD_ID"
+      - |
+        if [ "${CODEBUILD_BUILD_SUCCEEDING}" == "1" ]; then
+          MESSAGE="Database load complete for ${DATABASE_NAME} in environment ${TO_ENVIRONMENT}."
+          ADDITIONAL_OPTIONS=""
+        else
+          MESSAGE=":alert: Database load FAILED for ${DATABASE_NAME} in environment ${TO_ENVIRONMENT}."
+          ADDITIONAL_OPTIONS="--send-to-main-channel true"
+        fi
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}" ${ADDITIONAL_OPTIONS}

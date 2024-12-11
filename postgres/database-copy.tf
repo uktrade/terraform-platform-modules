@@ -8,7 +8,6 @@ module "database-dump" {
   tasks         = local.data_dump_tasks
 }
 
-
 module "database-load" {
   count  = length(local.data_load_tasks)
   source = "./database-load"
@@ -17,4 +16,14 @@ module "database-load" {
   environment   = var.environment
   database_name = var.name
   task          = local.data_load_tasks[count.index]
+}
+
+module "database-copy-pipeline" {
+  count  = length(local.pipeline_tasks)
+  source = "./database-copy-pipeline"
+
+  application   = var.application
+  environment   = var.environment
+  database_name = var.name
+  task          = local.pipeline_tasks[count.index]
 }

@@ -26,6 +26,16 @@ variable "config" {
     instance              = optional(string)
     storage_type          = optional(string)
     backup_retention_days = optional(number)
-    database_copy         = optional(any)
+    database_copy = optional(list(
+      object({
+        from         = string
+        to           = string
+        from_account = optional(string)
+        to_account   = optional(string)
+        pipeline = optional(object({
+          schedule = optional(string)
+        }))
+      })
+    ))
   })
 }
