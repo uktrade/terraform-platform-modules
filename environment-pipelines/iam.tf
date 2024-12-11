@@ -44,7 +44,8 @@ data "aws_iam_policy_document" "access_artifact_store" {
     effect = "Allow"
     actions = [
       "codestar-connections:ListConnections",
-      "codestar-connections:ListTagsForResource"
+      "codestar-connections:ListTagsForResource",
+      "codestar-connections:PassConnection"
     ]
     resources = ["arn:aws:codestar-connections:eu-west-2:${data.aws_caller_identity.current.account_id}:*"]
   }
@@ -466,7 +467,9 @@ data "aws_iam_policy_document" "logs" {
       "logs:DescribeSubscriptionFilters",
       "logs:DeleteSubscriptionFilter",
       "logs:TagResource",
-      "logs:AssociateKmsKey"
+      "logs:AssociateKmsKey",
+      "logs:DescribeLogStreams",
+      "logs:DeleteLogStream"
     ]
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*",
@@ -572,9 +575,13 @@ data "aws_iam_policy_document" "postgres" {
       "iam:PassRole"
     ]
     resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-adminrole"
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-adminrole",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-codepipeline",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-codebuild",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-scheduler"
     ]
   }
+
   dynamic "statement" {
     for_each = local.environment_config
     content {
@@ -943,6 +950,48 @@ data "aws_iam_policy_document" "codepipeline" {
     ]
     resources = [
       "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.application}-${var.pipeline_name}-environment-pipeline"
+    ]
+  }
+
+  statement {
+    actions = [
+      "codepipeline:CreatePipeline",
+      "codepipeline:DeletePipeline",
+      "codepipeline:GetPipeline",
+      "codepipeline:UpdatePipeline",
+      "codepipeline:ListTagsForResource",
+      "codepipeline:TagResource"
+    ]
+    resources = [
+      "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*-copy-pipeline",
+      "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*-copy-pipeline/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "codebuild:CreateProject",
+      "codebuild:BatchGetProjects",
+      "codebuild:DeleteProject",
+      "codebuild:UpdateProject"
+    ]
+    resources = [
+      "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:project/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "scheduler:CreateSchedule",
+      "scheduler:UpdateSchedule",
+      "scheduler:DeleteSchedule",
+      "scheduler:TagResource",
+      "scheduler:GetSchedule",
+      "scheduler:ListSchedules",
+      "scheduler:ListTagsForResource"
+    ]
+    resources = [
+      "arn:aws:scheduler:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:schedule/*"
     ]
   }
 }
