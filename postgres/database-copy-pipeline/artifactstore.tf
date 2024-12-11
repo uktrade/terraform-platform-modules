@@ -3,7 +3,7 @@ resource "aws_s3_bucket" "artifact_store" {
   # checkov:skip=CKV2_AWS_62: It's just a pipeline artifacts bucket, event notifications are not needed.
   # checkov:skip=CKV_AWS_21: It's just a pipeline artifacts bucket, versioning is not needed.
   # checkov:skip=CKV_AWS_18: It's just a pipeline artifacts bucket, access logging is not needed.
-  bucket = "${local.pipeline_name}-artifact-store"
+  bucket = "${substr(local.pipeline_name, 0 , 48)}-artifact-store"
 
   tags = local.tags
 }
