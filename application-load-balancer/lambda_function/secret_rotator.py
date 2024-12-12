@@ -50,7 +50,7 @@ class SecretRotator:
                             aws_secret_access_key=credentials["SecretAccessKey"],
                             aws_session_token=credentials["SessionToken"])
 
-    def get_distro_list(self) -> List[Dict[str, Any]]:
+    def get_deployed_distributions(self) -> List[Dict[str, Any]]:
         client = self.get_cloudfront_client()
         paginator = client.get_paginator("list_distributions")
         matching_distributions = []
@@ -471,7 +471,7 @@ class SecretRotator:
             token (string): The ClientRequestToken associated with the secret version
         """
         # Confirm CloudFront distributions are in Deployed state
-        matching_distributions = self.get_distro_list()
+        matching_distributions = self.get_deployed_distributions()
 
         if not matching_distributions:
             self.logger.error("No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs")
@@ -560,7 +560,7 @@ class SecretRotator:
 
             secrets = [pendingsecret['HEADERVALUE'], currentsecret['HEADERVALUE']]
 
-            distro_list = self.get_distro_list()
+            distro_list = self.get_deployed_distributions()
             for distro in distro_list:
                 self.logger.info(f"Testing distro: {distro['Id']}")
                 try:

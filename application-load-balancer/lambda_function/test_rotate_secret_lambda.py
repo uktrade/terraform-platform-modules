@@ -120,7 +120,7 @@ class TestDistributionDiscovery:
             mock_paginator.paginate.return_value = [mock_distributions]
             mock_session.return_value = mock_client
 
-            result = rotator.get_distro_list()
+            result = rotator.get_deployed_distributions()
             
             assert result == expected_result, f"Expected: {expected_result}, but got: {result}"
 
@@ -497,7 +497,7 @@ class TestRotationProcess:
             mock_current_secret
         ]
 
-        with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
+        with patch.object(rotator, 'get_deployed_distributions') as mock_get_deployed_distributions, \
              patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
              patch.object(rotator, 'update_waf_acl') as mock_update_waf_acl, \
              patch.object(rotator, 'update_cf_distro') as mock_update_cf_distro, \
@@ -506,7 +506,7 @@ class TestRotationProcess:
             
             mock_client = MagicMock()
             mock_session.return_value = mock_client
-            mock_get_distro_list.return_value = mock_distributions
+            mock_get_deployed_distributions.return_value = mock_distributions
             mock_get_cf_distro.return_value = mock_get_distro
 
             rotator.set_secret(mock_service_client, "test-arn", "test-token")
@@ -554,10 +554,10 @@ class TestRotationProcess:
         ]
         mock_service_client.describe_secret.return_value = mock_metadata
 
-        with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
+        with patch.object(rotator, 'get_deployed_distributions') as mock_get_deployed_distributions, \
             patch.object(rotator, 'run_test_origin_access') as mock_run_test_origin_access:
             
-            mock_get_distro_list.return_value = mock_distributions
+            mock_get_deployed_distributions.return_value = mock_distributions
             mock_run_test_origin_access.return_value = True
 
             rotator.run_test_secret(mock_service_client, "test-arn", "test_token")
@@ -665,11 +665,11 @@ class TestErrorHandling:
         ]
         
         mock_service_client = MagicMock()
-        with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
+        with patch.object(rotator, 'get_deployed_distributions') as mock_get_deployed_distributions, \
              patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
              patch.object(rotator, 'update_waf_acl') as mock_update_waf_acl:
 
-            mock_get_distro_list.return_value = mock_distributions
+            mock_get_deployed_distributions.return_value = mock_distributions
             mock_get_cf_distro.side_effect = [
                 {"Distribution": {"Status": "Deployed"}},
                 {"Distribution": {"Status": "InProgress"}}
@@ -701,12 +701,12 @@ class TestErrorHandling:
             mock_current_secret,  # For AWSCURRENT
         ]
 
-        with patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
+        with patch.object(rotator, 'get_deployed_distributions') as mock_get_deployed_distributions, \
             patch.object(rotator, 'get_cf_distro') as mock_get_cf_distro, \
             patch.object(rotator, 'update_cf_distro') as mock_update_cf_distro, \
             patch.object(rotator, 'process_cf_distributions_and_WAF_rules') as mock_process:
 
-            mock_get_distro_list.return_value = mock_distributions
+            mock_get_deployed_distributions.return_value = mock_distributions
             mock_get_cf_distro.return_value = mock_get_distro
             
             mock_process.side_effect = ClientError( 
@@ -865,7 +865,7 @@ class TestLambdaHandler:
         with patch('boto3.client') as mock_boto3_client, \
             patch('rotate_secret_lambda.boto3.client') as mock_lambda_boto, \
             patch('secret_rotator.boto3.client') as mock_secret_rotator_boto, \
-            patch.object(rotator, 'get_distro_list') as mock_get_distro_list, \
+            patch.object(rotator, 'get_deployed_distributions') as mock_get_deployed_distributions, \
             patch('rotate_secret_lambda.SecretRotator') as MockSecretRotator:
             
             # Create a specific mock client to use
@@ -875,8 +875,8 @@ class TestLambdaHandler:
             mock_service_client = mock_boto3_client.return_value
             mock_rotator_instance = MockSecretRotator.return_value
             
-            # mocks get_distro_list and calls made in get_secrets() method
-            mock_get_distro_list.return_value = mock_distributions
+            # mocks get_deployed_distributions and calls made in get_secrets() method
+            mock_get_deployed_distributions.return_value = mock_distributions
             mock_service_client.describe_secret.return_value = mock_metadata
             mock_service_client.get_secret_value.side_effect = [
                 mock_pending_secret,
