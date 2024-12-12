@@ -398,16 +398,17 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
       SECRETID = aws_secretsmanager_secret.origin-verify-secret.arn
       WAFACLID = aws_wafv2_web_acl.waf-acl.id
       # todo: why are we splitting on |, should it just be aws_wafv2_web_acl.waf-acl.name?
-      WAFACLNAME    = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
-      WAFRULEPRI    = "0"
-      DISTROIDLIST  = local.domain_list
-      HEADERNAME    = "x-origin-verify"
-      APPLICATION   = var.application
-      ENVIRONMENT   = var.environment
-      ROLEARN       = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
-      AWS_ACCOUNT   = data.aws_caller_identity.current.account_id
-      SLACK_TOKEN   = data.aws_ssm_parameter.slack_token.value
-      SLACK_CHANNEL = local.config_with_defaults.slack_alert_channel_alb_secret_rotation
+      WAFACLNAME         = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
+      WAFRULEPRI         = "0"
+      DISTROIDLIST       = local.domain_list
+      HEADERNAME         = "x-origin-verify"
+      APPLICATION        = var.application
+      ENVIRONMENT        = var.environment
+      ROLEARN            = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+      AWS_ACCOUNT        = data.aws_caller_identity.current.account_id
+      SLACK_TOKEN        = data.aws_ssm_parameter.slack_token.value
+      SLACK_CHANNEL      = local.config_with_defaults.slack_alert_channel_alb_secret_rotation
+      WAF_SLEEP_DURATION = "75"
     }
   }
 
