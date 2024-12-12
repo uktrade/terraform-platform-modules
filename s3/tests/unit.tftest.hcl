@@ -1011,6 +1011,25 @@ run "aws_ssm_parameter_cloudfront_alias_unit_test" {
   }
 }
 
+run "aws_serve_static_param_name_override_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name"             = "test",
+      "serve_static_content"    = true,
+      "type"                    = "string",
+      "objects"                 = [],
+      "serve_static_param_name" = "ALTERNATIVE_STATIC_S3_ENDPOINT"
+    }
+  }
+
+  assert {
+    condition     = aws_ssm_parameter.cloudfront_alias[0].name == "/copilot/s3-test-application/dev/secrets/ALTERNATIVE_STATIC_S3_ENDPOINT"
+    error_message = "Invalid name for aws_ssm_parameter cloudfront alias."
+  }
+}
+
 run "aws_ssm_parameter_cloudfront_alias_prod_domain_name_unit_test" {
   command = plan
 

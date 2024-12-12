@@ -2,6 +2,7 @@ data "aws_caller_identity" "current" {}
 
 locals {
   serve_static_domain = var.environment == "prod" ? "${var.config.bucket_name}.${var.application}.prod.uktrade.digital" : "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+  ssm_param_name      = coalesce(var.config.serve_static_param_name, "STATIC_S3_ENDPOINT")
 }
 
 resource "aws_s3_bucket" "this" {
@@ -427,7 +428,7 @@ resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
         Resource = aws_kms_key.s3-ssm-kms-key[0].arn
         Condition = {
           StringEquals = {
-            "kms:EncryptionContext:aws:ssm:parameterName" = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
+            "kms:EncryptionContext:aws:ssm:parameterName" = "/copilot/${var.application}/${var.environment}/secrets/${local.ssm_param_name}"
           }
         }
         Sid = "Enable SSM Permissions"
@@ -449,7 +450,7 @@ resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
 resource "aws_ssm_parameter" "cloudfront_alias" {
   count = var.config.serve_static_content ? 1 : 0
 
-  name   = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
+  name   = "/copilot/${var.application}/${var.environment}/secrets/${local.ssm_param_name}"
   type   = "SecureString"
   value  = local.serve_static_domain
   key_id = aws_kms_key.s3-ssm-kms-key[0].arn
