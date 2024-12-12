@@ -442,7 +442,6 @@ run "aws_s3_bucket_external_role_access_invalid_cyber_sign_off" {
   expect_failures = [var.config.external_role_access.cyber_sign_off_by]
 }
 
-# TODO assert on the condtion stringLike "arn:aws:iam::${var.config.cross_environment_service_access.test-access.account}:role/${statement.value.application}-${statement.value.environment}-${statement.value.service}-TaskRole-*"
 run "aws_s3_bucket_cross_environment_service_access_read_write_unit_test" {
   command = plan
 
@@ -467,6 +466,22 @@ run "aws_s3_bucket_cross_environment_service_access_read_write_unit_test" {
   assert {
     condition     = data.aws_iam_policy_document.bucket-policy.statement[1].effect == "Allow"
     error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition     = length([for item in data.aws_iam_policy_document.bucket-policy.statement[1].condition : item if item.test == "StringLike"]) == 1
+    error_message = "condition should have a test: StringLike attribute"
+  }
+
+  assert {
+    condition     = length([for item in data.aws_iam_policy_document.bucket-policy.statement[1].condition : item if item.variable == "aws:PrincipalArn"]) == 1
+    error_message = "condition should have a variable: aws:PrincipalArn attribute"
+  }
+
+  assert {
+    condition = length([for item in data.aws_iam_policy_document.bucket-policy.statement[1].condition :
+    item if item.values == tolist(["arn:aws:iam::123456789012:role/app-test-service-TaskRole-*"])]) == 1
+    error_message = "condition should have a values: [bucket arn] attribute"
   }
 
   assert {
