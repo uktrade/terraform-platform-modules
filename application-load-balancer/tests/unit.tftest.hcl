@@ -454,17 +454,6 @@ run "waf_and_rotate_lambda" {
     error_message = "Invalid timeout for aws_lambda_function.origin-secret-rotate-function"
   }
 
-  # Cannot assert against the arn in a plan. Requires an apply to evaluate.
-  # assert {
-  #   condition     = aws_lambda_function.origin-secret-rotate-function.role == aws_iam_role.origin-secret-rotate-execution-role.arn
-  #   error_message = "Invalid role for aws_lambda_function.origin-secret-rotate-function"
-  # }
-
-  # Cannot assert against the arn in a plan. Requires an apply to evaluate.
-  # assert {
-  #   condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.WAFACLID == aws_wafv2_web_acl.waf-acl.id
-  #   error_message = "Invalid WAFACLID environment variable for aws_lambda_function.origin-secret-rotate-function"
-  # }
 
   assert {
     condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.WAFACLNAME == split("|", aws_wafv2_web_acl.waf-acl.name)[0]
@@ -543,31 +532,11 @@ run "waf_and_rotate_lambda" {
   }
 
   # Cannot assert against the arn in a plan. Requires an apply to evaluate.
-  # assert {
-  #   condition     = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule.secret_id == aws_secretsmanager_secret.origin-verify-secret.id
-  #   error_message = "Invalid secret_id for aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule"
-  # }
 
-  # Cannot assert against the arn in a plan. Requires an apply to evaluate.
-  # assert {
-  #   condition     = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule.rotation_lambda_arn == aws_lambda_function.origin-secret-rotate-function.arn
-  #   error_message = "Invalid rotation_lambda_arn for aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule"
-  # }
 
   assert {
     condition     = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule.rotation_rules[0].automatically_after_days == 7
     error_message = "Invalid rotation_rules.automatically_after_days for aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule"
   }
 
-  # Cannot assert against the arn in a plan. Requires an apply to evaluate.
-  # assert {
-  #   condition     = aws_wafv2_web_acl_association.waf-alb-association.resource_arn == aws_lb.this.arn
-  #   error_message = "Invalid resource_arn for aws_wafv2_web_acl_association.waf-alb-association"
-  # }
-
-  # Cannot assert against the arn in a plan. Requires an apply to evaluate.
-  # assert {
-  #   condition     = aws_wafv2_web_acl_association.waf-alb-association.web_acl_arn == aws_wafv2_web_acl.waf-acl.arn
-  #   error_message = "Invalid web_acl_arn for aws_wafv2_web_acl_association.waf-alb-association"
-  # }
 }
