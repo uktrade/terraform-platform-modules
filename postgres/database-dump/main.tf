@@ -1,4 +1,5 @@
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 data "aws_iam_policy_document" "allow_task_creation" {
   statement {
@@ -22,8 +23,8 @@ data "aws_iam_policy_document" "allow_task_creation" {
       "logs:PutLogEvents"
     ]
     resources = [
-      "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${local.task_name}",
-      "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/ecs/${local.task_name}:log-stream:*",
+      "arn:aws:logs:${local.region_account}:log-group:/ecs/${local.task_name}",
+      "arn:aws:logs:${local.region_account}:log-group:/ecs/${local.task_name}:log-stream:*",
     ]
   }
 }
@@ -41,6 +42,21 @@ data "aws_iam_policy_document" "assume_ecs_task_role" {
 
     actions = ["sts:AssumeRole"]
   }
+
+  dynamic "statement" {
+    for_each = local.pipeline_tasks
+    content {
+      sid    = "AllowPipelineAssumeRole"
+      effect = "Allow"
+
+      principals {
+        type        = "AWS"
+        identifiers = ["arn:aws:iam::${coalesce(statement.value.to_account, data.aws_caller_identity.current.account_id)}:role/${var.database_name}-${statement.value.from}-to-${statement.value.to}-copy-pipeline-codebuild"]
+      }
+
+      actions = ["sts:AssumeRole"]
+    }
+  }
 }
 
 resource "aws_iam_role" "data_dump_task_execution_role" {
@@ -55,7 +71,6 @@ resource "aws_iam_role_policy" "allow_task_creation" {
   role   = aws_iam_role.data_dump_task_execution_role.name
   policy = data.aws_iam_policy_document.allow_task_creation.json
 }
-
 
 data "aws_iam_policy_document" "data_dump" {
   policy_id = "data_dump"
@@ -105,6 +120,132 @@ resource "aws_iam_role_policy" "allow_data_dump" {
   name   = "AllowDataDump"
   role   = aws_iam_role.data_dump.name
   policy = data.aws_iam_policy_document.data_dump.json
+}
+
+resource "aws_iam_role_policy" "allow_pipeline_access" {
+  for_each = toset(length(local.pipeline_tasks) > 0 ? [""] : [])
+  name     = "AllowPipelineAccess"
+  role     = aws_iam_role.data_dump.name
+  policy   = data.aws_iam_policy_document.pipeline_access.json
+}
+
+data "aws_iam_policy_document" "pipeline_access" {
+  policy_id = "pipeline_access"
+  statement {
+    sid    = "AllowListAccountAliases"
+    effect = "Allow"
+    actions = [
+      "iam:ListAccountAliases",
+    ]
+    resources = [
+      "*",
+    ]
+  }
+
+  statement {
+    sid    = "AllowGetCopilotMetaData"
+    effect = "Allow"
+    actions = [
+      "ssm:GetParametersByPath",
+      "ssm:GetParameters",
+      "ssm:GetParameter"
+    ]
+    resources = [
+      "arn:aws:ssm:${local.region_account}:parameter/copilot/*",
+    ]
+  }
+
+  statement {
+    sid    = "AllowReadOnRDSSecrets"
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue",
+    ]
+    resources = [
+      "arn:aws:secretsmanager:${local.region_account}:secret:rds*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowRunningDumpTask"
+    effect = "Allow"
+    actions = [
+      "ecs:RunTask",
+    ]
+    resources = [
+      "arn:aws:ecs:${local.region_account}:task-definition/*-dump:*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowLogTrail"
+    effect = "Allow"
+    actions = [
+      "logs:StartLiveTail",
+    ]
+    resources = [
+      "arn:aws:logs:${local.region_account}:log-group:/ecs/*-dump"
+    ]
+  }
+
+  statement {
+    sid    = "AllowPassRoleToTaskExec"
+    effect = "Allow"
+    actions = [
+      "iam:PassRole",
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-dump-exec"
+    ]
+  }
+
+  statement {
+    sid    = "AllowDescribeLogs"
+    effect = "Allow"
+    actions = [
+      "logs:DescribeLogGroups",
+    ]
+    resources = [
+      "arn:aws:logs:${local.region_account}:log-group::log-stream:"
+    ]
+  }
+
+  statement {
+    sid = "AllowRedisListVersions"
+    actions = [
+      "elasticache:DescribeCacheEngineVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    sid = "AllowOpensearchListVersions"
+    actions = [
+      "es:ListVersions",
+      "es:ListElasticsearchVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowDescribeVPCsAndSubnets"
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeRouteTables",
+      "ec2:DescribeSecurityGroups"
+    ]
+    resources = [
+      "*"
+    ]
+  }
 }
 
 resource "aws_ecs_task_definition" "service" {
@@ -163,7 +304,6 @@ resource "aws_ecs_task_definition" "service" {
   }
 }
 
-
 resource "aws_s3_bucket" "data_dump_bucket" {
   # checkov:skip=CKV_AWS_144: Cross Region Replication not Required
   # checkov:skip=CKV2_AWS_62: Requires wider discussion around log/event ingestion before implementing. To be picked up on conclusion of DBTP-974
@@ -182,22 +322,40 @@ data "aws_iam_policy_document" "data_dump_bucket_policy" {
       type        = "*"
       identifiers = ["*"]
     }
-
     actions = [
       "s3:*",
     ]
-
     effect = "Deny"
-
     condition {
       test     = "Bool"
       variable = "aws:SecureTransport"
-
       values = [
         "false",
       ]
     }
+    resources = [
+      aws_s3_bucket.data_dump_bucket.arn,
+      "${aws_s3_bucket.data_dump_bucket.arn}/*",
+    ]
+  }
 
+  statement {
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [
+        for el in var.tasks :
+        "arn:aws:iam::${coalesce(el.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${el.to}-${var.database_name}-load-task"
+      ]
+    }
+    actions = [
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging",
+      "s3:DeleteObject"
+    ]
     resources = [
       aws_s3_bucket.data_dump_bucket.arn,
       "${aws_s3_bucket.data_dump_bucket.arn}/*",
@@ -216,13 +374,17 @@ resource "aws_kms_key" "data_dump_kms_key" {
   tags        = local.tags
 
   policy = jsonencode({
-    Id = "key-default-1"
     Statement = [
       {
         "Sid" : "Enable IAM User Permissions",
         "Effect" : "Allow",
         "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" : flatten([
+            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+            [for el in var.tasks :
+              "arn:aws:iam::${coalesce(el.to_account, data.aws_caller_identity.current.account_id)}:role/${var.application}-${el.to}-${var.database_name}-load-task"
+            ]
+          ])
         },
         "Action" : "kms:*",
         "Resource" : "*"

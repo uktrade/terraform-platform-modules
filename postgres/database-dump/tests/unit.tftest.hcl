@@ -2,6 +2,12 @@ variables {
   application   = "test-app"
   environment   = "test-env"
   database_name = "test-db"
+  tasks = [
+    {
+      from : "prod"
+      to : "dev"
+    }
+  ]
 }
 
 mock_provider "aws" {}
@@ -17,6 +23,13 @@ override_data {
   target = data.aws_iam_policy_document.allow_task_creation
   values = {
     json = "{\"Sid\": \"AllowPullFromEcr\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.pipeline_access
+  values = {
+    json = "{\"Sid\": \"AllowPipelineAccess\"}"
   }
 }
 
@@ -68,8 +81,12 @@ run "data_dump_unit_test" {
       for el in data.aws_iam_policy_document.assume_ecs_task_role.statement[0].principals :
       true if el.type == "Service" && [
         for identifier in el.identifiers : true if identifier == "ecs-tasks.amazonaws.com"
-      ][0] == true
-    ][0] == true
+        ][
+        0
+      ] == true
+      ][
+      0
+    ] == true
     error_message = "Principal identifier should be: 'ecs-tasks.amazonaws.com'"
   }
 
@@ -142,7 +159,7 @@ run "data_dump_unit_test" {
 
   assert {
     condition     = contains(data.aws_iam_policy_document.data_dump.statement[1].actions, "kms:Decrypt")
-    error_message = "Permission not found: kms:Encrypt"
+    error_message = "Permission not found: kms:Decrypt"
   }
 
   assert {
@@ -262,13 +279,37 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = [for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[0].condition : true if(el.variable == "aws:SecureTransport" && contains(el.values, "false"))] == [true]
+    condition = [
+      for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[0].condition : true
+      if(el.variable == "aws:SecureTransport" && contains(el.values, "false"))
+    ] == [true]
     error_message = "Should be denied if not aws:SecureTransport"
   }
 
-  # aws_s3_bucket_policy.data_dump_bucket_policy.policy cannot be tested with plan
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].principals : el.type][0] == "AWS"
+    error_message = "Should be: AWS"
+  }
 
-  # aws_kms_key.data_dump_kms_key policy cannot be tested with plan
+  assert {
+    condition     = flatten([for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-dev-test-db-load-task"]
+    error_message = "Bucket policy principals incorrect"
+  }
+
+  assert {
+    condition = data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].actions == toset(["s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging",
+    "s3:DeleteObject"])
+    error_message = "Unexpected actions"
+  }
+
+  assert {
+    condition     = strcontains(aws_kms_key.data_dump_kms_key.policy, "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root") && !strcontains(aws_kms_key.data_dump_kms_key.policy, "arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task")
+    error_message = "Unexpected KMS key policy principal"
+  }
 
   assert {
     condition     = aws_kms_alias.data_dump_kms_alias.name == "alias/test-app-test-env-test-db-dump"
@@ -281,7 +322,10 @@ run "data_dump_unit_test" {
   }
 
   assert {
-    condition     = [for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule : el.apply_server_side_encryption_by_default[0].sse_algorithm] == ["aws:kms"]
+    condition = [
+      for el in aws_s3_bucket_server_side_encryption_configuration.encryption-config.rule :
+      el.apply_server_side_encryption_by_default[0].sse_algorithm
+    ] == ["aws:kms"]
     error_message = "Server side encryption algorithm should be: aws:kms"
   }
 
@@ -293,5 +337,232 @@ run "data_dump_unit_test" {
       aws_s3_bucket_public_access_block.public_access_block.restrict_public_buckets == true
     )
     error_message = "Public access block has expected conditions"
+  }
+}
+
+run "cross_account_data_dump_unit_test" {
+  command = plan
+
+  variables {
+    tasks = [
+      {
+        from : "prod"
+        from_account : "123456789000"
+        to : "dev"
+        to_account : "000123456789"
+      }
+    ]
+  }
+
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].principals : el.type][0] == "AWS"
+    error_message = "Should be: AWS"
+  }
+  assert {
+    condition     = flatten([for el in data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task"]
+    error_message = "Bucket policy principals incorrect"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.data_dump_bucket_policy.statement[1].actions == toset(["s3:ListBucket",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionTagging",
+    "s3:DeleteObject"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = strcontains(aws_kms_key.data_dump_kms_key.policy, "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root") && strcontains(aws_kms_key.data_dump_kms_key.policy, "arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task")
+    error_message = "Unexpected KMS key policy principal"
+  }
+}
+
+run "pipeline_unit_test" {
+  command = plan
+
+  variables {
+    tasks = [
+      {
+        from : "prod"
+        from_account : "123456789000"
+        to : "dev"
+        to_account : "000123456789"
+        pipeline : {}
+      }
+    ]
+  }
+
+  assert {
+    condition     = length(local.pipeline_tasks) == 1
+    error_message = "There should be 1 pipeline task"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.assume_ecs_task_role.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_ecs_task_role.statement[1].actions) == "sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_ecs_task_role.statement[1].principals).type == "AWS"
+    error_message = "Should be: AWS"
+  }
+  assert {
+    condition     = contains(one(data.aws_iam_policy_document.assume_ecs_task_role.statement[1].principals).identifiers, "arn:aws:iam::000123456789:role/test-db-prod-to-dev-copy-pipeline-codebuild")
+    error_message = "Should contain: scheduler.amazonaws.com"
+  }
+  assert {
+    condition     = aws_iam_role_policy.allow_pipeline_access[""].name == "AllowPipelineAccess"
+    error_message = "Should be: 'AllowPipelineAccess'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.allow_pipeline_access[""].role == "test-app-test-env-test-db-dump-task"
+    error_message = "Should be: 'test-app-test-env-test-db-dump-task'"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[0].actions == toset(["iam:ListAccountAliases"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[0].resources == toset([
+      "*"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[1].actions == toset(["ssm:GetParametersByPath",
+      "ssm:GetParameters",
+    "ssm:GetParameter"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[1].resources == toset([
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/*"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[2].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[2].actions == toset(["secretsmanager:GetSecretValue"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[2].resources == toset([
+      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:rds*"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[3].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[3].actions == toset(["ecs:RunTask"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[3].resources == toset([
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*-dump:*"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[4].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[4].actions == toset(["logs:StartLiveTail"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[4].resources == toset([
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/*-dump"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[5].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[5].actions == toset(["iam:PassRole"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[5].resources == toset([
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-dump-exec"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[6].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[6].actions == toset(["logs:DescribeLogGroups"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[6].resources == toset([
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[7].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[7].actions == toset(["elasticache:DescribeCacheEngineVersions"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[7].resources == toset([
+      "*"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[8].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[8].actions == toset(["es:ListVersions", "es:ListElasticsearchVersions"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[8].resources == toset([
+      "*"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.pipeline_access.statement[9].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[9].actions == toset(["ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeRouteTables",
+    "ec2:DescribeSecurityGroups"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.pipeline_access.statement[9].resources == toset([
+      "*"
+    ])
+    error_message = "Unexpected resources"
   }
 }

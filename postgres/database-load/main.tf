@@ -1,12 +1,5 @@
 data "aws_caller_identity" "current" {}
-
-data "aws_kms_key" "data_dump_kms_key" {
-  key_id = local.dump_kms_key_alias
-}
-
-data "aws_s3_bucket" "data_dump_bucket" {
-  bucket = local.dump_bucket_name
-}
+data "aws_region" "current" {}
 
 data "aws_iam_policy_document" "allow_task_creation" {
   statement {
@@ -49,6 +42,21 @@ data "aws_iam_policy_document" "assume_ecs_task_role" {
 
     actions = ["sts:AssumeRole"]
   }
+
+  dynamic "statement" {
+    for_each = toset(local.pipeline_task ? [""] : [])
+    content {
+      sid    = "AllowPipelineAssumeRole"
+      effect = "Allow"
+
+      principals {
+        type        = "AWS"
+        identifiers = ["arn:aws:iam::${coalesce(var.task.to_account, data.aws_caller_identity.current.account_id)}:role/${var.database_name}-${var.task.from}-to-${var.task.to}-copy-pipeline-codebuild"]
+      }
+
+      actions = ["sts:AssumeRole"]
+    }
+  }
 }
 
 resource "aws_iam_role" "data_load_task_execution_role" {
@@ -66,10 +74,10 @@ resource "aws_iam_role_policy" "allow_task_creation" {
 
 data "aws_iam_policy_document" "data_load" {
   policy_id = "data_load"
+
   statement {
     sid    = "AllowReadFromS3"
     effect = "Allow"
-
     actions = [
       "s3:ListBucket",
       "s3:GetObject",
@@ -78,10 +86,9 @@ data "aws_iam_policy_document" "data_load" {
       "s3:GetObjectVersionTagging",
       "s3:DeleteObject"
     ]
-
     resources = [
-      data.aws_s3_bucket.data_dump_bucket.arn,
-      "${data.aws_s3_bucket.data_dump_bucket.arn}/*"
+      "arn:aws:s3:::${local.dump_bucket_name}/*",
+      "arn:aws:s3:::${local.dump_bucket_name}",
     ]
   }
 
@@ -102,12 +109,10 @@ data "aws_iam_policy_document" "data_load" {
   statement {
     sid    = "AllowKMSDencryption"
     effect = "Allow"
-
     actions = [
-      "kms:Decrypt",
+      "kms:Decrypt"
     ]
-
-    resources = [data.aws_kms_key.data_dump_kms_key.arn]
+    resources = ["arn:aws:kms:eu-west-2:${coalesce(var.task.from_account, data.aws_caller_identity.current.account_id)}:key/*"]
   }
 }
 
@@ -122,6 +127,132 @@ resource "aws_iam_role_policy" "allow_data_load" {
   name   = "AllowDataLoad"
   role   = aws_iam_role.data_load.name
   policy = data.aws_iam_policy_document.data_load.json
+}
+
+resource "aws_iam_role_policy" "allow_pipeline_access" {
+  for_each = toset(local.pipeline_task ? [""] : [])
+  name     = "AllowPipelineAccess"
+  role     = aws_iam_role.data_load.name
+  policy   = data.aws_iam_policy_document.pipeline_access.json
+}
+
+data "aws_iam_policy_document" "pipeline_access" {
+  policy_id = "pipeline_access"
+  statement {
+    sid    = "AllowListAccountAliases"
+    effect = "Allow"
+    actions = [
+      "iam:ListAccountAliases",
+    ]
+    resources = [
+      "*",
+    ]
+  }
+
+  statement {
+    sid    = "AllowGetCopilotMetaData"
+    effect = "Allow"
+    actions = [
+      "ssm:GetParametersByPath",
+      "ssm:GetParameters",
+      "ssm:GetParameter"
+    ]
+    resources = [
+      "arn:aws:ssm:${local.region_account}:parameter/copilot/*",
+    ]
+  }
+
+  statement {
+    sid    = "AllowReadOnRDSSecrets"
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue",
+    ]
+    resources = [
+      "arn:aws:secretsmanager:${local.region_account}:secret:rds*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowRunningLoadTask"
+    effect = "Allow"
+    actions = [
+      "ecs:RunTask",
+    ]
+    resources = [
+      "arn:aws:ecs:${local.region_account}:task-definition/*-load:*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowLogTrail"
+    effect = "Allow"
+    actions = [
+      "logs:StartLiveTail",
+    ]
+    resources = [
+      "arn:aws:logs:${local.region_account}:log-group:/ecs/*-load"
+    ]
+  }
+
+  statement {
+    sid    = "AllowPassRoleToTaskExec"
+    effect = "Allow"
+    actions = [
+      "iam:PassRole",
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-load-exec"
+    ]
+  }
+
+  statement {
+    sid    = "AllowDescribeLogs"
+    effect = "Allow"
+    actions = [
+      "logs:DescribeLogGroups",
+    ]
+    resources = [
+      "arn:aws:logs:${local.region_account}:log-group::log-stream:"
+    ]
+  }
+
+  statement {
+    sid = "AllowRedisListVersions"
+    actions = [
+      "elasticache:DescribeCacheEngineVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    sid = "AllowOpensearchListVersions"
+    actions = [
+      "es:ListVersions",
+      "es:ListElasticsearchVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowDescribeVPCsAndSubnets"
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeRouteTables",
+      "ec2:DescribeSecurityGroups"
+    ]
+    resources = [
+      "*"
+    ]
+  }
 }
 
 resource "aws_ecs_task_definition" "service" {
@@ -142,7 +273,7 @@ resource "aws_ecs_task_definition" "service" {
         },
         {
           name  = "S3_BUCKET_NAME"
-          value = data.aws_s3_bucket.data_dump_bucket.bucket
+          value = local.dump_bucket_name
         }
       ],
       portMappings = [
@@ -167,7 +298,6 @@ resource "aws_ecs_task_definition" "service" {
 
   cpu    = 1024
   memory = 3072
-
 
   requires_compatibilities = ["FARGATE"]
 

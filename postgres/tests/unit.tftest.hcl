@@ -92,9 +92,51 @@ override_data {
   }
 }
 
+override_data {
+  target = module.database-load[0].data.aws_iam_policy_document.pipeline_access
+  values = {
+    json = "{\"Sid\": \"AllowPipelineAccess\"}"
+  }
+}
+
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.assume_codepipeline_role
+  values = {
+    json = "{\"Sid\": \"AssumeCodePipeline\"}"
+  }
+}
+
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.access_artifact_store
+  values = {
+    json = "{\"Sid\": \"AccessArtifactStore\"}"
+  }
+}
+
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.assume_codebuild_role
+  values = {
+    json = "{\"Sid\": \"AssumeCodeBuild\"}"
+  }
+}
+
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.ssm_access
+  values = {
+    json = "{\"Sid\": \"SSMAccess\"}"
+  }
+}
+
+override_data {
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.assume_account_role
+  values = {
+    json = "{\"Sid\": \"AllowAssumeAccountRole\"}"
+  }
+}
+
 variables {
   application = "test-application"
-  environment = "test-environment"
+  environment = "test-env"
   name        = "test-name"
   vpc_name    = "sandbox-postgres"
   config = {
@@ -103,8 +145,8 @@ variables {
     multi_az            = false,
     database_copy = [
       {
-        from = "test-environment"
-        to   = "some-other-environment"
+        from = "test-env"
+        to   = "other-env"
       }
     ]
   }
@@ -115,7 +157,7 @@ run "aws_security_group_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_security_group.default.name == "test-application-test-environment-test-name"
+    condition     = aws_security_group.default.name == "test-application-test-env-test-name"
     error_message = "Invalid name for aws_security_group.default"
   }
 
@@ -128,7 +170,7 @@ run "aws_security_group_unit_test" {
   }
 
   assert {
-    condition     = aws_security_group.default.tags.environment == "test-environment"
+    condition     = aws_security_group.default.tags.environment == "test-env"
     error_message = "Invalid tags for aws_security_group.default copilot-environment"
   }
 
@@ -138,7 +180,7 @@ run "aws_security_group_unit_test" {
   }
 
   assert {
-    condition     = aws_security_group.default.tags.copilot-environment == "test-environment"
+    condition     = aws_security_group.default.tags.copilot-environment == "test-env"
     error_message = "Invalid tags for aws_security_group.default copilot-environment"
   }
 
@@ -153,7 +195,7 @@ run "aws_db_parameter_group_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_db_parameter_group.default.name == "test-application-test-environment-test-name-postgres14"
+    condition     = aws_db_parameter_group.default.name == "test-application-test-env-test-name-postgres14"
     error_message = "Invalid name for aws_db_parameter_group.default"
   }
 
@@ -183,7 +225,7 @@ run "aws_db_subnet_group_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_db_subnet_group.default.name == "test-application-test-environment-test-name"
+    condition     = aws_db_subnet_group.default.name == "test-application-test-env-test-name"
     error_message = "Invalid name for aws_db_subnet_group.default"
   }
 
@@ -197,7 +239,7 @@ run "aws_kms_key_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_kms_key.default.description == "test-application-test-environment-test-name KMS key"
+    condition     = aws_kms_key.default.description == "test-application-test-env-test-name KMS key"
     error_message = "Invalid description for aws_kms_key.default"
   }
 
@@ -229,7 +271,7 @@ run "aws_db_instance_unit_test" {
   }
 
   assert {
-    condition     = aws_db_instance.default.db_subnet_group_name == "test-application-test-environment-test-name"
+    condition     = aws_db_instance.default.db_subnet_group_name == "test-application-test-env-test-name"
     error_message = "Invalid db_subnet_group_name for aws_db_instance.default"
   }
 
@@ -362,28 +404,13 @@ run "aws_db_instance_unit_test" {
 run "aws_db_instance_unit_test_database_dump_created" {
   command = plan
 
-  override_data {
-    target = module.database-load[0].data.aws_s3_bucket.data_dump_bucket
-    values = {
-      bucket = "mock-dump-bucket"
-      arn    = "arn://mock-dump-bucket"
-    }
-  }
-
-  override_data {
-    target = module.database-load[0].data.aws_kms_key.data_dump_kms_key
-    values = {
-      arn = "arn://mock-dump-bucket-kms-key"
-    }
-  }
-
   variables {
     config = {
       version = 14,
       database_copy = [
         {
-          from = "test-environment"
-          to   = "some-other-environment"
+          from = "test-env"
+          to   = "other-env"
         }
       ]
     }
@@ -400,30 +427,50 @@ run "aws_db_instance_unit_test_database_dump_created" {
   }
 }
 
-run "aws_db_instance_unit_test_database_dump_not_created_if_to_env_is_prod" {
+run "aws_db_instance_unit_test_database_dump_multiple_source" {
   command = plan
-
-  override_data {
-    target = module.database-load[0].data.aws_s3_bucket.data_dump_bucket
-    values = {
-      bucket = "mock-dump-bucket"
-      arn    = "arn://mock-dump-bucket"
-    }
-  }
-
-  override_data {
-    target = module.database-load[0].data.aws_kms_key.data_dump_kms_key
-    values = {
-      arn = "arn://mock-dump-bucket-kms-key"
-    }
-  }
 
   variables {
     config = {
       version = 14,
       database_copy = [
         {
-          from = "test-environment"
+          from = "test-env"
+          to   = "other-env"
+        },
+        {
+          from = "test-env"
+          to   = "other-env-2"
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = length(module.database-dump) == 1
+    error_message = "One database-dump module should be created"
+  }
+
+  assert {
+    condition     = length(local.data_dump_tasks) == 2
+    error_message = "There should be 2 database dump tasks"
+  }
+
+  assert {
+    condition     = length(module.database-load) == 0
+    error_message = "database-load module should not be created"
+  }
+}
+
+run "aws_db_instance_unit_test_database_dump_not_created_if_to_env_is_prod" {
+  command = plan
+
+  variables {
+    config = {
+      version = 14,
+      database_copy = [
+        {
+          from = "test-env"
           to   = "some-prod-environment"
         }
       ]
@@ -444,28 +491,13 @@ run "aws_db_instance_unit_test_database_dump_not_created_if_to_env_is_prod" {
 run "aws_db_instance_unit_test_database_load_created" {
   command = plan
 
-  override_data {
-    target = module.database-load[0].data.aws_s3_bucket.data_dump_bucket
-    values = {
-      bucket = "mock-dump-bucket"
-      arn    = "arn://mock-dump-bucket"
-    }
-  }
-
-  override_data {
-    target = module.database-load[0].data.aws_kms_key.data_dump_kms_key
-    values = {
-      arn = "arn://mock-dump-bucket-kms-key"
-    }
-  }
-
   variables {
     config = {
       version = 14,
       database_copy = [
         {
-          from = "some-other-environment"
-          to   = "test-environment"
+          from = "other-env"
+          to   = "test-env"
         }
       ]
     }
@@ -477,11 +509,6 @@ run "aws_db_instance_unit_test_database_load_created" {
   }
 
   assert {
-    condition     = module.database-load[0].database-load-module-created
-    error_message = "database-load module should be created"
-  }
-
-  assert {
     condition     = length(module.database-load) == 1
     error_message = "database-load module should be created"
   }
@@ -490,27 +517,12 @@ run "aws_db_instance_unit_test_database_load_created" {
 run "aws_db_instance_unit_test_database_load_not_created_if_to_env_is_prod" {
   command = plan
 
-  override_data {
-    target = module.database-load[0].data.aws_s3_bucket.data_dump_bucket
-    values = {
-      bucket = "mock-dump-bucket"
-      arn    = "arn://mock-dump-bucket"
-    }
-  }
-
-  override_data {
-    target = module.database-load[0].data.aws_kms_key.data_dump_kms_key
-    values = {
-      arn = "arn://mock-dump-bucket-kms-key"
-    }
-  }
-
   variables {
     config = {
       version = 14,
       database_copy = [
         {
-          from = "some-other-environment"
+          from = "other-env"
           to   = "test-prod-environment"
         }
       ]
@@ -635,7 +647,7 @@ run "aws_iam_role_unit_test" {
 
   # Test aws_iam_role.lambda-execution-role resource
   assert {
-    condition     = aws_iam_role.lambda-execution-role.name == "test-application-test-environment-test-name-lambda-role"
+    condition     = aws_iam_role.lambda-execution-role.name == "test-application-test-env-test-name-lambda-role"
     error_message = "Invalid name for aws_iam_role.lambda-execution-role"
   }
 
@@ -669,7 +681,7 @@ run "aws_cloudwatch_log_rds_subscription_filter_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_cloudwatch_log_subscription_filter.rds.name == "/aws/rds/instance/test-application/test-environment/test-name/postgresql"
+    condition     = aws_cloudwatch_log_subscription_filter.rds.name == "/aws/rds/instance/test-application/test-env/test-name/postgresql"
     error_message = "Invalid name for aws_cloudwatch_log_subscription_filter.rds"
   }
 
@@ -696,8 +708,8 @@ run "aws_lambda_function_unit_test" {
   }
 
   assert {
-    condition     = aws_lambda_function.lambda.function_name == "test-application-test-environment-test-name-rds-create-user"
-    error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
+    condition     = aws_lambda_function.lambda.function_name == "test-application-test-env-test-name-rds-create-user"
+    error_message = "Should be: test-application-test-env-test-name-rds-create-user"
   }
 
   assert {
@@ -739,8 +751,8 @@ run "aws_lambda_invocation_unit_test" {
 
   # Test aws_lambda_invocation.create-application-user resource
   assert {
-    condition     = aws_lambda_invocation.create-application-user.function_name == "test-application-test-environment-test-name-rds-create-user"
-    error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
+    condition     = aws_lambda_invocation.create-application-user.function_name == "test-application-test-env-test-name-rds-create-user"
+    error_message = "Should be: test-application-test-env-test-name-rds-create-user"
   }
 
   # Cannot test for the default on a plan
@@ -754,8 +766,8 @@ run "aws_lambda_invocation_unit_test" {
 
   # Test aws_lambda_invocation.create-readonly-user resource
   assert {
-    condition     = aws_lambda_invocation.create-readonly-user.function_name == "test-application-test-environment-test-name-rds-create-user"
-    error_message = "Should be: test-application-test-environment-test-name-rds-create-user"
+    condition     = aws_lambda_invocation.create-readonly-user.function_name == "test-application-test-env-test-name-rds-create-user"
+    error_message = "Should be: test-application-test-env-test-name-rds-create-user"
   }
 
   # Cannot test for the default on a plan
@@ -777,12 +789,43 @@ run "aws_ssm_parameter_master_secret_arn_unit_test" {
   command = plan
 
   assert {
-    condition     = aws_ssm_parameter.master-secret-arn.name == "/copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
-    error_message = "Should be: /copilot/test-application/test-environment/secrets/TEST_NAME_RDS_MASTER_ARN"
+    condition     = aws_ssm_parameter.master-secret-arn.name == "/copilot/test-application/test-env/secrets/TEST_NAME_RDS_MASTER_ARN"
+    error_message = "Should be: /copilot/test-application/test-env/secrets/TEST_NAME_RDS_MASTER_ARN"
   }
 
   assert {
     condition     = aws_ssm_parameter.master-secret-arn.type == "SecureString"
     error_message = "Should be: SecureString"
+  }
+}
+
+run "aws_db_instance_database_copy_pipeline" {
+  command = plan
+
+  variables {
+    config = {
+      version = 14,
+      database_copy = [
+        {
+          from = "test-env"
+          to   = "other-env"
+        },
+        {
+          from     = "other-env"
+          to       = "test-env"
+          pipeline = {}
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = length(module.database-load) == 1
+    error_message = "database-load module should be created"
+  }
+
+  assert {
+    condition     = length(module.database-copy-pipeline) == 1
+    error_message = "database-copy-pipeline module should be created"
   }
 }

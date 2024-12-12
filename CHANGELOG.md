@@ -1,5 +1,38 @@
 # Changelog
 
+## [5.13.0](https://github.com/uktrade/terraform-platform-modules/compare/5.12.1...5.13.0) (2024-12-11)
+
+
+### Features
+
+* Removing hardcoded value for S3 ENDPOINT ([#302](https://github.com/uktrade/terraform-platform-modules/issues/302)) ([cffd06a](https://github.com/uktrade/terraform-platform-modules/commit/cffd06ac1801190f3a4da38d8a252ac653ce95e6))
+
+## [5.12.1](https://github.com/uktrade/terraform-platform-modules/compare/5.12.0...5.12.1) (2024-12-04)
+
+
+### Bug Fixes
+
+* Environment pipeline permissions ([#299](https://github.com/uktrade/terraform-platform-modules/issues/299)) ([7eb1a63](https://github.com/uktrade/terraform-platform-modules/commit/7eb1a63c5ffde9767ed9a71fd9739378fd56976d))
+
+## [5.12.0](https://github.com/uktrade/terraform-platform-modules/compare/5.11.0...5.12.0) (2024-12-03)
+
+
+### Features
+
+* DBTP-1299 - Cross account database copy ([#294](https://github.com/uktrade/terraform-platform-modules/issues/294)) ([ac84ca8](https://github.com/uktrade/terraform-platform-modules/commit/ac84ca8690ab530e74efadabf179fa8b38059c70))
+
+## [5.11.0](https://github.com/uktrade/terraform-platform-modules/compare/5.10.0...5.11.0) (2024-11-29)
+
+
+### Features
+
+* DBTP-1503 - Terraform codebase pipelines ([#276](https://github.com/uktrade/terraform-platform-modules/issues/276)) ([96b5935](https://github.com/uktrade/terraform-platform-modules/commit/96b593574db00c32c682726826ee765ebb561863))
+
+
+### Bug Fixes
+
+* Add missing environment pipeline permission ([#297](https://github.com/uktrade/terraform-platform-modules/issues/297)) ([57f4ea1](https://github.com/uktrade/terraform-platform-modules/commit/57f4ea11b6e99fef1f9d9b0a99c6a7085f463579))
+
 ## [5.10.0](https://github.com/uktrade/terraform-platform-modules/compare/5.9.0...5.10.0) (2024-11-26)
 
 
