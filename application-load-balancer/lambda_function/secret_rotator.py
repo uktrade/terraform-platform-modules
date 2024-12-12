@@ -302,9 +302,9 @@ class SecretRotator:
             self.logger.info("Updating WAF rule first. All CloudFront distributions already have custom header.")
             self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
 
-            # Sleep for 75 seconds for regional WAF config propagation
-            self.logger.info("Sleeping for 75 seconds for updated WAF rule propagation.")
-            time.sleep(75)
+           # Sleep for 75 seconds for regional WAF config propagation
+            self.logger.info(f"Sleeping for {self.waf_sleep_duration} seconds for WAF rule propagation.")
+            time.sleep(self.waf_sleep_duration)
 
         # Update each CloudFront distribution
         for distro in matching_distributions:
