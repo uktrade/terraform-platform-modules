@@ -16,5 +16,6 @@ variable "tasks" {
     to           = string
     from_account = optional(string)
     to_account   = optional(string)
+    pipeline     = optional(object({}))
   }))
 }
