@@ -249,7 +249,7 @@ class SecretRotator:
         If the custom header is missing, it will be added to the distribution.
         Updates the WAF ACL & the CloudFront distributions with the AWSPENDING & AWSCURRENT secret values.
         This method should set the AWSPENDING secret in the service that the secret belongs to.
-        Sleep 75 seconds to allow resources to update
+        Sleep default 75 seconds to allow resources to update
         """
         all_have_header = True  # Assume all distributions have the header initially
 
@@ -302,7 +302,7 @@ class SecretRotator:
             self.logger.info("Updating WAF rule first. All CloudFront distributions already have custom header.")
             self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
 
-           # Sleep for 75 seconds for regional WAF config propagation
+           # Sleep for default 75 seconds for regional WAF config propagation
             self.logger.info(f"Sleeping for {self.waf_sleep_duration} seconds for WAF rule propagation.")
             time.sleep(self.waf_sleep_duration)
 
@@ -320,7 +320,7 @@ class SecretRotator:
             self.logger.info("Not all CloudFront distributions have the header. Updating WAF last.")
             self.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'])
 
-            # Sleep for 75 seconds for regional WAF config propagation
+            # Sleep for default 75 seconds for regional WAF config propagation
             self.logger.info(f"Sleeping for {self.waf_sleep_duration} seconds for WAF rule propagation.")
             time.sleep(self.waf_sleep_duration)
 
@@ -465,7 +465,7 @@ class SecretRotator:
         """Set the secret
         Updates the WAF ACL & the CloudFront distributions with the AWSPENDING & AWSCURRENT secret values.
         This method should set the AWSPENDING secret in the service that the secret belongs to.
-        Sleep 75 seconds to allow resources to update
+        Sleep default 75 seconds to allow resources to update
         Args:
             service_client (client): The secrets manager service client
             arn (string): The secret ARN or other identifier
