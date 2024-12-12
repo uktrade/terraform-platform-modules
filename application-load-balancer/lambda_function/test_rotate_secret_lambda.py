@@ -380,6 +380,154 @@ class TestDistributionUpdates:
             assert "Distribution Id: DIST1 status is not Deployed." in str(excinfo.value)
 
 
+class TestProcessCloudFrontDistributions:
+
+    def test_all_distributions_already_have_header(self, rotator):
+        """
+        Test scenario where all distributions already have the custom header.
+        Verify WAF update happens first, and distributions are still updated.
+        """
+        mock_logger = MagicMock()
+        rotator.logger = mock_logger
+        
+        matching_distributions = [
+            {'Id': 'dist1'},
+            {'Id': 'dist2'}
+        ]
+        pending_secret = {'HEADERVALUE': 'new-secret'}
+        current_secret = {'HEADERVALUE': 'old-secret'}
+        
+        # Mock methods to simulate existing header
+        def mock_get_cf_distro_config(distro_id):
+            return {
+                'DistributionConfig': {
+                    'Origins': {
+                        'Items': [{
+                            'Id': 'origin1',
+                            'CustomHeaders': {
+                                'Items': [{
+                                    'HeaderName': 'x-origin-verify',
+                                    'HeaderValue': 'existing-secret'
+                                }]
+                            }
+                        }]
+                    }
+                }
+            }
+        
+        rotator.get_cf_distro_config = mock_get_cf_distro_config
+        
+        rotator.update_waf_acl = MagicMock()
+        rotator.update_cf_distro = MagicMock()
+        
+        with patch('time.sleep') as mock_sleep:
+            rotator.process_cf_distributions_and_WAF_rules(
+                matching_distributions, 
+                pending_secret, 
+                current_secret
+            )
+        
+        rotator.update_waf_acl.assert_called_once_with(
+            pending_secret['HEADERVALUE'], 
+            current_secret['HEADERVALUE']
+        )
+        
+        rotator.update_cf_distro.assert_has_calls([ call('dist1', pending_secret['HEADERVALUE']), call('dist2', pending_secret['HEADERVALUE']), ], any_order=False)
+
+        rotator.update_waf_acl.assert_called_once_with( pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'] ) 
+        
+        mock_sleep.assert_called_once_with(rotator.waf_sleep_duration)
+        
+        mock_logger.info.assert_any_call(
+            "Updating WAF rule first. All CloudFront distributions already have custom header."
+        )
+
+
+    def test_some_distributions_missing_header(self, rotator):
+        """
+        Test scenario where some distributions are missing the custom header.
+        Verify header is added and all distributions are updated.
+        """
+        mock_logger = MagicMock()
+        rotator.logger = mock_logger
+        
+        matching_distributions = [
+            {'Id': 'dist1'},
+            {'Id': 'dist2'}
+        ]
+        pending_secret = {'HEADERVALUE': 'new-secret'}
+        current_secret = {'HEADERVALUE': 'old-secret'}
+        
+        def mock_get_cf_distro_config(distro_id):
+            if distro_id == 'dist1':
+                return {
+                    'DistributionConfig': {
+                        'Origins': {
+                            'Items': [{
+                                'Id': 'origin1',
+                                'CustomHeaders': {
+                                    'Items': [] 
+                                }
+                            }]
+                        }
+                    }
+                }
+            return {
+                'DistributionConfig': {
+                    'Origins': {
+                        'Items': [{
+                            'Id': 'origin1',
+                            'CustomHeaders': {
+                                'Items': [{
+                                    'HeaderName': 'x-origin-verify',
+                                    'HeaderValue': 'existing-secret'
+                                }]
+                            }
+                        }]
+                    }
+                }
+            }
+        
+        rotator.get_cf_distro_config = mock_get_cf_distro_config
+        
+        rotator.update_waf_acl = MagicMock()
+        rotator.update_cf_distro = MagicMock()
+        
+        with patch('time.sleep') as mock_sleep:
+            rotator.process_cf_distributions_and_WAF_rules(
+                matching_distributions, 
+                pending_secret, 
+                current_secret
+            )
+        
+        assert rotator.update_cf_distro.call_count == len(matching_distributions)
+        for distro in matching_distributions:
+            rotator.update_cf_distro.assert_any_call(distro['Id'], pending_secret['HEADERVALUE'])
+        
+        rotator.update_waf_acl.assert_called_once_with(
+            pending_secret['HEADERVALUE'], 
+            current_secret['HEADERVALUE']
+        )
+        
+        assert mock_sleep.call_count == 1
+
+        mock_logger.info.assert_any_call(
+            "Not all CloudFront distributions have the header. Updating WAF last."
+        )
+        
+        # Verify the call order 
+        expected_calls = [ 
+                          call.update_cf_distro('dist1', pending_secret['HEADERVALUE']), 
+                          call.update_cf_distro('dist2', pending_secret['HEADERVALUE']), 
+                          call.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE']), 
+                          ] 
+        
+        actual_calls = rotator.update_cf_distro.mock_calls + rotator.update_waf_acl.mock_calls  
+        assert actual_calls == expected_calls
+
+
+
+
 class TestSecretManagement:
     """
     Tests for AWS Secrets Manager operations during rotation.

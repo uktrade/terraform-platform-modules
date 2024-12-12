@@ -261,7 +261,7 @@ class SecretRotator:
             header_found = False
 
             for origin in dist_config['DistributionConfig']['Origins']['Items']:
-                # Check if 'Items' exists inside 'CustomHeaders', if not, initialize it
+                # Check if 'Items' exists inside 'CustomHeaders', if not, initialise it
                 if 'Items' not in origin['CustomHeaders']:
                     self.logger.info(f"CustomHeaders empty for origin {origin['Id']}, adding custom header.")
                     origin['CustomHeaders']['Items'] = [{
