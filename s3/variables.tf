@@ -42,8 +42,9 @@ variable "config" {
       cyber_sign_off_by = string
     })))
     # NOTE: readonly access is managed by Copilot server addon s3 policy.
-    readonly             = optional(bool)
-    serve_static_content = optional(bool, false)
+    readonly                = optional(bool)
+    serve_static_content    = optional(bool, false)
+    serve_static_param_name = optional(string)
     objects = optional(list(object({
       body         = string
       key          = string
