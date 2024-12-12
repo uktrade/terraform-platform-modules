@@ -93,6 +93,13 @@ override_data {
 }
 
 override_data {
+  target = module.database-load[0].data.aws_iam_policy_document.pipeline_access
+  values = {
+    json = "{\"Sid\": \"AllowPipelineAccess\"}"
+  }
+}
+
+override_data {
   target = module.database-copy-pipeline[0].data.aws_iam_policy_document.assume_codepipeline_role
   values = {
     json = "{\"Sid\": \"AssumeCodePipeline\"}"
@@ -114,13 +121,6 @@ override_data {
 }
 
 override_data {
-  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.database_copy
-  values = {
-    json = "{\"Sid\": \"DatabaseCopyAccess\"}"
-  }
-}
-
-override_data {
   target = module.database-copy-pipeline[0].data.aws_iam_policy_document.ssm_access
   values = {
     json = "{\"Sid\": \"SSMAccess\"}"
@@ -128,16 +128,9 @@ override_data {
 }
 
 override_data {
-  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.iam_access
+  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.assume_account_role
   values = {
-    json = "{\"Sid\": \"IAMAccess\"}"
-  }
-}
-
-override_data {
-  target = module.database-copy-pipeline[0].data.aws_iam_policy_document.assume_dump_account_role
-  values = {
-    json = "{\"Sid\": \"AllowAssumeDumpAccountRole\"}"
+    json = "{\"Sid\": \"AllowAssumeAccountRole\"}"
   }
 }
 
