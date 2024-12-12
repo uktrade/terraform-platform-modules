@@ -167,7 +167,7 @@ data "aws_iam_policy_document" "pipeline_access" {
   }
 
   statement {
-    sid    = "AllowRunningDumpAndLoadTask"
+    sid    = "AllowRunningDumpTask"
     effect = "Allow"
     actions = [
       "ecs:RunTask",

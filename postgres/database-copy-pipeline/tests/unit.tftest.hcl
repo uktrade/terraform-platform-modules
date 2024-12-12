@@ -22,23 +22,9 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.database_copy
-  values = {
-    json = "{\"Sid\": \"DatabaseCopyAccess\"}"
-  }
-}
-
-override_data {
   target = data.aws_iam_policy_document.ssm_access
   values = {
     json = "{\"Sid\": \"SSMAccess\"}"
-  }
-}
-
-override_data {
-  target = data.aws_iam_policy_document.iam_access
-  values = {
-    json = "{\"Sid\": \"IAMAccess\"}"
   }
 }
 
@@ -57,9 +43,9 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.assume_dump_account_role
+  target = data.aws_iam_policy_document.assume_account_role
   values = {
-    json = "{\"Sid\": \"AllowAssumeDumpAccountRole\"}"
+    json = "{\"Sid\": \"AllowAssumeAccountRole\"}"
   }
 }
 
@@ -237,7 +223,7 @@ run "test_pipeline" {
     error_message = "Should be: build_output"
   }
   assert {
-    condition     = aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"DUMP_ROLE_ARN\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-prod-test-db-dump-task\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    condition     = aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"DUMP_ROLE_ARN\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-prod-test-db-dump-task\"},{\"name\":\"LOAD_ROLE_ARN\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-dev-test-db-load-task\"},{\"name\":\"FROM_ACCOUNT\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"TO_ACCOUNT\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 
@@ -283,7 +269,7 @@ run "test_pipeline" {
     error_message = "Should be: build_output"
   }
   assert {
-    condition     = aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    condition     = aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"LOAD_ROLE_ARN\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-dev-test-db-load-task\"},{\"name\":\"TO_ACCOUNT\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
 }
@@ -656,169 +642,25 @@ run "test_iam" {
     error_message = "Unexpected resources"
   }
   assert {
-    condition     = aws_iam_role_policy.iam_access_for_codebuild.name == "IAMAccess"
-    error_message = "Should be: 'IAMAccess'"
+    condition     = aws_iam_role_policy.assume_account_role_access_for_codebuild.name == "AssumeAccountRole"
+    error_message = "Should be: 'AssumeAccountRole'"
   }
   assert {
-    condition     = aws_iam_role_policy.iam_access_for_codebuild.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
+    condition     = aws_iam_role_policy.assume_account_role_access_for_codebuild.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
     error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-codebuild'"
   }
   assert {
-    condition     = data.aws_iam_policy_document.iam_access.statement[0].effect == "Allow"
+    condition     = data.aws_iam_policy_document.assume_account_role.statement[0].effect == "Allow"
     error_message = "Should be: Allow"
   }
   assert {
-    condition     = data.aws_iam_policy_document.iam_access.statement[0].actions == toset(["iam:ListAccountAliases"])
+    condition     = data.aws_iam_policy_document.assume_account_role.statement[0].actions == toset(["sts:AssumeRole"])
     error_message = "Unexpected actions"
   }
   assert {
-    condition = data.aws_iam_policy_document.iam_access.statement[0].resources == toset([
-      "*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = aws_iam_role_policy.database_copy_access_for_codebuild.name == "DatabaseCopy"
-    error_message = "Should be: 'DatabaseCopy'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.database_copy_access_for_codebuild.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
-    error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-codebuild'"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[0].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[0].actions == toset(["secretsmanager:GetSecretValue"])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[0].resources == toset([
-      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:rds*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[1].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[1].actions == toset(["ecs:RunTask"])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[1].resources == toset([
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*-load:*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[2].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[2].actions == toset(["logs:StartLiveTail"])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[2].resources == toset([
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/*-load"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[3].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[3].actions == toset(["iam:PassRole"])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[3].resources == toset([
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-load-exec"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[4].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[4].actions == toset(["logs:DescribeLogGroups"])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[4].resources == toset([
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[5].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[5].actions == toset(["elasticache:DescribeCacheEngineVersions"])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[5].resources == toset([
-      "*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[6].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[6].actions == toset(["es:ListVersions", "es:ListElasticsearchVersions"])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[6].resources == toset([
-      "*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.database_copy.statement[7].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[7].actions == toset(["ec2:DescribeVpcs",
-      "ec2:DescribeSubnets",
-      "ec2:DescribeRouteTables",
-    "ec2:DescribeSecurityGroups"])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.database_copy.statement[7].resources == toset([
-      "*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = aws_iam_role_policy.assume_dump_account_role_access_for_codebuild.name == "AssumeDumpAccountRole"
-    error_message = "Should be: 'AssumeDumpAccountRole'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.assume_dump_account_role_access_for_codebuild.role == "test-db-prod-to-dev-copy-pipeline-codebuild"
-    error_message = "Should be: 'test-db-prod-to-dev-copy-pipeline-codebuild'"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.assume_dump_account_role.statement[0].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.assume_dump_account_role.statement[0].actions == toset(["sts:AssumeRole"])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.assume_dump_account_role.statement[0].resources == toset([
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-prod-test-db-dump-task"
+    condition = data.aws_iam_policy_document.assume_account_role.statement[0].resources == toset([
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-prod-test-db-dump-task",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-dev-test-db-load-task"
     ])
     error_message = "Unexpected resources"
   }
@@ -838,12 +680,17 @@ run "test_cross_account_iam" {
   }
 
   assert {
-    condition     = aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"DUMP_ROLE_ARN\",\"value\":\"arn:aws:iam::123456789000:role/test-app-prod-test-db-dump-task\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    condition     = aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"DUMP_ROLE_ARN\",\"value\":\"arn:aws:iam::123456789000:role/test-app-prod-test-db-dump-task\"},{\"name\":\"LOAD_ROLE_ARN\",\"value\":\"arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task\"},{\"name\":\"FROM_ACCOUNT\",\"value\":\"123456789000\"},{\"name\":\"TO_ACCOUNT\",\"value\":\"000123456789\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
     error_message = "Configuration Env Vars incorrect"
   }
   assert {
-    condition = data.aws_iam_policy_document.assume_dump_account_role.statement[0].resources == toset([
-      "arn:aws:iam::123456789000:role/test-app-prod-test-db-dump-task"
+    condition     = aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"LOAD_ROLE_ARN\",\"value\":\"arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task\"},{\"name\":\"TO_ACCOUNT\",\"value\":\"000123456789\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
+    error_message = "Configuration Env Vars incorrect"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.assume_account_role.statement[0].resources == toset([
+      "arn:aws:iam::123456789000:role/test-app-prod-test-db-dump-task",
+      "arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task"
     ])
     error_message = "Unexpected resources"
   }

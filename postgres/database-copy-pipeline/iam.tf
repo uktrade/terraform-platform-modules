@@ -179,139 +179,22 @@ data "aws_iam_policy_document" "ssm_access" {
   }
 }
 
-resource "aws_iam_role_policy" "iam_access_for_codebuild" {
-  name   = "IAMAccess"
+resource "aws_iam_role_policy" "assume_account_role_access_for_codebuild" {
+  name   = "AssumeAccountRole"
   role   = aws_iam_role.database_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.iam_access.json
+  policy = data.aws_iam_policy_document.assume_account_role.json
 }
 
-data "aws_iam_policy_document" "iam_access" {
+data "aws_iam_policy_document" "assume_account_role" {
   statement {
-    effect = "Allow"
-    actions = [
-      "iam:ListAccountAliases"
-    ]
-    resources = [
-      "*"
-    ]
-  }
-}
-
-resource "aws_iam_role_policy" "database_copy_access_for_codebuild" {
-  name   = "DatabaseCopy"
-  role   = aws_iam_role.database_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.database_copy.json
-}
-
-data "aws_iam_policy_document" "database_copy" {
-  statement {
-    sid    = "AllowReadOnRDSSecrets"
-    effect = "Allow"
-    actions = [
-      "secretsmanager:GetSecretValue",
-    ]
-    resources = [
-      "arn:aws:secretsmanager:${local.region_account}:secret:rds*"
-    ]
-  }
-
-  statement {
-    sid    = "AllowRunningDumpAndLoadTask"
-    effect = "Allow"
-    actions = [
-      "ecs:RunTask",
-    ]
-    resources = [
-      "arn:aws:ecs:${local.region_account}:task-definition/*-load:*"
-    ]
-  }
-
-  statement {
-    sid    = "AllowLogTrail"
-    effect = "Allow"
-    actions = [
-      "logs:StartLiveTail",
-    ]
-    resources = [
-      "arn:aws:logs:${local.region_account}:log-group:/ecs/*-load"
-    ]
-  }
-
-  statement {
-    sid    = "AllowPassRoleToTaskExec"
-    effect = "Allow"
-    actions = [
-      "iam:PassRole",
-    ]
-    resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-load-exec"
-    ]
-  }
-
-  statement {
-    sid    = "AllowDescribeLogs"
-    effect = "Allow"
-    actions = [
-      "logs:DescribeLogGroups",
-    ]
-    resources = [
-      "arn:aws:logs:${local.region_account}:log-group::log-stream:"
-    ]
-  }
-
-  statement {
-    sid = "AllowRedisListVersions"
-    actions = [
-      "elasticache:DescribeCacheEngineVersions"
-    ]
-    effect = "Allow"
-    resources = [
-      "*"
-    ]
-  }
-
-  statement {
-    sid = "AllowOpensearchListVersions"
-    actions = [
-      "es:ListVersions",
-      "es:ListElasticsearchVersions"
-    ]
-    effect = "Allow"
-    resources = [
-      "*"
-    ]
-  }
-
-  statement {
-    sid    = "AllowDescribeVPCsAndSubnets"
-    effect = "Allow"
-    actions = [
-      "ec2:DescribeVpcs",
-      "ec2:DescribeSubnets",
-      "ec2:DescribeRouteTables",
-      "ec2:DescribeSecurityGroups"
-    ]
-    resources = [
-      "*",
-    ]
-  }
-}
-
-resource "aws_iam_role_policy" "assume_dump_account_role_access_for_codebuild" {
-  name   = "AssumeDumpAccountRole"
-  role   = aws_iam_role.database_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.assume_dump_account_role.json
-}
-
-data "aws_iam_policy_document" "assume_dump_account_role" {
-  statement {
-    sid    = "AllowAssumeDumpAccountRole"
+    sid    = "AllowAssumeAccountRole"
     effect = "Allow"
     actions = [
       "sts:AssumeRole"
     ]
     resources = [
-      local.dump_role_arn
+      local.dump_role_arn,
+      local.load_role_arn
     ]
   }
 }
