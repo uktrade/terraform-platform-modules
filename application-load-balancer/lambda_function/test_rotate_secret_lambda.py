@@ -397,7 +397,6 @@ class TestProcessCloudFrontDistributions:
         pending_secret = {'HEADERVALUE': 'new-secret'}
         current_secret = {'HEADERVALUE': 'old-secret'}
         
-        # Mock methods to simulate existing header
         def mock_get_cf_distro_config(distro_id):
             return {
                 'DistributionConfig': {
@@ -432,15 +431,23 @@ class TestProcessCloudFrontDistributions:
             current_secret['HEADERVALUE']
         )
         
+        mock_sleep.assert_called_once_with(rotator.waf_sleep_duration)
+        
         rotator.update_cf_distro.assert_has_calls([ call('dist1', pending_secret['HEADERVALUE']), call('dist2', pending_secret['HEADERVALUE']), ], any_order=False)
 
-        rotator.update_waf_acl.assert_called_once_with( pending_secret['HEADERVALUE'], current_secret['HEADERVALUE'] ) 
-        
-        mock_sleep.assert_called_once_with(rotator.waf_sleep_duration)
         
         mock_logger.info.assert_any_call(
             "Updating WAF rule first. All CloudFront distributions already have custom header."
         )
+        
+        expected_calls = [ 
+                          call.update_waf_acl(pending_secret['HEADERVALUE'], current_secret['HEADERVALUE']), 
+                          call.update_cf_distro('dist1', pending_secret['HEADERVALUE']), 
+                          call.update_cf_distro('dist2', pending_secret['HEADERVALUE']), 
+                          ] 
+        actual_calls = rotator.update_waf_acl.mock_calls + rotator.update_cf_distro.mock_calls
+        assert actual_calls == expected_calls
+
 
 
     def test_some_distributions_missing_header(self, rotator):
@@ -515,7 +522,6 @@ class TestProcessCloudFrontDistributions:
             "Not all CloudFront distributions have the header. Updating WAF last."
         )
         
-        # Verify the call order 
         expected_calls = [ 
                           call.update_cf_distro('dist1', pending_secret['HEADERVALUE']), 
                           call.update_cf_distro('dist2', pending_secret['HEADERVALUE']), 
@@ -567,7 +573,6 @@ class TestSecretManagement:
             call(SecretId="test-arn", VersionId="test-token", VersionStage="AWSPENDING")  # Second call for AWSPENDING
         ])
 
-        # Verify that `put_secret_value` was called with the expected parameters
         mock_service_client.put_secret_value.assert_called_once_with(
             SecretId="test-arn",
             ClientRequestToken="test-token",
