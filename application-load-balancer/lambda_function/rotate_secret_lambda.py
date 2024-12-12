@@ -18,7 +18,7 @@ def lambda_handler(event, context):
         logger.error("Unable to determine SecretId.")
         raise ValueError("Unable to determine SecretId.")
 
-    rotator = SecretRotator()
+    rotator = SecretRotator(logger=logger)
 
     if step == "createSecret":
         logger.info("Entered createSecret step")

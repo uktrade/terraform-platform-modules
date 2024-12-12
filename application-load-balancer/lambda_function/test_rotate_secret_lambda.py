@@ -9,7 +9,10 @@ def rotator():
     """
     Creates a SecretRotator instance with test configuration.
     """
+    mock_logger = MagicMock()
+    
     return SecretRotator(
+        logger = mock_logger,
         waf_acl_name="test-waf-id",
         waf_acl_id="test-waf-acl",
         waf_rule_priority="0",
@@ -429,10 +432,10 @@ class TestSecretManagement:
         """
         Test that a ResourceNotFoundException for AWSCURRENT logs the appropriate error message.
         """
-        # Mock the boto3 Secrets Manager client
+        mock_logger = MagicMock()
+        rotator.logger = mock_logger
         mock_service_client = MagicMock()
 
-        # Mock the Secrets Manager exceptions
         mock_service_client.exceptions.ResourceNotFoundException = Exception
 
         # Configure the `get_secret_value` method to raise an exception for AWSCURRENT
@@ -442,17 +445,16 @@ class TestSecretManagement:
                     {"Error": {"Code": "ResourceNotFoundException"}},
                     "GetSecretValue"
                 )
-            # Allow other calls to succeed
+         
             return {"SecretString": json.dumps({"HEADERVALUE": "current-secret"})}
 
         mock_service_client.get_secret_value.side_effect = mock_get_secret_value
 
-        # Mock logger to verify logging behavior
-        with patch("secret_rotator.logger") as mock_logger:  # Replace 'your_module' with the module where `logger` is defined
-            rotator.create_secret(mock_service_client, "test-arn", "test-token")
+        
+        rotator.create_secret(mock_service_client, "test-arn", "test-token")
 
-            # Verify that the logger.error was called with the correct message
-            mock_logger.error.assert_called_with("AWSCURRENT version does not exist for secret")
+
+        mock_logger.error.assert_called_with("AWSCURRENT version does not exist for secret")
 
 
 
