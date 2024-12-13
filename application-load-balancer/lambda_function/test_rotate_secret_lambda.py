@@ -622,104 +622,7 @@ class TestRotationProcess:
     Tests for the complete secret rotation process.
     Verifying the end-to-end rotation workflow and its components.
     """
-
-    # def test_set_secret_updates_components_based_on_header_state(self, rotator):
-    #     """
-    #     The set_secret method should:
-    #     - Update WAF ACL first if all distributions already have the header.
-    #     - Update WAF ACL last if any distribution is missing the header.
-    #     - Update distributions in the correct order.
-    #     """
-    #     mock_distributions = [
-    #         {"Id": "DIST1", "Origin": "origin1.example.com"},
-    #         {"Id": "DIST2", "Origin": "origin2.example.com"}
-    #     ]
-        
-    #     mock_get_distro_with_header = {
-    #         "DistributionConfig": {
-    #             "Origins": {
-    #                 "Items": [
-    #                     {
-    #                         "CustomHeaders": {
-    #                             "Items": [{"HeaderName": rotator.header_name, "HeaderValue": "current-secret"}]
-    #                         }
-    #                     }
-    #                 ]
-    #             }
-    #         }
-    #     }
-    #     mock_get_distro_without_header = {
-    #         "DistributionConfig": {
-    #             "Origins": {
-    #                 "Items": [
-    #                     {
-    #                         "CustomHeaders": {
-    #                             "Items": []
-    #                         }
-    #                     }
-    #                 ]
-    #             }
-    #         }
-    #     }
-
-    #     mock_metadata = {
-    #         "VersionIdsToStages": {
-    #             "current-version": ["AWSCURRENT"],
-    #             "test-token": ["AWSPENDING"]
-    #         }
-    #     }
-    #     mock_credentials = {
-    #         "Credentials": {
-    #             "AccessKeyId": "test-access-key",
-    #             "SecretAccessKey": "test-secret-key",
-    #             "SessionToken": "test-session-token"
-    #         }
-    #     }
-    #     mock_pending_secret = {"SecretString": json.dumps({"HEADERVALUE": "new-secret"})}
-    #     mock_current_secret = {"SecretString": json.dumps({"HEADERVALUE": "current-secret"})}
-        
-    #     mock_boto_client = MagicMock() 
-        
-    #     mock_boto_client.get_secret_value.side_effect = [
-    #             mock_pending_secret,
-    #             mock_current_secret
-    #         ]                                            
-    #     mock_boto_client.describe_secret.return_value = mock_metadata 
-    #     mock_boto_client.assume_role.return_value = mock_credentials
-        
-    #     boto3.client = MagicMock(return_value=mock_boto_client)
-    #     time.sleep = MagicMock()
-        
-    #     rotator.is_distribution_deployed = MagicMock() 
-    #     rotator.is_distribution_deployed.return_value = True
-
-    #     # Mock CloudFront distribution config retrieval
-    #     rotator.get_cf_distro_config = MagicMock(side_effect=[
-    #         mock_get_distro_without_header,  # DIST1
-    #         mock_get_distro_with_header  # DIST2
-    #     ])
-
-    #     rotator.update_cf_distro = MagicMock()
-    #     rotator.update_waf_acl = MagicMock()
-    #     rotator.get_deployed_distributions = MagicMock(return_value=mock_distributions)
-
-    #     rotator.set_secret(mock_boto_client, "test-arn", "test-token")
-     
-    #     # Validate the correct order of operations based on header presence
-    #     if rotator.update_cf_distro.call_args_list[0][0][0] == "DIST1":
-    #         # Header missing in first distribution
-    #         rotator.update_cf_distro.assert_any_call("DIST1", "new-secret")
-    #         rotator.update_cf_distro.assert_any_call("DIST2", "new-secret")
-    #         rotator.update_waf_acl.assert_called_once_with("new-secret", "current-secret")
-    #     else:
-    #         # Header present in both distributions
-    #         rotator.update_waf_acl.assert_called_once_with("new-secret", "current-secret")
-    #         rotator.update_cf_distro.assert_any_call("DIST1", "new-secret")
-    #         rotator.update_cf_distro.assert_any_call("DIST2", "new-secret")
-
-    #     time.sleep.assert_called_once_with(rotator.waf_sleep_duration)
-        
-        
+          
     def test_set_secret_updates_waf_first_when_all_distributions_have_header(self, rotator):
         """
         The WAF ACL should be updated before the distributions when all distributions
@@ -849,8 +752,7 @@ class TestRotationProcess:
         mock_boto_client.describe_secret.return_value = mock_metadata
         mock_boto_client.assume_role.return_value = mock_credentials
         boto3.client = MagicMock(return_value=mock_boto_client)
-
-        # Mock time and other methods
+        
         time.sleep = MagicMock()
         rotator.is_distribution_deployed = MagicMock(return_value=True)
         rotator.get_cf_distro_config = MagicMock(side_effect=[
@@ -861,19 +763,16 @@ class TestRotationProcess:
         rotator.update_waf_acl = MagicMock()
         rotator.get_deployed_distributions = MagicMock(return_value=mock_distributions)
 
-        # Act
         rotator.set_secret(mock_boto_client, "test-arn", "test-token")
 
-        # Assert sequence of calls for DISTRIBUTION without header first
         rotator.update_cf_distro.assert_has_calls([
             call("DIST1", "new-secret"),
             call("DIST2", "new-secret")
-        ], any_order=False)  # Ensure the calls happen in the exact order, not any order
+        ], any_order=False)
         
-        # Then, ensure update_waf_acl is called after all distributions are updated
+
         rotator.update_waf_acl.assert_called_once_with("new-secret", "current-secret")
         
-        # Ensure time.sleep was called after all updates
         time.sleep.assert_called_once_with(rotator.waf_sleep_duration)
 
 
