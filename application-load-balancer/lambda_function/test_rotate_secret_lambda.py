@@ -44,15 +44,14 @@ class TestCloudFrontSessionManagement:
             }
         }
 
+        mock_sts = MagicMock()
+        mock_cloudfront = MagicMock()
+        
+        mock_sts.assume_role.return_value = mock_credentials
+
         with patch('boto3.client') as mock_boto3_client:
-            # Set up separate mocks for STS and CloudFront clients
-            mock_sts = MagicMock()
-            mock_cloudfront = MagicMock()
-            
             mock_boto3_client.side_effect = lambda service, **kwargs: \
                 mock_sts if service == 'sts' else mock_cloudfront
-
-            mock_sts.assume_role.return_value = mock_credentials
 
             client = rotator.get_cloudfront_client()
 
@@ -996,7 +995,6 @@ class TestEdgeCases:
         rotator.get_deployed_distributions = MagicMock()
         rotator.get_deployed_distributions.return_value = []
         
-        boto3.client = MagicMock()
         mock_boto_client = MagicMock()
         mock_boto_client.assume_role.return_value = mock_credentials
         mock_boto_client.get_secret_value.side_effect = [
@@ -1004,8 +1002,6 @@ class TestEdgeCases:
             mock_current_secret,  # For AWSCURRENT
         ]
         mock_boto_client.describe_secret.return_value = mock_metadata
-        
-        boto3.client.return_value = mock_boto_client
         
         rotator.get_waf_acl = MagicMock()
         rotator.update_cf_distro = MagicMock()
