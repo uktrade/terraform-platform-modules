@@ -1087,28 +1087,22 @@ class TestLambdaHandler:
                 "test-token": ["AWSPENDING"]
             }
         }
-
-        with patch('boto3.client') as mock_boto3_client, \
-            patch('rotate_secret_lambda.boto3.client') as mock_lambda_boto, \
-            patch('secret_rotator.boto3.client') as mock_secret_rotator_boto, \
-            patch.object(rotator, 'get_deployed_distributions') as mock_get_deployed_distributions, \
-            patch('rotate_secret_lambda.SecretRotator') as MockSecretRotator:
-            
-            # Create a specific mock client to use
-            specific_mock_client = MagicMock()
-            mock_lambda_boto.return_value = specific_mock_client
-            
-            mock_service_client = mock_boto3_client.return_value
-            mock_rotator_instance = MockSecretRotator.return_value
-            
-            # mocks get_deployed_distributions and calls made in get_secrets() method
-            mock_get_deployed_distributions.return_value = mock_distributions
-            mock_service_client.describe_secret.return_value = mock_metadata
-            mock_service_client.get_secret_value.side_effect = [
+        
+        mock_boto_client = MagicMock()
+        mock_boto_client.describe_secret.return_value = mock_metadata
+        mock_boto_client.get_secret_value.side_effect = [
                 mock_pending_secret,
                 mock_current_secret
             ]
+        
+        rotator.get_deployed_distributions = MagicMock()
+        rotator.get_deployed_distributions.return_value = mock_distributions
 
+        with patch('boto3.client') as mock_boto_client, \
+            patch('rotate_secret_lambda.SecretRotator') as mock_rotator:
+            
+            mock_rotator_instance = mock_rotator.return_value
+           
             from rotate_secret_lambda import lambda_handler
             lambda_handler(event, None)
             
@@ -1118,7 +1112,6 @@ class TestLambdaHandler:
 
             call_args = actual_calls[0][0]  
             for i, arg in enumerate(call_args): 
-                # Assert with more detailed checking on provided arguments 
                 assert call_args[1] == "test-arn" 
                 assert call_args[2] == "test-token"
                 assert call_args[3] == ['domain1.example.com', 'domain2.example.com']
