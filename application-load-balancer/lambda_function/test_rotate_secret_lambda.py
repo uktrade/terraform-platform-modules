@@ -425,20 +425,20 @@ class TestProcessCloudFrontDistributions:
         
         rotator.update_waf_acl = MagicMock()
         rotator.update_cf_distro = MagicMock()
+        time.sleep = MagicMock()
         
-        with patch('time.sleep') as mock_sleep:
-            rotator.process_cf_distributions_and_WAF_rules(
-                matching_distributions, 
-                pending_secret, 
-                current_secret
-            )
+        rotator.process_cf_distributions_and_WAF_rules(
+            matching_distributions, 
+            pending_secret, 
+            current_secret
+        )
         
         rotator.update_waf_acl.assert_called_once_with(
             pending_secret['HEADERVALUE'], 
             current_secret['HEADERVALUE']
         )
         
-        mock_sleep.assert_called_once_with(rotator.waf_sleep_duration)
+        time.sleep.assert_called_once_with(rotator.waf_sleep_duration)
         
         rotator.update_cf_distro.assert_has_calls([ call('dist1', pending_secret['HEADERVALUE']), call('dist2', pending_secret['HEADERVALUE']), ], any_order=False)
 
