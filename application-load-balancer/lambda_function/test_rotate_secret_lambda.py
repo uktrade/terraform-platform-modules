@@ -672,7 +672,6 @@ class TestRotationProcess:
         ]
         mock_boto_client.describe_secret.return_value = mock_metadata
         mock_boto_client.assume_role.return_value = mock_credentials
-        boto3.client = MagicMock(return_value=mock_boto_client)
         
         time.sleep = MagicMock()
         rotator.is_distribution_deployed = MagicMock(return_value=True)
@@ -751,7 +750,6 @@ class TestRotationProcess:
         ]
         mock_boto_client.describe_secret.return_value = mock_metadata
         mock_boto_client.assume_role.return_value = mock_credentials
-        boto3.client = MagicMock(return_value=mock_boto_client)
         
         time.sleep = MagicMock()
         rotator.is_distribution_deployed = MagicMock(return_value=True)
