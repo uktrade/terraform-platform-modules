@@ -1032,7 +1032,7 @@ class TestEdgeCases:
                 )
 
 class TestLambdaHandler:
-
+        
     def test_executes_correct_rotation_step(self):
         """
         Lambda must execute the correct rotation step based on the event.
@@ -1042,27 +1042,19 @@ class TestLambdaHandler:
             "ClientRequestToken": "test-token",
             "Step": "createSecret"
         }
-        
-        with patch('boto3.client') as mock_boto3_client, \
-             patch('rotate_secret_lambda.SecretRotator') as MockRotator:
-            
-            mock_service_client = mock_boto3_client.return_value
-            mock_service_client.describe_secret.return_value = {
-                "RotationEnabled": True,
-                "VersionIdsToStages": {
-                    "test-token": "AWSPENDING"
-                }
-            }
-            
-            mock_rotator = MockRotator.return_value
 
-            from rotate_secret_lambda import lambda_handler
-            lambda_handler(event, None)
+        mock_rotator = MagicMock()
+        mock_boto_client = MagicMock()
 
-            # Verify correct step was called
-            mock_rotator.create_secret.assert_called_once_with(
-                mock_service_client, "test-arn", "test-token"
-            )
+        with patch("boto3.client", return_value=mock_boto_client):
+            with patch("rotate_secret_lambda.SecretRotator", return_value=mock_rotator):
+            
+                from rotate_secret_lambda import lambda_handler
+                lambda_handler(event, None)
+
+                mock_rotator.create_secret.assert_called_once_with(
+                    mock_boto_client, "test-arn", "test-token"
+                )
             
             
     def test_run_test_secret_with_test_domains(self, rotator):
