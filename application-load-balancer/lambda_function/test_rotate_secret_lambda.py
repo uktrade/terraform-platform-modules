@@ -1008,7 +1008,7 @@ class TestEdgeCases:
         time.sleep = MagicMock()
         
         with pytest.raises(ValueError, match="No matching distributions found. Cannot update Cloudfront distributions or WAF ACLs"): 
-            rotator.set_secret(boto3.client, "test-arn", "token")
+            rotator.set_secret(mock_boto_client, "test-arn", "token")
                 
         rotator.get_waf_acl.assert_not_called() 
         rotator.update_cf_distro.assert_not_called() 
