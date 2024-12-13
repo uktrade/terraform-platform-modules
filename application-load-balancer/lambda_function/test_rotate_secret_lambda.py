@@ -506,13 +506,13 @@ class TestProcessCloudFrontDistributions:
         
         rotator.update_waf_acl = MagicMock()
         rotator.update_cf_distro = MagicMock()
+        time.sleep = MagicMock()
         
-        with patch('time.sleep') as mock_sleep:
-            rotator.process_cf_distributions_and_WAF_rules(
-                matching_distributions, 
-                pending_secret, 
-                current_secret
-            )
+        rotator.process_cf_distributions_and_WAF_rules(
+            matching_distributions, 
+            pending_secret, 
+            current_secret
+        )
         
         assert rotator.update_cf_distro.call_count == len(matching_distributions)
         for distro in matching_distributions:
@@ -523,7 +523,7 @@ class TestProcessCloudFrontDistributions:
             current_secret['HEADERVALUE']
         )
         
-        assert mock_sleep.call_count == 1
+        assert time.sleep.call_count == 1
 
         mock_logger.info.assert_any_call(
             "Not all CloudFront distributions have the header. Updating WAF last."
