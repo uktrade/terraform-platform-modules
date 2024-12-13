@@ -183,20 +183,20 @@ class TestWAFManagement:
             "LockToken": "original-lock-token"
         }
 
-        boto3.client = MagicMock()
-        mock_client = MagicMock()
-        boto3.client.return_value = mock_client
-        
-        rotator.get_waf_acl = MagicMock()
-        rotator.get_waf_acl.return_value = current_rules
+        with patch("boto3.client") as mock_boto_client:
+            mock_client = MagicMock()
+            mock_boto_client.return_value = mock_client
+            
+            rotator.get_waf_acl = MagicMock()
+            rotator.get_waf_acl.return_value = current_rules
 
-        # When updating the WAF
-        rotator.update_waf_acl("new-secret", "old-secret")
+            # When updating the WAF
+            rotator.update_waf_acl("new-secret", "old-secret")
 
-        # Then it should use the lock token
-        call_args = mock_client.update_web_acl.call_args[1]
-        assert call_args['LockToken'] == "original-lock-token", \
-            "Must use lock token for atomic updates"
+            # Then it should use the lock token
+            call_args = mock_client.update_web_acl.call_args[1]
+            assert call_args['LockToken'] == "original-lock-token", \
+                "Must use lock token for atomic updates"
 
 class TestDistributionUpdates:
     """
