@@ -133,7 +133,7 @@ data "aws_iam_policy_document" "write_environment_pipeline_codebuild_logs" {
     resources = [
       aws_cloudwatch_log_group.environment_pipeline_codebuild.arn,
       "${aws_cloudwatch_log_group.environment_pipeline_codebuild.arn}:*",
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
+      "arn:aws:logs:${local.account_region}:log-group:*"
     ]
   }
 }
@@ -182,7 +182,7 @@ data "aws_iam_policy_document" "state_dynamo_db_access" {
       "dynamodb:DeleteItem"
     ]
     resources = [
-      "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/terraform-platform-lockdb-${local.stages[0].accounts.deploy.name}"
+      "arn:aws:dynamodb:${local.account_region}:table/terraform-platform-lockdb-${local.stages[0].accounts.deploy.name}"
     ]
   }
 }
@@ -206,7 +206,7 @@ data "aws_iam_policy_document" "ec2_read_access" {
       "ec2:CreateSecurityGroup"
     ]
     resources = [
-      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vpc/*"
+      "arn:aws:ec2:${local.account_region}:vpc/*"
     ]
   }
 }
@@ -223,7 +223,7 @@ data "aws_iam_policy_document" "ssm_read_access" {
     ]
     resources = [
       data.aws_ssm_parameter.central_log_group_parameter.arn,
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/codebuild/slack_*"
+      "arn:aws:ssm:${local.account_region}:parameter/codebuild/slack_*"
     ]
   }
 }
@@ -267,7 +267,7 @@ data "aws_iam_policy_document" "load_balancer" {
         "elasticloadbalancing:DeleteTargetGroup"
       ]
       resources = [
-        "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:targetgroup/${var.application}-${statement.value.name}-http/*"
+        "arn:aws:elasticloadbalancing:${local.account_region}:targetgroup/${var.application}-${statement.value.name}-http/*"
       ]
     }
   }
@@ -284,7 +284,7 @@ data "aws_iam_policy_document" "load_balancer" {
         "elasticloadbalancing:ModifyListener"
       ]
       resources = [
-        "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:loadbalancer/app/${var.application}-${statement.value.name}/*"
+        "arn:aws:elasticloadbalancing:${local.account_region}:loadbalancer/app/${var.application}-${statement.value.name}/*"
       ]
     }
   }
@@ -297,7 +297,7 @@ data "aws_iam_policy_document" "load_balancer" {
         "elasticloadbalancing:ModifyListener"
       ]
       resources = [
-        "arn:aws:elasticloadbalancing:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:listener/app/${var.application}-${statement.value.name}/*"
+        "arn:aws:elasticloadbalancing:${local.account_region}:listener/app/${var.application}-${statement.value.name}/*"
       ]
     }
   }
@@ -320,7 +320,7 @@ data "aws_iam_policy_document" "certificate" {
       "acm:DeleteCertificate"
     ]
     resources = [
-      "arn:aws:acm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate/*"
+      "arn:aws:acm:${local.account_region}:certificate/*"
     ]
   }
 
@@ -346,7 +346,7 @@ data "aws_iam_policy_document" "security_group" {
       "ec2:AuthorizeSecurityGroupEgress"
     ]
     resources = [
-      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/*"
+      "arn:aws:ec2:${local.account_region}:security-group/*"
     ]
   }
 }
@@ -357,7 +357,7 @@ data "aws_iam_policy_document" "ssm_parameter" {
       "ssm:DescribeParameters"
     ]
     resources = [
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "arn:aws:ssm:${local.account_region}:*"
     ]
   }
 
@@ -372,9 +372,9 @@ data "aws_iam_policy_document" "ssm_parameter" {
       "ssm:ListTagsForResource"
     ]
     resources = [
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/${var.application}/*/secrets/*",
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}",
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.application}/*"
+      "arn:aws:ssm:${local.account_region}:parameter/copilot/${var.application}/*/secrets/*",
+      "arn:aws:ssm:${local.account_region}:parameter/copilot/applications/${var.application}",
+      "arn:aws:ssm:${local.account_region}:parameter/copilot/applications/${var.application}/*"
     ]
   }
 }
@@ -407,7 +407,7 @@ data "aws_iam_policy_document" "cloudwatch" {
         "resource-groups:DeleteGroup"
       ]
       resources = [
-        "arn:aws:resource-groups:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:group/${var.application}-${statement.value.name}-application-insights-resources"
+        "arn:aws:resource-groups:${local.account_region}:group/${var.application}-${statement.value.name}-application-insights-resources"
       ]
     }
   }
@@ -423,7 +423,7 @@ data "aws_iam_policy_document" "cloudwatch" {
         "applicationinsights:DeleteApplication"
       ]
       resources = [
-        "arn:aws:applicationinsights:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:application/resource-group/${var.application}-${statement.value.name}-application-insights-resources"
+        "arn:aws:applicationinsights:${local.account_region}:application/resource-group/${var.application}-${statement.value.name}-application-insights-resources"
       ]
     }
   }
@@ -442,7 +442,7 @@ data "aws_iam_policy_document" "logs" {
       "logs:DescribeLogGroups"
     ]
     resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group::log-stream:"
+      "arn:aws:logs:${local.account_region}:log-group::log-stream:"
     ]
   }
 
@@ -472,10 +472,10 @@ data "aws_iam_policy_document" "logs" {
       "logs:DeleteLogStream"
     ]
     resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*",
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/rds/*",
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*",
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/*"
+      "arn:aws:logs:${local.account_region}:log-group:/aws/opensearch/*",
+      "arn:aws:logs:${local.account_region}:log-group:/aws/rds/*",
+      "arn:aws:logs:${local.account_region}:log-group:/aws/elasticache/*",
+      "arn:aws:logs:${local.account_region}:log-group:codebuild/*"
     ]
   }
 }
@@ -496,7 +496,7 @@ data "aws_iam_policy_document" "kms_key" {
       "kms:*"
     ]
     resources = [
-      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:aws:kms:${local.account_region}:key/*"
     ]
   }
 
@@ -506,7 +506,7 @@ data "aws_iam_policy_document" "kms_key" {
       "kms:DeleteAlias"
     ]
     resources = [
-      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-*"
+      "arn:aws:kms:${local.account_region}:alias/${var.application}-*"
     ]
   }
 }
@@ -522,7 +522,7 @@ data "aws_iam_policy_document" "redis" {
       "elasticache:CreateReplicationGroup"
     ]
     resources = [
-      "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnetgroup:*"
+      "arn:aws:elasticache:${local.account_region}:subnetgroup:*"
     ]
   }
 
@@ -535,8 +535,8 @@ data "aws_iam_policy_document" "redis" {
       "elasticache:DeleteReplicationGroup"
     ]
     resources = [
-      "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:replicationgroup:*",
-      "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parametergroup:*"
+      "arn:aws:elasticache:${local.account_region}:replicationgroup:*",
+      "arn:aws:elasticache:${local.account_region}:parametergroup:*"
     ]
   }
 
@@ -545,7 +545,7 @@ data "aws_iam_policy_document" "redis" {
       "elasticache:DescribeCacheClusters"
     ]
     resources = [
-      "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:*"
+      "arn:aws:elasticache:${local.account_region}:cluster:*"
     ]
   }
 
@@ -616,7 +616,7 @@ data "aws_iam_policy_document" "postgres" {
         "lambda:CreateFunction"
       ]
       resources = [
-        "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${statement.value.name}-*"
+        "arn:aws:lambda:${local.account_region}:function:${var.application}-${statement.value.name}-*"
       ]
     }
   }
@@ -648,7 +648,7 @@ data "aws_iam_policy_document" "postgres" {
         "rds:DeleteDBParameterGroup"
       ]
       resources = [
-        "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:pg:${var.application}-${statement.value.name}-*"
+        "arn:aws:rds:${local.account_region}:pg:${var.application}-${statement.value.name}-*"
       ]
     }
   }
@@ -665,7 +665,7 @@ data "aws_iam_policy_document" "postgres" {
         "rds:CreateDBInstance"
       ]
       resources = [
-        "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subgrp:${var.application}-${statement.value.name}-*"
+        "arn:aws:rds:${local.account_region}:subgrp:${var.application}-${statement.value.name}-*"
       ]
     }
   }
@@ -675,7 +675,7 @@ data "aws_iam_policy_document" "postgres" {
       "rds:DescribeDBInstances"
     ]
     resources = [
-      "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
+      "arn:aws:rds:${local.account_region}:db:*"
     ]
   }
 
@@ -688,7 +688,7 @@ data "aws_iam_policy_document" "postgres" {
         "rds:ModifyDBInstance"
       ]
       resources = [
-        "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${var.application}-${statement.value.name}-*"
+        "arn:aws:rds:${local.account_region}:db:${var.application}-${statement.value.name}-*"
       ]
     }
   }
@@ -699,7 +699,7 @@ data "aws_iam_policy_document" "postgres" {
       "kms:*"
     ]
     resources = [
-      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:rds*"
+      "arn:aws:secretsmanager:${local.account_region}:secret:rds*"
     ]
   }
 }
@@ -755,8 +755,8 @@ data "aws_iam_policy_document" "ecs" {
       "ecs:RegisterTaskDefinition",
     ]
     resources = [
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*",
-      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/"
+      "arn:aws:ecs:${local.account_region}:task-definition/*",
+      "arn:aws:ecs:${local.account_region}:task-definition/"
     ]
   }
 
@@ -790,7 +790,7 @@ data "aws_iam_policy_document" "opensearch" {
       "es:UpdateDomainConfig"
     ]
     resources = [
-      "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/*"
+      "arn:aws:es:${local.account_region}:domain/*"
     ]
   }
 
@@ -857,9 +857,9 @@ data "aws_iam_policy_document" "cloudformation" {
       "cloudformation:DeleteStack"
     ]
     resources = [
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.application}-*",
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/StackSet-${var.application}-infrastructure-*",
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stackset/${var.application}-infrastructure:*",
+      "arn:aws:cloudformation:${local.account_region}:stack/${var.application}-*",
+      "arn:aws:cloudformation:${local.account_region}:stack/StackSet-${var.application}-infrastructure-*",
+      "arn:aws:cloudformation:${local.account_region}:stackset/${var.application}-infrastructure:*",
     ]
   }
 
@@ -946,7 +946,7 @@ data "aws_iam_policy_document" "codepipeline" {
       "codepipeline:StopPipelineExecution",
     ]
     resources = [
-      "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.application}-${var.pipeline_name}-environment-pipeline"
+      "arn:aws:codepipeline:${local.account_region}:${var.application}-${var.pipeline_name}-environment-pipeline"
     ]
   }
 
@@ -960,8 +960,8 @@ data "aws_iam_policy_document" "codepipeline" {
       "codepipeline:TagResource"
     ]
     resources = [
-      "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*-copy-pipeline",
-      "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*-copy-pipeline/*"
+      "arn:aws:codepipeline:${local.account_region}:*-copy-pipeline",
+      "arn:aws:codepipeline:${local.account_region}:*-copy-pipeline/*"
     ]
   }
 
@@ -973,7 +973,7 @@ data "aws_iam_policy_document" "codepipeline" {
       "codebuild:UpdateProject"
     ]
     resources = [
-      "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:project/*"
+      "arn:aws:codebuild:${local.account_region}:project/*"
     ]
   }
 
@@ -988,7 +988,7 @@ data "aws_iam_policy_document" "codepipeline" {
       "scheduler:ListTagsForResource"
     ]
     resources = [
-      "arn:aws:scheduler:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:schedule/*"
+      "arn:aws:scheduler:${local.account_region}:schedule/*"
     ]
   }
 }
@@ -1036,20 +1036,59 @@ resource "aws_iam_role" "environment_pipeline_codepipeline" {
 resource "aws_iam_role" "environment_pipeline_codebuild" {
   name               = "${var.application}-${var.pipeline_name}-environment-pipeline-codebuild"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
-  managed_policy_arns = [
-    aws_iam_policy.iam.arn,
-    aws_iam_policy.cloudformation.arn,
-    aws_iam_policy.cloudfront.arn,
-    aws_iam_policy.codepipeline.arn,
-    aws_iam_policy.redis.arn,
-    aws_iam_policy.postgres.arn,
-    aws_iam_policy.opensearch.arn,
-    aws_iam_policy.load_balancer.arn,
-    aws_iam_policy.s3.arn,
-    aws_iam_policy.ecs.arn
-  ]
-  tags = local.tags
+  tags               = local.tags
 }
+
+resource "aws_iam_role_policy_attachment" "attach_iam_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.iam.arn
+}
+
+resource "aws_iam_role_policy_attachment" "attach_cloudformation_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.cloudformation.arn
+}
+
+resource "aws_iam_role_policy_attachment" "attach_cloudfront_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.cloudfront.arn
+}
+
+resource "aws_iam_role_policy_attachment" "attach_codepipeline_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.codepipeline.arn
+}
+
+resource "aws_iam_role_policy_attachment" "attach_redis_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.redis.arn
+}
+
+resource "aws_iam_role_policy_attachment" "attach_postgres_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.postgres.arn
+}
+
+resource "aws_iam_role_policy_attachment" "attach_opensearch_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.opensearch.arn
+}
+
+resource "aws_iam_role_policy_attachment" "attach_load_balancer_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.load_balancer.arn
+}
+
+resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.s3.arn
+}
+
+resource "aws_iam_role_policy_attachment" "attach_ecs_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.ecs.arn
+}
+
 
 # Inline policies
 resource "aws_iam_role_policy" "artifact_store_access_for_environment_codepipeline" {
