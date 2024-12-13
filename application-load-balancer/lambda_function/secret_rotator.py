@@ -280,13 +280,13 @@ class SecretRotator:
 
                     # If the header is not found, add it
                     if not header_found:
-                        self.logger.info(f"Custom header not found in origin {origin['Id']}, adding header.")
+                        self.logger.info(f"Custom header not found in origin {origin}, adding header.")
                         origin['CustomHeaders']['Items'].append({
                             'HeaderName': self.header_name,
                             'HeaderValue': pending_secret['HEADERVALUE']
                         })
 
-                        self.logger.info(f"Custom header found/added in CloudFront distribution: {origin['Id']}")
+                        self.logger.info(f"Custom header found/added in CloudFront distribution: {origin}")
                         all_have_header = False  # Mark this as needing update, since we added it
 
                 # If header is found in the Items, we can break out of the loop for this origin
@@ -505,7 +505,7 @@ class SecretRotator:
                 VersionId=currenttoken,
                 VersionStage="AWSCURRENT"
                 )
-
+   
         pendingsecret = json.loads(pending['SecretString'])
         currentsecret = json.loads(current['SecretString'])
 
