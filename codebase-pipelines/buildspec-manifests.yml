@@ -28,6 +28,7 @@ phases:
           export AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey)
           export AWS_SESSION_TOKEN=$(echo $assumed_role | jq -r .Credentials.SessionToken)
           EXPORT_ENV=$(echo $env | tr '[:lower:]' '[:upper:]')
+          export CLUSTER_NAME="$APPLICATION-$env"
           export CLUSTER_NAME_$EXPORT_ENV="$APPLICATION-$env"
           for svc in $(echo $SERVICES | jq -c -r '.[]');
           do
@@ -35,8 +36,10 @@ phases:
               echo '[{"name":"'$svc'","imageUri":"'$REPOSITORY_URL':'$IMAGE_TAG'"}]' > image-definitions-$svc.json
             fi
             SERVICE_NAME=$(aws ecs list-services --cluster $APPLICATION-$env | jq -r '.serviceArns[] | select(contains("'$APPLICATION-$env'-'$svc'-Service"))')
-            EXPORT_SVC="$(echo $EXPORT_ENV'_'$svc | tr - _ | tr '[:lower:]' '[:upper:]')"
+            EXPORT_SVC="$(echo $svc | tr - _ | tr '[:lower:]' '[:upper:]')"
+            EXPORT_ENV_SVC="$(echo $EXPORT_ENV'_'$EXPORT_SVC)"
             export SERVICE_NAME_$EXPORT_SVC=$(echo $SERVICE_NAME | cut -d '/' -f3)
+            export SERVICE_NAME_$EXPORT_ENV_SVC=$(echo $SERVICE_NAME | cut -d '/' -f3)
             cat image-definitions-$svc.json
           done
         done
