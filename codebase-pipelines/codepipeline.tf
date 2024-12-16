@@ -99,7 +99,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
             ServiceName = "#{build_manifest.SERVICE_NAME_${upper(stage.value.name)}_${upper(replace(action.value.name, "-", "_"))}}"
             FileName    = "image-definitions-${action.value.name}.json"
           }
-          role_arn = "arn:aws:iam::${stage.value.account.id}:role/${var.application}-${stage.value.name}-codebase-pipeline-deploy-role"
+          role_arn = "arn:aws:iam::${stage.value.account.id}:role/${var.application}-${stage.value.name}-codebase-pipeline-deploy"
         }
       }
     }

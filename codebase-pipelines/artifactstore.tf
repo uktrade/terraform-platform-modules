@@ -55,7 +55,7 @@ data "aws_iam_policy_document" "artifact_store_bucket_policy" {
       type = "AWS"
       identifiers = [
         for env in local.pipeline_environments :
-        "arn:aws:iam::${env.account.id}:role/${var.application}-${env.name}-codebase-pipeline-deploy-role"
+        "arn:aws:iam::${env.account.id}:role/${var.application}-${env.name}-codebase-pipeline-deploy"
       ]
     }
     actions = [
