@@ -728,8 +728,8 @@ run "test_codebuild_manifests" {
     error_message = "Should be: 'CODEPIPELINE'"
   }
   assert {
-    condition     = length(regexall(".*\"exported-variables\":\\[\"CLUSTER_NAME_DEV\".*", aws_codebuild_project.codebase_deploy_manifests.source[0].buildspec)) > 0
-    error_message = "Should contain: '\"exported-variables\":[\"CLUSTER_NAME_DEV\"'"
+    condition     = length(regexall(".*\"exported-variables\":\\[\"CLUSTER_NAME\".*", aws_codebuild_project.codebase_deploy_manifests.source[0].buildspec)) > 0
+    error_message = "Should contain: '\"exported-variables\":[\"CLUSTER_NAME\"'"
   }
   assert {
     condition     = jsonencode(aws_codebuild_project.codebase_deploy_manifests.tags) == jsonencode(var.expected_tags)
@@ -889,7 +889,7 @@ run "test_main_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-deploy-manifests"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1008,7 +1008,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-deploy-manifests"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"staging\\\",\\\"requires_approval\\\":null},{\\\"account\\\":{\\\"id\\\":\\\"123456789000\\\",\\\"name\\\":\\\"prod\\\"},\\\"name\\\":\\\"prod\\\",\\\"requires_approval\\\":true}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"staging\\\",\\\"prod\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1268,7 +1268,7 @@ run "test_pipeline_single_run_group" {
   }
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1349,7 +1349,7 @@ run "test_pipeline_multiple_run_groups" {
   }
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\",\\\"service-5\\\",\\\"service-6\\\",\\\"service-7\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\",\\\"service-5\\\",\\\"service-6\\\",\\\"service-7\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
@@ -1459,7 +1459,7 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
   }
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[{\\\"account\\\":{\\\"id\\\":\\\"000123456789\\\",\\\"name\\\":\\\"sandbox\\\"},\\\"name\\\":\\\"dev\\\",\\\"requires_approval\\\":null},{\\\"account\\\":{\\\"id\\\":\\\"123456789000\\\",\\\"name\\\":\\\"prod\\\"},\\\"name\\\":\\\"prod\\\",\\\"requires_approval\\\":true}]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENTS\",\"value\":\"[\\\"dev\\\",\\\"prod\\\"]\"},{\"name\":\"SERVICES\",\"value\":\"[\\\"service-1\\\",\\\"service-2\\\",\\\"service-3\\\",\\\"service-4\\\"]\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
 
