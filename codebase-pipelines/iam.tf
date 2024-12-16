@@ -26,12 +26,12 @@ resource "aws_iam_role_policy_attachment" "ssm_access" {
 }
 
 resource "aws_iam_role_policy" "log_access_for_codebuild_images" {
-  name   = "${var.application}-${var.codebase}-log-access-for-codebuild-images"
+  name   = "log-access"
   role   = aws_iam_role.codebase_image_build.name
-  policy = data.aws_iam_policy_document.log_access_for_codebuild.json
+  policy = data.aws_iam_policy_document.log_access.json
 }
 
-data "aws_iam_policy_document" "log_access_for_codebuild" {
+data "aws_iam_policy_document" "log_access" {
   statement {
     effect = "Allow"
     actions = [
@@ -67,7 +67,7 @@ data "aws_iam_policy_document" "log_access_for_codebuild" {
 }
 
 resource "aws_iam_role_policy" "ecr_access_for_codebuild_images" {
-  name   = "${var.application}-${var.codebase}-ecr-access-for-codebuild-images"
+  name   = "ecr-access"
   role   = aws_iam_role.codebase_image_build.name
   policy = data.aws_iam_policy_document.ecr_access_for_codebuild_images.json
 }
@@ -174,7 +174,7 @@ resource "aws_iam_role" "codebase_deploy_manifests" {
 }
 
 resource "aws_iam_role_policy" "artifact_store_access_for_codebuild_manifests" {
-  name   = "${var.application}-${var.codebase}-artifact-store-access-for-codebuild-manifests"
+  name   = "artifact-store-access"
   role   = aws_iam_role.codebase_deploy_manifests.name
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
@@ -223,13 +223,13 @@ data "aws_iam_policy_document" "access_artifact_store" {
 }
 
 resource "aws_iam_role_policy" "log_access_for_codebuild_manifests" {
-  name   = "${var.application}-${var.codebase}-log-access-for-codebuild-manifests"
+  name   = "log-access"
   role   = aws_iam_role.codebase_deploy_manifests.name
-  policy = data.aws_iam_policy_document.log_access_for_codebuild.json
+  policy = data.aws_iam_policy_document.log_access.json
 }
 
 resource "aws_iam_role_policy" "codebuild_assume_environment_deploy_role" {
-  name   = "${var.application}-${var.codebase}-environment-deploy-role-access-for-codebuild-manifests"
+  name   = "environment-deploy-role-access"
   role   = aws_iam_role.codebase_deploy_manifests.name
   policy = data.aws_iam_policy_document.assume_environment_deploy_role.json
 }
@@ -254,7 +254,7 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
 }
 
 resource "aws_iam_role_policy" "ecr_access_for_codebase_pipeline" {
-  name   = "${var.application}-${var.codebase}-ecr-access-for-codebase-pipeline"
+  name   = "ecr-access"
   role   = aws_iam_role.codebase_deploy_pipeline.name
   policy = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.json
 }
@@ -272,13 +272,13 @@ data "aws_iam_policy_document" "ecr_access_for_codebase_pipeline" {
 }
 
 resource "aws_iam_role_policy" "artifact_store_access_for_codebase_pipeline" {
-  name   = "${var.application}-${var.codebase}-artifact-store-access-for-codebase-pipeline"
+  name   = "artifact-store-access"
   role   = aws_iam_role.codebase_deploy_pipeline.name
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
 
 resource "aws_iam_role_policy" "pipeline_assume_environment_deploy_role" {
-  name   = "${var.application}-${var.codebase}-assume-environment-codebase-pipeline-deploy-role"
+  name   = "environment-deploy-role-access"
   role   = aws_iam_role.codebase_deploy_pipeline.name
   policy = data.aws_iam_policy_document.assume_environment_deploy_role.json
 }
