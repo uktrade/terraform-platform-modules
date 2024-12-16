@@ -8,5 +8,17 @@ terraform {
         aws.domain,
       ]
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6.0"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.4.2"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2.3"
+    }
   }
 }

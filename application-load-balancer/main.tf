@@ -1,3 +1,7 @@
+data "aws_ssm_parameter" "slack_token" {
+  name = "/codebuild/slack_oauth_token"
+}
+
 data "aws_vpc" "vpc" {
   filter {
     name   = "tag:Name"
@@ -165,4 +169,267 @@ output "cert-arn" {
 
 output "alb-arn" {
   value = aws_lb.this.arn
+}
+
+
+## This section configures WAF on ALB to attach security token.
+
+data "aws_caller_identity" "current" {}
+
+# Random password for the secret value
+resource "random_password" "origin-secret" {
+  length           = 32
+  special          = false
+  override_special = "_%@"
+}
+
+resource "aws_wafv2_web_acl" "waf-acl" {
+  # checkov:skip=CKV2_AWS_31: Ensure WAF2 has a Logging Configuration to be done new ticket
+  # checkov:skip=CKV_AWS_192: AWSManagedRulesKnownBadInputsRuleSet handles on the CDN
+  depends_on = [random_password.origin-secret]
+
+  name        = "${var.application}-${var.environment}-ACL"
+  description = "CloudFront Origin Verify"
+  scope       = "REGIONAL"
+
+  default_action {
+    block {} # Action to perform if none of the rules contained in the WebACL match
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${var.application}-${var.environment}-XOriginVerify"
+    sampled_requests_enabled   = true
+  }
+
+  rule {
+    name     = "${var.application}-${var.environment}-XOriginVerify"
+    priority = "0"
+
+    action {
+      allow {}
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.application}-${var.environment}-XMetric"
+      sampled_requests_enabled   = true
+    }
+
+    # This is just a holding rule, it needs to initially not block any traffic.
+    statement {
+      not_statement {
+        statement {
+          byte_match_statement {
+            field_to_match {
+              single_header {
+                name = "x-origin-verify"
+              }
+            }
+            positional_constraint = "EXACTLY"
+            search_string         = "initial"
+            text_transformation {
+              priority = 0
+              type     = "NONE"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  lifecycle {
+    # Use `ignore_changes` to allow rotation without Terraform overwriting the value
+    ignore_changes = [rule]
+  }
+  tags = local.tags
+
+}
+
+# AWS Lambda Resources
+
+# IAM Role for Lambda Execution
+resource "aws_iam_role" "origin-secret-rotate-execution-role" {
+  name = "${var.application}-${var.environment}-origin-secret-rotate-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+
+  tags = local.tags
+}
+
+data "aws_iam_policy_document" "origin_verify_rotate_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+    resources = [
+      "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*origin-secret-rotate*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:UpdateSecretVersionStage"
+    ]
+    resources = [
+      "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${var.environment}-origin-verify-header-secret-*"
+    ]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetRandomPassword"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "cloudfront:GetDistribution",
+      "cloudfront:GetDistributionConfig",
+      "cloudfront:ListDistributions",
+      "cloudfront:UpdateDistribution"
+    ]
+    resources = [
+      "arn:aws:cloudfront::${var.dns_account_id}:distribution/*"
+    ]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["wafv2:*"]
+    resources = [
+      aws_wafv2_web_acl.waf-acl.arn
+    ]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["wafv2:UpdateWebACL"]
+    resources = [
+      "arn:aws:wafv2:eu-west-2:${data.aws_caller_identity.current.account_id}:regional/managedruleset/*/*"
+    ]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    resources = [
+      "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:GenerateDataKey"
+    ]
+    resources = [
+      aws_kms_key.origin_verify_secret_key.arn
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "origin_secret_rotate_policy" {
+  name   = "OriginVerifyRotatePolicy"
+  role   = aws_iam_role.origin-secret-rotate-execution-role.name
+  policy = data.aws_iam_policy_document.origin_verify_rotate_policy.json
+}
+
+
+
+# This file needs to exist, but it's not directly used in the Terraform so...
+# tflint-ignore: terraform_unused_declarations
+# This resource creates the Lambda function code zip file
+data "archive_file" "lambda" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_function"
+  output_path = "${path.module}/lambda_function.zip" # This zip contains only your function code
+  excludes = [
+    "**/.DS_Store",
+    "**/.idea/*"
+  ]
+
+  depends_on = [
+    aws_iam_role.origin-secret-rotate-execution-role
+  ]
+}
+
+
+# Secrets Manager Rotation Lambda Function
+resource "aws_lambda_function" "origin-secret-rotate-function" {
+  # Precedence in the Postgres Lambda to skip first 2 checks
+  # checkov:skip=CKV_AWS_272:Code signing is not currently in use
+  # checkov:skip=CKV_AWS_116:Dead letter queue not required due to the nature of this function
+  # checkov:skip=CKV_AWS_173:Encryption of environmental variables is not configured with KMS key
+  # checkov:skip=CKV_AWS_117:Run Lambda inside VPC with security groups & private subnets not necessary
+  # checkov:skip=CKV_AWS_50:XRAY tracing not used
+  depends_on    = [data.archive_file.lambda, aws_iam_role.origin-secret-rotate-execution-role]
+  filename      = data.archive_file.lambda.output_path
+  function_name = "${var.application}-${var.environment}-origin-secret-rotate"
+  description   = "Secrets Manager Rotation Lambda Function"
+  handler       = "rotate_secret_lambda.lambda_handler"
+  runtime       = "python3.9"
+  timeout       = 300
+  role          = aws_iam_role.origin-secret-rotate-execution-role.arn
+  # this is not a user-facing function that needs to scale rapidly
+  reserved_concurrent_executions = 5
+
+  environment {
+    variables = {
+      SECRETID = aws_secretsmanager_secret.origin-verify-secret.arn
+      WAFACLID = aws_wafv2_web_acl.waf-acl.id
+      # todo: why are we splitting on |, should it just be aws_wafv2_web_acl.waf-acl.name?
+      WAFACLNAME         = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
+      WAFRULEPRI         = "0"
+      DISTROIDLIST       = local.domain_list
+      HEADERNAME         = "x-origin-verify"
+      APPLICATION        = var.application
+      ENVIRONMENT        = var.environment
+      ROLEARN            = "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+      AWS_ACCOUNT        = data.aws_caller_identity.current.account_id
+      SLACK_TOKEN        = data.aws_ssm_parameter.slack_token.value
+      SLACK_CHANNEL      = local.config_with_defaults.slack_alert_channel_alb_secret_rotation
+      WAF_SLEEP_DURATION = "75"
+    }
+  }
+
+  layers           = ["arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"]
+  source_code_hash = data.archive_file.lambda.output_base64sha256
+  tags             = local.tags
+}
+
+# Lambda Permission for Secrets Manager Rotation
+resource "aws_lambda_permission" "rotate-function-invoke-permission" {
+  statement_id  = "AllowSecretsManagerInvocation"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.origin-secret-rotate-function.function_name
+  principal     = "secretsmanager.amazonaws.com"
+
+  # chekov CKV_AWS_364 requirement: limit lambda invocation by secrets in the same AWS account
+  source_account = data.aws_caller_identity.current.account_id
+}
+
+# Associate WAF ACL with ALB
+resource "aws_wafv2_web_acl_association" "waf-alb-association" {
+  resource_arn = aws_lb.this.arn
+  web_acl_arn  = aws_wafv2_web_acl.waf-acl.arn
 }
