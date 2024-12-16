@@ -3,7 +3,7 @@ resource "aws_s3_bucket" "artifact_store" {
   # checkov:skip=CKV2_AWS_62: It's just a pipeline artifacts bucket, event notifications are not needed.
   # checkov:skip=CKV_AWS_21: It's just a pipeline artifacts bucket, versioning is not needed.
   # checkov:skip=CKV_AWS_18: It's just a pipeline artifacts bucket, access logging is not needed.
-  bucket = "${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store"
+  bucket = "${substr(local.pipeline_name, 0, 48)}-artifact-store"
 
   tags = local.tags
 }
@@ -31,22 +31,17 @@ data "aws_iam_policy_document" "artifact_store_bucket_policy" {
       type        = "*"
       identifiers = ["*"]
     }
-
     actions = [
       "s3:*",
     ]
-
     effect = "Deny"
-
     condition {
       test     = "Bool"
       variable = "aws:SecureTransport"
-
       values = [
         "false",
       ]
     }
-
     resources = [
       aws_s3_bucket.artifact_store.arn,
       "${aws_s3_bucket.artifact_store.arn}/*",
@@ -83,7 +78,7 @@ resource "aws_kms_key" "artifact_store_kms_key" {
 
 resource "aws_kms_alias" "artifact_store_kms_alias" {
   depends_on    = [aws_kms_key.artifact_store_kms_key]
-  name          = "alias/${var.application}-${var.pipeline_name}-environment-pipeline-artifact-store-key"
+  name          = "alias/${local.pipeline_name}-artifact-store-key"
   target_key_id = aws_kms_key.artifact_store_kms_key.id
 }
 

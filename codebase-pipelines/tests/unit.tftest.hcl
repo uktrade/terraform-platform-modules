@@ -8,14 +8,14 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.log_access_for_codebuild
+  target = data.aws_iam_policy_document.log_access
   values = {
     json = "{\"Sid\": \"CodeBuildLogs\"}"
   }
 }
 
 override_data {
-  target = data.aws_iam_policy_document.ecr_access_for_codebase_image_build
+  target = data.aws_iam_policy_document.ecr_access_for_codebuild_images
   values = {
     json = "{\"Sid\": \"CodeBuildImageECRAccess\"}"
   }
@@ -132,10 +132,6 @@ run "test_ecr" {
     condition     = jsonencode(aws_ecr_repository.this.tags) == jsonencode(var.expected_ecr_tags)
     error_message = "Should be: ${jsonencode(var.expected_ecr_tags)}"
   }
-  assert {
-    condition     = jsonencode(aws_ecr_repository.this.tags) == false
-    error_message = "Should be: ${jsonencode(jsonencode(local.base_env_config))}"
-  }
 }
 
 run "test_artifact_store" {
@@ -166,7 +162,7 @@ run "test_artifact_store" {
     error_message = "Should be: AWS"
   }
   assert {
-    condition     = flatten([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy-role", "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy-role", "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy-role"]
+    condition     = flatten([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy", "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy", "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy"]
     error_message = "Bucket policy principals incorrect"
   }
   assert {
@@ -179,8 +175,8 @@ run "test_codebuild_images" {
   command = plan
 
   assert {
-    condition     = aws_codebuild_project.codebase_image_build.name == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: my-app-my-codebase-codebase-image-build"
+    condition     = aws_codebuild_project.codebase_image_build.name == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: my-app-my-codebase-codebase-pipeline-image-build"
   }
   assert {
     condition     = aws_codebuild_project.codebase_image_build.description == "Publish images on push to my-repository"
@@ -275,8 +271,8 @@ run "test_codebuild_images" {
 
   # Webhook config:
   assert {
-    condition     = aws_codebuild_webhook.codebuild_webhook.project_name == "my-app-my-codebase-codebase-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
+    condition     = aws_codebuild_webhook.codebuild_webhook.project_name == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
     condition     = aws_codebuild_webhook.codebuild_webhook.build_type == "BUILD"
@@ -379,20 +375,123 @@ run "test_iam" {
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebase_image_build.name == "my-app-my-codebase-log-access-for-codebase-pipeline-image-build"
-    error_message = "Should be: 'my-app-my-codebase-log-access-for-codebase-pipeline-image-build'"
+    condition     = data.aws_iam_policy_document.assume_codebuild_role.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebase_image_build.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = one(data.aws_iam_policy_document.assume_codebuild_role.statement[0].actions) == "sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_codebuild_role.statement[0].principals).type == "Service"
+    error_message = "Should be: Service"
+  }
+  assert {
+    condition     = contains(one(data.aws_iam_policy_document.assume_codebuild_role.statement[0].principals).identifiers, "codebuild.amazonaws.com")
+    error_message = "Should contain: codebuild.amazonaws.com"
+  }
+  assert {
+    condition     = aws_iam_role_policy.log_access_for_codebuild_images.name == "log-access"
+    error_message = "Should be: 'log-access'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.log_access_for_codebuild_images.role == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebase_image_build.name == "my-app-my-codebase-ecr-access-for-codebase-pipeline-image-build"
-    error_message = "Should be: 'my-app-my-codebase-ecr-access-for-codebase-pipeline-image-build'"
+    condition     = data.aws_iam_policy_document.log_access.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebase_image_build.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = data.aws_iam_policy_document.log_access.statement[0].actions == toset(["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:TagLogGroup"])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.log_access.statement[0].resources == toset([
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/my-app-my-codebase-codebase-image-build/log-group",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/my-app-my-codebase-codebase-image-build/log-group:*",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group:*"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.name == "ecr-access"
+    error_message = "Should be: 'ecr-access'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.role == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[0].actions == toset([
+      "ecr:GetAuthorizationToken",
+      "ecr-public:GetAuthorizationToken",
+      "sts:GetServiceBearerToken"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[0].resources) == "*"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].actions == toset([
+      "ecr-public:DescribeImageScanFindings",
+      "ecr-public:GetLifecyclePolicyPreview",
+      "ecr-public:GetDownloadUrlForLayer",
+      "ecr-public:BatchGetImage",
+      "ecr-public:DescribeImages",
+      "ecr-public:ListTagsForResource",
+      "ecr-public:BatchCheckLayerAvailability",
+      "ecr-public:GetLifecyclePolicy",
+      "ecr-public:GetRepositoryPolicy",
+      "ecr-public:PutImage",
+      "ecr-public:InitiateLayerUpload",
+      "ecr-public:UploadLayerPart",
+      "ecr-public:CompleteLayerUpload",
+      "ecr-public:BatchDeleteImage",
+      "ecr-public:DescribeRepositories",
+      "ecr-public:ListImages"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].actions == toset([
+      "ecr:DescribeImageScanFindings",
+      "ecr:GetLifecyclePolicyPreview",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "ecr:DescribeImages",
+      "ecr:ListTagsForResource",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetLifecyclePolicy",
+      "ecr:GetRepositoryPolicy",
+      "ecr:PutImage",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:BatchDeleteImage",
+      "ecr:DescribeRepositories",
+      "ecr:ListImages"
+    ])
+    error_message = "Unexpected actions"
   }
   assert {
     condition     = aws_iam_role_policy.codestar_connection_access.name == "codestar-connection-policy"
@@ -401,6 +500,25 @@ run "test_iam" {
   assert {
     condition     = aws_iam_role_policy.codestar_connection_access.role == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.codestar_connection_access.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.codestar_connection_access.statement[0].actions == toset([
+      "codestar-connections:GetConnectionToken",
+      "codestar-connections:UseConnection"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = aws_iam_role_policy_attachment.ssm_access.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
+  }
+  assert {
+    condition     = aws_iam_role_policy_attachment.ssm_access.policy_arn == "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+    error_message = "Should be: 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess'"
   }
 
   # CodeBuild deploy manifests
@@ -417,27 +535,59 @@ run "test_iam" {
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.name == "my-app-my-codebase-artifact-store-access-for-codebase-pipeline-deploy-manifests"
-    error_message = "Should be: 'my-app-my-codebase-artifact-store-access-for-codebase-pipeline-deploy-manifests'"
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.name == "artifact-store-access"
+    error_message = "Should be: 'artifact-store-access'"
   }
   assert {
     condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.name == "my-app-my-codebase-log-access-for-codebase-pipeline-deploy-manifests"
-    error_message = "Should be: 'my-app-my-codebase-log-access-for-codebase-pipeline-deploy-manifests'"
+    condition     = data.aws_iam_policy_document.access_artifact_store.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.access_artifact_store.statement[0].actions == toset([
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketVersioning",
+      "s3:PutObjectAcl",
+      "s3:PutObject",
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.access_artifact_store.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.access_artifact_store.statement[1].actions == toset([
+      "codebuild:BatchGetBuilds",
+      "codebuild:StartBuild",
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.access_artifact_store.statement[1].resources) == "*"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.access_artifact_store.statement[2].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.access_artifact_store.statement[2].actions == toset([
+      "kms:GenerateDataKey",
+      "kms:Decrypt"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.name == "log-access"
+    error_message = "Should be: 'log-access'"
   }
   assert {
     condition     = aws_iam_role_policy.log_access_for_codebuild_manifests.role == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.codebuild_assume_environment_deploy_role.name == "my-app-my-codebase-environment-deploy-role-access-for-codebase-pipeline-deploy-manifests"
-    error_message = "Should be: 'my-app-my-codebase-environment-deploy-role-access-for-codebase-pipeline-deploy-manifests'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.codebuild_assume_environment_deploy_role.role == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy-manifests'"
   }
 
@@ -455,28 +605,66 @@ run "test_iam" {
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.name == "my-app-my-codebase-ecr-access-for-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-ecr-access-for-codebase-pipeline'"
+    condition     = data.aws_iam_policy_document.assume_codepipeline_role.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_codepipeline_role.statement[0].actions) == "sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_codepipeline_role.statement[0].principals).type == "Service"
+    error_message = "Should be: Service"
+  }
+  assert {
+    condition     = contains(one(data.aws_iam_policy_document.assume_codepipeline_role.statement[0].principals).identifiers, "codepipeline.amazonaws.com")
+    error_message = "Should contain: codepipeline.amazonaws.com"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.name == "ecr-access"
+    error_message = "Should be: 'ecr-access'"
   }
   assert {
     condition     = aws_iam_role_policy.ecr_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.name == "my-app-my-codebase-artifact-store-access-for-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-artifact-store-access-for-codebase-pipeline'"
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].actions) == "ecr:DescribeImages"
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.name == "artifact-store-access"
+    error_message = "Should be: 'artifact-store-access'"
   }
   assert {
     condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
   assert {
-    condition     = aws_iam_role_policy.pipeline_assume_environment_deploy_role.name == "my-app-my-codebase-assume-environment-codebase-pipeline-deploy-role"
-    error_message = "Should be: 'my-app-my-codebase-assume-environment-codebase-pipeline-deploy-role'"
+    condition     = aws_iam_role_policy.pipeline_assume_environment_deploy_role.name == "environment-deploy-role-access"
+    error_message = "Should be: 'environment-deploy-role-access'"
   }
   assert {
     condition     = aws_iam_role_policy.pipeline_assume_environment_deploy_role.role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.assume_environment_deploy_role.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_environment_deploy_role.statement[0].actions) == "sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition = flatten(data.aws_iam_policy_document.assume_environment_deploy_role.statement[0].resources) == ["arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy",
+      "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy",
+    "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy"]
+    error_message = "Unexpected resources"
   }
 }
 
@@ -484,7 +672,7 @@ run "test_codebuild_manifests" {
   command = plan
 
   assert {
-    condition     = aws_codebuild_project.codebase_deploy_manifests.name == "my-app-my-codebase-codebase-deploy-manifests"
+    condition     = aws_codebuild_project.codebase_deploy_manifests.name == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
     error_message = "Should be: 'my-app-my-codebase-codebase-deploy-manifests'"
   }
   assert {
@@ -551,10 +739,12 @@ run "test_codebuild_manifests" {
     condition     = aws_kms_key.codebuild_kms_key.description == "KMS Key for my-app my-codebase CodeBuild encryption"
     error_message = "Should be: KMS Key for my-app my-codebase CodeBuild encryption"
   }
+
   assert {
     condition     = aws_kms_key.codebuild_kms_key.enable_key_rotation == true
     error_message = "Should be: true"
   }
+
   assert {
     condition     = jsonencode(aws_kms_key.codebuild_kms_key.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
@@ -695,7 +885,7 @@ run "test_main_pipeline" {
     error_message = "Should be: manifest_output"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-deploy-manifests"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
     error_message = "Should be: my-app-my-codebase-codebase-deploy-manifests"
   }
   assert {
@@ -743,7 +933,7 @@ run "test_main_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].role_arn == "arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy-role"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].role_arn == "arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy"
     error_message = "Role ARN incorrect"
   }
   assert {
@@ -769,7 +959,7 @@ run "test_main_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].role_arn == "arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy-role"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].role_arn == "arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy"
     error_message = "Role ARN incorrect"
   }
   assert {
@@ -814,7 +1004,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: Create-Deploy-Manifests"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-deploy-manifests"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy-manifests"
     error_message = "Should be: my-app-my-codebase-codebase-deploy-manifests"
   }
   assert {
@@ -838,7 +1028,7 @@ run "test_tagged_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].role_arn == "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy-role"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[0].role_arn == "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy"
     error_message = "Role ARN incorrect"
   }
   assert {
@@ -864,7 +1054,7 @@ run "test_tagged_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].role_arn == "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy-role"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].role_arn == "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy"
     error_message = "Role ARN incorrect"
   }
   assert {
@@ -922,7 +1112,7 @@ run "test_tagged_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].role_arn == "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy-role"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[1].role_arn == "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy"
     error_message = "Role ARN incorrect"
   }
   assert {
@@ -948,7 +1138,7 @@ run "test_tagged_pipeline" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].role_arn == "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy-role"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[3].action[2].role_arn == "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy"
     error_message = "Role ARN incorrect"
   }
   assert {
@@ -1004,7 +1194,7 @@ run "test_event_bridge" {
     error_message = "Should be: 'my-app-my-codebase-ecr-image-publish-tagged'"
   }
 
-  # IAM
+  # IAM roles
   assert {
     condition     = aws_iam_role.event_bridge_pipeline_trigger.name == "my-app-my-codebase-event-bridge-pipeline-trigger"
     error_message = "Should be: 'my-app-my-codebase-event-bridge-pipeline-trigger'"
@@ -1018,12 +1208,46 @@ run "test_event_bridge" {
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.name == "my-app-my-codebase-pipeline-trigger-access-for-event-bridge"
-    error_message = "Should be: 'my-app-my-codebase-pipeline-trigger-access-for-event-bridge'"
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.name == "event-bridge-access"
+    error_message = "Should be: 'event-bridge-access'"
   }
   assert {
     condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.role == "my-app-my-codebase-event-bridge-pipeline-trigger"
     error_message = "Should be: 'my-app-my-codebase-event-bridge-pipeline-trigger'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.policy == "{\"Sid\": \"EventBridgePipelineTrigger\"}"
+    error_message = "Unexpected policy"
+  }
+
+  # IAM Policy documents
+  assert {
+    condition     = data.aws_iam_policy_document.event_bridge_pipeline_trigger.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.event_bridge_pipeline_trigger.statement[0].actions) == "codepipeline:StartPipelineExecution"
+    error_message = "Should be: codepipeline:StartPipelineExecution"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.event_bridge_pipeline_trigger.statement[0].resources) == "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:my-app-my-codebase-main-codebase-pipeline"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.assume_event_bridge_policy.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_event_bridge_policy.statement[0].actions) == "sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_event_bridge_policy.statement[0].principals).type == "Service"
+    error_message = "Should be: Service"
+  }
+  assert {
+    condition     = contains(one(data.aws_iam_policy_document.assume_event_bridge_policy.statement[0].principals).identifiers, "events.amazonaws.com")
+    error_message = "Should contain: events.amazonaws.com"
   }
 }
 
@@ -1056,6 +1280,10 @@ run "test_pipeline_single_run_group" {
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].run_order == 2
     error_message = "Run order incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].role_arn == "arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy"
+    error_message = "Role ARN incorrect"
   }
 
   # service-2
@@ -1250,10 +1478,6 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].run_order == 2
     error_message = "Run order incorrect"
   }
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].role_arn == "arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy-role"
-    error_message = "Role ARN incorrect"
-  }
 
   # service-2
   assert {
@@ -1311,7 +1535,7 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
     error_message = "Run order incorrect"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[1].role_arn == "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy-role"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[3].action[1].role_arn == "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy"
     error_message = "Role ARN incorrect"
   }
 

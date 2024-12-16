@@ -1,5 +1,79 @@
 # Changelog
 
+## [5.14.0](https://github.com/uktrade/terraform-platform-modules/compare/5.13.0...5.14.0) (2024-12-12)
+
+
+### Features
+
+* DBTP-1498 - Wrap database copy in pipeline ([#301](https://github.com/uktrade/terraform-platform-modules/issues/301)) ([917457d](https://github.com/uktrade/terraform-platform-modules/commit/917457df29c8867d06b38bce19a3bb0be24b067a))
+
+## [5.13.0](https://github.com/uktrade/terraform-platform-modules/compare/5.12.1...5.13.0) (2024-12-11)
+
+
+### Features
+
+* Removing hardcoded value for S3 ENDPOINT ([#302](https://github.com/uktrade/terraform-platform-modules/issues/302)) ([cffd06a](https://github.com/uktrade/terraform-platform-modules/commit/cffd06ac1801190f3a4da38d8a252ac653ce95e6))
+
+## [5.12.1](https://github.com/uktrade/terraform-platform-modules/compare/5.12.0...5.12.1) (2024-12-04)
+
+
+### Bug Fixes
+
+* Environment pipeline permissions ([#299](https://github.com/uktrade/terraform-platform-modules/issues/299)) ([7eb1a63](https://github.com/uktrade/terraform-platform-modules/commit/7eb1a63c5ffde9767ed9a71fd9739378fd56976d))
+
+## [5.12.0](https://github.com/uktrade/terraform-platform-modules/compare/5.11.0...5.12.0) (2024-12-03)
+
+
+### Features
+
+* DBTP-1299 - Cross account database copy ([#294](https://github.com/uktrade/terraform-platform-modules/issues/294)) ([ac84ca8](https://github.com/uktrade/terraform-platform-modules/commit/ac84ca8690ab530e74efadabf179fa8b38059c70))
+
+## [5.11.0](https://github.com/uktrade/terraform-platform-modules/compare/5.10.0...5.11.0) (2024-11-29)
+
+
+### Features
+
+* DBTP-1503 - Terraform codebase pipelines ([#276](https://github.com/uktrade/terraform-platform-modules/issues/276)) ([96b5935](https://github.com/uktrade/terraform-platform-modules/commit/96b593574db00c32c682726826ee765ebb561863))
+
+
+### Bug Fixes
+
+* Add missing environment pipeline permission ([#297](https://github.com/uktrade/terraform-platform-modules/issues/297)) ([57f4ea1](https://github.com/uktrade/terraform-platform-modules/commit/57f4ea11b6e99fef1f9d9b0a99c6a7085f463579))
+
+## [5.10.0](https://github.com/uktrade/terraform-platform-modules/compare/5.9.0...5.10.0) (2024-11-26)
+
+
+### Features
+
+* DBTP-1568 - Add s3 support for external role access ([#292](https://github.com/uktrade/terraform-platform-modules/issues/292)) ([f20e203](https://github.com/uktrade/terraform-platform-modules/commit/f20e2034d5ec51d59d3cafbe679432b51867798e))
+
+## [5.9.0](https://github.com/uktrade/terraform-platform-modules/compare/5.8.1...5.9.0) (2024-11-21)
+
+
+### Features
+
+* DBTP 1433 cdn cache on paths ([#291](https://github.com/uktrade/terraform-platform-modules/issues/291)) ([c456564](https://github.com/uktrade/terraform-platform-modules/commit/c4565641e91369c309bdec2adaf46127c9d5f6a4))
+* DBTP-1380 Get Opensearch/Redis versions from AWS API - Permissions on env pipeline ([#275](https://github.com/uktrade/terraform-platform-modules/issues/275)) ([aca4cc4](https://github.com/uktrade/terraform-platform-modules/commit/aca4cc4dfe6a52f19a65cc3c107f0ca5500c19ba))
+
+## [5.8.1](https://github.com/uktrade/terraform-platform-modules/compare/5.8.0...5.8.1) (2024-11-14)
+
+
+### Bug Fixes
+
+* DBTP-1534 Add S3MigrationRole to the resources allowed to add policies and roles ([#283](https://github.com/uktrade/terraform-platform-modules/issues/283)) ([0a4130e](https://github.com/uktrade/terraform-platform-modules/commit/0a4130ed37cb16a05ea8f1b6ddebe4d05b2d6183))
+
+## [5.8.0](https://github.com/uktrade/terraform-platform-modules/compare/5.7.1...5.8.0) (2024-11-13)
+
+
+### Features
+
+* DBTP-1502 - Terraform image build codebuild project ([#274](https://github.com/uktrade/terraform-platform-modules/issues/274)) ([4f44598](https://github.com/uktrade/terraform-platform-modules/commit/4f44598c84b943c2056cd60a395790855e9beb24))
+
+
+### Bug Fixes
+
+* DBTP-1534 - Assume role policy for the S3 migration were too strict so relaxing them ([#279](https://github.com/uktrade/terraform-platform-modules/issues/279)) ([3ea79ff](https://github.com/uktrade/terraform-platform-modules/commit/3ea79ff7e9a825870c2c8d3638f464fc649892c5))
+
 ## [5.7.1](https://github.com/uktrade/terraform-platform-modules/compare/5.7.0...5.7.1) (2024-11-08)
 
 

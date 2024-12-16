@@ -2,6 +2,7 @@ data "aws_caller_identity" "current" {}
 
 locals {
   serve_static_domain = var.environment == "prod" ? "${var.config.bucket_name}.${var.application}.prod.uktrade.digital" : "${var.config.bucket_name}.${var.environment}.${var.application}.uktrade.digital"
+  ssm_param_name      = coalesce(var.config.serve_static_param_name, "STATIC_S3_ENDPOINT")
 }
 
 resource "aws_s3_bucket" "this" {
@@ -39,6 +40,22 @@ data "aws_iam_policy_document" "bucket-policy" {
       aws_s3_bucket.this.arn,
       "${aws_s3_bucket.this.arn}/*",
     ]
+  }
+
+  dynamic "statement" {
+    for_each = coalesce(var.config.external_role_access, {})
+    content {
+      effect = "Allow"
+      actions = flatten([
+        statement.value.read ? ["s3:Get*", "s3:ListBucket"] : [],
+        statement.value.write ? ["s3:Put*"] : [],
+      ])
+      principals {
+        identifiers = [statement.value.role_arn]
+        type        = "AWS"
+      }
+      resources = [aws_s3_bucket.this.arn, "${aws_s3_bucket.this.arn}/*"]
+    }
   }
 }
 
@@ -81,28 +98,48 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle-configuration" {
   }
 }
 
+data "aws_iam_policy_document" "key-policy" {
+  count = var.config.serve_static_content ? 0 : 1
+  statement {
+    sid       = "Enable IAM User Permissions"
+    effect    = "Allow"
+    actions   = ["kms:*"]
+    resources = [aws_kms_key.kms-key[0].arn]
+    principals {
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      type        = "AWS"
+    }
+  }
+
+  dynamic "statement" {
+    for_each = coalesce(var.config.external_role_access, {})
+    content {
+      effect = "Allow"
+      actions = flatten([
+        statement.value.read ? ["kms:Decrypt"] : [],
+        statement.value.write ? ["kms:GenerateDataKey"] : [],
+      ])
+      principals {
+        identifiers = [statement.value.role_arn]
+        type        = "AWS"
+      }
+      resources = [aws_kms_key.kms-key[0].arn]
+    }
+  }
+}
+
+resource "aws_kms_key_policy" "key-policy" {
+  count  = var.config.serve_static_content ? 0 : 1
+  key_id = aws_kms_key.kms-key[0].id
+  policy = data.aws_iam_policy_document.key-policy[0].json
+}
+
 resource "aws_kms_key" "kms-key" {
   count = var.config.serve_static_content ? 0 : 1
 
   # checkov:skip=CKV_AWS_7:We are not currently rotating the keys
   description = "KMS Key for S3 encryption"
   tags        = local.tags
-
-  policy = jsonencode({
-    Id = "key-default-1"
-    Statement = [
-      {
-        "Sid" : "Enable IAM User Permissions",
-        "Effect" : "Allow",
-        "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        },
-        "Action" : "kms:*",
-        "Resource" : "*"
-      }
-    ]
-    Version = "2012-10-17"
-  })
 }
 
 resource "aws_kms_alias" "s3-bucket" {
@@ -349,7 +386,7 @@ resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
         Resource = aws_kms_key.s3-ssm-kms-key[0].arn
         Condition = {
           StringEquals = {
-            "kms:EncryptionContext:aws:ssm:parameterName" = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
+            "kms:EncryptionContext:aws:ssm:parameterName" = "/copilot/${var.application}/${var.environment}/secrets/${local.ssm_param_name}"
           }
         }
         Sid = "Enable SSM Permissions"
@@ -371,7 +408,7 @@ resource "aws_kms_key_policy" "s3-ssm-kms-key-policy" {
 resource "aws_ssm_parameter" "cloudfront_alias" {
   count = var.config.serve_static_content ? 1 : 0
 
-  name   = "/copilot/${var.application}/${var.environment}/secrets/STATIC_S3_ENDPOINT"
+  name   = "/copilot/${var.application}/${var.environment}/secrets/${local.ssm_param_name}"
   type   = "SecureString"
   value  = local.serve_static_domain
   key_id = aws_kms_key.s3-ssm-kms-key[0].arn

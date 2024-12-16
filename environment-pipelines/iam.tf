@@ -41,8 +41,12 @@ data "aws_iam_policy_document" "access_artifact_store" {
   }
 
   statement {
-    effect    = "Allow"
-    actions   = ["codestar-connections:ListConnections"]
+    effect = "Allow"
+    actions = [
+      "codestar-connections:ListConnections",
+      "codestar-connections:ListTagsForResource",
+      "codestar-connections:PassConnection"
+    ]
     resources = ["arn:aws:codestar-connections:eu-west-2:${data.aws_caller_identity.current.account_id}:*"]
   }
 
@@ -463,12 +467,15 @@ data "aws_iam_policy_document" "logs" {
       "logs:DescribeSubscriptionFilters",
       "logs:DeleteSubscriptionFilter",
       "logs:TagResource",
-      "logs:AssociateKmsKey"
+      "logs:AssociateKmsKey",
+      "logs:DescribeLogStreams",
+      "logs:DeleteLogStream"
     ]
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/opensearch/*",
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/rds/*",
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*"
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/elasticache/*",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/*"
     ]
   }
 }
@@ -493,17 +500,14 @@ data "aws_iam_policy_document" "kms_key" {
     ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "kms:CreateAlias",
-        "kms:DeleteAlias"
-      ]
-      resources = [
-        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-${statement.value.name}-*-key"
-      ]
-    }
+  statement {
+    actions = [
+      "kms:CreateAlias",
+      "kms:DeleteAlias"
+    ]
+    resources = [
+      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${var.application}-*"
+    ]
   }
 }
 
@@ -544,6 +548,17 @@ data "aws_iam_policy_document" "redis" {
       "arn:aws:elasticache:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster:*"
     ]
   }
+
+  statement {
+    actions = [
+      "elasticache:DescribeCacheEngineVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+    sid = "AllowRedisListVersions"
+  }
 }
 
 resource "aws_iam_policy" "redis" {
@@ -559,9 +574,11 @@ data "aws_iam_policy_document" "postgres" {
       "iam:PassRole"
     ]
     resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-adminrole"
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-adminrole",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-*"
     ]
   }
+
   dynamic "statement" {
     for_each = local.environment_config
     content {
@@ -733,14 +750,23 @@ data "aws_iam_policy_document" "ecs" {
   }
 
   statement {
-    sid = "AllowRegisterAndDeregister"
+    sid = "AllowRegister"
     actions = [
-      "ecs:DeregisterTaskDefinition",
       "ecs:RegisterTaskDefinition",
     ]
     resources = [
       "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/*",
       "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/"
+    ]
+  }
+
+  statement {
+    sid = "AllowDeregister"
+    actions = [
+      "ecs:DeregisterTaskDefinition"
+    ]
+    resources = [
+      "*"
     ]
   }
 }
@@ -766,6 +792,17 @@ data "aws_iam_policy_document" "opensearch" {
     resources = [
       "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/*"
     ]
+  }
+
+  statement {
+    actions = [
+      "es:ListVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+    sid = "AllowOpensearchListVersions"
   }
 }
 
@@ -825,6 +862,13 @@ data "aws_iam_policy_document" "cloudformation" {
       "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stackset/${var.application}-infrastructure:*",
     ]
   }
+
+  statement {
+    actions = [
+      "cloudformation:ListExports"
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "cloudformation" {
@@ -858,7 +902,11 @@ data "aws_iam_policy_document" "iam" {
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-CFNExecutionRole",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-*-exec",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-*-task",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-*"
       ]
     }
   }
@@ -875,7 +923,9 @@ data "aws_iam_policy_document" "iam" {
     actions = [
       "iam:UpdateAssumeRolePolicy"
     ]
-    resources = [for environment in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${environment.name}-shared-S3MigrationRole"]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole"
+    ]
   }
 
   statement {
@@ -897,6 +947,48 @@ data "aws_iam_policy_document" "codepipeline" {
     ]
     resources = [
       "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.application}-${var.pipeline_name}-environment-pipeline"
+    ]
+  }
+
+  statement {
+    actions = [
+      "codepipeline:CreatePipeline",
+      "codepipeline:DeletePipeline",
+      "codepipeline:GetPipeline",
+      "codepipeline:UpdatePipeline",
+      "codepipeline:ListTagsForResource",
+      "codepipeline:TagResource"
+    ]
+    resources = [
+      "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*-copy-pipeline",
+      "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*-copy-pipeline/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "codebuild:CreateProject",
+      "codebuild:BatchGetProjects",
+      "codebuild:DeleteProject",
+      "codebuild:UpdateProject"
+    ]
+    resources = [
+      "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:project/*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "scheduler:CreateSchedule",
+      "scheduler:UpdateSchedule",
+      "scheduler:DeleteSchedule",
+      "scheduler:TagResource",
+      "scheduler:GetSchedule",
+      "scheduler:ListSchedules",
+      "scheduler:ListTagsForResource"
+    ]
+    resources = [
+      "arn:aws:scheduler:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:schedule/*"
     ]
   }
 }

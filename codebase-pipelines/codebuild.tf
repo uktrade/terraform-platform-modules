@@ -3,7 +3,7 @@ data "aws_codestarconnections_connection" "github_codestar_connection" {
 }
 
 resource "aws_codebuild_project" "codebase_image_build" {
-  name          = "${var.application}-${var.codebase}-codebase-image-build"
+  name          = "${var.application}-${var.codebase}-codebase-pipeline-image-build"
   description   = "Publish images on push to ${var.repository}"
   build_timeout = 30
   service_role  = aws_iam_role.codebase_image_build.arn
@@ -116,7 +116,7 @@ resource "aws_codebuild_webhook" "codebuild_webhook" {
 
 
 resource "aws_codebuild_project" "codebase_deploy_manifests" {
-  name           = "${var.application}-${var.codebase}-codebase-deploy-manifests"
+  name           = "${var.application}-${var.codebase}-codebase-pipeline-deploy-manifests"
   description    = "Create image deploy manifests to deploy services"
   build_timeout  = 5
   service_role   = aws_iam_role.codebase_deploy_manifests.arn
@@ -136,6 +136,7 @@ resource "aws_codebuild_project" "codebase_deploy_manifests" {
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
+
     environment_variable {
       name  = "ENV_CONFIG"
       value = jsonencode(local.base_env_config)
@@ -166,7 +167,6 @@ resource "aws_kms_key" "codebuild_kms_key" {
   enable_key_rotation = true
 
   policy = jsonencode({
-    Id = "key-default-1"
     Statement = [
       {
         "Sid" : "Enable IAM User Permissions",
