@@ -329,7 +329,7 @@ class SecretRotator:
             response = requests.get(
                 url,
                 headers={self.header_name: secret}, 
-                timeout=(3, 5)  # 3-second connection timeout, 5-second read timeout
+                timeout=(5, 10)  # 3-second connection timeout, 5-second read timeout
             )
             self.logger.info(f"Testing URL, {url} - response code, {response.status_code}")
 
