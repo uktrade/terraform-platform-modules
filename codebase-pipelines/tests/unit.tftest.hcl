@@ -413,7 +413,7 @@ run "test_iam" {
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group",
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group:*"
     ])
-    error_message = "Unexpected resources ${jsonencode(data.aws_iam_policy_document.log_access.statement[0].resources)}"
+    error_message = "Unexpected resources"
   }
   assert {
     condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.name == "ecr-access"
