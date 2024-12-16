@@ -1,13 +1,13 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
-resource "aws_iam_role" "codebase_pipeline_deploy_role" {
-  name               = "${var.args.application}-${var.environment}-codebase-pipeline-deploy-role"
-  assume_role_policy = data.aws_iam_policy_document.codebase_deploy_pipeline_assume_role_policy.json
+resource "aws_iam_role" "codebase_pipeline_deploy" {
+  name               = "${var.args.application}-${var.environment}-codebase-pipeline-deploy"
+  assume_role_policy = data.aws_iam_policy_document.assume_codebase_pipeline.json
   tags               = local.tags
 }
 
-data "aws_iam_policy_document" "codebase_deploy_pipeline_assume_role_policy" {
+data "aws_iam_policy_document" "assume_codebase_pipeline" {
   statement {
     effect = "Allow"
     principals {
@@ -26,13 +26,13 @@ data "aws_iam_policy_document" "codebase_deploy_pipeline_assume_role_policy" {
   }
 }
 
-resource "aws_iam_role_policy" "ecr_access_for_codebase_pipeline" {
-  name   = "${var.args.application}-ecr-access-for-codebase-pipeline"
-  role   = aws_iam_role.codebase_pipeline_deploy_role.name
-  policy = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.json
+resource "aws_iam_role_policy" "ecr_access" {
+  name   = "ecr-access"
+  role   = aws_iam_role.codebase_pipeline_deploy.name
+  policy = data.aws_iam_policy_document.ecr_access.json
 }
 
-data "aws_iam_policy_document" "ecr_access_for_codebase_pipeline" {
+data "aws_iam_policy_document" "ecr_access" {
   statement {
     effect = "Allow"
     actions = [
@@ -44,13 +44,13 @@ data "aws_iam_policy_document" "ecr_access_for_codebase_pipeline" {
   }
 }
 
-resource "aws_iam_role_policy" "artifact_store_access_for_codebase_pipeline" {
-  name   = "${var.args.application}-artifact-store-access-for-codebase-pipeline"
-  role   = aws_iam_role.codebase_pipeline_deploy_role.name
-  policy = data.aws_iam_policy_document.access_artifact_store.json
+resource "aws_iam_role_policy" "artifact_store_access" {
+  name   = "artifact-store-access"
+  role   = aws_iam_role.codebase_pipeline_deploy.name
+  policy = data.aws_iam_policy_document.artifact_store_access.json
 }
 
-data "aws_iam_policy_document" "access_artifact_store" {
+data "aws_iam_policy_document" "artifact_store_access" {
   # checkov:skip=CKV_AWS_111:Permissions required to change ACLs on uploaded artifacts
   # checkov:skip=CKV_AWS_356:Permissions required to upload artifacts
   statement {
@@ -91,13 +91,13 @@ data "aws_iam_policy_document" "access_artifact_store" {
   }
 }
 
-resource "aws_iam_role_policy" "ecs_deploy_access_for_codebase_pipeline" {
-  name   = "${var.args.application}-ecs-deploy-access-for-codebase-pipeline"
-  role   = aws_iam_role.codebase_pipeline_deploy_role.name
-  policy = data.aws_iam_policy_document.ecs_deploy_access_for_codebase_pipeline.json
+resource "aws_iam_role_policy" "ecs_deploy_access" {
+  name   = "ecs-deploy-access"
+  role   = aws_iam_role.codebase_pipeline_deploy.name
+  policy = data.aws_iam_policy_document.ecs_deploy_access.json
 }
 
-data "aws_iam_policy_document" "ecs_deploy_access_for_codebase_pipeline" {
+data "aws_iam_policy_document" "ecs_deploy_access" {
   statement {
     effect = "Allow"
     actions = [
