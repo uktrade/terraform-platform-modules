@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.14.0](https://github.com/uktrade/terraform-platform-modules/compare/5.13.0...5.14.0) (2024-12-12)
+
+
+### Features
+
+* DBTP-1498 - Wrap database copy in pipeline ([#301](https://github.com/uktrade/terraform-platform-modules/issues/301)) ([917457d](https://github.com/uktrade/terraform-platform-modules/commit/917457df29c8867d06b38bce19a3bb0be24b067a))
+
 ## [5.13.0](https://github.com/uktrade/terraform-platform-modules/compare/5.12.1...5.13.0) (2024-12-11)
 
 
