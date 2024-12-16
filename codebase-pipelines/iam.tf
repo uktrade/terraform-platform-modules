@@ -41,27 +41,10 @@ data "aws_iam_policy_document" "log_access" {
       "logs:TagLogGroup"
     ]
     resources = [
-      aws_cloudwatch_log_group.codebase_image_build.arn,
-      "${aws_cloudwatch_log_group.codebase_image_build.arn}:*",
-      "arn:aws:logs:${local.account_region}:log-group:*",
-      "arn:aws:codebuild:${local.account_region}:build/${var.application}-${var.codebase}-*-codebase-deploy-manifests",
-      "arn:aws:codebuild:${local.account_region}:build/${var.application}-${var.codebase}-*-codebase-deploy-manifests:*"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "codebuild:CreateReportGroup",
-      "codebuild:CreateReport",
-      "codebuild:UpdateReport",
-      "codebuild:BatchPutTestCases",
-      "codebuild:BatchPutCodeCoverages"
-    ]
-    resources = [
-      "arn:aws:codebuild:${local.account_region}:report-group/${var.application}-${var.codebase}-codebase-pipeline-image-build-*",
-      "arn:aws:codebuild:${local.account_region}:report-group/pipeline-${var.application}-*",
-      "arn:aws:codebuild:${local.account_region}:report-group/${var.application}-${var.codebase}-*-codebase-pipeline-deploy-manifests-*"
+      "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-image-build/log-group",
+      "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-image-build/log-group:*",
+      "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy-manifests/log-group",
+      "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy-manifests/log-group:*"
     ]
   }
 }
@@ -73,16 +56,6 @@ resource "aws_iam_role_policy" "ecr_access_for_codebuild_images" {
 }
 
 data "aws_iam_policy_document" "ecr_access_for_codebuild_images" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "ecr:GetAuthorizationToken"
-    ]
-    resources = [
-      "arn:aws:codebuild:${local.account_region}:report-group/pipeline-${var.application}-*"
-    ]
-  }
-
   statement {
     # checkov:skip=CKV_AWS_107:GetAuthorizationToken required for ci-image-builder
     effect = "Allow"
@@ -284,17 +257,14 @@ resource "aws_iam_role_policy" "pipeline_assume_environment_deploy_role" {
 }
 
 data "aws_iam_policy_document" "assume_environment_deploy_role" {
-  dynamic "statement" {
-    for_each = local.pipeline_environments
-
-    content {
-      effect = "Allow"
-      actions = [
-        "sts:AssumeRole"
-      ]
-      resources = [
-        "arn:aws:iam::${statement.value.account.id}:role/${var.application}-${statement.value.name}-codebase-pipeline-deploy-role"
-      ]
-    }
+  statement {
+    effect = "Allow"
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = [
+      for env in local.pipeline_environments :
+      "arn:aws:iam::${env.account.id}:role/${var.application}-${env.name}-codebase-pipeline-deploy"
+    ]
   }
 }

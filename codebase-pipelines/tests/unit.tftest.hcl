@@ -407,26 +407,13 @@ run "test_iam" {
     error_message = "Unexpected actions"
   }
   assert {
-    condition     = data.aws_iam_policy_document.log_access.statement[1].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.log_access.statement[1].actions == toset([
-      "codebuild:CreateReportGroup",
-      "codebuild:CreateReport",
-      "codebuild:UpdateReport",
-      "codebuild:BatchPutTestCases",
-      "codebuild:BatchPutCodeCoverages"
+    condition = data.aws_iam_policy_document.log_access.statement[0].resources == toset([
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/my-app-my-codebase-codebase-image-build/log-group",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/my-app-my-codebase-codebase-image-build/log-group:*",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group",
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:codebuild/my-app-my-codebase-codebase-deploy-manifests/log-group:*"
     ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.log_access.statement[1].resources == toset([
-      "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/my-app-my-codebase-*-codebase-pipeline-deploy-manifests-*",
-      "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/my-app-my-codebase-codebase-pipeline-image-build-*",
-      "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/pipeline-my-app-*"
-    ])
-    error_message = "Unexpected resources"
+    error_message = "Unexpected resources ${jsonencode(data.aws_iam_policy_document.log_access.statement[0].resources)}"
   }
   assert {
     condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.name == "ecr-access"
@@ -441,11 +428,15 @@ run "test_iam" {
     error_message = "Should be: Allow"
   }
   assert {
-    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[0].actions) == "ecr:GetAuthorizationToken"
+    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[0].actions == toset([
+      "ecr:GetAuthorizationToken",
+      "ecr-public:GetAuthorizationToken",
+      "sts:GetServiceBearerToken"
+    ])
     error_message = "Unexpected actions"
   }
   assert {
-    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[0].resources) == "arn:aws:codebuild:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:report-group/pipeline-my-app-*"
+    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[0].resources) == "*"
     error_message = "Unexpected resources"
   }
   assert {
@@ -454,22 +445,6 @@ run "test_iam" {
   }
   assert {
     condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].actions == toset([
-      "ecr:GetAuthorizationToken",
-      "ecr-public:GetAuthorizationToken",
-      "sts:GetServiceBearerToken"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == "*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].actions == toset([
       "ecr-public:DescribeImageScanFindings",
       "ecr-public:GetLifecyclePolicyPreview",
       "ecr-public:GetDownloadUrlForLayer",
@@ -490,15 +465,15 @@ run "test_iam" {
     error_message = "Unexpected actions"
   }
   assert {
-    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].resources) == "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
+    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
     error_message = "Unexpected resources"
   }
   assert {
-    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[3].effect == "Allow"
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].effect == "Allow"
     error_message = "Should be: Allow"
   }
   assert {
-    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[3].actions == toset([
+    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].actions == toset([
       "ecr:DescribeImageScanFindings",
       "ecr:GetLifecyclePolicyPreview",
       "ecr:GetDownloadUrlForLayer",
@@ -668,6 +643,28 @@ run "test_iam" {
   assert {
     condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.pipeline_assume_environment_deploy_role.name == "environment-deploy-role-access"
+    error_message = "Should be: 'environment-deploy-role-access'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.pipeline_assume_environment_deploy_role.role == "my-app-my-codebase-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.assume_environment_deploy_role.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_environment_deploy_role.statement[0].actions) == "sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition = flatten(data.aws_iam_policy_document.assume_environment_deploy_role.statement[0].resources) == ["arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy",
+      "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy",
+    "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy"]
+    error_message = "Unexpected resources"
   }
 }
 
