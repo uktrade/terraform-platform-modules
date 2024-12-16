@@ -42,13 +42,18 @@ run "data_load_unit_test" {
   command = plan
 
   assert {
-    condition     = local.dump_kms_key_alias == "alias/test-app-some-other-env-test-db-dump"
-    error_message = "Dump Kms key alias should be: alias/test-app-some-other-env-test-db-dump"
+    condition     = local.dump_bucket_name == "test-app-some-other-env-test-db-dump"
+    error_message = "Dump bucket name should be: test-app-some-other-env-test-db-dump"
   }
 
   assert {
-    condition     = local.dump_bucket_name == "test-app-some-other-env-test-db-dump"
-    error_message = "Dump bucket name should be: test-app-some-other-env-test-db-dump"
+    condition     = local.task_name == "test-app-test-env-test-db-load"
+    error_message = "Task name incorrect"
+  }
+
+  assert {
+    condition     = local.dump_task_name == "test-app-some-other-env-test-db-dump"
+    error_message = "Dump task name incorrect"
   }
 
   assert {
