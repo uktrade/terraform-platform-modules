@@ -44,7 +44,9 @@ data "aws_iam_policy_document" "log_access" {
       "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-image-build/log-group",
       "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-image-build/log-group:*",
       "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy-manifests/log-group",
-      "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy-manifests/log-group:*"
+      "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy-manifests/log-group:*",
+      "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy/log-group",
+      "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy/log-group:*"
     ]
   }
 }
@@ -265,6 +267,47 @@ data "aws_iam_policy_document" "assume_environment_deploy_role" {
     resources = [
       for env in local.pipeline_environments :
       "arn:aws:iam::${env.account.id}:role/${var.application}-${env.name}-codebase-pipeline-deploy"
+    ]
+  }
+}
+
+
+
+
+# Manual release pipeline role
+resource "aws_iam_role" "codebase_deploy" {
+  name               = "${var.application}-${var.codebase}-codebase-pipeline-deploy"
+  assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
+  tags               = local.tags
+}
+
+resource "aws_iam_role_policy" "artifact_store_access_for_codebuild_deploy" {
+  name   = "artifact-store-access"
+  role   = aws_iam_role.codebase_deploy.name
+  policy = data.aws_iam_policy_document.access_artifact_store.json
+}
+
+resource "aws_iam_role_policy" "log_access_for_codebuild_deploy" {
+  name   = "log-access"
+  role   = aws_iam_role.codebase_deploy.name
+  policy = data.aws_iam_policy_document.log_access.json
+}
+
+resource "aws_iam_role_policy" "environment_deploy_role_access_for_codebuild_deploy" {
+  name   = "environment-deploy-role-access"
+  role   = aws_iam_role.codebase_deploy.name
+  policy = data.aws_iam_policy_document.environment_deploy_role_access.json
+}
+
+data "aws_iam_policy_document" "environment_deploy_role_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = [
+      for id in local.deploy_account_ids :
+      "arn:aws:iam::${id}:role/${var.application}-*-codebase-pipeline-deploy"
     ]
   }
 }

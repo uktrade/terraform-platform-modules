@@ -60,7 +60,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
           { name : "APPLICATION", value : var.application },
           { name : "ENVIRONMENTS", value : jsonencode([for env in each.value.environments : env.name]) },
           { name : "SERVICES", value : jsonencode(local.services) },
-          { name : "REPOSITORY_URL", value : "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}" },
+          { name : "REPOSITORY_URL", value : local.repository_url },
           { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" }
         ])
       }
@@ -156,51 +156,30 @@ resource "aws_codepipeline" "manual_release_pipeline" {
   }
 
   stage {
-    name = "Create-Deploy-Manifests"
-
-    action {
-      name             = "CreateManifests"
-      category         = "Build"
-      owner            = "AWS"
-      provider         = "CodeBuild"
-      input_artifacts  = ["source_output"]
-      output_artifacts = ["manifest_output"]
-      version          = "1"
-      namespace        = "build_manifest"
-
-      configuration = {
-        ProjectName = aws_codebuild_project.codebase_deploy_manifests.name
-        EnvironmentVariables : jsonencode([
-          { name : "APPLICATION", value : var.application },
-          { name : "ENVIRONMENTS", value : "[\"#{variables.ENVIRONMENT}\"]" },
-          { name : "SERVICES", value : jsonencode(local.services) },
-          { name : "REPOSITORY_URL", value : "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}" },
-          { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" }
-        ])
-      }
-    }
-  }
-
-  stage {
     name = "Deploy"
 
     dynamic "action" {
       for_each = local.service_order_list
       content {
-        name            = action.value.name
-        category        = "Deploy"
-        owner           = "AWS"
-        provider        = "ECS"
-        version         = "1"
-        input_artifacts = ["manifest_output"]
-        run_order       = action.value.order + 1
+        name             = action.value.name
+        category         = "Build"
+        owner            = "AWS"
+        provider         = "CodeBuild"
+        input_artifacts  = ["source_output"]
+        output_artifacts = []
+        version          = "1"
+        run_order        = action.value.order + 1
+
         configuration = {
-          ClusterName = "#{build_manifest.CLUSTER_NAME}"
-          ServiceName = "#{build_manifest.SERVICE_NAME_${upper(replace(action.value.name, "-", "_"))}}"
-          FileName    = "image-definitions-${action.value.name}.json"
+          ProjectName = aws_codebuild_project.codebase_deploy.name
+          EnvironmentVariables : jsonencode([
+            { name : "APPLICATION", value : var.application },
+            { name : "ENVIRONMENT", value : "#{variables.ENVIRONMENT}" },
+            { name : "SERVICE", value : action.value.name },
+            { name : "REPOSITORY_URL", value : local.repository_url },
+            { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" }
+          ])
         }
-        # role_arn = "arn:aws:iam::${stage.value.account.id}:role/${var.application}-${stage.value.name}-codebase-pipeline-deploy-role"
-        # TODO This is going to need to be a role capable of deploying any environment in the account, how will that work cross-account?
       }
     }
   }

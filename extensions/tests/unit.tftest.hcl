@@ -326,15 +326,15 @@ run "codebase_deploy_iam_test" {
     error_message = "Should contain: arn:aws:iam::000123456789:root"
   }
   assert {
-    condition     = [for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.test][0] == "StringLike"
-    error_message = "Should be: StringLike"
+    condition     = [for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.test][0] == "ArnLike"
+    error_message = "Should be: ArnLike"
   }
   assert {
     condition     = [for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.variable][0] == "aws:PrincipalArn"
     error_message = "Should be: aws:PrincipalArn"
   }
   assert {
-    condition     = flatten([for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.values][0]) == ["arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline", "arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline-deploy-manifests"]
+    condition     = flatten([for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.values][0]) == ["arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline", "arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline-*"]
     error_message = "Unexpected condition values"
   }
   assert {
@@ -540,5 +540,19 @@ run "codebase_deploy_iam_test" {
   assert {
     condition     = [for el in data.aws_iam_policy_document.ecs_deploy_access.statement[5].condition : el.variable][0] == "iam:PassedToService"
     error_message = "Should be: iam:PassedToService"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecs_deploy_access.statement[6].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecs_deploy_access.statement[6].actions == toset([
+      "ecs:ListServiceDeployments"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecs_deploy_access.statement[6].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/test-application-test-environment/*"
+    error_message = "Unexpected resources"
   }
 }

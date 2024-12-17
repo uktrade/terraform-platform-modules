@@ -15,10 +15,10 @@ data "aws_iam_policy_document" "assume_codebase_pipeline" {
       identifiers = ["arn:aws:iam::${var.args.pipeline_account_id}:root"]
     }
     condition {
-      test = "StringLike"
+      test = "ArnLike"
       values = [
         "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline",
-        "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline-deploy-manifests"
+        "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline-*"
       ]
       variable = "aws:PrincipalArn"
     }
@@ -165,5 +165,15 @@ data "aws_iam_policy_document" "ecs_deploy_access" {
       values   = ["ecs-tasks.amazonaws.com"]
       variable = "iam:PassedToService"
     }
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecs:ListServiceDeployments"
+    ]
+    resources = [
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.args.application}-${var.environment}/*"
+    ]
   }
 }
