@@ -15,7 +15,7 @@ data "aws_iam_policy_document" "assume_codebase_pipeline" {
       identifiers = ["arn:aws:iam::${var.args.pipeline_account_id}:root"]
     }
     condition {
-      test = "StringLike"
+      test = "ArnLike"
       values = [
         "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline",
         "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline-deploy-manifests"

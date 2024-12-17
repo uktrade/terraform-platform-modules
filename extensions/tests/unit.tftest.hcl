@@ -326,8 +326,8 @@ run "codebase_deploy_iam_test" {
     error_message = "Should contain: arn:aws:iam::000123456789:root"
   }
   assert {
-    condition     = [for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.test][0] == "StringLike"
-    error_message = "Should be: StringLike"
+    condition     = [for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.test][0] == "ArnLike"
+    error_message = "Should be: ArnLike"
   }
   assert {
     condition     = [for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.variable][0] == "aws:PrincipalArn"
