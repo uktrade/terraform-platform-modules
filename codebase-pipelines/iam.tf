@@ -271,10 +271,6 @@ data "aws_iam_policy_document" "assume_environment_deploy_role" {
   }
 }
 
-
-
-
-# Manual release pipeline role
 resource "aws_iam_role" "codebase_deploy" {
   name               = "${var.application}-${var.codebase}-codebase-pipeline-deploy"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
