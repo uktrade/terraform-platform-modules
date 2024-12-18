@@ -740,6 +740,14 @@ run "test_codebuild_deploy" {
     error_message = "Should be: 'CODEBUILD'"
   }
   assert {
+    condition     = one(aws_codebuild_project.codebase_deploy.environment).environment_variable[0].name == "ENV_CONFIG"
+    error_message = "Should be: 'ENV_CONFIG' ${jsonencode(one(aws_codebuild_project.codebase_deploy.environment).environment_variable[0])}"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_deploy.environment).environment_variable[0].value == "{\"dev\":{\"account\":\"000123456789\"},\"prod\":{\"account\":\"123456789000\"},\"staging\":{\"account\":\"000123456789\"}}"
+    error_message = "Incorrect value"
+  }
+  assert {
     condition = aws_codebuild_project.codebase_deploy.logs_config[0].cloudwatch_logs[
       0
     ].group_name == "codebuild/my-app-my-codebase-codebase-deploy/log-group"
