@@ -42,10 +42,6 @@ locals {
     for run_group in var.services : [for service in flatten(values(run_group)) : service]
   ]))
 
-  service_export_names = sort(flatten([
-    for run_group in var.services : [for service in flatten(values(run_group)) : upper(replace(service, "-", "_"))]
-  ]))
-
   service_order_list = flatten([
     for index, group in var.services : [
       for key, services in group : [

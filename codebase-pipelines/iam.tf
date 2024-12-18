@@ -43,8 +43,6 @@ data "aws_iam_policy_document" "log_access" {
     resources = [
       "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-image-build/log-group",
       "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-image-build/log-group:*",
-      "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy-manifests/log-group",
-      "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy-manifests/log-group:*",
       "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy/log-group",
       "arn:aws:logs:${local.account_region}:log-group:codebuild/${var.application}-${var.codebase}-codebase-deploy/log-group:*"
     ]
@@ -142,73 +140,6 @@ data "aws_iam_policy_document" "codestar_connection_access" {
   }
 }
 
-resource "aws_iam_role" "codebase_deploy_manifests" {
-  name               = "${var.application}-${var.codebase}-codebase-pipeline-deploy-manifests"
-  assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
-  tags               = local.tags
-}
-
-resource "aws_iam_role_policy" "artifact_store_access_for_codebuild_manifests" {
-  name   = "artifact-store-access"
-  role   = aws_iam_role.codebase_deploy_manifests.name
-  policy = data.aws_iam_policy_document.access_artifact_store.json
-}
-
-data "aws_iam_policy_document" "access_artifact_store" {
-  # checkov:skip=CKV_AWS_111:Permissions required to change ACLs on uploaded artifacts
-  # checkov:skip=CKV_AWS_356:Permissions required to upload artifacts
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "s3:GetObject",
-      "s3:GetObjectVersion",
-      "s3:GetBucketVersioning",
-      "s3:PutObjectAcl",
-      "s3:PutObject",
-    ]
-
-    resources = [
-      aws_s3_bucket.artifact_store.arn,
-      "${aws_s3_bucket.artifact_store.arn}/*"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "codebuild:BatchGetBuilds",
-      "codebuild:StartBuild",
-    ]
-
-    resources = ["*"]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "kms:GenerateDataKey",
-      "kms:Decrypt"
-    ]
-    resources = [
-      aws_kms_key.artifact_store_kms_key.arn
-    ]
-  }
-}
-
-resource "aws_iam_role_policy" "log_access_for_codebuild_manifests" {
-  name   = "log-access"
-  role   = aws_iam_role.codebase_deploy_manifests.name
-  policy = data.aws_iam_policy_document.log_access.json
-}
-
-resource "aws_iam_role_policy" "codebuild_assume_environment_deploy_role" {
-  name   = "environment-deploy-role-access"
-  role   = aws_iam_role.codebase_deploy_manifests.name
-  policy = data.aws_iam_policy_document.assume_environment_deploy_role.json
-}
-
 resource "aws_iam_role" "codebase_deploy_pipeline" {
   name               = "${var.application}-${var.codebase}-codebase-pipeline"
   assume_role_policy = data.aws_iam_policy_document.assume_codepipeline_role.json
@@ -252,21 +183,45 @@ resource "aws_iam_role_policy" "artifact_store_access_for_codebase_pipeline" {
   policy = data.aws_iam_policy_document.access_artifact_store.json
 }
 
-resource "aws_iam_role_policy" "pipeline_assume_environment_deploy_role" {
-  name   = "environment-deploy-role-access"
-  role   = aws_iam_role.codebase_deploy_pipeline.name
-  policy = data.aws_iam_policy_document.assume_environment_deploy_role.json
-}
+data "aws_iam_policy_document" "access_artifact_store" {
+  # checkov:skip=CKV_AWS_111:Permissions required to change ACLs on uploaded artifacts
+  # checkov:skip=CKV_AWS_356:Permissions required to upload artifacts
+  statement {
+    effect = "Allow"
 
-data "aws_iam_policy_document" "assume_environment_deploy_role" {
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketVersioning",
+      "s3:PutObjectAcl",
+      "s3:PutObject",
+    ]
+
+    resources = [
+      aws_s3_bucket.artifact_store.arn,
+      "${aws_s3_bucket.artifact_store.arn}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "codebuild:BatchGetBuilds",
+      "codebuild:StartBuild",
+    ]
+
+    resources = ["*"]
+  }
+
   statement {
     effect = "Allow"
     actions = [
-      "sts:AssumeRole"
+      "kms:GenerateDataKey",
+      "kms:Decrypt"
     ]
     resources = [
-      for env in local.pipeline_environments :
-      "arn:aws:iam::${env.account.id}:role/${var.application}-${env.name}-codebase-pipeline-deploy"
+      aws_kms_key.artifact_store_kms_key.arn
     ]
   }
 }
