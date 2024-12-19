@@ -244,6 +244,12 @@ resource "aws_iam_role_policy" "log_access_for_codebuild_deploy" {
   policy = data.aws_iam_policy_document.log_access.json
 }
 
+resource "aws_iam_role_policy" "ecr_access_for_codebuild_deploy" {
+  name   = "ecr-access"
+  role   = aws_iam_role.codebase_deploy.name
+  policy = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.json
+}
+
 resource "aws_iam_role_policy" "environment_deploy_role_access_for_codebuild_deploy" {
   name   = "environment-deploy-role-access"
   role   = aws_iam_role.codebase_deploy.name

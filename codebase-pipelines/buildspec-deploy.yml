@@ -8,26 +8,46 @@ phases:
   build:
     commands:
       - set -e
+
+      # Check if the specified image tag exists
+      - |
+        if ! aws ecr describe-images --repository-name "${REPOSITORY_NAME}" --image-ids "imageTag=${IMAGE_TAG}" > /dev/null 2>&1; then
+          echo "Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_NAME}"
+          exit 1
+        fi
+
+      # Check environment exists in config
+      - |
+        if [ $(echo $ENV_CONFIG | jq 'has('\"${ENVIRONMENT}\"')') == "false" ]; then
+          echo "Error: environment ${ENVIRONMENT} not listed in environment config"
+          exit 1
+        fi
+
       - task_family="${APPLICATION}-${ENVIRONMENT}-${SERVICE}"
       - cluster="${APPLICATION}-${ENVIRONMENT}"
       - image_uri="${REPOSITORY_URL}:${IMAGE_TAG}"
+
       # Assume environment role
       - account_id=$(echo ${ENV_CONFIG} | jq -c -r .${ENVIRONMENT}.account)
       - assumed_role=$(aws sts assume-role --role-arn "arn:aws:iam::${account_id}:role/${APPLICATION}-${ENVIRONMENT}-codebase-pipeline-deploy" --role-session-name "${ENVIRONMENT}-codebase-pipeline-deploy")
       - export AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $assumed_role | jq -r .Credentials.SessionToken)
+
       # Get service name
-      - service_name=$(aws ecs list-services --cluster ${cluster} | jq -r '.serviceArns[] | select(contains("'${cluster}'-'${SERVICE}'-Service"))' | cut -d '/' -f3)
+      - service_name=$(aws ecs list-services --cluster "${cluster}" | jq -r '.serviceArns[] | select(contains("'${cluster}'-'${SERVICE}'-Service"))' | cut -d '/' -f3)
+
       # Update task definition
       - task_definition=$(aws ecs describe-task-definition --task-definition "${task_family}")
-      - new_task_definition=$(echo ${task_definition} | jq --arg IMAGE "$image_uri" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) |  del(.registeredAt)  | del(.registeredBy)')
+      - new_task_definition=$(echo ${task_definition} | jq '.taskDefinition | .containerDefinitions[0].image = '\"${image_uri}\"' | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) |  del(.registeredAt)  | del(.registeredBy)')
       - new_task_info=$(aws ecs register-task-definition --cli-input-json "${new_task_definition}")
       - new_revision=$(echo ${new_task_info} | jq '.taskDefinition.revision')
+
       # Start deployment
       - start=$( date +%s )
       - deploy_status="IN_PROGRESS"
       - aws ecs update-service --cluster "${cluster}" --service "${service_name}" --task-definition "${task_family}:${new_revision}" > /dev/null 2>&1
+
       # Check deployment status
       - |
         while [[ "${deploy_status}" == "IN_PROGRESS" || "${deploy_status}" == "PENDING" || "${deploy_status}" == "ROLLBACK_IN_PROGRESS" ]];
@@ -44,6 +64,7 @@ phases:
             exit 1
           fi
         done
+
       # Check deployment success
       - |
         if [ "${deploy_status}" != "SUCCESSFUL" ]; then 

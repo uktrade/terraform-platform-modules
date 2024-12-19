@@ -77,6 +77,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
               { name : "ENVIRONMENT", value : stage.value.name },
               { name : "SERVICE", value : action.value.name },
               { name : "REPOSITORY_URL", value : local.repository_url },
+              { name : "REPOSITORY_NAME", value : local.ecr_name },
               { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" }
             ])
           }
@@ -157,6 +158,7 @@ resource "aws_codepipeline" "manual_release_pipeline" {
             { name : "ENVIRONMENT", value : "#{variables.ENVIRONMENT}" },
             { name : "SERVICE", value : action.value.name },
             { name : "REPOSITORY_URL", value : local.repository_url },
+            { name : "REPOSITORY_NAME", value : local.ecr_name },
             { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" }
           ])
         }

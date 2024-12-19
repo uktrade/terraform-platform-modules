@@ -444,6 +444,14 @@ run "test_iam" {
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy'"
   }
   assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_deploy.name == "ecr-access"
+    error_message = "Should be: 'ecr-access'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_deploy.role == "my-app-my-codebase-codebase-pipeline-deploy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy'"
+  }
+  assert {
     condition     = aws_iam_role_policy.environment_deploy_role_access_for_codebuild_deploy.name == "environment-deploy-role-access"
     error_message = "Should be: 'environment-deploy-role-access'"
   }
@@ -909,7 +917,7 @@ run "test_main_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
@@ -947,7 +955,7 @@ run "test_main_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
@@ -990,7 +998,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
@@ -1004,7 +1012,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
@@ -1050,7 +1058,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
@@ -1064,7 +1072,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[2].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[2].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
@@ -1199,7 +1207,7 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
@@ -1237,7 +1245,7 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
