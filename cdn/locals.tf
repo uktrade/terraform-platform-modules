@@ -50,6 +50,8 @@ locals {
       locations        = coalesce(var.config.cdn_geo_locations, [])
     }
 
+    headers_to_remove = [ "X-Cache", "Via", "X-Amz-Cf-Pop", "X-Amz-Cf-Id", "Server" ]
+
     # By default logging is off on all distros.
     logging_config = coalesce(var.config.enable_logging, false) ? { bucket = local.logging_bucket } : {}
 

@@ -115,6 +115,7 @@ resource "aws_cloudfront_distribution" "standard" {
     # If the variable paths/{domain}/default/[cache/request] are set.
     cache_policy_id          = try(data.aws_cloudfront_cache_policy.policy-name[var.config.paths[each.key].default.cache].id, "")
     origin_request_policy_id = try(data.aws_cloudfront_origin_request_policy.request-policy-name[var.config.paths[each.key].default.request].id, "")
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.insecure_headers.id
   }
 
   # If path based routing is set in platform-config.yml then this is run per path, you will always attach a policy to a path.
@@ -241,6 +242,21 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
     enable_accept_encoding_gzip   = true
   }
 }
+
+resource "aws_cloudfront_response_headers_policy" "insecure_headers" {
+  provider = aws.domain-cdn
+  name = "delete-headers-exposing-platform-details-${var.application}-${var.environment}"
+
+  remove_headers_config {
+    dynamic "items" {
+      for_each = local.cdn_defaults.headers_to_remove
+      content {
+        header = items.value
+      }
+    }
+  }
+}
+
 
 # We do not cache origin requests, so leaving all config as default.
 resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {
