@@ -168,3 +168,24 @@ resource "aws_codepipeline" "manual_release_pipeline" {
 
   tags = local.tags
 }
+
+# This is a temporary workaround until automatic stage rollback is implemented in terraform-provider-aws
+# https://github.com/hashicorp/terraform-provider-aws/issues/37244
+resource "terraform_data" "update_pipeline" {
+  provisioner "local-exec" {
+    command = "python ${path.module}/custom_pipeline_update/update_pipeline.py"
+    quiet   = true
+    environment = {
+      PIPELINES = jsonencode(local.pipeline_names)
+    }
+  }
+  triggers_replace = [
+    aws_codepipeline.codebase_pipeline,
+    aws_codepipeline.manual_release_pipeline,
+    file("${path.module}/custom_pipeline_update/update_pipeline.py")
+  ]
+  depends_on = [
+    aws_codepipeline.codebase_pipeline,
+    aws_codepipeline.manual_release_pipeline
+  ]
+}
