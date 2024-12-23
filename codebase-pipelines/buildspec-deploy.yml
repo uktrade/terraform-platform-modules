@@ -5,6 +5,10 @@ env:
     DEPLOY_TIMEOUT: 1800
 
 phases:
+  install:
+    commands:
+      - pip install yq --quiet
+
   build:
     commands:
       - set -e
@@ -39,14 +43,40 @@ phases:
 
       # Update task definition
       - task_definition=$(aws ecs describe-task-definition --task-definition "${task_family}")
-      - new_task_definition=$(echo ${task_definition} | jq '.taskDefinition | .containerDefinitions[0].image = '\"${image_uri}\"' | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) |  del(.registeredAt)  | del(.registeredBy)')
+      - new_task_definition=$(echo ${task_definition} | jq '.taskDefinition | .containerDefinitions |= map(if .name == '\"${SERVICE}\"' then .image = '\"${image_uri}\"' else . end) | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) |  del(.registeredAt)  | del(.registeredBy)')
       - new_task_info=$(aws ecs register-task-definition --cli-input-json "${new_task_definition}")
       - new_revision=$(echo ${new_task_info} | jq '.taskDefinition.revision')
 
+      # Get desired task count
+      - count=0
+      - cd "${CODEBUILD_SRC_DIR}"
+
+      # If count is a range, get the first value otherwise get count
+      - | 
+        if [ $(yq '.count | type == "object"' copilot/web/manifest.yml) == "true" ]; then
+          count=$(yq '.count.range' copilot/web/manifest.yml | tr -d '"' | cut -d '-' -f1)
+        else
+          count=$(yq '.count' copilot/web/manifest.yml)
+        fi
+
+      # Check for environment overrides
+      - |
+        if [ $(yq '.environments.'${ENVIRONMENT}'.count | type == "object"' copilot/web/manifest.yml) == "true" ]; then
+          env_count=$(yq '.environments.'${ENVIRONMENT}'.count.range' copilot/web/manifest.yml | tr -d '"' | cut -d '-' -f1)
+        else
+          env_count=$(yq '.environments.'${ENVIRONMENT}'.count' copilot/web/manifest.yml)
+        fi
+
+      - |
+        if [[ "${env_count}" != "null" ]]; then
+          count=${env_count}
+        fi
+
       # Start deployment
+      - echo "Deploying ${image_uri} to ${service_name} in ${cluster} with task count ${count}"
       - start=$( date +%s )
       - deploy_status="IN_PROGRESS"
-      - aws ecs update-service --cluster "${cluster}" --service "${service_name}" --task-definition "${task_family}:${new_revision}" > /dev/null 2>&1
+      - aws ecs update-service --cluster "${cluster}" --service "${service_name}" --task-definition "${task_family}:${new_revision}" --desired-count ${count} > /dev/null 2>&1
 
       # Check deployment status
       - |

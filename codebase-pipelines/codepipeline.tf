@@ -22,21 +22,41 @@ resource "aws_codepipeline" "codebase_pipeline" {
     }
   }
 
+#   stage {
+#     name = "Source"
+#
+#     action {
+#       name             = "Source"
+#       category         = "Source"
+#       owner            = "AWS"
+#       provider         = "ECR"
+#       version          = "1"
+#       namespace        = "source_ecr"
+#       output_artifacts = ["source_output"]
+#
+#       configuration = {
+#         RepositoryName = local.ecr_name
+#         ImageTag       = coalesce(each.value.tag, false) ? "tag-latest" : "branch-${each.value.branch}"
+#       }
+#     }
+#   }
+
   stage {
     name = "Source"
 
     action {
-      name             = "Source"
+      name             = "GitCheckout"
       category         = "Source"
       owner            = "AWS"
-      provider         = "ECR"
+      provider         = "CodeStarSourceConnection"
       version          = "1"
-      namespace        = "source_ecr"
-      output_artifacts = ["source_output"]
+      output_artifacts = ["deploy_source"]
 
       configuration = {
-        RepositoryName = local.ecr_name
-        ImageTag       = coalesce(each.value.tag, false) ? "tag-latest" : "branch-${each.value.branch}"
+        ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
+        FullRepositoryId = "${var.repository}-deploy"
+        BranchName       = "main"
+        DetectChanges    = false
       }
     }
   }
@@ -65,7 +85,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
           category         = "Build"
           owner            = "AWS"
           provider         = "CodeBuild"
-          input_artifacts  = ["source_output"]
+          input_artifacts  = ["deploy_source"]
           output_artifacts = []
           version          = "1"
           run_order        = action.value.order + 1
@@ -118,20 +138,40 @@ resource "aws_codepipeline" "manual_release_pipeline" {
     }
   }
 
+#   stage {
+#     name = "Source"
+#
+#     action {
+#       name             = "Source"
+#       category         = "Source"
+#       owner            = "AWS"
+#       provider         = "ECR"
+#       version          = "1"
+#       namespace        = "source_ecr"
+#       output_artifacts = ["source_output"]
+#
+#       configuration = {
+#         RepositoryName = local.ecr_name
+#       }
+#     }
+#   }
+
   stage {
     name = "Source"
 
     action {
-      name             = "Source"
+      name             = "GitCheckout"
       category         = "Source"
       owner            = "AWS"
-      provider         = "ECR"
+      provider         = "CodeStarSourceConnection"
       version          = "1"
-      namespace        = "source_ecr"
-      output_artifacts = ["source_output"]
+      output_artifacts = ["deploy_source"]
 
       configuration = {
-        RepositoryName = local.ecr_name
+        ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
+        FullRepositoryId = "${var.repository}-deploy"
+        BranchName       = "main"
+        DetectChanges    = false
       }
     }
   }
@@ -146,7 +186,7 @@ resource "aws_codepipeline" "manual_release_pipeline" {
         category         = "Build"
         owner            = "AWS"
         provider         = "CodeBuild"
-        input_artifacts  = ["source_output"]
+        input_artifacts  = ["deploy_source"]
         output_artifacts = []
         version          = "1"
         run_order        = action.value.order + 1

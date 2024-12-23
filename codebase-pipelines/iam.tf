@@ -121,7 +121,7 @@ data "aws_iam_policy_document" "ecr_access_for_codebuild_images" {
   }
 }
 
-resource "aws_iam_role_policy" "codestar_connection_access" {
+resource "aws_iam_role_policy" "codestar_connection_access_for_codebuild_images" {
   name   = "codestar-connection-policy"
   role   = aws_iam_role.codebase_image_build.name
   policy = data.aws_iam_policy_document.codestar_connection_access.json
@@ -157,6 +157,12 @@ data "aws_iam_policy_document" "assume_codepipeline_role" {
 
     actions = ["sts:AssumeRole"]
   }
+}
+
+resource "aws_iam_role_policy" "codestar_connection_access_for_codebase_pipeline" {
+  name   = "codestar-connection-policy"
+  role   = aws_iam_role.codebase_deploy_pipeline.name
+  policy = data.aws_iam_policy_document.codestar_connection_access.json
 }
 
 resource "aws_iam_role_policy" "ecr_access_for_codebase_pipeline" {
