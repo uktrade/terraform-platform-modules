@@ -3,7 +3,7 @@ data "aws_codestarconnections_connection" "github_codestar_connection" {
 }
 
 resource "aws_codebuild_project" "codebase_image_build" {
-  name          = "${var.application}-${var.codebase}-codebase-image-build"
+  name          = "${var.application}-${var.codebase}-codebase-pipeline-image-build"
   description   = "Publish images on push to ${var.repository}"
   build_timeout = 30
   service_role  = aws_iam_role.codebase_image_build.arn
@@ -115,12 +115,11 @@ resource "aws_codebuild_webhook" "codebuild_webhook" {
 }
 
 
-resource "aws_codebuild_project" "codebase_deploy_manifests" {
-  for_each       = local.pipeline_map
-  name           = "${var.application}-${var.codebase}-${each.value.name}-codebase-deploy-manifests"
-  description    = "Create image deploy manifests to deploy services"
-  build_timeout  = 5
-  service_role   = aws_iam_role.codebuild_manifests.arn
+resource "aws_codebuild_project" "codebase_deploy" {
+  name           = "${var.application}-${var.codebase}-codebase-pipeline-deploy"
+  description    = "Deploy specified image tag to specified environment"
+  build_timeout  = 30
+  service_role   = aws_iam_role.codebase_deploy.arn
   encryption_key = aws_kms_key.artifact_store_kms_key.arn
 
   artifacts {
@@ -137,59 +136,36 @@ resource "aws_codebuild_project" "codebase_deploy_manifests" {
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
+
+    environment_variable {
+      name  = "ENV_CONFIG"
+      value = jsonencode(local.base_env_config)
+    }
   }
 
   logs_config {
     cloudwatch_logs {
-      group_name  = aws_cloudwatch_log_group.codebase_deploy_manifests.name
-      stream_name = aws_cloudwatch_log_stream.codebase_deploy_manifests.name
+      group_name  = aws_cloudwatch_log_group.codebase_deploy.name
+      stream_name = aws_cloudwatch_log_stream.codebase_deploy.name
     }
   }
 
   source {
-    type = "CODEPIPELINE"
-    buildspec = templatefile("${path.module}/buildspec-manifests.yml", {
-      application = var.application,
-      environments = [
-        for env in each.value.environments : upper(env.name)
-      ],
-      services = local.service_export_names
-    })
+    type      = "CODEPIPELINE"
+    buildspec = file("${path.module}/buildspec-deploy.yml")
   }
 
   tags = local.tags
 }
 
-resource "aws_kms_key" "codebuild_kms_key" {
-  description         = "KMS Key for ${var.application} ${var.codebase} CodeBuild encryption"
-  enable_key_rotation = true
-
-  policy = jsonencode({
-    Statement = [
-      {
-        "Sid" : "Enable IAM User Permissions",
-        "Effect" : "Allow",
-        "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        },
-        "Action" : "kms:*",
-        "Resource" : "*"
-      }
-    ]
-    Version = "2012-10-17"
-  })
-
-  tags = local.tags
-}
-
-resource "aws_cloudwatch_log_group" "codebase_deploy_manifests" {
+resource "aws_cloudwatch_log_group" "codebase_deploy" {
   # checkov:skip=CKV_AWS_338:Retains logs for 3 months instead of 1 year
   # checkov:skip=CKV_AWS_158:Log groups encrypted using default encryption key instead of KMS CMK
-  name              = "codebuild/${var.application}-${var.codebase}-codebase-deploy-manifests/log-group"
+  name              = "codebuild/${var.application}-${var.codebase}-codebase-deploy/log-group"
   retention_in_days = 90
 }
 
-resource "aws_cloudwatch_log_stream" "codebase_deploy_manifests" {
-  name           = "codebuild/${var.application}-${var.codebase}-codebase-deploy-manifests/log-stream"
-  log_group_name = aws_cloudwatch_log_group.codebase_deploy_manifests.name
+resource "aws_cloudwatch_log_stream" "codebase_deploy" {
+  name           = "codebuild/${var.application}-${var.codebase}-codebase-deploy/log-stream"
+  log_group_name = aws_cloudwatch_log_group.codebase_deploy.name
 }
