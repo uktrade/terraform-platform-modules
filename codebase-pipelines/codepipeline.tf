@@ -22,25 +22,6 @@ resource "aws_codepipeline" "codebase_pipeline" {
     }
   }
 
-#   stage {
-#     name = "Source"
-#
-#     action {
-#       name             = "Source"
-#       category         = "Source"
-#       owner            = "AWS"
-#       provider         = "ECR"
-#       version          = "1"
-#       namespace        = "source_ecr"
-#       output_artifacts = ["source_output"]
-#
-#       configuration = {
-#         RepositoryName = local.ecr_name
-#         ImageTag       = coalesce(each.value.tag, false) ? "tag-latest" : "branch-${each.value.branch}"
-#       }
-#     }
-#   }
-
   stage {
     name = "Source"
 
@@ -137,24 +118,6 @@ resource "aws_codepipeline" "manual_release_pipeline" {
       type = "KMS"
     }
   }
-
-#   stage {
-#     name = "Source"
-#
-#     action {
-#       name             = "Source"
-#       category         = "Source"
-#       owner            = "AWS"
-#       provider         = "ECR"
-#       version          = "1"
-#       namespace        = "source_ecr"
-#       output_artifacts = ["source_output"]
-#
-#       configuration = {
-#         RepositoryName = local.ecr_name
-#       }
-#     }
-#   }
 
   stage {
     name = "Source"

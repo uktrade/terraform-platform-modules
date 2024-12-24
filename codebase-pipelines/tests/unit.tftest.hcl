@@ -50,13 +50,6 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.assume_environment_deploy_role
-  values = {
-    json = "{\"Sid\": \"AssumeEnvironmentDeployRole\"}"
-  }
-}
-
-override_data {
   target = data.aws_iam_policy_document.environment_deploy_role_access
   values = {
     json = "{\"Sid\": \"EnvironmentDeployAccess\"}"
@@ -398,11 +391,11 @@ run "test_iam" {
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy.codestar_connection_access.name == "codestar-connection-policy"
+    condition     = aws_iam_role_policy.codestar_connection_access_for_codebuild_images.name == "codestar-connection-policy"
     error_message = "Should be: 'codestar-connection-policy'"
   }
   assert {
-    condition     = aws_iam_role_policy.codestar_connection_access.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = aws_iam_role_policy.codestar_connection_access_for_codebuild_images.role == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
@@ -487,6 +480,14 @@ run "test_iam" {
   }
   assert {
     condition     = aws_iam_role_policy.artifact_store_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.codestar_connection_access_for_codebase_pipeline.name == "codestar-connection-policy"
+    error_message = "Should be: 'codestar-connection-policy'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.codestar_connection_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
 }
@@ -845,8 +846,8 @@ run "test_main_pipeline" {
     error_message = "Should be: Source"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].name == "Source"
-    error_message = "Should be: Source"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].name == "GitCheckout"
+    error_message = "Should be: GitCheckout"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].category == "Source"
@@ -857,28 +858,28 @@ run "test_main_pipeline" {
     error_message = "Should be: AWS"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].provider == "ECR"
-    error_message = "Should be: ECR"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].provider == "CodeStarSourceConnection"
+    error_message = "Should be: CodeStarSourceConnection"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].version == "1"
     error_message = "Should be: 1"
   }
   assert {
-    condition     = one(aws_codepipeline.codebase_pipeline[0].stage[0].action[0].output_artifacts) == "source_output"
-    error_message = "Should be: source_output"
+    condition     = one(aws_codepipeline.codebase_pipeline[0].stage[0].action[0].output_artifacts) == "deploy_source"
+    error_message = "Should be: deploy_source"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].namespace == "source_ecr"
-    error_message = "Should be: source_ecr"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.FullRepositoryId == "my-repository-deploy"
+    error_message = "Should be: my-repository-deploy"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.RepositoryName == "my-app/my-codebase"
-    error_message = "Should be: my-app/my-codebase"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.BranchName == "main"
+    error_message = "Should be: main"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.ImageTag == "branch-main"
-    error_message = "Should be: branch-main"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.DetectChanges == "false"
+    error_message = "Should be: false"
   }
 
   # Deploy dev environment stage
@@ -909,8 +910,8 @@ run "test_main_pipeline" {
     error_message = "Should be: 1"
   }
   assert {
-    condition     = one(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].input_artifacts) == "source_output"
-    error_message = "Should be: source_output"
+    condition     = one(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].input_artifacts) == "deploy_source"
+    error_message = "Should be: deploy_source"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
@@ -947,8 +948,8 @@ run "test_main_pipeline" {
     error_message = "Should be: 1"
   }
   assert {
-    condition     = one(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].input_artifacts) == "source_output"
-    error_message = "Should be: source_output"
+    condition     = one(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].input_artifacts) == "deploy_source"
+    error_message = "Should be: deploy_source"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
@@ -978,12 +979,6 @@ run "test_tagged_pipeline" {
   assert {
     condition     = length(aws_codepipeline.codebase_pipeline[1].stage) == 3
     error_message = "Should be: 3"
-  }
-
-  # Source stage
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[0].action[0].configuration.ImageTag == "tag-latest"
-    error_message = "Should be: tag-latest"
   }
 
   # Deploy staging environment stage
@@ -1135,40 +1130,44 @@ run "test_manual_release_pipeline" {
 
   # Source stage
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[0].name == "Source"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].name == "Source"
     error_message = "Should be: Source"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[0].action[0].name == "Source"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].name == "GitCheckout"
+    error_message = "Should be: GitCheckout"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].category == "Source"
     error_message = "Should be: Source"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[0].action[0].category == "Source"
-    error_message = "Should be: Source"
-  }
-  assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[0].action[0].owner == "AWS"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].owner == "AWS"
     error_message = "Should be: AWS"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[0].action[0].provider == "ECR"
-    error_message = "Should be: ECR"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].provider == "CodeStarSourceConnection"
+    error_message = "Should be: CodeStarSourceConnection"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[0].action[0].version == "1"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].version == "1"
     error_message = "Should be: 1"
   }
   assert {
-    condition     = one(aws_codepipeline.manual_release_pipeline.stage[0].action[0].output_artifacts) == "source_output"
-    error_message = "Should be: source_output"
+    condition     = one(aws_codepipeline.codebase_pipeline[0].stage[0].action[0].output_artifacts) == "deploy_source"
+    error_message = "Should be: deploy_source"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[0].action[0].namespace == "source_ecr"
-    error_message = "Should be: source_ecr"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.FullRepositoryId == "my-repository-deploy"
+    error_message = "Should be: my-repository-deploy"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[0].action[0].configuration.RepositoryName == "my-app/my-codebase"
-    error_message = "Should be: my-app/my-codebase"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.BranchName == "main"
+    error_message = "Should be: main"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.DetectChanges == "false"
+    error_message = "Should be: false"
   }
 
   # Deploy stage
@@ -1199,8 +1198,8 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: 1"
   }
   assert {
-    condition     = one(aws_codepipeline.manual_release_pipeline.stage[1].action[0].input_artifacts) == "source_output"
-    error_message = "Should be: source_output"
+    condition     = one(aws_codepipeline.manual_release_pipeline.stage[1].action[0].input_artifacts) == "deploy_source"
+    error_message = "Should be: deploy_source"
   }
   assert {
     condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
@@ -1237,8 +1236,8 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: 1"
   }
   assert {
-    condition     = one(aws_codepipeline.manual_release_pipeline.stage[1].action[1].input_artifacts) == "source_output"
-    error_message = "Should be: source_output"
+    condition     = one(aws_codepipeline.manual_release_pipeline.stage[1].action[1].input_artifacts) == "deploy_source"
+    error_message = "Should be: deploy_source"
   }
   assert {
     condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
