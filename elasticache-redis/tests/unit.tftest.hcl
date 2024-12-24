@@ -94,7 +94,7 @@ run "aws_elasticache_replication_group_unit_test" {
   }
 
   assert {
-    condition     = aws_elasticache_replication_group.redis.at_rest_encryption_enabled == true
+    condition     = aws_elasticache_replication_group.redis.at_rest_encryption_enabled == "true"
     error_message = "Invalid config for aws_elasticache_replication_group at_rest_encryption_enabled"
   }
 
@@ -174,7 +174,7 @@ run "aws_elasticache_replication_group_unit_test2" {
   }
 
   assert {
-    condition     = aws_elasticache_replication_group.redis.at_rest_encryption_enabled == true
+    condition     = aws_elasticache_replication_group.redis.at_rest_encryption_enabled == "true"
     error_message = "Invalid config for aws_elasticache_replication_group at_rest_encryption_enabled"
   }
 
