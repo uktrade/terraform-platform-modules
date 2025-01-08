@@ -10,9 +10,6 @@ from requests.exceptions import RequestException
 
 from botocore.exceptions import ClientError
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
 AWSPENDING = "AWSPENDING"
 AWSCURRENT = "AWSCURRENT"
 
@@ -201,7 +198,7 @@ class SecretRotator:
             found_header = False
             for header in origin['CustomHeaders']['Items']:
                 if header['HeaderName'] == self.header_name:
-                    logger.info(f"Updating existing custom header for origin: {origin['Id']}")
+                    self.logger.info(f"Updating existing custom header for origin: {origin['Id']}")
                     header['HeaderValue'] = header_value
                     found_header = True
                     header_count += 1
@@ -350,7 +347,7 @@ class SecretRotator:
             self.logger.error(f"Connection Error Details: {str(conn_err)}")
             # Log more specific connection error details
             if hasattr(conn_err, 'response'):
-                logger.error(f"Connection Error Response: {conn_err.response}")
+                self.logger.error(f"Connection Error Response: {conn_err.response}")
             return False
 
         except requests.exceptions.Timeout as timeout_err:
@@ -375,7 +372,7 @@ class SecretRotator:
                     self.logger.error(f"Error Response Headers: {e.response.headers}")
                     self.logger.error(f"Error Response Content: {e.response.text[:500]}") # Limit content to first 500 chars
                 except Exception as log_err:
-                    logger.error(f"Could not log error response details: {str(log_err)}")
+                    self.logger.error(f"Could not log error response details: {str(log_err)}")
 
             return False
 
