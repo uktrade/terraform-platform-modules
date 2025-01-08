@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.15.0](https://github.com/uktrade/terraform-platform-modules/compare/5.14.0...5.15.0) (2025-01-07)
+
+
+### Features
+
+* DBTP-1568 - Add s3 support for cross environment service access ([#293](https://github.com/uktrade/terraform-platform-modules/issues/293)) ([e4252ad](https://github.com/uktrade/terraform-platform-modules/commit/e4252addef2493c65735ced988d8c42ad3f66d7e))
+
+
+### Bug Fixes
+
+* Update deprecated managed role policy ([#305](https://github.com/uktrade/terraform-platform-modules/issues/305)) ([5e73422](https://github.com/uktrade/terraform-platform-modules/commit/5e73422305bf329eff0a7ef5db2274834b5158e1))
+
 ## [5.14.0](https://github.com/uktrade/terraform-platform-modules/compare/5.13.0...5.14.0) (2024-12-12)
 
 
