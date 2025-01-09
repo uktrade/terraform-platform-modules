@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.0.0](https://github.com/uktrade/terraform-platform-modules/compare/5.15.0...6.0.0) (2025-01-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* DBTP-1395 Add CloudFront and application load balancer origin verification secret for IP Filter spoofing ([#273](https://github.com/uktrade/terraform-platform-modules/issues/273))
+
+### Features
+
+* DBTP-1395 Add CloudFront and application load balancer origin verification secret for IP Filter spoofing ([#273](https://github.com/uktrade/terraform-platform-modules/issues/273)) ([7c182e0](https://github.com/uktrade/terraform-platform-modules/commit/7c182e002ffc2ad465dfef255c086af114e53e97))
+
 ## [5.15.0](https://github.com/uktrade/terraform-platform-modules/compare/5.14.0...5.15.0) (2025-01-07)
 
 
