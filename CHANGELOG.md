@@ -13,7 +13,8 @@
 
 ## Upgrade Path
 
-To upgrade to version 6 of terraform-platform-modules you can modify the `&lt;application&gt;-deploy/platform-config.yml` for the environments that you want to upgrade (put the `versions` property in an individual environment or under the `*` to apply to all environments)
+To upgrade to version 6 of terraform-platform-modules you can modify the 
+`<application>-deploy/platform-config.yml` for the environments that you want to upgrade (put the `versions` property in an individual environment or under the `*` to apply to all environments)
 
 ```
   environments:
