@@ -10,6 +10,25 @@
 ### Features
 
 * DBTP-1395 Add CloudFront and application load balancer origin verification secret for IP Filter spoofing ([#273](https://github.com/uktrade/terraform-platform-modules/issues/273)) ([7c182e0](https://github.com/uktrade/terraform-platform-modules/commit/7c182e002ffc2ad465dfef255c086af114e53e97))
+  
+## Upgrade path
+
+Major version release, so the version will need updating in the following files: 
+`<application>-deploy/terraform/environments/*/main.tf`
+
+The `source` attribute will need updating to **6** as per example below:
+
+```
+module "extensions" {
+  source = "git::https://github.com/uktrade/terraform-platform-modules.git//extensions?depth=1&ref=6"
+
+  args        = local.args
+  environment = ...
+  vpc_name    = ...
+}
+```
+
+Please let SRE and the Platform team know when you have upgraded to this release
 
 ## [5.15.0](https://github.com/uktrade/terraform-platform-modules/compare/5.14.0...5.15.0) (2025-01-07)
 
