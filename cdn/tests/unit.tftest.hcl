@@ -6,11 +6,22 @@ mock_provider "aws" {
   alias = "domain"
 }
 
+mock_provider "aws" {
+
+}
+
 override_data {
   target = data.aws_route53_zone.domain-root
   values = {
     count = 0
     name  = "my-application.uktrade.digital"
+  }
+}
+
+override_data {
+  target = data.aws_secretsmanager_secret_version.origin_verify_secret_version
+  values = {
+    secret_string = "{\"HEADERVALUE\": \"some-secret\"}"
   }
 }
 
@@ -22,6 +33,7 @@ variables {
     domain_prefix    = "dom-prefix",
     cdn_domains_list = { "dev.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital"], "dev2.my-application.uktrade.digital" : ["internal", "my-application.uktrade.digital", "disable_cdn"] }
   }
+  origin_verify_secret_id = "dummy123"
 }
 
 
