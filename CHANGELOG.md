@@ -27,8 +27,8 @@ To upgrade to version 6 of terraform-platform-modules you can modify the <applic
         id: "011755346992"
     vpc: platform-sandbox-dev
   dev:
-    **versions**:
-      **terraform-platform-modules: 6**
+    versions:                        # add "versions" property
+      terraform-platform-modules: 6  # set "terraform-platform-modules" property to 6
   ...
 ```
 
