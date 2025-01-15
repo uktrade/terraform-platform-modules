@@ -4,11 +4,9 @@ import boto3
 from typing import List
 
 
-def update_pipeline_stage_failure(pipelines: List[str]):
+def update_pipeline_stage_failure(client: boto3.client, pipelines: List[str]):
     for pipeline_name in pipelines:
         print(f"Updating pipeline {pipeline_name}")
-
-        client = boto3.client("codepipeline")
 
         response = client.get_pipeline(name=pipeline_name)
         pipeline = response["pipeline"]
@@ -30,4 +28,5 @@ def update_pipeline_stage_failure(pipelines: List[str]):
 
 if __name__ == "__main__":
     pipelines = json.loads(os.environ['PIPELINES'])
-    update_pipeline_stage_failure(pipelines)
+    client = boto3.client("codepipeline")
+    update_pipeline_stage_failure(client, pipelines)
