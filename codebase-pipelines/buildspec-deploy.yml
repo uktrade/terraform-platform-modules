@@ -3,11 +3,16 @@ version: 0.2
 env:
   variables:
     DEPLOY_TIMEOUT: 1800
+    SLACK_THREAD_ID: ""
+    
 
 phases:
   install:
     commands:
       - pip install yq --quiet
+      - echo "Installing platform-helper
+      - pip install dbt-platform-helper
+      - platform-helper --version
 
   build:
     commands:
@@ -17,6 +22,7 @@ phases:
       - |
         if ! aws ecr describe-images --repository-name "${REPOSITORY_NAME}" --image-ids "imageTag=${IMAGE_TAG}" > /dev/null 2>&1; then
           echo "Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_NAME}"
+          
           exit 1
         fi
 
