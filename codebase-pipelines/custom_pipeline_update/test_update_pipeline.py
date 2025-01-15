@@ -67,3 +67,22 @@ class TestUpdatePipeline(unittest.TestCase):
         assert not hasattr(call_args["pipeline"]["stages"][0], "onFailure")
         assert call_args["pipeline"]["stages"][1]["onFailure"]["result"] == "ROLLBACK"
         assert call_args["pipeline"]["stages"][2]["onFailure"]["result"] == "ROLLBACK"
+
+    def test_update_pipeline_failure_if_pipeline_not_found(self):
+        mock_client = MagicMock()
+
+        not_found_exception = mock_client.exceptions.PipelineNotFoundException(
+            error_response={
+                "Error": {
+                    "Code": "PipelineNotFoundException",
+                    "Message": "Pipeline not found"
+                }
+            },
+            operation_name="GetPipeline"
+        )
+        mock_client.get_pipeline.side_effect = Exception(not_found_exception)
+
+        with pytest.raises(Exception) as error_msg:
+            update_pipeline_stage_failure(mock_client, ["non-existing-pipeline"])
+
+        assert "PipelineNotFoundException" in str(error_msg.value)
