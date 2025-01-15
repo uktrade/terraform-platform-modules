@@ -12,13 +12,13 @@ data "aws_iam_policy_document" "assume_codebase_pipeline" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${var.args.pipeline_account_id}:root"]
+      identifiers = ["arn:aws:iam::${local.pipeline_account_id}:root"]
     }
     condition {
       test = "ArnLike"
       values = [
-        "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline",
-        "arn:aws:iam::${var.args.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline-*"
+        "arn:aws:iam::${local.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline",
+        "arn:aws:iam::${local.pipeline_account_id}:role/${var.args.application}-*-codebase-pipeline-*"
       ]
       variable = "aws:PrincipalArn"
     }
@@ -39,7 +39,7 @@ data "aws_iam_policy_document" "ecr_access" {
       "ecr:DescribeImages"
     ]
     resources = [
-      "arn:aws:ecr:${data.aws_region.current.name}:${var.args.pipeline_account_id}:repository/${var.args.application}/*"
+      "arn:aws:ecr:${data.aws_region.current.name}:${local.pipeline_account_id}:repository/${var.args.application}/*"
     ]
   }
 }
@@ -86,7 +86,7 @@ data "aws_iam_policy_document" "artifact_store_access" {
       "kms:Decrypt"
     ]
     resources = [
-      "arn:aws:kms:${data.aws_region.current.name}:${var.args.pipeline_account_id}:key/*"
+      "arn:aws:kms:${data.aws_region.current.name}:${local.pipeline_account_id}:key/*"
     ]
   }
 }

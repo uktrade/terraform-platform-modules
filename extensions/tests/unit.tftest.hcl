@@ -33,12 +33,36 @@ variables {
         }
       }
     },
-    dns_account_id      = "123456"
-    pipeline_account_id = "000123456789"
+    env_config = {
+      "*" = {
+        accounts = {
+          deploy = {
+            name = "sandbox"
+            id   = "000123456789"
+          }
+          dns = {
+            name = "dev"
+            id   = "123456"
+          }
+        }
+        vpc : "test-vpc"
+      },
+      "test-environment" = {
+        accounts = {
+          deploy = {
+            name = "sandbox"
+            id   = "000123456789"
+          }
+          dns = {
+            name = "dev"
+            id   = "123456"
+          }
+        }
+        vpc : "test-vpc"
+      }
+    }
   }
-  application = "test-application"
   environment = "test-environment"
-  vpc_name    = "test-vpc"
 }
 
 mock_provider "aws" {
@@ -215,11 +239,36 @@ run "opensearch_plan_medium_ha_service_test" {
           }
         }
       },
-      dns_account_id      = "123456"
-      pipeline_account_id = "000123456789"
+      env_config = {
+        "*" = {
+          accounts = {
+            deploy = {
+              name = "sandbox"
+              id   = "000123456789"
+            }
+            dns = {
+              name = "dev"
+              id   = "123456"
+            }
+          }
+          vpc : "test-vpc"
+        },
+        "test-environment" = {
+          accounts = {
+            deploy = {
+              name = "sandbox"
+              id   = "000123456789"
+            }
+            dns = {
+              name = "dev"
+              id   = "123456"
+            }
+          }
+          vpc : "test-vpc"
+        }
+      }
     }
     environment = "test-environment"
-    vpc_name    = "test-vpc"
   }
 
   command = plan

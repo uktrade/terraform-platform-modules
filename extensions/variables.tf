@@ -1,16 +1,11 @@
 variable "args" {
   type = object({
-    application         = string,
-    services            = any,
-    dns_account_id      = string
-    pipeline_account_id = string
+    application = string,
+    services    = any,
+    env_config  = any
   })
 }
 
 variable "environment" {
-  type = string
-}
-
-variable "vpc_name" {
   type = string
 }

@@ -10,7 +10,7 @@ module "s3" {
   application = var.args.application
   environment = var.environment
   name        = each.key
-  vpc_name    = var.vpc_name
+  vpc_name    = local.vpc_name
 
   config = each.value
 }
@@ -23,7 +23,7 @@ module "postgres" {
   application = var.args.application
   environment = var.environment
   name        = each.key
-  vpc_name    = var.vpc_name
+  vpc_name    = local.vpc_name
 
   config = each.value
 }
@@ -36,7 +36,7 @@ module "elasticache-redis" {
   application = var.args.application
   environment = var.environment
   name        = each.key
-  vpc_name    = var.vpc_name
+  vpc_name    = local.vpc_name
 
   config = each.value
 }
@@ -49,7 +49,7 @@ module "opensearch" {
   application = var.args.application
   environment = var.environment
   name        = each.key
-  vpc_name    = var.vpc_name
+  vpc_name    = local.vpc_name
 
   config = each.value
 }
@@ -63,7 +63,7 @@ module "alb" {
   }
   application = var.args.application
   environment = var.environment
-  vpc_name    = var.vpc_name
+  vpc_name    = local.vpc_name
 
   config = each.value
 }
@@ -88,7 +88,7 @@ module "monitoring" {
 
   application = var.args.application
   environment = var.environment
-  vpc_name    = var.vpc_name
+  vpc_name    = local.vpc_name
 
   config = each.value
 }
