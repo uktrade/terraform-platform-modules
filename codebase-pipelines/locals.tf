@@ -6,9 +6,12 @@ locals {
   }
 
   account_region = "${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}"
+  aws_account_id = data.aws_caller_identity.current.account_id
+  aws_region     = data.aws_region.current.name
 
-  ecr_name       = "${var.application}/${var.codebase}"
-  repository_url = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}"
+  ecr_name                 = "${var.application}/${var.codebase}"
+  prefixed_repository_name = "uktrade/${var.application}"
+  repository_url           = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}"
 
   pipeline_branches = distinct([
     for pipeline in var.pipelines : pipeline.branch if lookup(pipeline, "branch", null) != null
