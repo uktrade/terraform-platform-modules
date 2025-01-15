@@ -34,6 +34,11 @@ variable "services" {
   type = any
 }
 
+variable "slack_channel" {
+  type    = string
+  default = "/codebuild/slack_oauth_channel"
+}
+
 variable "env_config" {
   type = any
 }
