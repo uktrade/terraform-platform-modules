@@ -3,20 +3,34 @@ version: 0.2
 env:
   variables:
     DEPLOY_TIMEOUT: 1800
-    SLACK_THREAD_ID: ""
+  parameter-store:
+    SLACK_TOKEN: /codebuild/slack_oauth_token
     
-
 phases:
   install:
     commands:
       - pip install yq --quiet
-      - echo "Installing platform-helper
+      - echo "Installing platform-helper"
       - pip install dbt-platform-helper
       - platform-helper --version
+      - echo "Installing regclient"
+      - curl -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > /usr/local/bin/regctl
+      - chmod +x /usr/local/bin/regctl
 
   build:
     commands:
       - set -e
+      
+      # Extract timestamp from image config and check if it exists
+      - |
+        SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
+        if [ "$SLACK_REF" = "null" ] || [ -z "$SLACK_REF" ]; then
+          echo "Image contains no timestamp label"
+          exit 1
+        fi
+        echo "Found image timestamp $SLACK_REF"
+        
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Deployment started for ${PREFIXED_REPOSITORY_NAME}@${IMAGE_TAG}"
 
       # Check if the specified image tag exists
       - |
@@ -78,6 +92,17 @@ phases:
         fi
 
       # Start deployment
+      - |
+        BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)
+        echo "BUILD_ID_PREFIX - ${BUILD_ID_PREFIX}"
+
+      
+      - |
+        MESSAGE="*Deploying ${PREFIXED_REPOSITORY_NAME}@${IMAGE_TAG}*\n*Repository:* ${PREFIXED_REPOSITORY_NAME}\n*Revision:* ${PREFIXED_REPOSITORY_NAME}/commit/${IMAGE_TAG}\nDeploying ${image_uri} to ${service_name} in ${cluster} with task count ${count}\n*Deploy Logs:* <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|${BUILD_ID_PREFIX} - build ${CODEBUILD_BUILD_NUMBER}>"
+
+      
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
+      
       - echo "Deploying ${image_uri} to ${service_name} in ${cluster} with task count ${count}"
       - start=$( date +%s )
       - deploy_status="IN_PROGRESS"
@@ -106,3 +131,8 @@ phases:
           echo "Error: deployment did not succeed"
           exit 1
         fi
+        
+      - |
+        MESSAGE="*Deployment of ${image_uri} to ${service_name} in ${cluster} with task count ${count} is: ${deploy_status}*\n*Deploy Logs:* <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|${BUILD_ID_PREFIX} - build ${CODEBUILD_BUILD_NUMBER}>"
+
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
