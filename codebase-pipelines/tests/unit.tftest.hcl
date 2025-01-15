@@ -1644,3 +1644,12 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
     error_message = "Run order incorrect"
   }
 }
+
+run "test_pipeline_update_script" {
+  command = plan
+
+  assert {
+    condition     = length(terraform_data.update_pipeline.triggers_replace) == 3
+    error_message = "Should be: 3"
+  }
+}
