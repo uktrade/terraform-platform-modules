@@ -1,8 +1,9 @@
 locals {
   args = {
-    application    = "my-application"
-    services       = yamldecode(file("${path.module}/extensions.yml"))
-    dns_account_id = one([for env in yamldecode(file("${path.module}/pipelines.yml"))["environments"] : env if env["name"] == "my-environment"])["accounts"]["dns"]["id"]
+    application         = "my-application"
+    services            = yamldecode(file("${path.module}/extensions.yml"))
+    dns_account_id      = one([for env in yamldecode(file("${path.module}/pipelines.yml"))["environments"] : env if env["name"] == "my-environment"])["accounts"]["dns"]["id"]
+    pipeline_account_id = one([for env in yamldecode(file("${path.module}/pipelines.yml"))["environments"] : env if env["name"] == "default"])["accounts"]["deploy"]["id"]
   }
 }
 

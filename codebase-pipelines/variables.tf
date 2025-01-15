@@ -33,3 +33,7 @@ variable "pipelines" {
 variable "services" {
   type = any
 }
+
+variable "env_config" {
+  type = any
+}

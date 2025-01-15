@@ -22,7 +22,6 @@ phases:
       - |
         if ! aws ecr describe-images --repository-name "${REPOSITORY_NAME}" --image-ids "imageTag=${IMAGE_TAG}" > /dev/null 2>&1; then
           echo "Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_NAME}"
-          
           exit 1
         fi
 
