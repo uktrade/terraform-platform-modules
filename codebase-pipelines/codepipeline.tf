@@ -79,7 +79,10 @@ resource "aws_codepipeline" "codebase_pipeline" {
               { name : "SERVICE", value : action.value.name },
               { name : "REPOSITORY_URL", value : local.repository_url },
               { name : "REPOSITORY_NAME", value : local.ecr_name },
-              { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" }
+              { name : "PREFIXED_REPOSITORY_NAME", value : local.prefixed_repository_name },
+              { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" },
+              { name : "AWS_REGION", value : local.aws_region },
+              { name : "AWS_ACCOUNT_ID", value : local.aws_account_id }
             ])
           }
         }
