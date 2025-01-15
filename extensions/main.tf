@@ -64,6 +64,7 @@ module "alb" {
   application = var.args.application
   environment = var.environment
   vpc_name    = local.vpc_name
+  dns_account_id = local.dns_account_id
 
   config = each.value
 }
@@ -77,6 +78,8 @@ module "cdn" {
   }
   application = var.args.application
   environment = var.environment
+
+  origin_verify_secret_id = one(values(module.alb)).origin_verify_secret_id
 
   config = each.value
 }
