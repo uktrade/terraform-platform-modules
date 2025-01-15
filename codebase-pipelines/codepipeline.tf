@@ -83,7 +83,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
               { name : "REPOSITORY_URL", value : local.repository_url },
               { name : "REPOSITORY_NAME", value : local.ecr_name },
               { name : "SERVICE", value : action.value.name },
-              { name : "SLACK_CHANNEL_ID", value : var.slack_channel },
+              { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             ])
           }
         }
