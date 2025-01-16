@@ -56,6 +56,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.ssm_access
+  values = {
+    json = "{\"Sid\": \"SSMAccess\"}"
+  }
+}
+
 variables {
   env_config = {
     "*" = {
@@ -119,6 +126,8 @@ variables {
     copilot-pipeline    = "my-codebase"
     copilot-application = "my-app"
   }
+
+  slack_channel = "/fake/slack/channel"
 }
 
 run "test_ecr" {
@@ -700,7 +709,11 @@ run "test_iam_documents" {
     error_message = "Should be: Allow"
   }
   assert {
-    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].actions) == "ecr:DescribeImages"
+    condition = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].actions == toset([
+      "ecr:DescribeImages",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer"
+    ])
     error_message = "Unexpected actions"
   }
 }
@@ -917,10 +930,12 @@ run "test_main_pipeline" {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
+
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
     error_message = "Configuration environment variables incorrect"
   }
+
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].run_order == 2
     error_message = "Run order incorrect"
@@ -956,9 +971,10 @@ run "test_main_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
     error_message = "Configuration environment variables incorrect"
   }
+
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].run_order == 3
     error_message = "Run order incorrect"
@@ -993,9 +1009,10 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
     error_message = "Configuration environment variables incorrect"
   }
+
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].run_order == 2
     error_message = "Run order incorrect"
@@ -1007,7 +1024,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
@@ -1053,7 +1070,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
@@ -1067,7 +1084,7 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[2].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[2].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
