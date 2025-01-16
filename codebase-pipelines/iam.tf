@@ -175,10 +175,21 @@ data "aws_iam_policy_document" "ecr_access_for_codebase_pipeline" {
   statement {
     effect = "Allow"
     actions = [
-      "ecr:DescribeImages"
+      "ecr:DescribeImages",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer"
     ]
     resources = [
       aws_ecr_repository.this.arn
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:GetAuthorizationToken"
+    ]
+    resources = [
+      "*"
     ]
   }
 }
@@ -271,6 +282,25 @@ data "aws_iam_policy_document" "environment_deploy_role_access" {
     resources = [
       for id in local.deploy_account_ids :
       "arn:aws:iam::${id}:role/${var.application}-*-codebase-pipeline-deploy"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "ssm_access" {
+  name   = "ssm-access"
+  role   = aws_iam_role.codebase_deploy.name
+  policy = data.aws_iam_policy_document.ssm_access.json
+}
+
+data "aws_iam_policy_document" "ssm_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters"
+    ]
+    resources = [
+      "arn:aws:ssm:${local.account_region}:parameter/codebuild/slack_*"
     ]
   }
 }
