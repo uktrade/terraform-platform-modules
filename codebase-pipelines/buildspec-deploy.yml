@@ -5,23 +5,26 @@ env:
     DEPLOY_TIMEOUT: 1800
   parameter-store:
     SLACK_TOKEN: /codebuild/slack_oauth_token
-    
+
 phases:
   install:
     commands:
+      - echo "Starting deployment script for ${SERVICE} service"
       - pip install yq --quiet
       - echo "Installing platform-helper"
-      - pip install dbt-platform-helper
-      - platform-helper --version
+      - pip install dbt-platform-helper --quiet
+      - platform-helper --version 
       - echo "Installing regclient"
-      - curl -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > /usr/local/bin/regctl
+      - curl -s -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > /usr/local/bin/regctl
       - chmod +x /usr/local/bin/regctl
 
   build:
     commands:
       - set -e
-      
+
       # Extract timestamp from image config and check if it exists
+      - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
       - |
         SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
         if [ "$SLACK_REF" = "null" ] || [ -z "$SLACK_REF" ]; then
@@ -30,7 +33,11 @@ phases:
         fi
         echo "Found image timestamp $SLACK_REF"
         
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "Deployment started for ${PREFIXED_REPOSITORY_NAME}@${IMAGE_TAG}"
+      - UPPERCASE_SERVICE=$(echo "${SERVICE}" | tr '[:lower:]' '[:upper:]')
+      - |
+        MESSAGE=":rocket: STARTED -- Deployment for ${UPPERCASE_SERVICE} service"
+
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
 
       # Check if the specified image tag exists
       - |
@@ -71,7 +78,7 @@ phases:
       - cd "${CODEBUILD_SRC_DIR}"
 
       # If count is a range, get the first value otherwise get count
-      - | 
+      - |
         if [ $(yq '.count | type == "object"' copilot/web/manifest.yml) == "true" ]; then
           count=$(yq '.count.range' copilot/web/manifest.yml | tr -d '"' | cut -d '-' -f1)
         else
@@ -96,13 +103,11 @@ phases:
         BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)
         echo "BUILD_ID_PREFIX - ${BUILD_ID_PREFIX}"
 
-      
       - |
-        MESSAGE="*Deploying ${PREFIXED_REPOSITORY_NAME}@${IMAGE_TAG}*\n*Repository:* ${PREFIXED_REPOSITORY_NAME}\n*Revision:* ${PREFIXED_REPOSITORY_NAME}/commit/${IMAGE_TAG}\nDeploying ${image_uri} to ${service_name} in ${cluster} with task count ${count}\n*Deploy Logs:* <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|${BUILD_ID_PREFIX} - build ${CODEBUILD_BUILD_NUMBER}>"
+        MESSAGE=":building_construction: Deploying ${UPPERCASE_SERVICE} service  -  Build number logs: <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|${CODEBUILD_BUILD_NUMBER}>"
 
-      
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
-      
+
       - echo "Deploying ${image_uri} to ${service_name} in ${cluster} with task count ${count}"
       - start=$( date +%s )
       - deploy_status="IN_PROGRESS"
@@ -115,24 +120,45 @@ phases:
           sleep 10
           now=$( date +%s )
           elapsed=$(( now-start ))
-        
+
           deploy_status=$(aws ecs list-service-deployments --cluster "${cluster}" --service "${service_name}" --created-at "after=${start}" | jq -r '.serviceDeployments[0].status')
           echo "Deployment status after ${elapsed} seconds: ${deploy_status}"
-        
+
           if [[ ${elapsed} -gt ${DEPLOY_TIMEOUT} ]]; then
             echo "Error: deployment not completed in ${DEPLOY_TIMEOUT} seconds"
             exit 1
           fi
         done
-
+        
       # Check deployment success
       - |
-        if [ "${deploy_status}" != "SUCCESSFUL" ]; then 
-          echo "Error: deployment did not succeed"
-          exit 1
-        fi
-        
+        case "${deploy_status}" in
+          SUCCESSFUL)
+            STATUS=":large_green_circle:"
+            ;;
+          ROLLBACK_SUCCESSFUL)
+            STATUS=":large_orange_circle::white_check_mark:"
+            ;;
+          ROLLBACK_IN_PROGRESS)
+            STATUS=":large_orange_circle::hourglass:"
+            ;;
+          ROLLBACK_FAILED)
+            STATUS=":large_orange_circle::arrow_right::red_circle:"
+            ;;
+          *)
+            STATUS=":large_blue_circle:"
+            ;;
+        esac
+        echo "Status emoji set to ${STATUS}"
+      
       - |
-        MESSAGE="*Deployment of ${image_uri} to ${service_name} in ${cluster} with task count ${count} is: ${deploy_status}*\n*Deploy Logs:* <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|${BUILD_ID_PREFIX} - build ${CODEBUILD_BUILD_NUMBER}>"
+        MESSAGE="${STATUS} Deployment of ${image_uri} to ${service_name} is: ${deploy_status}"
 
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
+      
+      # Exit with an error code if deployment did not succeed 
+      - | 
+        if [ "${deploy_status}" != "SUCCESSFUL" ]; then 
+          echo "Error: deployment status is ${deploy_status}" 
+          exit 1 
+        fi
