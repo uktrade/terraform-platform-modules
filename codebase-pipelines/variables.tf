@@ -37,3 +37,8 @@ variable "services" {
 variable "env_config" {
   type = any
 }
+
+variable "image_build" {
+  type = bool
+  default = true
+}
