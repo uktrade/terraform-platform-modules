@@ -321,6 +321,14 @@ run "test_codebuild_images_not_required" {
     condition     = length(aws_codebuild_webhook.codebuild_webhook) == 0
     error_message = "Should be: 0"
   }
+  assert {
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"latest\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
+    error_message = "Event pattern is incorrect ${jsonencode(aws_cloudwatch_event_rule.ecr_image_publish[0].event_pattern)}"
+  }
+  assert {
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"latest\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
+    error_message = "Event pattern is incorrect"
+  }
 }
 
 run "test_main_branch_filter" {
