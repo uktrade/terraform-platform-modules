@@ -79,6 +79,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
               { name : "AWS_ACCOUNT_ID", value : local.aws_account_id },
               { name : "ENVIRONMENT", value : stage.value.name },
               { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" },
+              { name : "PIPELINE_EXECUTION_ID", value : "#{codepipeline.PipelineExecutionId}" },
               { name : "PREFIXED_REPOSITORY_NAME", value : local.prefixed_repository_name },
               { name : "REPOSITORY_URL", value : local.repository_url },
               { name : "REPOSITORY_NAME", value : local.ecr_name },
