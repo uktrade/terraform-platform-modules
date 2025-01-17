@@ -13,7 +13,7 @@ phases:
       - pip install yq --quiet
       - echo "Installing platform-helper"
       - pip install dbt-platform-helper --quiet
-      - platform-helper --version 
+      - platform-helper --version
       - echo "Installing regclient"
       - curl -s -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > /usr/local/bin/regctl
       - chmod +x /usr/local/bin/regctl
@@ -32,10 +32,28 @@ phases:
           exit 1
         fi
         echo "Found image timestamp $SLACK_REF"
-        
+
       - UPPERCASE_SERVICE=$(echo "${SERVICE}" | tr '[:lower:]' '[:upper:]')
+      - UPPERCASE_TAG=$(echo "${IMAGE_TAG}" | tr '[:lower:]' '[:upper:]')
+
+        # Extract the pipeline name from CODEBUILD_INITIATOR default env var
       - |
-        MESSAGE=":rocket: STARTED -- Deployment for ${UPPERCASE_SERVICE} service"
+        PIPELINE_NAME=""
+
+        if [[ "${CODEBUILD_INITIATOR}" == codepipeline/* ]]; then 
+          PIPELINE_NAME=$(echo "${CODEBUILD_INITIATOR}" | cut -d'/' -f2) 
+          echo "Pipeline name is ${PIPELINE_NAME}"
+        else 
+          echo "ERROR: Build not triggered by CodePipeline." 
+          exit 1 
+        fi
+
+      - |
+        BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)
+        echo "BUILD_ID_PREFIX - ${BUILD_ID_PREFIX}"
+
+      - |
+        MESSAGE=":rocket: STARTED - Deployment for ${UPPERCASE_SERVICE} service - Build log <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|${CODEBUILD_BUILD_NUMBER}>"
 
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
 
@@ -99,15 +117,6 @@ phases:
         fi
 
       # Start deployment
-      - |
-        BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)
-        echo "BUILD_ID_PREFIX - ${BUILD_ID_PREFIX}"
-
-      - |
-        MESSAGE=":building_construction: Deploying ${UPPERCASE_SERVICE} service  -  Build number logs: <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|${CODEBUILD_BUILD_NUMBER}>"
-
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
-
       - echo "Deploying ${image_uri} to ${service_name} in ${cluster} with task count ${count}"
       - start=$( date +%s )
       - deploy_status="IN_PROGRESS"
@@ -129,7 +138,7 @@ phases:
             exit 1
           fi
         done
-        
+
       # Check deployment success
       - |
         case "${deploy_status}" in
@@ -150,14 +159,20 @@ phases:
             ;;
         esac
         echo "Status emoji set to ${STATUS}"
-      
+
+      # Construct the pipeline execution URL
       - |
-        MESSAGE="${STATUS} Deployment of ${image_uri} to ${service_name} is: ${deploy_status}"
+        PIPELINE_EXECUTION_URL="https://${AWS_REGION}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${PIPELINE_NAME}/executions/${PIPELINE_EXECUTION_ID}" 
+
+        echo "Pipeline execution URL: ${PIPELINE_EXECUTION_URL}"
+
+      - |
+        MESSAGE="${STATUS} COMPLETE - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
 
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
-      
-      # Exit with an error code if deployment did not succeed 
-      - | 
+
+      # Exit with an error code if deployment did not succeed
+      - |
         if [ "${deploy_status}" != "SUCCESSFUL" ]; then 
           echo "Error: deployment status is ${deploy_status}" 
           exit 1 
