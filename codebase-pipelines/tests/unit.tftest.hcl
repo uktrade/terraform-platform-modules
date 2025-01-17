@@ -294,16 +294,32 @@ run "test_codebuild_images" {
   }
 }
 
-run "test_codebuild_images_disabled" {
+run "test_codebuild_images_not_required" {
   command = plan
 
   variables {
-    image_build = false
+    requires_image_build = false
   }
-  # TODO testing when image_build is false, all of the image build stuff isn't created
+
   assert {
-    condition     = length(terraform_data.update_pipeline.triggers_replace) == 3
-    error_message = "Should be: 3"
+    condition     = length(aws_codebuild_project.codebase_image_build) == 0
+    error_message = "Should be: 0"
+  }
+  assert {
+    condition     = length(aws_iam_role.codebase_image_build) == 0
+    error_message = "Should be: 0"
+  }
+  assert {
+    condition     = length(aws_cloudwatch_log_group.codebase_image_build) == 0
+    error_message = "Should be: 0"
+  }
+  assert {
+    condition     = length(aws_cloudwatch_log_stream.codebase_image_build) == 0
+    error_message = "Should be: 0"
+  }
+  assert {
+    condition     = length(aws_codebuild_webhook.codebuild_webhook) == 0
+    error_message = "Should be: 0"
   }
 }
 

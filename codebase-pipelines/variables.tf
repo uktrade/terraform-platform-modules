@@ -38,7 +38,7 @@ variable "env_config" {
   type = any
 }
 
-variable "image_build" {
-  type = bool
+variable "requires_image_build" {
+  type    = bool
   default = true
 }
