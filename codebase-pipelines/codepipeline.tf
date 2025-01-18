@@ -165,7 +165,7 @@ resource "aws_codepipeline" "manual_release_pipeline" {
             { name : "APPLICATION", value : var.application },
             { name : "AWS_REGION", value : local.aws_region },
             { name : "AWS_ACCOUNT_ID", value : local.aws_account_id },
-            { name : "ENVIRONMENT", value : stage.value.name },
+            { name : "ENVIRONMENT", value : "#{variables.ENVIRONMENT}" },
             { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" },
             { name : "PIPELINE_EXECUTION_ID", value : "#{codepipeline.PipelineExecutionId}" },
             { name : "PREFIXED_REPOSITORY_NAME", value : local.prefixed_repository_name },
