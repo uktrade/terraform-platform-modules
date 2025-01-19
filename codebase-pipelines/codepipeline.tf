@@ -75,8 +75,8 @@ resource "aws_codepipeline" "codebase_pipeline" {
             ProjectName = aws_codebuild_project.codebase_deploy.name
             EnvironmentVariables : jsonencode([
               { name : "APPLICATION", value : var.application },
-              { name : "AWS_REGION", value : local.aws_region },
-              { name : "AWS_ACCOUNT_ID", value : local.aws_account_id },
+              { name : "AWS_REGION", value : data.aws_region.current.name },
+              { name : "AWS_ACCOUNT_ID", value : data.aws_caller_identity.current.account_id },
               { name : "ENVIRONMENT", value : stage.value.name },
               { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" },
               { name : "PIPELINE_EXECUTION_ID", value : "#{codepipeline.PipelineExecutionId}" },
@@ -163,8 +163,8 @@ resource "aws_codepipeline" "manual_release_pipeline" {
           ProjectName = aws_codebuild_project.codebase_deploy.name
           EnvironmentVariables : jsonencode([
             { name : "APPLICATION", value : var.application },
-            { name : "AWS_REGION", value : local.aws_region },
-            { name : "AWS_ACCOUNT_ID", value : local.aws_account_id },
+            { name : "AWS_REGION", value : data.aws_region.current.name },
+            { name : "AWS_ACCOUNT_ID", value : data.aws_caller_identity.current.account_id },
             { name : "ENVIRONMENT", value : "#{variables.ENVIRONMENT}" },
             { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" },
             { name : "PIPELINE_EXECUTION_ID", value : "#{codepipeline.PipelineExecutionId}" },
