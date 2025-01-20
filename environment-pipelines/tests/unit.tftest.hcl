@@ -600,6 +600,22 @@ run "test_iam" {
     error_message = "Should be: {\"Sid\": \"AssumePipelineRole\"}"
   }
   assert {
+    condition     = data.aws_iam_policy_document.assume_codepipeline_role.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_codepipeline_role.statement[0].actions) == "sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_codepipeline_role.statement[0].principals).type == "Service"
+    error_message = "Should be: Service"
+  }
+  assert {
+    condition     = contains(one(data.aws_iam_policy_document.assume_codepipeline_role.statement[0].principals).identifiers, "codepipeline.amazonaws.com")
+    error_message = "Should contain: codepipeline.amazonaws.com"
+  }
+  assert {
     condition     = jsonencode(aws_iam_role.environment_pipeline_codepipeline.tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }

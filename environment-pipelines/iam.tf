@@ -257,50 +257,41 @@ data "aws_iam_policy_document" "load_balancer" {
     ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "elasticloadbalancing:CreateTargetGroup",
-        "elasticloadbalancing:AddTags",
-        "elasticloadbalancing:ModifyTargetGroupAttributes",
-        "elasticloadbalancing:DeleteTargetGroup"
-      ]
-      resources = [
-        "arn:aws:elasticloadbalancing:${local.account_region}:targetgroup/${var.application}-${statement.value.name}-http/*"
-      ]
-    }
+  statement {
+    actions = [
+      "elasticloadbalancing:CreateTargetGroup",
+      "elasticloadbalancing:AddTags",
+      "elasticloadbalancing:ModifyTargetGroupAttributes",
+      "elasticloadbalancing:DeleteTargetGroup"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:elasticloadbalancing:${local.account_region}:targetgroup/${var.application}-${env.name}-http/*"
+    ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "elasticloadbalancing:CreateLoadBalancer",
-        "elasticloadbalancing:AddTags",
-        "elasticloadbalancing:ModifyLoadBalancerAttributes",
-        "elasticloadbalancing:DeleteLoadBalancer",
-        "elasticloadbalancing:CreateListener",
-        "elasticloadbalancing:ModifyListener",
-        "elasticloadbalancing:SetWebACL"
-      ]
-      resources = [
-        "arn:aws:elasticloadbalancing:${local.account_region}:loadbalancer/app/${var.application}-${statement.value.name}/*"
-      ]
-    }
+  statement {
+    actions = [
+      "elasticloadbalancing:CreateLoadBalancer",
+      "elasticloadbalancing:AddTags",
+      "elasticloadbalancing:ModifyLoadBalancerAttributes",
+      "elasticloadbalancing:DeleteLoadBalancer",
+      "elasticloadbalancing:CreateListener",
+      "elasticloadbalancing:ModifyListener",
+      "elasticloadbalancing:SetWebACL"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:elasticloadbalancing:${local.account_region}:loadbalancer/app/${var.application}-${env.name}/*"
+    ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "elasticloadbalancing:AddTags",
-        "elasticloadbalancing:ModifyListener"
-      ]
-      resources = [
-        "arn:aws:elasticloadbalancing:${local.account_region}:listener/app/${var.application}-${statement.value.name}/*"
-      ]
-    }
+  statement {
+    actions = [
+      "elasticloadbalancing:AddTags",
+      "elasticloadbalancing:ModifyListener"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:elasticloadbalancing:${local.account_region}:listener/app/${var.application}-${env.name}/*"
+    ]
   }
 }
 
@@ -382,52 +373,43 @@ data "aws_iam_policy_document" "ssm_parameter" {
 }
 
 data "aws_iam_policy_document" "cloudwatch" {
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "cloudwatch:GetDashboard",
-        "cloudwatch:PutDashboard",
-        "cloudwatch:DeleteDashboards"
-      ]
-      resources = [
-        "arn:aws:cloudwatch::${data.aws_caller_identity.current.account_id}:dashboard/${var.application}-${statement.value.name}-compute"
-      ]
-    }
+  statement {
+    actions = [
+      "cloudwatch:GetDashboard",
+      "cloudwatch:PutDashboard",
+      "cloudwatch:DeleteDashboards"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:cloudwatch::${data.aws_caller_identity.current.account_id}:dashboard/${var.application}-${env.name}-compute"
+    ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "resource-groups:GetGroup",
-        "resource-groups:CreateGroup",
-        "resource-groups:Tag",
-        "resource-groups:GetGroupQuery",
-        "resource-groups:GetGroupConfiguration",
-        "resource-groups:GetTags",
-        "resource-groups:DeleteGroup"
-      ]
-      resources = [
-        "arn:aws:resource-groups:${local.account_region}:group/${var.application}-${statement.value.name}-application-insights-resources"
-      ]
-    }
+  statement {
+    actions = [
+      "resource-groups:GetGroup",
+      "resource-groups:CreateGroup",
+      "resource-groups:Tag",
+      "resource-groups:GetGroupQuery",
+      "resource-groups:GetGroupConfiguration",
+      "resource-groups:GetTags",
+      "resource-groups:DeleteGroup"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:resource-groups:${local.account_region}:group/${var.application}-${env.name}-application-insights-resources"
+    ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "applicationinsights:CreateApplication",
-        "applicationinsights:TagResource",
-        "applicationinsights:DescribeApplication",
-        "applicationinsights:ListTagsForResource",
-        "applicationinsights:DeleteApplication"
-      ]
-      resources = [
-        "arn:aws:applicationinsights:${local.account_region}:application/resource-group/${var.application}-${statement.value.name}-application-insights-resources"
-      ]
-    }
+  statement {
+    actions = [
+      "applicationinsights:CreateApplication",
+      "applicationinsights:TagResource",
+      "applicationinsights:DescribeApplication",
+      "applicationinsights:ListTagsForResource",
+      "applicationinsights:DeleteApplication"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:applicationinsights:${local.account_region}:application/resource-group/${var.application}-${env.name}-application-insights-resources"
+    ]
   }
 }
 
@@ -581,95 +563,79 @@ data "aws_iam_policy_document" "postgres" {
     ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "iam:CreateRole",
-        "iam:GetRole",
-        "iam:ListRolePolicies",
-        "iam:ListAttachedRolePolicies",
-        "iam:ListInstanceProfilesForRole",
-        "iam:DeleteRole",
-        "iam:AttachRolePolicy",
-        "iam:PutRolePolicy",
-        "iam:GetRolePolicy",
-        "iam:DeleteRolePolicy",
-        "iam:PassRole",
-        "iam:UpdateAssumeRolePolicy",
-      ]
-      resources = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-*",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/rds-enhanced-monitoring-*"
-      ]
-    }
+  statement {
+    actions = [
+      "iam:CreateRole",
+      "iam:GetRole",
+      "iam:ListRolePolicies",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListInstanceProfilesForRole",
+      "iam:DeleteRole",
+      "iam:AttachRolePolicy",
+      "iam:PutRolePolicy",
+      "iam:GetRolePolicy",
+      "iam:DeleteRolePolicy",
+      "iam:PassRole",
+      "iam:UpdateAssumeRolePolicy",
+    ]
+    resources = flatten(concat([
+      for env in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${env.name}-*"
+    ], ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/rds-enhanced-monitoring-*"]))
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "lambda:GetFunction",
-        "lambda:InvokeFunction",
-        "lambda:ListVersionsByFunction",
-        "lambda:GetFunctionCodeSigningConfig",
-        "lambda:UpdateFunctionCode",
-        "lambda:UpdateFunctionConfiguration",
-        "lambda:CreateFunction"
-      ]
-      resources = [
-        "arn:aws:lambda:${local.account_region}:function:${var.application}-${statement.value.name}-*"
-      ]
-    }
+  statement {
+    actions = [
+      "lambda:GetFunction",
+      "lambda:InvokeFunction",
+      "lambda:ListVersionsByFunction",
+      "lambda:GetFunctionCodeSigningConfig",
+      "lambda:UpdateFunctionCode",
+      "lambda:UpdateFunctionConfiguration",
+      "lambda:CreateFunction"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:lambda:${local.account_region}:function:${var.application}-${env.name}-*"
+    ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "lambda:GetLayerVersion"
-      ]
-      resources = [
-        "arn:aws:lambda:eu-west-2:763451185160:layer:python-postgres:1"
-      ]
-    }
+  statement {
+    actions = [
+      "lambda:GetLayerVersion"
+    ]
+    resources = [
+      "arn:aws:lambda:eu-west-2:763451185160:layer:python-postgres:1"
+    ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "rds:CreateDBParameterGroup",
-        "rds:AddTagsToResource",
-        "rds:ModifyDBParameterGroup",
-        "rds:DescribeDBParameterGroups",
-        "rds:DescribeDBParameters",
-        "rds:ListTagsForResource",
-        "rds:CreateDBInstance",
-        "rds:ModifyDBInstance",
-        "rds:DeleteDBParameterGroup"
-      ]
-      resources = [
-        "arn:aws:rds:${local.account_region}:pg:${var.application}-${statement.value.name}-*"
-      ]
-    }
+  statement {
+    actions = [
+      "rds:CreateDBParameterGroup",
+      "rds:AddTagsToResource",
+      "rds:ModifyDBParameterGroup",
+      "rds:DescribeDBParameterGroups",
+      "rds:DescribeDBParameters",
+      "rds:ListTagsForResource",
+      "rds:CreateDBInstance",
+      "rds:ModifyDBInstance",
+      "rds:DeleteDBParameterGroup"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:rds:${local.account_region}:pg:${var.application}-${env.name}-*"
+    ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "rds:CreateDBSubnetGroup",
-        "rds:AddTagsToResource",
-        "rds:DescribeDBSubnetGroups",
-        "rds:ListTagsForResource",
-        "rds:DeleteDBSubnetGroup",
-        "rds:CreateDBInstance"
-      ]
-      resources = [
-        "arn:aws:rds:${local.account_region}:subgrp:${var.application}-${statement.value.name}-*"
-      ]
-    }
+  statement {
+    actions = [
+      "rds:CreateDBSubnetGroup",
+      "rds:AddTagsToResource",
+      "rds:DescribeDBSubnetGroups",
+      "rds:ListTagsForResource",
+      "rds:DeleteDBSubnetGroup",
+      "rds:CreateDBInstance"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:rds:${local.account_region}:subgrp:${var.application}-${env.name}-*"
+    ]
   }
 
   statement {
@@ -681,18 +647,15 @@ data "aws_iam_policy_document" "postgres" {
     ]
   }
 
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "rds:CreateDBInstance",
-        "rds:AddTagsToResource",
-        "rds:ModifyDBInstance"
-      ]
-      resources = [
-        "arn:aws:rds:${local.account_region}:db:${var.application}-${statement.value.name}-*"
-      ]
-    }
+  statement {
+    actions = [
+      "rds:CreateDBInstance",
+      "rds:AddTagsToResource",
+      "rds:ModifyDBInstance"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:rds:${local.account_region}:db:${var.application}-${env.name}-*"
+    ]
   }
 
   statement {
@@ -815,18 +778,132 @@ resource "aws_iam_policy" "opensearch" {
   policy      = data.aws_iam_policy_document.opensearch.json
 }
 
+data "aws_iam_policy_document" "lambda_policy_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "lambda:GetPolicy",
+      "lambda:RemovePermission",
+      "lambda:DeleteFunction",
+      "lambda:TagResource",
+      "lambda:PutFunctionConcurrency",
+      "lambda:AddPermission"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${env.name}-origin-secret-rotate"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "lambda:GetLayerVersion"
+    ]
+    resources = [
+      "arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "lambda_policy_access" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-lambda-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access lambda resources"
+  policy      = data.aws_iam_policy_document.lambda_policy_access.json
+}
+
+data "aws_iam_policy_document" "wafv2_read_access" {
+  statement {
+    sid    = "WAFv2ReadAccess"
+    effect = "Allow"
+    actions = [
+      "wafv2:GetWebACL",
+      "wafv2:GetWebACLForResource",
+      "wafv2:ListTagsForResource",
+      "wafv2:DeleteWebACL",
+      "wafv2:CreateWebACL",
+      "wafv2:TagResource",
+      "wafv2:AssociateWebACL"
+    ]
+    resources = [
+      "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*/*"
+    ]
+  }
+  statement {
+    sid    = "WAFv2RuleSetAccess"
+    effect = "Allow"
+    actions = [
+      "wafv2:CreateWebACL"
+    ]
+    resources = [
+      "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/managedruleset/*/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "wafv2_read_access" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-wafv2-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access wafv2 resources"
+  policy      = data.aws_iam_policy_document.wafv2_read_access.json
+}
+
+data "aws_iam_policy_document" "secret_manager_read_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:GetResourcePolicy",
+      "secretsmanager:DeleteResourcePolicy",
+      "secretsmanager:CancelRotateSecret",
+      "secretsmanager:DeleteSecret",
+      "secretsmanager:CreateSecret",
+      "secretsmanager:TagResource",
+      "secretsmanager:PutResourcePolicy",
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:RotateSecret"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${env.name}-origin-verify-header-secret-*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "secret_manager_read_access" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-secret-manager-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access secret-manager resources"
+  policy      = data.aws_iam_policy_document.secret_manager_read_access.json
+}
+
+data "aws_iam_policy_document" "origin_secret_rotation_role_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:TagRole"
+    ]
+    resources = [
+      for env in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${env.name}-origin-secret-rotate-role"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "origin_secret_rotation_role_access" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-secret-rotation-access"
+  path        = "/${var.application}/codebuild/"
+  description = "Allow ${var.application} codebuild job to access secret-rotation resources"
+  policy      = data.aws_iam_policy_document.lambda_policy_access.json
+}
+
 # Policies for AWS Copilot
 data "aws_iam_policy_document" "copilot_assume_role" {
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "sts:AssumeRole"
-      ]
-      resources = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole"
-      ]
-    }
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+    resources = [for env in local.environment_config : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${env.name}-EnvManagerRole"
+    ]
   }
 
   dynamic "statement" {
@@ -881,36 +958,36 @@ resource "aws_iam_policy" "cloudformation" {
 }
 
 data "aws_iam_policy_document" "iam" {
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      actions = [
-        "iam:AttachRolePolicy",
-        "iam:DetachRolePolicy",
-        "iam:CreatePolicy",
-        "iam:DeletePolicy",
-        "iam:CreateRole",
-        "iam:DeleteRole",
-        "iam:TagRole",
-        "iam:PutRolePolicy",
-        "iam:GetRole",
-        "iam:ListRolePolicies",
-        "iam:GetRolePolicy",
-        "iam:ListAttachedRolePolicies",
-        "iam:ListInstanceProfilesForRole",
-        "iam:DeleteRolePolicy",
-        "iam:UpdateAssumeRolePolicy",
-      ]
-      resources = [
+  statement {
+    actions = [
+      "iam:AttachRolePolicy",
+      "iam:DetachRolePolicy",
+      "iam:CreatePolicy",
+      "iam:DeletePolicy",
+      "iam:CreateRole",
+      "iam:DeleteRole",
+      "iam:TagRole",
+      "iam:PutRolePolicy",
+      "iam:GetRole",
+      "iam:ListRolePolicies",
+      "iam:GetRolePolicy",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListInstanceProfilesForRole",
+      "iam:DeleteRolePolicy",
+      "iam:UpdateAssumeRolePolicy",
+    ]
+    resources = flatten(concat([
+      for env in local.environment_config : [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${env.name}-CFNExecutionRole",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${env.name}-EnvManagerRole"
+      ]],
+      [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-CFNExecutionRole",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-EnvManagerRole",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-*-exec",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-*-task",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-*"
-      ]
-    }
+    ]))
   }
 
   statement {
@@ -1067,110 +1144,6 @@ resource "aws_iam_role_policy_attachment" "attach_redis_policy" {
   policy_arn = aws_iam_policy.redis.arn
 }
 
-data "aws_iam_policy_document" "lambda_policy_access" {
-
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      sid    = "LambdaPolicyAccess"
-      effect = "Allow"
-      actions = [
-        "lambda:GetPolicy",
-        "lambda:RemovePermission",
-        "lambda:DeleteFunction",
-        "lambda:TagResource",
-        "lambda:PutFunctionConcurrency",
-        "lambda:AddPermission"
-      ]
-      resources = [
-        "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${statement.value.name}-origin-secret-rotate"
-      ]
-    }
-  }
-
-  statement {
-    sid    = "LambdaLayerAccess"
-    effect = "Allow"
-    actions = [
-      "lambda:GetLayerVersion"
-    ]
-    resources = [
-      "arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"
-    ]
-  }
-}
-
-data "aws_iam_policy_document" "wafv2_read_access" {
-  statement {
-    sid    = "WAFv2ReadAccess"
-    effect = "Allow"
-    actions = [
-      "wafv2:GetWebACL",
-      "wafv2:GetWebACLForResource",
-      "wafv2:ListTagsForResource",
-      "wafv2:DeleteWebACL",
-      "wafv2:CreateWebACL",
-      "wafv2:TagResource",
-      "wafv2:AssociateWebACL"
-    ]
-    resources = [
-      "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*/*"
-    ]
-  }
-  statement {
-    sid    = "WAFv2RuleSetAccess"
-    effect = "Allow"
-    actions = [
-      "wafv2:CreateWebACL"
-    ]
-    resources = [
-      "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/managedruleset/*/*"
-    ]
-  }
-}
-
-data "aws_iam_policy_document" "secret_manager_read_access" {
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      sid    = "SecretManagerReadAccess"
-      effect = "Allow"
-      actions = [
-        "secretsmanager:DescribeSecret",
-        "secretsmanager:GetSecretValue",
-        "secretsmanager:GetResourcePolicy",
-        "secretsmanager:DeleteResourcePolicy",
-        "secretsmanager:CancelRotateSecret",
-        "secretsmanager:DeleteSecret",
-        "secretsmanager:CreateSecret",
-        "secretsmanager:TagResource",
-        "secretsmanager:PutResourcePolicy",
-        "secretsmanager:PutSecretValue",
-        "secretsmanager:RotateSecret"
-      ]
-      resources = [
-        "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${statement.value.name}-origin-verify-header-secret-*"
-      ]
-    }
-  }
-}
-
-data "aws_iam_policy_document" "origin_secret_rotation_role_access" {
-  dynamic "statement" {
-    for_each = local.environment_config
-    content {
-      sid    = "OriginSecretRotationRoleAccess"
-      effect = "Allow"
-      actions = [
-        "iam:TagRole"
-      ]
-      resources = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-origin-secret-rotate-role"
-      ]
-    }
-  }
-}
-
 resource "aws_iam_role_policy_attachment" "attach_postgres_policy" {
   role       = aws_iam_role.environment_pipeline_codebuild.name
   policy_arn = aws_iam_policy.postgres.arn
@@ -1196,31 +1169,27 @@ resource "aws_iam_role_policy_attachment" "attach_ecs_policy" {
   policy_arn = aws_iam_policy.ecs.arn
 }
 
+resource "aws_iam_role_policy_attachment" "attach_lambda_policy" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.lambda_policy_access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "wafv2_read_access" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.wafv2_read_access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "secret_manager_read_access" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.secret_manager_read_access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "origin_secret_rotation_role_access" {
+  role       = aws_iam_role.environment_pipeline_codebuild.name
+  policy_arn = aws_iam_policy.origin_secret_rotation_role_access.arn
+}
+
 # Inline policies
-resource "aws_iam_role_policy" "lambda_policy_access_for_environment_codebuild" {
-  name   = "${var.application}-${var.pipeline_name}-lambda-policy-access-for-environment-codebuild"
-  role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.lambda_policy_access.json
-}
-
-resource "aws_iam_role_policy" "wafv2_read_access_for_environment_codebuild" {
-  name   = "${var.application}-${var.pipeline_name}-waf2-read-access-for-environment-codebuild"
-  role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.wafv2_read_access.json
-}
-
-resource "aws_iam_role_policy" "secret_manager_read_access_for_environment_codebuild" {
-  name   = "${var.application}-${var.pipeline_name}-secret-manager-read-access-for-environment-codebuild"
-  role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.secret_manager_read_access.json
-}
-
-resource "aws_iam_role_policy" "origin_secret_rotation_role_access_for_environment_codebuild" {
-  name   = "${var.application}-${var.pipeline_name}-origin-secret-rotation-role-access-for-environment-codebuild"
-  role   = aws_iam_role.environment_pipeline_codebuild.name
-  policy = data.aws_iam_policy_document.origin_secret_rotation_role_access.json
-}
-
 resource "aws_iam_role_policy" "artifact_store_access_for_environment_codepipeline" {
   name   = "${var.application}-${var.pipeline_name}-artifact-store-access-for-environment-codepipeline"
   role   = aws_iam_role.environment_pipeline_codepipeline.name
