@@ -302,6 +302,16 @@ data "aws_iam_policy_document" "load_balancer" {
       ]
     }
   }
+
+  statement {
+    actions = [
+      "cloudfront:ListCachePolicies",
+      "cloudfront:GetCachePolicy"
+    ]
+    resources = [
+      "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:cache-policy/*"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "load_balancer" {
@@ -815,7 +825,7 @@ resource "aws_iam_policy" "opensearch" {
   policy      = data.aws_iam_policy_document.opensearch.json
 }
 
-data "aws_iam_policy_document" "lambda_policy_access" {
+data "aws_iam_policy_document" "origin_secret_rotate_access" {
   statement {
     effect = "Allow"
     actions = [
@@ -840,16 +850,7 @@ data "aws_iam_policy_document" "lambda_policy_access" {
       "arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"
     ]
   }
-}
 
-resource "aws_iam_policy" "lambda_policy_access" {
-  name        = "${var.application}-${var.pipeline_name}-pipeline-lambda-access"
-  path        = "/${var.application}/codebuild/"
-  description = "Allow ${var.application} codebuild job to access lambda resources"
-  policy      = data.aws_iam_policy_document.lambda_policy_access.json
-}
-
-data "aws_iam_policy_document" "wafv2_read_access" {
   statement {
     sid    = "WAFv2ReadAccess"
     effect = "Allow"
@@ -866,6 +867,7 @@ data "aws_iam_policy_document" "wafv2_read_access" {
       "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*/*"
     ]
   }
+
   statement {
     sid    = "WAFv2RuleSetAccess"
     effect = "Allow"
@@ -876,16 +878,7 @@ data "aws_iam_policy_document" "wafv2_read_access" {
       "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/managedruleset/*/*"
     ]
   }
-}
 
-resource "aws_iam_policy" "wafv2_read_access" {
-  name        = "${var.application}-${var.pipeline_name}-pipeline-wafv2-access"
-  path        = "/${var.application}/codebuild/"
-  description = "Allow ${var.application} codebuild job to access wafv2 resources"
-  policy      = data.aws_iam_policy_document.wafv2_read_access.json
-}
-
-data "aws_iam_policy_document" "secret_manager_read_access" {
   statement {
     effect = "Allow"
     actions = [
@@ -905,16 +898,7 @@ data "aws_iam_policy_document" "secret_manager_read_access" {
       for env in local.environment_config : "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${env.name}-origin-verify-header-secret-*"
     ]
   }
-}
 
-resource "aws_iam_policy" "secret_manager_read_access" {
-  name        = "${var.application}-${var.pipeline_name}-pipeline-secret-manager-access"
-  path        = "/${var.application}/codebuild/"
-  description = "Allow ${var.application} codebuild job to access secret-manager resources"
-  policy      = data.aws_iam_policy_document.secret_manager_read_access.json
-}
-
-data "aws_iam_policy_document" "origin_secret_rotation_role_access" {
   statement {
     effect = "Allow"
     actions = [
@@ -926,11 +910,11 @@ data "aws_iam_policy_document" "origin_secret_rotation_role_access" {
   }
 }
 
-resource "aws_iam_policy" "origin_secret_rotation_role_access" {
-  name        = "${var.application}-${var.pipeline_name}-pipeline-secret-rotation-access"
+resource "aws_iam_policy" "origin_secret_rotate_access" {
+  name        = "${var.application}-${var.pipeline_name}-pipeline-origin-secret-rotate-access"
   path        = "/${var.application}/codebuild/"
-  description = "Allow ${var.application} codebuild job to access secret-rotation resources"
-  policy      = data.aws_iam_policy_document.lambda_policy_access.json
+  description = "Allow ${var.application} codebuild job to access lambda resources"
+  policy      = data.aws_iam_policy_document.origin_secret_rotate_access.json
 }
 
 # Policies for AWS Copilot
@@ -1128,25 +1112,6 @@ resource "aws_iam_policy" "codepipeline" {
   policy      = data.aws_iam_policy_document.codepipeline.json
 }
 
-data "aws_iam_policy_document" "cloudfront" {
-  statement {
-    actions = [
-      "cloudfront:ListCachePolicies",
-      "cloudfront:GetCachePolicy"
-    ]
-    resources = [
-      "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:cache-policy/*"
-    ]
-  }
-}
-
-resource "aws_iam_policy" "cloudfront" {
-  name        = "${var.application}-${var.pipeline_name}-pipeline-cloudfront"
-  path        = "/${var.application}/codebuild/"
-  description = "Allow ${var.application} codebuild job access to cloudfront cache policies"
-  policy      = data.aws_iam_policy_document.cloudfront.json
-}
-
 # Roles
 resource "aws_iam_role" "environment_pipeline_codepipeline" {
   name               = "${var.application}-${var.pipeline_name}-environment-pipeline-codepipeline"
@@ -1168,11 +1133,6 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy" {
 resource "aws_iam_role_policy_attachment" "attach_cloudformation_policy" {
   role       = aws_iam_role.environment_pipeline_codebuild.name
   policy_arn = aws_iam_policy.cloudformation.arn
-}
-
-resource "aws_iam_role_policy_attachment" "attach_cloudfront_policy" {
-  role       = aws_iam_role.environment_pipeline_codebuild.name
-  policy_arn = aws_iam_policy.cloudfront.arn
 }
 
 resource "aws_iam_role_policy_attachment" "attach_codepipeline_policy" {
@@ -1210,24 +1170,9 @@ resource "aws_iam_role_policy_attachment" "attach_ecs_policy" {
   policy_arn = aws_iam_policy.ecs.arn
 }
 
-resource "aws_iam_role_policy_attachment" "attach_lambda_policy" {
+resource "aws_iam_role_policy_attachment" "attach_origin_secret_rotate_policy" {
   role       = aws_iam_role.environment_pipeline_codebuild.name
-  policy_arn = aws_iam_policy.lambda_policy_access.arn
-}
-
-resource "aws_iam_role_policy_attachment" "wafv2_read_access" {
-  role       = aws_iam_role.environment_pipeline_codebuild.name
-  policy_arn = aws_iam_policy.wafv2_read_access.arn
-}
-
-resource "aws_iam_role_policy_attachment" "secret_manager_read_access" {
-  role       = aws_iam_role.environment_pipeline_codebuild.name
-  policy_arn = aws_iam_policy.secret_manager_read_access.arn
-}
-
-resource "aws_iam_role_policy_attachment" "origin_secret_rotation_role_access" {
-  role       = aws_iam_role.environment_pipeline_codebuild.name
-  policy_arn = aws_iam_policy.origin_secret_rotation_role_access.arn
+  policy_arn = aws_iam_policy.origin_secret_rotate_access.arn
 }
 
 # Inline policies
