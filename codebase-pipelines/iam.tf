@@ -291,13 +291,13 @@ data "aws_iam_policy_document" "environment_deploy_role_access" {
   }
 }
 
-resource "aws_iam_role_policy" "ssm_access" {
+resource "aws_iam_role_policy" "deploy_ssm_access" {
   name   = "ssm-access"
   role   = aws_iam_role.codebase_deploy.name
-  policy = data.aws_iam_policy_document.ssm_access.json
+  policy = data.aws_iam_policy_document.deploy_ssm_access.json
 }
 
-data "aws_iam_policy_document" "ssm_access" {
+data "aws_iam_policy_document" "deploy_ssm_access" {
   statement {
     effect = "Allow"
     actions = [
