@@ -28,7 +28,7 @@ phases:
       # construct Slack message env vars
       - |
         SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
-        if [ "$SLACK_REF" = "null" ] || [ -z "$SLACK_REF" ]; then
+        if [ "${SLACK_REF}" = "null" ] || [ -z "${SLACK_REF}" ]; then
           echo "Image contains no timestamp label"
           exit 1
         fi
