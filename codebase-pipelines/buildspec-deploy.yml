@@ -25,6 +25,7 @@ phases:
       # Extract timestamp from image config and check if it exists
       - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
+      # construct Slack message env vars
       - |
         SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
         if [ "$SLACK_REF" = "null" ] || [ -z "$SLACK_REF" ]; then
@@ -48,12 +49,18 @@ phases:
           exit 1 
         fi
 
+      # Construct the pipeline execution URL
+      - |
+        PIPELINE_EXECUTION_URL="https://${AWS_REGION}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${PIPELINE_NAME}/executions/${PIPELINE_EXECUTION_ID}" 
+
+        echo "Pipeline execution URL: ${PIPELINE_EXECUTION_URL}"
+
       - |
         BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)
         echo "BUILD_ID_PREFIX - ${BUILD_ID_PREFIX}"
 
       - |
-        MESSAGE=":rocket: STARTED - Deployment for ${UPPERCASE_SERVICE} service - Build log <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|${CODEBUILD_BUILD_NUMBER}>"
+        MESSAGE=":rocket: STARTED - Deployment of ${UPPERCASE_SERVICE} service - Tag: ${UPPERCASE_TAG} - <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|Build log> | <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
 
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
 
@@ -143,37 +150,32 @@ phases:
       - |
         case "${deploy_status}" in
           SUCCESSFUL)
-            STATUS=":large_green_circle:"
+            STATUS_EMOJI=":large_green_circle:"
+            STATUS_TEXT="COMPLETE"
             ;;
           ROLLBACK_SUCCESSFUL)
-            STATUS=":large_orange_circle::white_check_mark:"
-            ;;
-          ROLLBACK_IN_PROGRESS)
-            STATUS=":large_orange_circle::hourglass:"
+            STATUS_EMOJI=":red_circle:"
+            STATUS_TEXT="FAILED"
             ;;
           ROLLBACK_FAILED)
-            STATUS=":large_orange_circle::arrow_right::red_circle:"
+            STATUS_EMOJI=":red_circle::warning:"
+            STATUS_TEXT="FAILED"
             ;;
           *)
-            STATUS=":large_blue_circle:"
+            STATUS_EMOJI=":large_blue_circle:"
+            STATUS_TEXT="STOP_REQUESTED/STOPPED/PENDING/IN_PROGRESS"
             ;;
         esac
-        echo "Status emoji set to ${STATUS}"
-
-      # Construct the pipeline execution URL
-      - |
-        PIPELINE_EXECUTION_URL="https://${AWS_REGION}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${PIPELINE_NAME}/executions/${PIPELINE_EXECUTION_ID}" 
-
-        echo "Pipeline execution URL: ${PIPELINE_EXECUTION_URL}"
+        echo "Status emoji set to ${STATUS_EMOJI}"
 
       - |
-        MESSAGE="${STATUS} COMPLETE - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
+        MESSAGE="${STATUS_EMOJI} ${STATUS_TEXT} - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
 
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
 
       # Exit with an error code if deployment did not succeed
       - |
-        if [ "${deploy_status}" != "SUCCESSFUL" ]; then 
-          echo "Error: deployment status is ${deploy_status}" 
-          exit 1 
+        if [ "${deploy_status}" != "SUCCESSFUL" ]; then
+          echo "Error: deployment status is ${deploy_status}"
+          exit 1
         fi
