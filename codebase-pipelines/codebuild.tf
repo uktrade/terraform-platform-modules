@@ -3,10 +3,11 @@ data "aws_codestarconnections_connection" "github_codestar_connection" {
 }
 
 resource "aws_codebuild_project" "codebase_image_build" {
+  for_each      = toset(var.requires_image_build ? [""] : [])
   name          = "${var.application}-${var.codebase}-codebase-pipeline-image-build"
   description   = "Publish images on push to ${var.repository}"
   build_timeout = 30
-  service_role  = aws_iam_role.codebase_image_build.arn
+  service_role  = aws_iam_role.codebase_image_build[""].arn
   badge_enabled = true
 
   artifacts {
@@ -49,8 +50,8 @@ resource "aws_codebuild_project" "codebase_image_build" {
 
   logs_config {
     cloudwatch_logs {
-      group_name  = aws_cloudwatch_log_group.codebase_image_build.name
-      stream_name = aws_cloudwatch_log_stream.codebase_image_build.name
+      group_name  = aws_cloudwatch_log_group.codebase_image_build[""].name
+      stream_name = aws_cloudwatch_log_stream.codebase_image_build[""].name
     }
   }
 
@@ -70,17 +71,20 @@ resource "aws_codebuild_project" "codebase_image_build" {
 resource "aws_cloudwatch_log_group" "codebase_image_build" {
   # checkov:skip=CKV_AWS_338:Retains logs for 3 months instead of 1 year
   # checkov:skip=CKV_AWS_158:Log groups encrypted using default encryption key instead of KMS CMK
+  for_each          = toset(var.requires_image_build ? [""] : [])
   name              = "codebuild/${var.application}-${var.codebase}-codebase-image-build/log-group"
   retention_in_days = 90
 }
 
 resource "aws_cloudwatch_log_stream" "codebase_image_build" {
+  for_each       = toset(var.requires_image_build ? [""] : [])
   name           = "codebuild/${var.application}-${var.codebase}-codebase-image-build/log-stream"
-  log_group_name = aws_cloudwatch_log_group.codebase_image_build.name
+  log_group_name = aws_cloudwatch_log_group.codebase_image_build[""].name
 }
 
 resource "aws_codebuild_webhook" "codebuild_webhook" {
-  project_name = aws_codebuild_project.codebase_image_build.name
+  for_each     = toset(var.requires_image_build ? [""] : [])
+  project_name = aws_codebuild_project.codebase_image_build[""].name
   build_type   = "BUILD"
 
   dynamic "filter_group" {

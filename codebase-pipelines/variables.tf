@@ -42,3 +42,8 @@ variable "slack_channel" {
 variable "env_config" {
   type = any
 }
+
+variable "requires_image_build" {
+  type    = bool
+  default = true
+}

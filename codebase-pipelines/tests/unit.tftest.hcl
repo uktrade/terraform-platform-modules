@@ -184,122 +184,159 @@ run "test_codebuild_images" {
   command = plan
 
   assert {
-    condition     = aws_codebuild_project.codebase_image_build.name == "my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = aws_codebuild_project.codebase_image_build[""].name == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-image-build"
   }
   assert {
-    condition     = aws_codebuild_project.codebase_image_build.description == "Publish images on push to my-repository"
+    condition     = aws_codebuild_project.codebase_image_build[""].description == "Publish images on push to my-repository"
     error_message = "Should be: 'Publish images on push to my-repository'"
   }
   assert {
-    condition     = aws_codebuild_project.codebase_image_build.build_timeout == 30
+    condition     = aws_codebuild_project.codebase_image_build[""].build_timeout == 30
     error_message = "Should be: 30"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.artifacts).type == "NO_ARTIFACTS"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].artifacts).type == "NO_ARTIFACTS"
     error_message = "Should be: 'NO_ARTIFACTS'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.cache).type == "LOCAL"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].cache).type == "LOCAL"
     error_message = "Should be: 'LOCAL'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.cache).modes[0] == "LOCAL_DOCKER_LAYER_CACHE"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].cache).modes[0] == "LOCAL_DOCKER_LAYER_CACHE"
     error_message = "Should be: 'LOCAL_DOCKER_LAYER_CACHE'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.environment).compute_type == "BUILD_GENERAL1_SMALL"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).compute_type == "BUILD_GENERAL1_SMALL"
     error_message = "Should be: 'BUILD_GENERAL1_SMALL'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.environment).image == "public.ecr.aws/uktrade/ci-image-builder:tag-latest"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).image == "public.ecr.aws/uktrade/ci-image-builder:tag-latest"
     error_message = "Should be: 'public.ecr.aws/uktrade/ci-image-builder:tag-latest'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.environment).environment_variable[1].name == "ECR_REPOSITORY"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[1].name == "ECR_REPOSITORY"
     error_message = "Should be: 'ECR_REPOSITORY'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.environment).environment_variable[1].value == "my-app/my-codebase"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[1].value == "my-app/my-codebase"
     error_message = "Should be: 'my-app/my-codebase'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.environment).environment_variable[3].name == "ADDITIONAL_ECR_REPOSITORY"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].name == "ADDITIONAL_ECR_REPOSITORY"
     error_message = "Should be: 'ADDITIONAL_ECR_REPOSITORY'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.environment).environment_variable[3].value == "my-additional-repository"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].value == "my-additional-repository"
     error_message = "Should be: 'my-additional-repository'"
   }
   assert {
-    condition = aws_codebuild_project.codebase_image_build.logs_config[0].cloudwatch_logs[
+    condition = aws_codebuild_project.codebase_image_build[""].logs_config[0].cloudwatch_logs[
       0
     ].group_name == "codebuild/my-app-my-codebase-codebase-image-build/log-group"
     error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-image-build/log-group'"
   }
   assert {
-    condition = aws_codebuild_project.codebase_image_build.logs_config[0].cloudwatch_logs[
+    condition = aws_codebuild_project.codebase_image_build[""].logs_config[0].cloudwatch_logs[
       0
     ].stream_name == "codebuild/my-app-my-codebase-codebase-image-build/log-stream"
     error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-image-build/log-stream'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.source).type == "GITHUB"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].source).type == "GITHUB"
     error_message = "Should be: 'GITHUB'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build.source).location == "https://github.com/my-repository.git"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].source).location == "https://github.com/my-repository.git"
     error_message = "Should be: 'https://github.com/my-repository.git'"
   }
   assert {
-    condition     = length(regexall(".*/work/cli build.*", aws_codebuild_project.codebase_image_build.source[0].buildspec)) > 0
+    condition     = length(regexall(".*/work/cli build.*", aws_codebuild_project.codebase_image_build[""].source[0].buildspec)) > 0
     error_message = "Should contain: '/work/cli build'"
   }
   assert {
-    condition     = jsonencode(aws_codebuild_project.codebase_image_build.tags) == jsonencode(var.expected_tags)
+    condition     = jsonencode(aws_codebuild_project.codebase_image_build[""].tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 
   # Cloudwatch config:
   assert {
-    condition     = aws_cloudwatch_log_group.codebase_image_build.name == "codebuild/my-app-my-codebase-codebase-image-build/log-group"
+    condition     = aws_cloudwatch_log_group.codebase_image_build[""].name == "codebuild/my-app-my-codebase-codebase-image-build/log-group"
     error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-image-build/log-group'"
   }
   assert {
-    condition     = aws_cloudwatch_log_group.codebase_image_build.retention_in_days == 90
+    condition     = aws_cloudwatch_log_group.codebase_image_build[""].retention_in_days == 90
     error_message = "Should be: 90"
   }
   assert {
-    condition     = aws_cloudwatch_log_stream.codebase_image_build.name == "codebuild/my-app-my-codebase-codebase-image-build/log-stream"
+    condition     = aws_cloudwatch_log_stream.codebase_image_build[""].name == "codebuild/my-app-my-codebase-codebase-image-build/log-stream"
     error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-image-build/log-stream'"
   }
   assert {
-    condition     = aws_cloudwatch_log_stream.codebase_image_build.log_group_name == "codebuild/my-app-my-codebase-codebase-image-build/log-group"
+    condition     = aws_cloudwatch_log_stream.codebase_image_build[""].log_group_name == "codebuild/my-app-my-codebase-codebase-image-build/log-group"
     error_message = "Should be: 'codebuild/my-app-my-codebase-codebase-image-build/log-group'"
   }
 
   # Webhook config:
   assert {
-    condition     = aws_codebuild_webhook.codebuild_webhook.project_name == "my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = aws_codebuild_webhook.codebuild_webhook[""].project_name == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_codebuild_webhook.codebuild_webhook.build_type == "BUILD"
+    condition     = aws_codebuild_webhook.codebuild_webhook[""].build_type == "BUILD"
     error_message = "Should be: 'BUILD'"
   }
 
   assert {
-    condition     = length(aws_codebuild_webhook.codebuild_webhook.filter_group) == 2
+    condition     = length(aws_codebuild_webhook.codebuild_webhook[""].filter_group) == 2
     error_message = "Should be: 2"
   }
   assert {
     condition = [
-      for el in aws_codebuild_webhook.codebuild_webhook.filter_group : true
+      for el in aws_codebuild_webhook.codebuild_webhook[""].filter_group : true
       if[for filter in el.filter : true if filter.type == "EVENT" && filter.pattern == "PUSH"][0] == true
       ][
       0
     ] == true
     error_message = "Should be: type = 'EVENT' and pattern = 'PUSH'"
+  }
+}
+
+run "test_codebuild_images_not_required" {
+  command = plan
+
+  variables {
+    requires_image_build = false
+  }
+
+  assert {
+    condition     = length(aws_codebuild_project.codebase_image_build) == 0
+    error_message = "Should be: 0"
+  }
+  assert {
+    condition     = length(aws_iam_role.codebase_image_build) == 0
+    error_message = "Should be: 0"
+  }
+  assert {
+    condition     = length(aws_cloudwatch_log_group.codebase_image_build) == 0
+    error_message = "Should be: 0"
+  }
+  assert {
+    condition     = length(aws_cloudwatch_log_stream.codebase_image_build) == 0
+    error_message = "Should be: 0"
+  }
+  assert {
+    condition     = length(aws_codebuild_webhook.codebuild_webhook) == 0
+    error_message = "Should be: 0"
+  }
+  assert {
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"latest\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
+    error_message = "Event pattern is incorrect ${jsonencode(aws_cloudwatch_event_rule.ecr_image_publish[0].event_pattern)}"
+  }
+  assert {
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"latest\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
+    error_message = "Event pattern is incorrect"
   }
 }
 
@@ -321,7 +358,7 @@ run "test_main_branch_filter" {
 
   assert {
     condition = [
-      for el in aws_codebuild_webhook.codebuild_webhook.filter_group : true
+      for el in aws_codebuild_webhook.codebuild_webhook[""].filter_group : true
       if[
         for filter in el.filter : true
         if filter.type == "HEAD_REF" && filter.pattern == "^refs/heads/main$"
@@ -353,7 +390,7 @@ run "test_tagged_branch_filter" {
 
   assert {
     condition = [
-      for el in aws_codebuild_webhook.codebuild_webhook.filter_group : true
+      for el in aws_codebuild_webhook.codebuild_webhook[""].filter_group : true
       if[
         for filter in el.filter : true
         if filter.type == "HEAD_REF" && filter.pattern == "^refs/tags/.*"
@@ -372,47 +409,47 @@ run "test_iam" {
 
   # CodeBuild image build
   assert {
-    condition     = aws_iam_role.codebase_image_build.name == "my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = aws_iam_role.codebase_image_build[""].name == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_iam_role.codebase_image_build.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
+    condition     = aws_iam_role.codebase_image_build[""].assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
     error_message = "Should be: {\"Sid\": \"AssumeCodebuildRole\"}"
   }
   assert {
-    condition     = jsonencode(aws_iam_role.codebase_image_build.tags) == jsonencode(var.expected_tags)
+    condition     = jsonencode(aws_iam_role.codebase_image_build[""].tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_images.name == "log-access"
+    condition     = aws_iam_role_policy.log_access_for_codebuild_images[""].name == "log-access"
     error_message = "Should be: 'log-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_images.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = aws_iam_role_policy.log_access_for_codebuild_images[""].role == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.name == "ecr-access"
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images[""].name == "ecr-access"
     error_message = "Should be: 'ecr-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images[""].role == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy.codestar_connection_access_for_codebuild_images.name == "codestar-connection-policy"
+    condition     = aws_iam_role_policy.codestar_connection_access_for_codebuild_images[""].name == "codestar-connection-policy"
     error_message = "Should be: 'codestar-connection-policy'"
   }
   assert {
-    condition     = aws_iam_role_policy.codestar_connection_access_for_codebuild_images.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = aws_iam_role_policy.codestar_connection_access_for_codebuild_images[""].role == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy_attachment.ssm_access.role == "my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = aws_iam_role_policy_attachment.ssm_access[""].role == "my-app-my-codebase-codebase-pipeline-image-build"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy_attachment.ssm_access.policy_arn == "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+    condition     = aws_iam_role_policy_attachment.ssm_access[""].policy_arn == "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
     error_message = "Should be: 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess'"
   }
 
@@ -1659,5 +1696,14 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[4].run_order == 4
     error_message = "Run order incorrect"
+  }
+}
+
+run "test_pipeline_update_script" {
+  command = plan
+
+  assert {
+    condition     = length(terraform_data.update_pipeline.triggers_replace) == 3
+    error_message = "Should be: 3"
   }
 }

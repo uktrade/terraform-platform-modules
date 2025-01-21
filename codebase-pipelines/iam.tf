@@ -2,6 +2,7 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_iam_role" "codebase_image_build" {
+  for_each           = toset(var.requires_image_build ? [""] : [])
   name               = "${var.application}-${var.codebase}-codebase-pipeline-image-build"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
   tags               = local.tags
@@ -21,14 +22,16 @@ data "aws_iam_policy_document" "assume_codebuild_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "ssm_access" {
-  role       = aws_iam_role.codebase_image_build.name
+  for_each   = toset(var.requires_image_build ? [""] : [])
+  role       = aws_iam_role.codebase_image_build[""].name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
 }
 
 resource "aws_iam_role_policy" "log_access_for_codebuild_images" {
-  name   = "log-access"
-  role   = aws_iam_role.codebase_image_build.name
-  policy = data.aws_iam_policy_document.log_access.json
+  for_each = toset(var.requires_image_build ? [""] : [])
+  name     = "log-access"
+  role     = aws_iam_role.codebase_image_build[""].name
+  policy   = data.aws_iam_policy_document.log_access.json
 }
 
 data "aws_iam_policy_document" "log_access" {
@@ -50,9 +53,10 @@ data "aws_iam_policy_document" "log_access" {
 }
 
 resource "aws_iam_role_policy" "ecr_access_for_codebuild_images" {
-  name   = "ecr-access"
-  role   = aws_iam_role.codebase_image_build.name
-  policy = data.aws_iam_policy_document.ecr_access_for_codebuild_images.json
+  for_each = toset(var.requires_image_build ? [""] : [])
+  name     = "ecr-access"
+  role     = aws_iam_role.codebase_image_build[""].name
+  policy   = data.aws_iam_policy_document.ecr_access_for_codebuild_images.json
 }
 
 data "aws_iam_policy_document" "ecr_access_for_codebuild_images" {
@@ -122,9 +126,10 @@ data "aws_iam_policy_document" "ecr_access_for_codebuild_images" {
 }
 
 resource "aws_iam_role_policy" "codestar_connection_access_for_codebuild_images" {
-  name   = "codestar-connection-policy"
-  role   = aws_iam_role.codebase_image_build.name
-  policy = data.aws_iam_policy_document.codestar_connection_access.json
+  for_each = toset(var.requires_image_build ? [""] : [])
+  name     = "codestar-connection-policy"
+  role     = aws_iam_role.codebase_image_build[""].name
+  policy   = data.aws_iam_policy_document.codestar_connection_access.json
 }
 
 data "aws_iam_policy_document" "codestar_connection_access" {

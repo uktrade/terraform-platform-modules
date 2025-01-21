@@ -1,7 +1,7 @@
 provider "aws" {
   alias = "domain"
   assume_role {
-    role_arn = "arn:aws:iam::${var.args.dns_account_id}:role/environment-pipeline-assumed-role"
+    role_arn = "arn:aws:iam::${local.dns_account_id}:role/environment-pipeline-assumed-role"
   }
 }
 
@@ -9,7 +9,7 @@ provider "aws" {
   region = "us-east-1"
   alias  = "domain-cdn"
   assume_role {
-    role_arn = "arn:aws:iam::${var.args.dns_account_id}:role/environment-pipeline-assumed-role"
+    role_arn = "arn:aws:iam::${local.dns_account_id}:role/environment-pipeline-assumed-role"
   }
 }
 
