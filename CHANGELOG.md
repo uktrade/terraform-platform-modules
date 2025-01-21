@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.1](https://github.com/uktrade/terraform-platform-modules/compare/6.0.0...6.0.1) (2025-01-21)
+
+
+### Bug Fixes
+
+* DBTP-1694 - Fix policy issues ([#316](https://github.com/uktrade/terraform-platform-modules/issues/316)) ([ec0733b](https://github.com/uktrade/terraform-platform-modules/commit/ec0733b380d27bfd6b93175e69640b0453abadb2))
+
 ## [6.0.0](https://github.com/uktrade/terraform-platform-modules/compare/5.15.0...6.0.0) (2025-01-09)
 
 
