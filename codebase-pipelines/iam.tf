@@ -292,7 +292,7 @@ data "aws_iam_policy_document" "environment_deploy_role_access" {
 }
 
 resource "aws_iam_role_policy" "deploy_ssm_access" {
-  name   = "ssm-access"
+  name   = "deploy-ssm-access"
   role   = aws_iam_role.codebase_deploy.name
   policy = data.aws_iam_policy_document.deploy_ssm_access.json
 }
