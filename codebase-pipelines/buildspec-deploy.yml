@@ -32,7 +32,7 @@ phases:
           echo "Image contains no timestamp label"
           exit 1
         fi
-        echo "Found image timestamp $SLACK_REF"
+        echo "Found image timestamp ${SLACK_REF}"
 
       - UPPERCASE_SERVICE=$(echo "${SERVICE}" | tr '[:lower:]' '[:upper:]')
       - UPPERCASE_TAG=$(echo "${IMAGE_TAG}" | tr '[:lower:]' '[:upper:]')
