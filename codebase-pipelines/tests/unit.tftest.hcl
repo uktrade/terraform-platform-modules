@@ -57,7 +57,7 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.ssm_access
+  target = data.aws_iam_policy_document.deploy_ssm_access
   values = {
     json = "{\"Sid\": \"SSMAccess\"}"
   }
