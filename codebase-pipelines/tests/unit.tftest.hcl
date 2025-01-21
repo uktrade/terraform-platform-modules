@@ -499,6 +499,16 @@ run "test_iam" {
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy'"
   }
 
+  assert {
+    condition     = aws_iam_role_policy.deploy_ssm_access.name == "deploy-ssm-access"
+    error_message = "Should be: 'deploy-ssm-access'"
+  }
+
+  assert {
+    condition     = aws_iam_role_policy.deploy_ssm_access.role == "my-app-my-codebase-codebase-pipeline-deploy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy'"
+  }
+
   # CodePipeline
   assert {
     condition     = aws_iam_role.codebase_deploy_pipeline.name == "my-app-my-codebase-codebase-pipeline"
@@ -750,6 +760,20 @@ run "test_iam_documents" {
       "ecr:DescribeImages",
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer"
+    ])
+    error_message = "Unexpected actions"
+  }
+
+  # SSM access
+  assert {
+    condition     = data.aws_iam_policy_document.deploy_ssm_access.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+
+  assert {
+    condition = data.aws_iam_policy_document.deploy_ssm_access.statement[0].actions == toset([
+      "ssm:GetParameter",
+      "ssm:GetParameters"
     ])
     error_message = "Unexpected actions"
   }
