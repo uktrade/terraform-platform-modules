@@ -777,11 +777,13 @@ run "test_iam_documents" {
     ])
     error_message = "Unexpected actions"
   }
-}
+
   assert {
-    condition = one(data.aws_iam_policy_document.deploy_ssm_access.statement[0].resources) == "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/codebuild/slack_*"
+    condition     = one(data.aws_iam_policy_document.deploy_ssm_access.statement[0].resources) == "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/codebuild/slack_*"
     error_message = "Unexpected resources"
   }
+}
+
 
 run "test_codebuild_deploy" {
   command = plan
