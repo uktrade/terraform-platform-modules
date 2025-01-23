@@ -607,6 +607,7 @@ data "aws_iam_policy_document" "postgres" {
         "iam:DeleteRolePolicy",
         "iam:PassRole",
         "iam:UpdateAssumeRolePolicy",
+        "iam:DetachRolePolicy"
       ]
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-*",
@@ -625,7 +626,8 @@ data "aws_iam_policy_document" "postgres" {
         "lambda:GetFunctionCodeSigningConfig",
         "lambda:UpdateFunctionCode",
         "lambda:UpdateFunctionConfiguration",
-        "lambda:CreateFunction"
+        "lambda:CreateFunction",
+        "lambda:DeleteFunction"
       ]
       resources = [
         "arn:aws:lambda:${local.account_region}:function:${var.application}-${statement.value.name}-*"
@@ -834,7 +836,8 @@ data "aws_iam_policy_document" "origin_secret_rotate_access" {
       "lambda:DeleteFunction",
       "lambda:TagResource",
       "lambda:PutFunctionConcurrency",
-      "lambda:AddPermission"
+      "lambda:AddPermission",
+      "lambda:DeleteFunction"
     ]
     resources = [
       for env in local.environment_config : "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${env.name}-origin-secret-rotate"
