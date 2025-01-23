@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.2](https://github.com/uktrade/terraform-platform-modules/compare/6.0.1...6.0.2) (2025-01-23)
+
+
+### Bug Fixes
+
+* Missing environment pipeline permissions ([#318](https://github.com/uktrade/terraform-platform-modules/issues/318)) ([155f371](https://github.com/uktrade/terraform-platform-modules/commit/155f3718917a4f6c09da0c5dd25d354eda5f2380))
+
 ## [6.0.1](https://github.com/uktrade/terraform-platform-modules/compare/6.0.0...6.0.1) (2025-01-21)
 
 
