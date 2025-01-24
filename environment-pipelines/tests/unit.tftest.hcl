@@ -204,16 +204,16 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.cloudfront
+  target = data.aws_ssm_parameter.log-destination-arn
   values = {
-    json = "{\"Sid\": \"Cloudfront\"}"
+    value = "{\"prod\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod\", \"dev\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev\"}"
   }
 }
 
 override_data {
-  target = data.aws_ssm_parameter.log-destination-arn
+  target = data.aws_iam_policy_document.origin_secret_rotate_access
   values = {
-    value = "{\"prod\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod\", \"dev\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev\"}"
+    json = "{\"Sid\": \"OriginSecretRotateAccess\"}"
   }
 }
 

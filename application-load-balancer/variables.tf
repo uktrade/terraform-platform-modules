@@ -10,13 +10,20 @@ variable "vpc_name" {
   type = string
 }
 
+variable "dns_account_id" {
+  type = string
+}
+
 variable "config" {
   type = object({
-    domain_prefix           = optional(string)
-    env_root                = optional(string)
-    cdn_domains_list        = optional(map(list(string)))
-    additional_address_list = optional(list(string))
+    domain_prefix                           = optional(string)
+    env_root                                = optional(string)
+    cdn_domains_list                        = optional(map(list(string)))
+    additional_address_list                 = optional(list(string))
+    slack_alert_channel_alb_secret_rotation = optional(string)
   })
+
+  default = {}
 
   validation {
     condition = var.config.cdn_domains_list == null ? true : alltrue([

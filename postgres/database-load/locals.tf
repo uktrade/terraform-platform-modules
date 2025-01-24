@@ -9,8 +9,8 @@ locals {
 
   task_name = "${var.application}-${var.environment}-${var.database_name}-load"
 
-  dump_task_name = "${var.application}-${var.task.from}-${var.database_name}-dump"
-  #dump_kms_key_alias = "alias/${local.dump_task_name}"
+
+  dump_task_name   = "${var.application}-${var.task.from}-${var.database_name}-dump"
   dump_bucket_name = local.dump_task_name
 
   pipeline_task  = lookup(var.task, "pipeline", null) != null

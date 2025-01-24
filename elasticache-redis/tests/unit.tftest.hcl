@@ -93,8 +93,10 @@ run "aws_elasticache_replication_group_unit_test" {
     error_message = "Invalid config for aws_elasticache_replication_group transit_encryption_enabled"
   }
 
+
+  # Set to a string due to changes in this release: https://github.com/hashicorp/terraform-provider-aws/releases/tag/v5.82.0  If this test fails, run terraform init -upgrade in the module directory
   assert {
-    condition     = aws_elasticache_replication_group.redis.at_rest_encryption_enabled == true
+    condition     = aws_elasticache_replication_group.redis.at_rest_encryption_enabled == "true"
     error_message = "Invalid config for aws_elasticache_replication_group at_rest_encryption_enabled"
   }
 
@@ -173,8 +175,9 @@ run "aws_elasticache_replication_group_unit_test2" {
     error_message = "Invalid config for aws_elasticache_replication_group transit_encryption_enabled"
   }
 
+  # Set to a string due to changes in this release: https://github.com/hashicorp/terraform-provider-aws/releases/tag/v5.82.0  If this test fails, run terraform init -upgrade in the module directory
   assert {
-    condition     = aws_elasticache_replication_group.redis.at_rest_encryption_enabled == true
+    condition     = aws_elasticache_replication_group.redis.at_rest_encryption_enabled == "true"
     error_message = "Invalid config for aws_elasticache_replication_group at_rest_encryption_enabled"
   }
 
