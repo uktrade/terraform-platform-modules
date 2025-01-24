@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "allow_assume_role" {
 
     principals {
       type        = "AWS"
-      identifiers = [var.config.worker_role_arn]
+      identifiers = local.worker_role_list
     }
 
     actions = ["sts:AssumeRole"]
@@ -30,10 +30,7 @@ data "aws_iam_policy_document" "s3_migration_policy_document" {
       "s3:GetObjectVersionTagging"
     ]
 
-    resources = [
-      var.config.source_bucket_arn,
-      "${var.config.source_bucket_arn}/*"
-    ]
+    resources = local.source_bucket_list
   }
 
   statement {

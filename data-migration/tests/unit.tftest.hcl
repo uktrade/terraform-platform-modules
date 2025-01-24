@@ -83,3 +83,77 @@ run "data_migration_without_source_kms_key" {
     error_message = "Statement should not contain kms:Decrypt"
   }
 }
+
+run "data_migration_with_just_source" {
+  command = plan
+
+  variables {
+    config = {
+      "source_bucket_arn" = "test-source-bucket-arn"
+      "worker_role_arn"   = "test-role-arn"
+    }
+    destination_bucket_arn        = "test-destination-bucket-arn"
+    destination_bucket_identifier = "test-destination-bucket-name"
+  }
+
+  assert {
+    condition     = contains(data.aws_iam_policy_document.s3_migration_policy_document.statement[0].resources, "test-source-bucket-arn")
+    error_message = "Should contain: test-source-bucket-arn"
+  }
+}
+
+run "data_migration_with_additional_source" {
+  command = plan
+
+  variables {
+    config = {
+      "source_bucket_arn"            = "test-source-bucket-arn"
+      "additional_source_bucket_arn" = ["test-source-bucket-arn2"]
+      "worker_role_arn"              = "test-role-arn"
+    }
+    destination_bucket_arn        = "test-destination-bucket-arn"
+    destination_bucket_identifier = "test-destination-bucket-name"
+  }
+
+  assert {
+    condition     = contains(data.aws_iam_policy_document.s3_migration_policy_document.statement[0].resources, "test-source-bucket-arn2")
+    error_message = "Should contain: test-source-bucket-arn2"
+  }
+}
+
+run "data_migration_with_just_worker_role" {
+  command = plan
+
+  variables {
+    config = {
+      "source_bucket_arn" = "test-source-bucket-arn"
+      "worker_role_arn"   = "test-role-arn"
+    }
+    destination_bucket_arn        = "test-destination-bucket-arn"
+    destination_bucket_identifier = "test-destination-bucket-name"
+  }
+
+  assert {
+    condition     = contains(flatten([for k in data.aws_iam_policy_document.allow_assume_role.statement[0].principals : k.identifiers]), "test-role-arn")
+    error_message = "Should contain: test-role-arn"
+  }
+}
+
+run "data_migration_with_additional_worker_role" {
+  command = plan
+
+  variables {
+    config = {
+      "source_bucket_arn"          = "test-source-bucket-arn"
+      "worker_role_arn"            = "test-role-arn"
+      "additional_worker_role_arn" = ["test-role-arn2"]
+    }
+    destination_bucket_arn        = "test-destination-bucket-arn"
+    destination_bucket_identifier = "test-destination-bucket-name"
+  }
+
+  assert {
+    condition     = contains(flatten([for k in data.aws_iam_policy_document.allow_assume_role.statement[0].principals : k.identifiers]), "test-role-arn2")
+    error_message = "Should contain: test-role-arn2"
+  }
+}
