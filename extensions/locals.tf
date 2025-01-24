@@ -42,4 +42,8 @@ locals {
     copilot-application = var.args.application
     copilot-environment = var.environment
   }
+
+  vpc_name            = var.args.env_config[var.environment]["vpc"]
+  dns_account_id      = var.args.env_config[var.environment]["accounts"]["dns"]["id"]
+  pipeline_account_id = var.args.env_config["*"]["accounts"]["deploy"]["id"]
 }

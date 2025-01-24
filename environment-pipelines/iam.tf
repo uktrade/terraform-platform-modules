@@ -1005,6 +1005,7 @@ data "aws_iam_policy_document" "iam" {
         "iam:ListInstanceProfilesForRole",
         "iam:DeleteRolePolicy",
         "iam:UpdateAssumeRolePolicy",
+        "iam:TagRole"
       ]
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
@@ -1013,7 +1014,8 @@ data "aws_iam_policy_document" "iam" {
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-S3MigrationRole",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-*-exec",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-*-task",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-*"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-copy-pipeline-*",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-codebase-pipeline-deploy"
       ]
     }
   }

@@ -8,7 +8,7 @@ resource "aws_cloudwatch_event_rule" "ecr_image_publish" {
     detail-type : ["ECR Image Action"],
     detail : {
       action-type : ["PUSH"],
-      image-tag : [coalesce(each.value.tag, false) ? "tag-latest" : "branch-${each.value.branch}"],
+      image-tag : [var.requires_image_build ? coalesce(each.value.tag, false) ? "tag-latest" : "branch-${each.value.branch}" : "latest"],
       repository-name : [local.ecr_name],
       result : ["SUCCESS"],
     }
@@ -29,7 +29,7 @@ resource "aws_iam_role" "event_bridge_pipeline_trigger" {
 }
 
 resource "aws_iam_role_policy" "event_bridge_pipeline_trigger" {
-  name   = "${var.application}-${var.codebase}-pipeline-trigger-access-for-event-bridge"
+  name   = "event-bridge-access"
   role   = aws_iam_role.event_bridge_pipeline_trigger.name
   policy = data.aws_iam_policy_document.event_bridge_pipeline_trigger.json
 }

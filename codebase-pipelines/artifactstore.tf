@@ -31,13 +31,10 @@ data "aws_iam_policy_document" "artifact_store_bucket_policy" {
       type        = "*"
       identifiers = ["*"]
     }
-
     actions = [
-      "s3:*",
+      "s3:*"
     ]
-
     effect = "Deny"
-
     condition {
       test     = "Bool"
       variable = "aws:SecureTransport"
@@ -46,7 +43,24 @@ data "aws_iam_policy_document" "artifact_store_bucket_policy" {
         "false",
       ]
     }
+    resources = [
+      aws_s3_bucket.artifact_store.arn,
+      "${aws_s3_bucket.artifact_store.arn}/*",
+    ]
+  }
 
+  statement {
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [
+        for env in local.pipeline_environments :
+        "arn:aws:iam::${env.account}:role/${var.application}-${env.name}-codebase-pipeline-deploy"
+      ]
+    }
+    actions = [
+      "s3:*"
+    ]
     resources = [
       aws_s3_bucket.artifact_store.arn,
       "${aws_s3_bucket.artifact_store.arn}/*",
@@ -70,7 +84,7 @@ resource "aws_kms_key" "artifact_store_kms_key" {
         "Sid" : "Enable IAM User Permissions",
         "Effect" : "Allow",
         "Principal" : {
-          "AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+          "AWS" : [for id in local.deploy_account_ids : "arn:aws:iam::${id}:root"]
         },
         "Action" : "kms:*",
         "Resource" : "*"
