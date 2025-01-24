@@ -9,6 +9,7 @@ locals {
 
   task_name = "${var.application}-${var.environment}-${var.database_name}-load"
 
+
   dump_task_name   = "${var.application}-${var.task.from}-${var.database_name}-dump"
   dump_bucket_name = local.dump_task_name
 
