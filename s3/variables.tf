@@ -68,7 +68,7 @@ variable "config" {
         source_kms_key_arn = optional(string)
         worker_role_arn    = string
       })),
-      import_sources = optional(map(object({
+      import_sources = optional(list(object({
         source_bucket_arn  = string
         source_kms_key_arn = optional(string)
         worker_role_arn    = string
