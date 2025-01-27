@@ -2,3 +2,7 @@
 output "module_exists" {
   value = true
 }
+
+output "sources" {
+  value = var.sources
+}
