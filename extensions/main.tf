@@ -96,6 +96,18 @@ module "monitoring" {
   config = each.value
 }
 
+module "observability" {
+  source = "../observability"
+
+  for_each = local.observability
+
+  application = var.args.application
+  environment = var.environment
+  # vpc_name    = var.vpc_name
+
+  config = each.value
+}
+
 resource "aws_ssm_parameter" "addons" {
   # checkov:skip=CKV_AWS_337: Used by copilot needs further analysis to ensure doesn't create similar issue to DBTP-1128 - raised as DBTP-1217
   # checkov:skip=CKV2_AWS_34: Used by copilot needs further analysis to ensure doesn't create similar issue to DBTP-1128 - raised as DBTP-1217
