@@ -1,10 +1,10 @@
 
-variable "config" {
-  type = object({
+variable "sources" {
+  type = list(object({
     source_bucket_arn  = string
     source_kms_key_arn = optional(string)
     worker_role_arn    = string
-  })
+  }))
 }
 
 variable "destination_bucket_arn" {
