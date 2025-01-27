@@ -32,6 +32,7 @@ locals {
   redis      = { for k, v in local.services : k => v if v.type == "redis" }
   opensearch = { for k, v in local.services : k => v if v.type == "opensearch" }
   monitoring = { for k, v in local.services : k => v if v.type == "monitoring" }
+  observability = { for k, v in local.services : k => v if v.type == "observability" }
   alb        = { for k, v in local.services : k => v if v.type == "alb" }
   cdn        = { for k, v in local.services : k => v if v.type == "alb" }
 
