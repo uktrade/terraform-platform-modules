@@ -1,8 +1,11 @@
 locals {
+  config       = yamldecode(file("${path.module}/platform-config.yml"))
+  environments = local.config["environments"]
+  env_config   = { for name, config in local.environments : name => merge(lookup(local.environments, "*", {}), config) }
   args = {
-    application    = "my-application"
-    services       = yamldecode(file("${path.module}/extensions.yml"))
-    dns_account_id = one([for env in yamldecode(file("${path.module}/pipelines.yml"))["environments"] : env if env["name"] == "my-environment"])["accounts"]["dns"]["id"]
+    application = "my-application"
+    services    = local.config["extensions"]
+    env_config  = local.env_config
   }
 }
 
@@ -10,5 +13,4 @@ module "extensions-staging" {
   source      = "../extensions"
   args        = local.args
   environment = "my-environment"
-  vpc_name    = "my-vpc"
 }

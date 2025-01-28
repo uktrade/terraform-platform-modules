@@ -33,11 +33,36 @@ variables {
         }
       }
     },
-    dns_account_id = "123456"
+    env_config = {
+      "*" = {
+        accounts = {
+          deploy = {
+            name = "sandbox"
+            id   = "000123456789"
+          }
+          dns = {
+            name = "dev"
+            id   = "123456"
+          }
+        }
+        vpc : "test-vpc"
+      },
+      "test-environment" = {
+        accounts = {
+          deploy = {
+            name = "sandbox"
+            id   = "000123456789"
+          }
+          dns = {
+            name = "dev"
+            id   = "123456"
+          }
+        }
+        vpc : "test-vpc"
+      }
+    }
   }
-  application = "test-application"
   environment = "test-environment"
-  vpc_name    = "test-vpc"
 }
 
 mock_provider "aws" {
@@ -214,10 +239,36 @@ run "opensearch_plan_medium_ha_service_test" {
           }
         }
       },
-      dns_account_id = "123456"
+      env_config = {
+        "*" = {
+          accounts = {
+            deploy = {
+              name = "sandbox"
+              id   = "000123456789"
+            }
+            dns = {
+              name = "dev"
+              id   = "123456"
+            }
+          }
+          vpc : "test-vpc"
+        },
+        "test-environment" = {
+          accounts = {
+            deploy = {
+              name = "sandbox"
+              id   = "000123456789"
+            }
+            dns = {
+              name = "dev"
+              id   = "123456"
+            }
+          }
+          vpc : "test-vpc"
+        }
+      }
     }
     environment = "test-environment"
-    vpc_name    = "test-vpc"
   }
 
   command = plan
@@ -255,5 +306,302 @@ run "opensearch_plan_medium_ha_service_test" {
   assert {
     condition     = output.resolved_config.test-opensearch.volume_size == 512
     error_message = "Should be: 512"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.assume_codebase_pipeline
+  values = {
+    json = "{\"Sid\": \"CodeBaseDeployAssume\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.ecr_access
+  values = {
+    json = "{\"Sid\": \"ECRAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.artifact_store_access
+  values = {
+    json = "{\"Sid\": \"ArtifactStoreAccess\"}"
+  }
+}
+
+override_data {
+  target = data.aws_iam_policy_document.ecs_deploy_access
+  values = {
+    json = "{\"Sid\": \"ECSDeployAccess\"}"
+  }
+}
+
+run "codebase_deploy_iam_test" {
+  command = plan
+
+  variables {
+    expected_tags = {
+      application         = var.args.application
+      environment         = var.environment
+      managed-by          = "DBT Platform - Terraform"
+      copilot-application = var.args.application
+      copilot-environment = var.environment
+    }
+  }
+
+  assert {
+    condition     = aws_iam_role.codebase_pipeline_deploy.name == "test-application-test-environment-codebase-pipeline-deploy"
+    error_message = "Should be: 'test-application-test-environment-codebase-pipeline-deploy'"
+  }
+  assert {
+    condition     = aws_iam_role.codebase_pipeline_deploy.assume_role_policy == "{\"Sid\": \"CodeBaseDeployAssume\"}"
+    error_message = "Should be: {\"Sid\": \"CodeBaseDeployAssume\"}"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].actions) == "sts:AssumeRole"
+    error_message = "Should be: sts:AssumeRole"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].principals).type == "AWS"
+    error_message = "Should be: AWS"
+  }
+  assert {
+    condition     = contains(one(data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].principals).identifiers, "arn:aws:iam::000123456789:root")
+    error_message = "Should contain: arn:aws:iam::000123456789:root"
+  }
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.test][0] == "ArnLike"
+    error_message = "Should be: ArnLike"
+  }
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.variable][0] == "aws:PrincipalArn"
+    error_message = "Should be: aws:PrincipalArn"
+  }
+  assert {
+    condition     = flatten([for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.values][0]) == ["arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline", "arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline-*"]
+    error_message = "Unexpected condition values"
+  }
+  assert {
+    condition     = jsonencode(aws_iam_role.codebase_pipeline_deploy.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access.name == "ecr-access"
+    error_message = "Should be: 'ecr-access'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access.role == "test-application-test-environment-codebase-pipeline-deploy"
+    error_message = "Should be: 'test-application-test-environment-codebase-pipeline-deploy'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecr_access.policy == "{\"Sid\": \"ECRAccess\"}"
+    error_message = "Should be: {\"Sid\": \"ECRAccess\"}"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecr_access.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecr_access.statement[0].actions) == "ecr:DescribeImages"
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecr_access.statement[0].resources) == "arn:aws:ecr:${data.aws_region.current.name}:000123456789:repository/test-application/*"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access.name == "artifact-store-access"
+    error_message = "Should be: 'artifact-store-access'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access.role == "test-application-test-environment-codebase-pipeline-deploy"
+    error_message = "Should be: 'test-application-test-environment-codebase-pipeline-deploy'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.artifact_store_access.policy == "{\"Sid\": \"ArtifactStoreAccess\"}"
+    error_message = "Should be: {\"Sid\": \"ArtifactStoreAccess\"}"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.artifact_store_access.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.artifact_store_access.statement[0].actions == toset([
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketVersioning",
+      "s3:PutObjectAcl",
+      "s3:PutObject",
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.artifact_store_access.statement[0].resources == toset(["arn:aws:s3:::test-application-*-codebase-pipeline-artifact-store", "arn:aws:s3:::test-application-*-codebase-pipeline-artifact-store/*"])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.artifact_store_access.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.artifact_store_access.statement[1].actions == toset([
+      "codebuild:BatchGetBuilds",
+      "codebuild:StartBuild",
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.artifact_store_access.statement[1].resources) == "*"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.artifact_store_access.statement[2].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.artifact_store_access.statement[2].actions == toset([
+      "kms:GenerateDataKey",
+      "kms:Decrypt"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.artifact_store_access.statement[2].resources) == "arn:aws:kms:${data.aws_region.current.name}:000123456789:key/*"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecs_deploy_access.name == "ecs-deploy-access"
+    error_message = "Should be: 'ecs-deploy-access'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecs_deploy_access.role == "test-application-test-environment-codebase-pipeline-deploy"
+    error_message = "Should be: 'test-application-test-environment-codebase-pipeline-deploy'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.ecs_deploy_access.policy == "{\"Sid\": \"ECSDeployAccess\"}"
+    error_message = "Should be: {\"Sid\": \"ECSDeployAccess\"}"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecs_deploy_access.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecs_deploy_access.statement[0].actions == toset([
+      "ecs:UpdateService",
+      "ecs:DescribeServices",
+      "ecs:TagResource",
+      "ecs:ListServices"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecs_deploy_access.statement[0].resources == toset([
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/test-application-test-environment",
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/test-application-test-environment/*"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecs_deploy_access.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecs_deploy_access.statement[1].actions == toset([
+      "ecs:DescribeTasks",
+      "ecs:TagResource"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecs_deploy_access.statement[1].resources == toset([
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/test-application-test-environment",
+      "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task/test-application-test-environment/*"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecs_deploy_access.statement[2].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecs_deploy_access.statement[2].actions == toset([
+      "ecs:RunTask",
+      "ecs:TagResource"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecs_deploy_access.statement[2].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:task-definition/test-application-test-environment-*:*"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecs_deploy_access.statement[3].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecs_deploy_access.statement[3].actions) == "ecs:ListTasks"
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecs_deploy_access.statement[3].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container-instance/test-application-test-environment/*"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecs_deploy_access.statement[4].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecs_deploy_access.statement[4].actions == toset([
+      "ecs:DescribeTaskDefinition",
+      "ecs:RegisterTaskDefinition"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecs_deploy_access.statement[4].resources) == "*"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecs_deploy_access.statement[5].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecs_deploy_access.statement[5].actions) == "iam:PassRole"
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecs_deploy_access.statement[5].resources) == "*"
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.ecs_deploy_access.statement[5].condition : el.test][0] == "StringLike"
+    error_message = "Should be: StringLike"
+  }
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.ecs_deploy_access.statement[5].condition : one(el.values)][0] == "ecs-tasks.amazonaws.com"
+    error_message = "Should be: ecs-tasks.amazonaws.com"
+  }
+  assert {
+    condition     = [for el in data.aws_iam_policy_document.ecs_deploy_access.statement[5].condition : el.variable][0] == "iam:PassedToService"
+    error_message = "Should be: iam:PassedToService"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecs_deploy_access.statement[6].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecs_deploy_access.statement[6].actions == toset([
+      "ecs:ListServiceDeployments"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecs_deploy_access.statement[6].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/test-application-test-environment/*"
+    error_message = "Unexpected resources"
   }
 }

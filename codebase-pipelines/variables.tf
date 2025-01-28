@@ -33,3 +33,17 @@ variable "pipelines" {
 variable "services" {
   type = any
 }
+
+variable "slack_channel" {
+  type    = string
+  default = "/codebuild/slack_oauth_channel"
+}
+
+variable "env_config" {
+  type = any
+}
+
+variable "requires_image_build" {
+  type    = bool
+  default = true
+}
