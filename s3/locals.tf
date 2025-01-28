@@ -9,5 +9,5 @@ locals {
 
   kms_alias_name = "${var.application}-${var.environment}-${var.config.bucket_name}-key"
 
-  has_data_migration_import_enabled = try(var.config.data_migration.import != null, false)
+  has_data_migration_import_enabled = try(coalesce(var.config.data_migration.import_sources, [var.config.data_migration.import]) != null, false)
 }
