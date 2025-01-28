@@ -468,7 +468,7 @@ module "data_migration" {
     aws_kms_key.kms-key
   ]
 
-  config = var.config.data_migration.import
+  sources = coalesce(var.config.data_migration.import_sources, [var.config.data_migration.import])
 
   destination_bucket_identifier = aws_s3_bucket.this.id
   destination_kms_key_arn       = aws_kms_key.kms-key[0].arn
