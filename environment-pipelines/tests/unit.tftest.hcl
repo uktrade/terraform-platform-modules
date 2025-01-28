@@ -204,13 +204,6 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.cloudfront
-  values = {
-    json = "{\"Sid\": \"Cloudfront\"}"
-  }
-}
-
-override_data {
   target = data.aws_ssm_parameter.log-destination-arn
   values = {
     value = "{\"prod\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_prod\", \"dev\":\"arn:aws:logs:eu-west-2:123456789987:destination:central_log_groups_dev\"}"
@@ -218,30 +211,9 @@ override_data {
 }
 
 override_data {
-  target = data.aws_iam_policy_document.lambda_policy_access
+  target = data.aws_iam_policy_document.origin_secret_rotate_access
   values = {
-    json = "{\"Sid\": \"LambdaPolicyAccess\"}"
-  }
-}
-
-override_data {
-  target = data.aws_iam_policy_document.wafv2_read_access
-  values = {
-    json = "{\"Sid\": \"WAFv2ReadAccess\"}"
-  }
-}
-
-override_data {
-  target = data.aws_iam_policy_document.secret_manager_read_access
-  values = {
-    json = "{\"Sid\": \"SecretManagerReadAccess\"}"
-  }
-}
-
-override_data {
-  target = data.aws_iam_policy_document.origin_secret_rotation_role_access
-  values = {
-    json = "{\"Sid\": \"SecretRotationRolePolicy\"}"
+    json = "{\"Sid\": \"OriginSecretRotateAccess\"}"
   }
 }
 

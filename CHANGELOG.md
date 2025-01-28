@@ -1,5 +1,24 @@
 # Changelog
 
+## [6.1.0](https://github.com/uktrade/terraform-platform-modules/compare/6.0.1...6.1.0) (2025-01-28)
+
+
+### Features
+
+* Support multiple source buckets for data migration ([#321](https://github.com/uktrade/terraform-platform-modules/issues/321)) ([49c2a4d](https://github.com/uktrade/terraform-platform-modules/commit/49c2a4daf3dd976f6bef8cce7a5724185a57c7cf))
+
+
+### Bug Fixes
+
+* Missing environment pipeline permissions ([#318](https://github.com/uktrade/terraform-platform-modules/issues/318)) ([155f371](https://github.com/uktrade/terraform-platform-modules/commit/155f3718917a4f6c09da0c5dd25d354eda5f2380))
+
+## [6.0.1](https://github.com/uktrade/terraform-platform-modules/compare/6.0.0...6.0.1) (2025-01-21)
+
+
+### Bug Fixes
+
+* DBTP-1694 - Fix policy issues ([#316](https://github.com/uktrade/terraform-platform-modules/issues/316)) ([ec0733b](https://github.com/uktrade/terraform-platform-modules/commit/ec0733b380d27bfd6b93175e69640b0453abadb2))
+
 ## [6.0.0](https://github.com/uktrade/terraform-platform-modules/compare/5.15.0...6.0.0) (2025-01-09)
 
 
@@ -10,6 +29,28 @@
 ### Features
 
 * DBTP-1395 Add CloudFront and application load balancer origin verification secret for IP Filter spoofing ([#273](https://github.com/uktrade/terraform-platform-modules/issues/273)) ([7c182e0](https://github.com/uktrade/terraform-platform-modules/commit/7c182e002ffc2ad465dfef255c086af114e53e97))
+
+## Upgrade Path
+
+To upgrade to version 6 of terraform-platform-modules you can modify the 
+`<application>-deploy/platform-config.yml` for the environments that you want to upgrade (put the `versions` property in an individual environment or under the `*` to apply to all environments)
+
+```
+  environments:
+  "*":
+    accounts:
+      deploy:
+        name: "platform-sandbox"
+        id: "563763463626"
+      dns:
+        name: "dev"
+        id: "011755346992"
+    vpc: platform-sandbox-dev
+  dev:
+    versions:                        # add "versions" property
+      terraform-platform-modules: 6  # set "terraform-platform-modules" property to 6
+  ...
+```
 
 ## [5.15.0](https://github.com/uktrade/terraform-platform-modules/compare/5.14.0...5.15.0) (2025-01-07)
 

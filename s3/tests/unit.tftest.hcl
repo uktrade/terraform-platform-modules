@@ -215,7 +215,7 @@ run "aws_s3_bucket_lifecycle_configuration_no_prefix_unit_test" {
   }
 }
 
-run "aws_s3_bucket_data_migration_unit_test" {
+run "aws_s3_bucket_data_migration_legacy_config_unit_test" {
   command = plan
 
   variables {
@@ -235,6 +235,81 @@ run "aws_s3_bucket_data_migration_unit_test" {
   assert {
     condition     = module.data_migration[0].module_exists
     error_message = "data migration module should be created"
+  }
+
+  assert {
+    condition     = module.data_migration[0].sources[0].worker_role_arn == "arn:aws:iam::1234:role/service-role/my-privileged-arn"
+    error_message = "data migration worker_role_arn should be present"
+  }
+
+  assert {
+    condition     = module.data_migration[0].sources[0].source_kms_key_arn == "arn:aws:iam::1234:my-external-kms-key-arn"
+    error_message = "data migration worker_role_arn should be present"
+  }
+
+  assert {
+    condition     = module.data_migration[0].sources[0].source_bucket_arn == "arn:aws:s3::1234:my-source-bucket"
+    error_message = "data migration worker_role_arn should be present"
+  }
+}
+
+run "aws_s3_bucket_data_migration_unit_test" {
+  command = plan
+
+  variables {
+    config = {
+      "bucket_name" = "dbt-terraform-test-s3-cross-account",
+      "type"        = "s3",
+      "data_migration" = {
+        "import_sources" = [
+          {
+            "worker_role_arn"    = "arn:aws:iam::1234:role/service-role/my-privileged-arn",
+            "source_kms_key_arn" = "arn:aws:iam::1234:my-external-kms-key-arn",
+            "source_bucket_arn"  = "arn:aws:s3::1234:my-source-bucket"
+          },
+          {
+            "worker_role_arn"    = "arn:aws:iam::1234:role/service-role/my-privileged-arn-2",
+            "source_kms_key_arn" = "arn:aws:iam::1234:my-external-kms-key-arn-2",
+            "source_bucket_arn"  = "arn:aws:s3::1234:my-source-bucket-2"
+          },
+        ]
+      }
+    }
+  }
+
+  assert {
+    condition     = module.data_migration[0].module_exists
+    error_message = "data migration module should be created"
+  }
+
+  assert {
+    condition     = module.data_migration[0].sources[0].worker_role_arn == "arn:aws:iam::1234:role/service-role/my-privileged-arn"
+    error_message = "data migration worker_role_arn should be present"
+  }
+
+  assert {
+    condition     = module.data_migration[0].sources[0].source_kms_key_arn == "arn:aws:iam::1234:my-external-kms-key-arn"
+    error_message = "data migration worker_role_arn should be present"
+  }
+
+  assert {
+    condition     = module.data_migration[0].sources[0].source_bucket_arn == "arn:aws:s3::1234:my-source-bucket"
+    error_message = "data migration worker_role_arn should be present"
+  }
+
+  assert {
+    condition     = module.data_migration[0].sources[1].worker_role_arn == "arn:aws:iam::1234:role/service-role/my-privileged-arn-2"
+    error_message = "data migration worker_role_arn should be present"
+  }
+
+  assert {
+    condition     = module.data_migration[0].sources[1].source_kms_key_arn == "arn:aws:iam::1234:my-external-kms-key-arn-2"
+    error_message = "data migration source_kms_key_arn should be present"
+  }
+
+  assert {
+    condition     = module.data_migration[0].sources[1].source_bucket_arn == "arn:aws:s3::1234:my-source-bucket-2"
+    error_message = "data migration source_bucket_arn should be present"
   }
 }
 
