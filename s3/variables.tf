@@ -63,6 +63,7 @@ variable "config" {
 
     # S3 to S3 data migration
     data_migration = optional(object({
+      # `import` is a legacy variable and will be removed in the future. Use `import_sources` instead.
       import = optional(object({
         source_bucket_arn  = string
         source_kms_key_arn = optional(string)
