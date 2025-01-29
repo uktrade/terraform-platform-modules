@@ -1,5 +1,16 @@
 # Changelog
 
+## [7.0.0](https://github.com/uktrade/terraform-platform-modules/compare/6.1.0...7.0.0) (2025-01-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* DBTP-1503 - Cross account deploy and manual release pipeline ([#306](https://github.com/uktrade/terraform-platform-modules/issues/306))
+
+### Features
+
+* DBTP-1503 - Cross account deploy and manual release pipeline ([#306](https://github.com/uktrade/terraform-platform-modules/issues/306)) ([7446c84](https://github.com/uktrade/terraform-platform-modules/commit/7446c84f9fc05b5c2e4ec81571ae7ffa1ae1fb14))
+
 ## [6.1.0](https://github.com/uktrade/terraform-platform-modules/compare/6.0.1...6.1.0) (2025-01-28)
 
 
