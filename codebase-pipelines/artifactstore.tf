@@ -3,7 +3,7 @@ resource "aws_s3_bucket" "artifact_store" {
   # checkov:skip=CKV2_AWS_62: It's just a pipeline artifacts bucket, event notifications are not needed.
   # checkov:skip=CKV_AWS_21: It's just a pipeline artifacts bucket, versioning is not needed.
   # checkov:skip=CKV_AWS_18: It's just a pipeline artifacts bucket, access logging is not needed.
-  bucket = "${var.application}-${var.codebase}-codebase-pipeline-artifact-store"
+  bucket = "${var.application}-${var.codebase}-cb-arts"
 
   tags = local.tags
 }
@@ -96,7 +96,7 @@ resource "aws_kms_key" "artifact_store_kms_key" {
 
 resource "aws_kms_alias" "artifact_store_kms_alias" {
   depends_on    = [aws_kms_key.artifact_store_kms_key]
-  name          = "alias/${var.application}-${var.codebase}-codebase-pipeline-artifact-store-key"
+  name          = "alias/${var.application}-${var.codebase}-cb-arts-key"
   target_key_id = aws_kms_key.artifact_store_kms_key.id
 }
 

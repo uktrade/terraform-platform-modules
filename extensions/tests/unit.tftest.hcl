@@ -441,7 +441,7 @@ run "codebase_deploy_iam_test" {
     error_message = "Unexpected actions"
   }
   assert {
-    condition     = data.aws_iam_policy_document.artifact_store_access.statement[0].resources == toset(["arn:aws:s3:::test-application-*-codebase-pipeline-artifact-store", "arn:aws:s3:::test-application-*-codebase-pipeline-artifact-store/*"])
+    condition     = data.aws_iam_policy_document.artifact_store_access.statement[0].resources == toset(["arn:aws:s3:::test-application-*-cb-arts", "arn:aws:s3:::test-application-*-cb-arts/*"])
     error_message = "Unexpected resources"
   }
   assert {

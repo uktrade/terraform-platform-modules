@@ -63,8 +63,8 @@ data "aws_iam_policy_document" "artifact_store_access" {
       "s3:PutObject",
     ]
     resources = [
-      "arn:aws:s3:::${var.args.application}-*-codebase-pipeline-artifact-store/*",
-      "arn:aws:s3:::${var.args.application}-*-codebase-pipeline-artifact-store"
+      "arn:aws:s3:::${var.args.application}-*-cb-arts/*",
+      "arn:aws:s3:::${var.args.application}-*-cb-arts"
     ]
   }
 

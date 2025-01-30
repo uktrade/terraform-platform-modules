@@ -147,12 +147,12 @@ run "test_artifact_store" {
   command = plan
 
   assert {
-    condition     = aws_s3_bucket.artifact_store.bucket == "my-app-my-codebase-codebase-pipeline-artifact-store"
-    error_message = "Should be: my-app-my-codebase-codebase-pipeline-artifact-store"
+    condition     = aws_s3_bucket.artifact_store.bucket == "my-app-my-codebase-cb-arts"
+    error_message = "Should be: my-app-my-codebase-cb-arts"
   }
   assert {
-    condition     = aws_kms_alias.artifact_store_kms_alias.name == "alias/my-app-my-codebase-codebase-pipeline-artifact-store-key"
-    error_message = "Should be: alias/my-app-my-codebase-codebase-pipeline-artifact-store-key"
+    condition     = aws_kms_alias.artifact_store_kms_alias.name == "alias/my-app-my-codebase-cb-arts-key"
+    error_message = "Should be: alias/my-app-my-codebase-cb-arts-key"
   }
   assert {
     condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[0].condition : el.variable][0] == "aws:SecureTransport"
@@ -809,8 +809,8 @@ run "test_codebuild_deploy" {
     error_message = "Should be: 'S3'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_deploy.cache).location == "my-app-my-codebase-codebase-pipeline-artifact-store"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-artifact-store'"
+    condition     = one(aws_codebuild_project.codebase_deploy.cache).location == "my-app-my-codebase-cb-arts"
+    error_message = "Should be: 'my-app-my-codebase-cb-arts'"
   }
   assert {
     condition     = one(aws_codebuild_project.codebase_deploy.environment).compute_type == "BUILD_GENERAL1_SMALL"
@@ -900,8 +900,8 @@ run "test_main_pipeline" {
     error_message = "Should be: 'Tagged image in ECR to deploy'"
   }
   assert {
-    condition     = tolist(aws_codepipeline.codebase_pipeline[0].artifact_store)[0].location == "my-app-my-codebase-codebase-pipeline-artifact-store"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-artifact-store'"
+    condition     = tolist(aws_codepipeline.codebase_pipeline[0].artifact_store)[0].location == "my-app-my-codebase-cb-arts"
+    error_message = "Should be: 'my-app-my-codebase-cb-arts'"
   }
   assert {
     condition     = tolist(aws_codepipeline.codebase_pipeline[0].artifact_store)[0].type == "S3"
@@ -1192,8 +1192,8 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: 'Name of the environment to deploy to'"
   }
   assert {
-    condition     = tolist(aws_codepipeline.manual_release_pipeline.artifact_store)[0].location == "my-app-my-codebase-codebase-pipeline-artifact-store"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-artifact-store'"
+    condition     = tolist(aws_codepipeline.manual_release_pipeline.artifact_store)[0].location == "my-app-my-codebase-cb-arts"
+    error_message = "Should be: 'my-app-my-codebase-cb-arts'"
   }
   assert {
     condition     = tolist(aws_codepipeline.manual_release_pipeline.artifact_store)[0].type == "S3"
