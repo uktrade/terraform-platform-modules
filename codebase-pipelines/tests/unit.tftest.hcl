@@ -224,11 +224,19 @@ run "test_codebuild_images" {
     error_message = "Should be: 'my-app/my-codebase'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].name == "ADDITIONAL_ECR_REPOSITORY"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].name == "SLACK_CHANNEL_ID"
+    error_message = "Should be: 'SLACK_CHANNEL_ID'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].value == "/fake/slack/channel"
+    error_message = "Should be: '/fake/slack/channel'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].name == "ADDITIONAL_ECR_REPOSITORY"
     error_message = "Should be: 'ADDITIONAL_ECR_REPOSITORY'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].value == "my-additional-repository"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].value == "my-additional-repository"
     error_message = "Should be: 'my-additional-repository'"
   }
   assert {

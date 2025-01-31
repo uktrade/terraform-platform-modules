@@ -39,6 +39,12 @@ resource "aws_codebuild_project" "codebase_image_build" {
       value = data.aws_codestarconnections_connection.github_codestar_connection.arn
     }
 
+    environment_variable {
+      name  = "SLACK_CHANNEL_ID"
+      value = var.slack_channel
+      type  = "PARAMETER_STORE"
+    }
+
     dynamic "environment_variable" {
       for_each = var.additional_ecr_repository != null ? [1] : []
       content {
