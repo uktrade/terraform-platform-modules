@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.1.1](https://github.com/uktrade/terraform-platform-modules/compare/7.1.0...7.1.1) (2025-01-31)
+
+
+### Bug Fixes
+
+* DBTP-1736 - Add custom slack channel id to image build project ([#326](https://github.com/uktrade/terraform-platform-modules/issues/326)) ([781b2f8](https://github.com/uktrade/terraform-platform-modules/commit/781b2f87a5adcf440f35bb561933e1c661ce4052))
+
 ## [7.1.0](https://github.com/uktrade/terraform-platform-modules/compare/7.0.0...7.1.0) (2025-01-31)
 
 
