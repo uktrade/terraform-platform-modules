@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.1.0](https://github.com/uktrade/terraform-platform-modules/compare/7.0.0...7.1.0) (2025-01-31)
+
+
+### Features
+
+* DBTP-1687 Reduce length of artifact and KMS key names ([#323](https://github.com/uktrade/terraform-platform-modules/issues/323)) ([0b5241b](https://github.com/uktrade/terraform-platform-modules/commit/0b5241b2e878692f4b3b9986492e44ba81b071d6))
+
 ## [7.0.0](https://github.com/uktrade/terraform-platform-modules/compare/6.1.0...7.0.0) (2025-01-28)
 
 
