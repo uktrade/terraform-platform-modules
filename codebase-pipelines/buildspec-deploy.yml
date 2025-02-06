@@ -50,7 +50,7 @@ phases:
         if [[ "${CODEBUILD_INITIATOR}" == codepipeline/* ]]; then 
           PIPELINE_NAME=$(echo "${CODEBUILD_INITIATOR}" | cut -d'/' -f2) 
         else 
-          echo "ERROR: Build not triggered by CodePipeline." 
+          echo "Error: Build not triggered by CodePipeline." 
           exit 1 
         fi
 
