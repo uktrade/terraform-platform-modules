@@ -34,7 +34,7 @@ run "test_compute_dashboard_is_created" {
 
   assert {
     condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[1].properties.title == "Deployed Sidecar Images"
-    error_message = "Deployed Sidecar Images"
+    error_message = "Deployed Sidecar Images widget is not created"
   }
 
   assert {
