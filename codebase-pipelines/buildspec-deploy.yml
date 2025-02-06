@@ -12,6 +12,7 @@ phases:
       - pip install yq dbt-platform-helper --quiet
       - curl -s -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > /usr/local/bin/regctl
       - chmod +x /usr/local/bin/regctl
+
   build:
     commands:
       - set -e
