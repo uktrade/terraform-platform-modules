@@ -26,12 +26,7 @@ phases:
         fi
 
       # Install tools
-      - echo "Starting deployment script for ${SERVICE} service"
-      - pip install yq --quiet
-      - echo "Installing platform-helper"
-      - pip install dbt-platform-helper --quiet
-      - platform-helper --version
-      - echo "Installing regclient"
+      - pip install yq dbt-platform-helper --quiet
       - curl -s -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > /usr/local/bin/regctl
       - chmod +x /usr/local/bin/regctl
 
@@ -45,7 +40,6 @@ phases:
           echo "Image contains no timestamp label"
           exit 1
         fi
-        echo "Found image timestamp ${SLACK_REF}"
 
       - UPPERCASE_SERVICE=$(echo "${SERVICE}" | tr '[:lower:]' '[:upper:]')
       - UPPERCASE_TAG=$(echo "${IMAGE_TAG}" | tr '[:lower:]' '[:upper:]')
@@ -54,17 +48,14 @@ phases:
       - |
         if [[ "${CODEBUILD_INITIATOR}" == codepipeline/* ]]; then 
           PIPELINE_NAME=$(echo "${CODEBUILD_INITIATOR}" | cut -d'/' -f2) 
-          echo "Pipeline name is ${PIPELINE_NAME}"
         else 
           echo "ERROR: Build not triggered by CodePipeline." 
           exit 1 
         fi
 
       # Construct the pipeline execution URL
-      - PIPELINE_EXECUTION_URL="https://${AWS_REGION}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${PIPELINE_NAME}/executions/${PIPELINE_EXECUTION_ID}" 
-
+      - PIPELINE_EXECUTION_URL="https://${AWS_REGION}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${PIPELINE_NAME}/executions/${PIPELINE_EXECUTION_ID}"
       - BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)
-      - echo "BUILD_ID_PREFIX - ${BUILD_ID_PREFIX}"
 
       - |
         MESSAGE=":rocket: STARTED - Deployment of ${UPPERCASE_SERVICE} service - Tag: ${UPPERCASE_TAG} - <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|Build log> | <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
