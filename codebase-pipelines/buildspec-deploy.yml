@@ -7,6 +7,11 @@ env:
     SLACK_TOKEN: /codebuild/slack_oauth_token
 
 phases:
+  install:
+    commands:
+      - pip install yq dbt-platform-helper --quiet
+      - curl -s -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > /usr/local/bin/regctl
+      - chmod +x /usr/local/bin/regctl
   build:
     commands:
       - set -e
@@ -24,11 +29,6 @@ phases:
           echo "Error: environment ${ENVIRONMENT} not listed in environment config"
           exit 1
         fi
-
-      # Install tools
-      - pip install yq dbt-platform-helper --quiet
-      - curl -s -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > /usr/local/bin/regctl
-      - chmod +x /usr/local/bin/regctl
 
       # Extract timestamp from image config and check if it exists
       - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
@@ -161,4 +161,14 @@ phases:
         if [ "${deploy_status}" != "SUCCESSFUL" ]; then
           echo "Error: deployment status is ${deploy_status}"
           exit 1
+        fi
+
+  post_build:
+    commands:
+      - |
+        if [ "${CODEBUILD_BUILD_SUCCEEDING}" != "1" ]; then
+          BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)          
+          MESSAGE=":red_circle::warning: ERROR - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - FAILED <https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=eu-west-2|Build log>"
+          
+          platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
         fi
