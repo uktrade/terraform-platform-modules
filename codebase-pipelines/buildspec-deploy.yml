@@ -113,6 +113,7 @@ phases:
       - start=$( date +%s )
       - deploy_status="IN_PROGRESS"
       - aws ecs update-service --cluster "${cluster}" --service "${service_name}" --task-definition "${task_family}:${new_revision}" --desired-count ${count} > /dev/null 2>&1
+      - sleep 10
 
       # Check deployment status
       - |
@@ -153,7 +154,6 @@ phases:
         esac
 
       - MESSAGE="${STATUS_EMOJI} ${STATUS_TEXT} - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
-
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
 
       # Exit with an error code if deployment did not succeed
