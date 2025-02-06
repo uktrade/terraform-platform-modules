@@ -22,44 +22,6 @@ phases:
     commands:
       - set -e
 
-      # Extract timestamp from image config and check if it exists
-      - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-
-      # construct Slack message env vars
-      - SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
-      - |
-        if [ "${SLACK_REF}" = "null" ] || [ -z "${SLACK_REF}" ]; then
-          echo "Image contains no timestamp label"
-          exit 1
-        fi
-        echo "Found image timestamp ${SLACK_REF}"
-
-      - UPPERCASE_SERVICE=$(echo "${SERVICE}" | tr '[:lower:]' '[:upper:]')
-      - UPPERCASE_TAG=$(echo "${IMAGE_TAG}" | tr '[:lower:]' '[:upper:]')
-
-        # Extract the pipeline name from CODEBUILD_INITIATOR default env var
-      - |
-        if [[ "${CODEBUILD_INITIATOR}" == codepipeline/* ]]; then 
-          PIPELINE_NAME=$(echo "${CODEBUILD_INITIATOR}" | cut -d'/' -f2) 
-          echo "Pipeline name is ${PIPELINE_NAME}"
-        else 
-          echo "ERROR: Build not triggered by CodePipeline." 
-          exit 1 
-        fi
-
-      # Construct the pipeline execution URL
-      - PIPELINE_EXECUTION_URL="https://${AWS_REGION}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${PIPELINE_NAME}/executions/${PIPELINE_EXECUTION_ID}" 
-
-      - echo "Pipeline execution URL ${PIPELINE_EXECUTION_URL}"
-
-      - BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)
-      - echo "BUILD_ID_PREFIX - ${BUILD_ID_PREFIX}"
-
-      - |
-        MESSAGE=":rocket: STARTED - Deployment of ${UPPERCASE_SERVICE} service - Tag: ${UPPERCASE_TAG} - <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|Build log> | <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
-
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
-
       # Check if the specified image tag exists
       - |
         if ! aws ecr describe-images --repository-name "${REPOSITORY_NAME}" --image-ids "imageTag=${IMAGE_TAG}" > /dev/null 2>&1; then
@@ -74,6 +36,43 @@ phases:
           exit 1
         fi
 
+      # Extract timestamp from image config and check if it exists
+      - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+      # Construct Slack message env vars
+      - SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
+      - |
+        if [ "${SLACK_REF}" = "null" ] || [ -z "${SLACK_REF}" ]; then
+          echo "Image contains no timestamp label"
+          exit 1
+        fi
+        echo "Found image timestamp ${SLACK_REF}"
+
+      - UPPERCASE_SERVICE=$(echo "${SERVICE}" | tr '[:lower:]' '[:upper:]')
+      - UPPERCASE_TAG=$(echo "${IMAGE_TAG}" | tr '[:lower:]' '[:upper:]')
+
+      # Extract the pipeline name from CODEBUILD_INITIATOR default env var
+      - |
+        if [[ "${CODEBUILD_INITIATOR}" == codepipeline/* ]]; then 
+          PIPELINE_NAME=$(echo "${CODEBUILD_INITIATOR}" | cut -d'/' -f2) 
+          echo "Pipeline name is ${PIPELINE_NAME}"
+        else 
+          echo "ERROR: Build not triggered by CodePipeline." 
+          exit 1 
+        fi
+
+      # Construct the pipeline execution URL
+      - PIPELINE_EXECUTION_URL="https://${AWS_REGION}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${PIPELINE_NAME}/executions/${PIPELINE_EXECUTION_ID}" 
+
+      - BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)
+      - echo "BUILD_ID_PREFIX - ${BUILD_ID_PREFIX}"
+
+      - |
+        MESSAGE=":rocket: STARTED - Deployment of ${UPPERCASE_SERVICE} service - Tag: ${UPPERCASE_TAG} - <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|Build log> | <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
+
+      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
+
+      # Build image uri
       - task_family="${APPLICATION}-${ENVIRONMENT}-${SERVICE}"
       - cluster="${APPLICATION}-${ENVIRONMENT}"
       - image_uri="${REPOSITORY_URL}:${IMAGE_TAG}"
@@ -162,8 +161,6 @@ phases:
             STATUS_TEXT="STOP_REQUESTED/STOPPED/PENDING/IN_PROGRESS"
             ;;
         esac
-        
-      - echo "Status emoji set to ${STATUS_EMOJI}"
 
       - MESSAGE="${STATUS_EMOJI} ${STATUS_TEXT} - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
 
