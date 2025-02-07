@@ -9,6 +9,34 @@ resource "aws_cloudwatch_dashboard" "compute" {
         x : 0,
         type : "log",
         properties : {
+          query : "SOURCE '/aws/ecs/containerinsights/${var.application}-${var.environment}/performance' | fields fromMillis(Timestamp) as Time, ClusterName as Cluster, TaskDefinitionFamily as Service, ContainerName as Container, Image\n| filter @message like 'application:'\n| sort Cluster, Service, Container\n| dedup Service, Container",
+          region : "eu-west-2",
+          stacked : false,
+          title : "Deployed Application Images",
+          view : "table"
+        }
+      },
+      {
+        height : 7,
+        width : 24,
+        y : 7,
+        x : 0,
+        type : "log",
+        properties : {
+          query : "SOURCE '/aws/ecs/containerinsights/${var.application}-${var.environment}/performance' | fields fromMillis(Timestamp) as Time, ClusterName as Cluster, TaskDefinitionFamily as Service, ContainerName as Container, Image\n| filter @message like '\"Image\":'\n| filter @message not like 'application:'\n| sort Cluster, Service, Container\n| dedup Service, Container",
+          region : "eu-west-2",
+          stacked : false,
+          title : "Deployed Sidecar Images",
+          view : "table"
+        }
+      },
+      {
+        height : 7,
+        width : 24,
+        y : 14,
+        x : 0,
+        type : "log",
+        properties : {
           query : "SOURCE '/aws/ecs/containerinsights/${var.application}-${var.environment}/performance' | fields @message\n| filter Type=\"Task\"\n| filter @logStream like /FargateTelemetry/\n| stats latest(TaskDefinitionFamily) as TaskDefFamily, \n        latest(TaskDefinitionRevision) as Rev, \n        max(CpuReserved) as TaskCpuReserved, \n        avg(CpuUtilized) as AvgCpuUtilized, \n        concat(ceil(avg(CpuUtilized) * 100 / TaskCpuReserved),\" %\") as AvgCpuUtilizedPerc, \n        max(CpuUtilized) as PeakCpuUtilized, \n        concat(ceil(max(CpuUtilized) * 100 / TaskCpuReserved),\" %\") as PeakCpuUtilizedPerc, \n        max(MemoryReserved) as TaskMemReserved, \n        ceil(avg(MemoryUtilized)) as AvgMemUtilized, \n        concat(ceil(avg(MemoryUtilized) * 100 / TaskMemReserved),\" %\") as AvgMemUtilizedPerc, \n        max(MemoryUtilized) as PeakMemUtilized, \n        concat(ceil(max(MemoryUtilized) * 100 / TaskMemReserved),\" %\") as PeakMemUtilizedPerc \n        by TaskId\n| sort TaskDefFamily asc\n",
           region : "eu-west-2",
           stacked : false,
@@ -19,7 +47,7 @@ resource "aws_cloudwatch_dashboard" "compute" {
       {
         height : 6,
         width : 15,
-        y : 7,
+        y : 21,
         x : 0,
         type : "log",
         properties : {
@@ -32,7 +60,7 @@ resource "aws_cloudwatch_dashboard" "compute" {
       {
         height : 6,
         width : 15,
-        y : 13,
+        y : 27,
         x : 0,
         type : "log",
         properties : {
@@ -45,7 +73,7 @@ resource "aws_cloudwatch_dashboard" "compute" {
       {
         height : 6,
         width : 9,
-        y : 7,
+        y : 21,
         x : 15,
         type : "log",
         properties : {
@@ -59,7 +87,7 @@ resource "aws_cloudwatch_dashboard" "compute" {
       {
         height : 6,
         width : 9,
-        y : 13,
+        y : 27,
         x : 15,
         type : "log",
         properties : {
