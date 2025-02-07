@@ -1741,7 +1741,7 @@ run "test_pipeline_update_script" {
   command = plan
 
   assert {
-    condition     = length(terraform_data.update_pipeline.triggers_replace) == 3
-    error_message = "Should be: 3"
+    condition     = length(terraform_data.update_pipeline.triggers_replace) == 2
+    error_message = "Should be: 2"
   }
 }
