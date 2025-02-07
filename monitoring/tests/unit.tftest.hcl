@@ -28,27 +28,37 @@ run "test_compute_dashboard_is_created" {
   # Test widgets are created
   # Not checking the whole queries as we would just have to replicate the code from the manifest, which would not add much value, so we're just going to check that the expected widgets exist.
   assert {
-    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[0].properties.title == "All Fargate Tasks Configuration and Consumption Details (CPU and Memory)"
+    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[0].properties.title == "Deployed Application Images"
+    error_message = "Deployed Application Images widget is not created"
+  }
+
+  assert {
+    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[1].properties.title == "Deployed Sidecar Images"
+    error_message = "Deployed Sidecar Images widget is not created"
+  }
+
+  assert {
+    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[2].properties.title == "All Fargate Tasks Configuration and Consumption Details (CPU and Memory)"
     error_message = "Configuration and Consumption Details (CPU and Memory) widget is not created"
   }
 
   assert {
-    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[1].properties.title == "Top 10 Fargate Tasks with Optimization Opportunities (CPU)"
+    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[3].properties.title == "Top 10 Fargate Tasks with Optimization Opportunities (CPU)"
     error_message = "Optimization Opportunities (CPU) widget is not created"
   }
 
   assert {
-    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[2].properties.title == "Top 10 Fargate Tasks with Optimization Opportunities (Memory)"
+    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[4].properties.title == "Top 10 Fargate Tasks with Optimization Opportunities (Memory)"
     error_message = "Optimization Opportunities (Memory) widget is not created"
   }
 
   assert {
-    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[3].properties.title == "CPU Reserved Vs Avg Usage (All Fargate Tasks)"
+    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[5].properties.title == "CPU Reserved Vs Avg Usage (All Fargate Tasks)"
     error_message = "CPU Reserved Vs Avg Usage widget is not created"
   }
 
   assert {
-    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[4].properties.title == "Memory Reserved Vs Avg Usage (All Fargate Tasks)"
+    condition     = jsondecode(aws_cloudwatch_dashboard.compute.dashboard_body).widgets[6].properties.title == "Memory Reserved Vs Avg Usage (All Fargate Tasks)"
     error_message = "Memory Reserved Vs Avg Usage widget is not created"
   }
 }
