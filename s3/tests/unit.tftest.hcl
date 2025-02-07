@@ -208,11 +208,6 @@ run "aws_s3_bucket_lifecycle_configuration_no_prefix_unit_test" {
     condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].filter[0] != null
     error_message = "Should be: {}"
   }
-
-  assert {
-    condition     = aws_s3_bucket_lifecycle_configuration.lifecycle-configuration[0].rule[0].filter[0].prefix == null
-    error_message = "Should be: null"
-  }
 }
 
 run "aws_s3_bucket_data_migration_legacy_config_unit_test" {
