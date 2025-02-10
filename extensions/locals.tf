@@ -13,27 +13,45 @@ locals {
   }
 
   // select environment for each service and expand config from "*"
-  services_select_env = { for k, v in var.args.services : k => merge(v, merge(lookup(v.environments, "*", {}), lookup(v.environments, var.environment, {}))) }
+  extensions_with_default_and_environment_settings_merged = {
+    for extension_name, extension_config in var.args.services :
+    extension_name => merge(
+      extension_config,
+      merge(
+        lookup(extension_config.environments, "*", {}),
+        lookup(extension_config.environments, var.environment, {})
+      )
+    )
+  }
 
-  // expand plan config
-  services_expand_plan = { for k, v in local.services_select_env : k => merge(lookup(local.plans[v.type], lookup(v, "plan", "NO-PLAN"), {}), v) }
+  // If a plan is specified, expand it to the individual settings
+  extensions_with_plan_expanded = {
+    for extension_name, extension_config in local.extensions_with_default_and_environment_settings_merged :
+    extension_name => merge(
+      lookup(
+        local.plans[extension_config.type],
+        lookup(extension_config, "plan", "NO-PLAN"), {}
+      ),
+      extension_config
+    )
+  }
 
   // remove unnecessary fields
-  services = {
-    for service_name, service_config in local.services_expand_plan :
-    service_name => {
-      for k, v in service_config : k => v if !contains(["environments", "services", "plan"], k)
+  extensions = {
+    for extension_name, extension_config in local.extensions_with_plan_expanded :
+    extension_name => {
+      for k, v in extension_config : k => v if !contains(["environments", "services", "plan"], k)
     }
   }
 
-  // filter services per extension type
-  postgres   = { for k, v in local.services : k => v if v.type == "postgres" }
-  s3         = { for k, v in local.services : k => v if v.type == "s3" }
-  redis      = { for k, v in local.services : k => v if v.type == "redis" }
-  opensearch = { for k, v in local.services : k => v if v.type == "opensearch" }
-  monitoring = { for k, v in local.services : k => v if v.type == "monitoring" }
-  alb        = { for k, v in local.services : k => v if v.type == "alb" }
-  cdn        = { for k, v in local.services : k => v if v.type == "alb" }
+  // filter extensions by type
+  postgres   = { for k, v in local.extensions : k => v if v.type == "postgres" }
+  s3         = { for k, v in local.extensions : k => v if v.type == "s3" }
+  redis      = { for k, v in local.extensions : k => v if v.type == "redis" }
+  opensearch = { for k, v in local.extensions : k => v if v.type == "opensearch" }
+  monitoring = { for k, v in local.extensions : k => v if v.type == "monitoring" }
+  alb        = { for k, v in local.extensions : k => v if v.type == "alb" }
+  cdn        = { for k, v in local.extensions : k => v if v.type == "alb" }
 
   tags = {
     application         = var.args.application
