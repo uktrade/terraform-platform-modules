@@ -16,6 +16,13 @@ data "aws_subnets" "public-subnets" {
   }
 }
 
+data "aws_subnets" "private-subnets" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.vpc_name}-private-*"]
+  }
+}
+
 resource "aws_lb" "this" {
   # checkov:skip=CKV2_AWS_20: Redirects for HTTP requests into HTTPS happens on the CDN
   # checkov:skip=CKV2_AWS_28: WAF is outside of terraform-platform-modules
@@ -373,6 +380,13 @@ data "archive_file" "lambda" {
   ]
 }
 
+data "aws_security_group" "secret_rotation_endpoint_sg" {
+  name = "${var.vpc_name}-secret-rotation-endpoint-sg"
+}
+
+data "aws_security_group" "ecs_service_sg" {
+  name = "${var.application}-${var.environment}-EnvironmentSecurityGroup"
+}
 
 # Secrets Manager Rotation Lambda Function
 resource "aws_lambda_function" "origin-secret-rotate-function" {
@@ -414,7 +428,13 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
 
   layers           = ["arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"]
   source_code_hash = data.archive_file.lambda.output_base64sha256
-  tags             = local.tags
+
+  vpc_config {
+    security_group_ids = [data.aws_security_group.secret_rotation_endpoint_sg.id, data.aws_security_group.ecs_service_sg.id]
+    subnet_ids         = data.aws_subnets.private-subnets.ids
+  }
+
+  tags = local.tags
 }
 
 # Lambda Permission for Secrets Manager Rotation
