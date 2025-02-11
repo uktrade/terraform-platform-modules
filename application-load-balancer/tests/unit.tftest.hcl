@@ -322,77 +322,77 @@ run "waf_and_rotate_lambda" {
   command = plan
 
   assert {
-    condition     = aws_secretsmanager_secret.origin-verify-secret.name == "${var.application}-${var.environment}-origin-verify-header-secret"
+    condition     = aws_secretsmanager_secret.origin-verify-secret[""].name == "${var.application}-${var.environment}-origin-verify-header-secret"
     error_message = "Invalid name for aws_secretsmanager_secret.origin-verify-secret"
   }
 
   assert {
-    condition     = aws_secretsmanager_secret.origin-verify-secret.description == "Secret used for Origin verification in WAF rules"
+    condition     = aws_secretsmanager_secret.origin-verify-secret[""].description == "Secret used for Origin verification in WAF rules"
     error_message = "Invalid description for aws_secretsmanager_secret.origin-verify-secret"
   }
 
   assert {
-    condition     = aws_wafv2_web_acl.waf-acl.name == "${var.application}-${var.environment}-ACL"
+    condition     = aws_wafv2_web_acl.waf-acl[""].name == "${var.application}-${var.environment}-ACL"
     error_message = "Invalid name for aws_wafv2_web_acl.waf-acl"
   }
 
   assert {
-    condition     = aws_wafv2_web_acl.waf-acl.description == "CloudFront Origin Verify"
+    condition     = aws_wafv2_web_acl.waf-acl[""].description == "CloudFront Origin Verify"
     error_message = "Invalid description for aws_wafv2_web_acl.waf-acl"
   }
 
   assert {
-    condition     = aws_wafv2_web_acl.waf-acl.scope == "REGIONAL"
+    condition     = aws_wafv2_web_acl.waf-acl[""].scope == "REGIONAL"
     error_message = "Invalid scope for aws_wafv2_web_acl.waf-acl"
   }
 
   assert {
-    condition     = aws_wafv2_web_acl.waf-acl.default_action[0].block != null
+    condition     = aws_wafv2_web_acl.waf-acl[""].default_action[0].block != null
     error_message = "Invalid default_action for aws_wafv2_web_acl.waf-acl"
   }
 
   assert {
-    condition     = aws_wafv2_web_acl.waf-acl.visibility_config[0].cloudwatch_metrics_enabled == true
+    condition     = aws_wafv2_web_acl.waf-acl[""].visibility_config[0].cloudwatch_metrics_enabled == true
     error_message = "Invalid visibility_config for aws_wafv2_web_acl.waf-acl"
   }
 
   assert {
-    condition     = aws_wafv2_web_acl.waf-acl.visibility_config[0].metric_name == "${var.application}-${var.environment}-XOriginVerify"
+    condition     = aws_wafv2_web_acl.waf-acl[""].visibility_config[0].metric_name == "${var.application}-${var.environment}-XOriginVerify"
     error_message = "Invalid metric_name in visibility_config for aws_wafv2_web_acl.waf-acl"
   }
 
   assert {
-    condition     = aws_wafv2_web_acl.waf-acl.visibility_config[0].sampled_requests_enabled == true
+    condition     = aws_wafv2_web_acl.waf-acl[""].visibility_config[0].sampled_requests_enabled == true
     error_message = "Invalid sampled_requests_enabled in visibility_config for aws_wafv2_web_acl.waf-acl"
   }
 
   assert {
-    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.name if r.name == "${var.application}-${var.environment}-XOriginVerify"]) == 1
+    condition     = length([for r in aws_wafv2_web_acl.waf-acl[""].rule : r.name if r.name == "${var.application}-${var.environment}-XOriginVerify"]) == 1
     error_message = "Invalid rule name for aws_wafv2_web_acl.waf-acl"
   }
 
   assert {
-    condition     = [for r in aws_wafv2_web_acl.waf-acl.rule : r.priority if r.name == "${var.application}-${var.environment}-XOriginVerify"][0] == 0
+    condition     = [for r in aws_wafv2_web_acl.waf-acl[""].rule : r.priority if r.name == "${var.application}-${var.environment}-XOriginVerify"][0] == 0
     error_message = "Invalid priority for rule ${var.application}-${var.environment}-XOriginVerify in aws_wafv2_web_acl.waf-acl"
   }
 
   assert {
-    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : try(r.action[0].allow, null) if r.name == "${var.application}-${var.environment}-XOriginVerify" && try(r.action[0].allow, null) != null]) == 1
+    condition     = length([for r in aws_wafv2_web_acl.waf-acl[""].rule : try(r.action[0].allow, null) if r.name == "${var.application}-${var.environment}-XOriginVerify" && try(r.action[0].allow, null) != null]) == 1
     error_message = "Invalid rule action for aws_wafv2_web_acl.waf-acl"
   }
 
   assert {
-    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.visibility_config[0] if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.visibility_config[0].cloudwatch_metrics_enabled == true]) == 1
+    condition     = length([for r in aws_wafv2_web_acl.waf-acl[""].rule : r.visibility_config[0] if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.visibility_config[0].cloudwatch_metrics_enabled == true]) == 1
     error_message = "Invalid visibility_config for aws_wafv2_web_acl.waf-acl rule"
   }
 
   assert {
-    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.visibility_config[0] if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.visibility_config[0].metric_name == "${var.application}-${var.environment}-XMetric"]) == 1
+    condition     = length([for r in aws_wafv2_web_acl.waf-acl[""].rule : r.visibility_config[0] if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.visibility_config[0].metric_name == "${var.application}-${var.environment}-XMetric"]) == 1
     error_message = "Invalid metric_name in visibility_config for aws_wafv2_web_acl.waf-acl rule"
   }
 
   assert {
-    condition     = length([for r in aws_wafv2_web_acl.waf-acl.rule : r.visibility_config[0] if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.visibility_config[0].sampled_requests_enabled == true]) == 1
+    condition     = length([for r in aws_wafv2_web_acl.waf-acl[""].rule : r.visibility_config[0] if r.name == "${var.application}-${var.environment}-XOriginVerify" && r.visibility_config[0].sampled_requests_enabled == true]) == 1
     error_message = "Invalid sampled_requests_enabled in visibility_config for aws_wafv2_web_acl.waf-acl rule"
   }
 
@@ -400,7 +400,7 @@ run "waf_and_rotate_lambda" {
 
   assert {
     condition = length(
-      [for r in aws_wafv2_web_acl.waf-acl.rule :
+      [for r in aws_wafv2_web_acl.waf-acl[""].rule :
         r.name if can(regex("${var.application}-${var.environment}-XOriginVerify", r.name))
       ]
     ) > 0
@@ -409,7 +409,7 @@ run "waf_and_rotate_lambda" {
 
   assert {
     condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
+      for r in aws_wafv2_web_acl.waf-acl[""].rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
         try(r.statement[0].not_statement[0].statement[0].byte_match_statement[0].field_to_match[0].single_header[0].name, "") == "x-origin-verify"
       ) : true
@@ -419,7 +419,7 @@ run "waf_and_rotate_lambda" {
 
   assert {
     condition = alltrue([
-      for r in aws_wafv2_web_acl.waf-acl.rule :
+      for r in aws_wafv2_web_acl.waf-acl[""].rule :
       r.name == "${var.application}-${var.environment}-XOriginVerify" ? (
         try(r.statement[0].not_statement[0].statement[0].byte_match_statement[0].positional_constraint, "") == "EXACTLY"
       ) : true
@@ -430,104 +430,104 @@ run "waf_and_rotate_lambda" {
   # --- End testing of the WAF rule statement ---
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.function_name == "${var.application}-${var.environment}-origin-secret-rotate"
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].function_name == "${var.application}-${var.environment}-origin-secret-rotate"
     error_message = "Invalid name for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.description == "Secrets Manager Rotation Lambda Function"
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].description == "Secrets Manager Rotation Lambda Function"
     error_message = "Invalid description for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.handler == "rotate_secret_lambda.lambda_handler"
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].handler == "rotate_secret_lambda.lambda_handler"
     error_message = "Invalid handler for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.runtime == "python3.9"
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].runtime == "python3.9"
     error_message = "Invalid runtime for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.timeout == 300
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].timeout == 300
     error_message = "Invalid timeout for aws_lambda_function.origin-secret-rotate-function"
   }
 
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.WAFACLNAME == split("|", aws_wafv2_web_acl.waf-acl.name)[0]
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].environment[0].variables.WAFACLNAME == split("|", aws_wafv2_web_acl.waf-acl[""].name)[0]
     error_message = "Invalid WAFACLNAME environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.WAFRULEPRI == "0"
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].environment[0].variables.WAFRULEPRI == "0"
     error_message = "Invalid WAFRULEPRI environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.HEADERNAME == "x-origin-verify"
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].environment[0].variables.HEADERNAME == "x-origin-verify"
     error_message = "Invalid HEADERNAME environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.APPLICATION == var.application
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].environment[0].variables.APPLICATION == var.application
     error_message = "Invalid APPLICATION environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.ENVIRONMENT == var.environment
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].environment[0].variables.ENVIRONMENT == var.environment
     error_message = "Invalid ENVIRONMENT environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.ROLEARN == "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].environment[0].variables.ROLEARN == "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
     error_message = "Invalid ROLEARN environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.AWS_ACCOUNT == data.aws_caller_identity.current.account_id
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].environment[0].variables.AWS_ACCOUNT == data.aws_caller_identity.current.account_id
     error_message = "Invalid AWS_ACCOUNT environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.SLACK_TOKEN == data.aws_ssm_parameter.slack_token.value
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].environment[0].variables.SLACK_TOKEN == data.aws_ssm_parameter.slack_token.value
     error_message = "Invalid SLACK_TOKEN environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.SLACK_CHANNEL == local.config_with_defaults.slack_alert_channel_alb_secret_rotation
+    condition     = aws_lambda_function.origin-secret-rotate-function[""].environment[0].variables.SLACK_CHANNEL == local.config_with_defaults.slack_alert_channel_alb_secret_rotation
     error_message = "Invalid SLACK_CHANNEL environment variable for aws_lambda_function.origin-secret-rotate-function"
   }
 
   assert {
-    condition     = aws_lambda_permission.rotate-function-invoke-permission.statement_id == "AllowSecretsManagerInvocation"
+    condition     = aws_lambda_permission.rotate-function-invoke-permission[""].statement_id == "AllowSecretsManagerInvocation"
     error_message = "Invalid statement_id for aws_lambda_permission.rotate-function-invoke-permission"
   }
 
   assert {
-    condition     = aws_lambda_permission.rotate-function-invoke-permission.action == "lambda:InvokeFunction"
+    condition     = aws_lambda_permission.rotate-function-invoke-permission[""].action == "lambda:InvokeFunction"
     error_message = "Invalid action for aws_lambda_permission.rotate-function-invoke-permission"
   }
 
   assert {
-    condition     = aws_lambda_permission.rotate-function-invoke-permission.function_name == aws_lambda_function.origin-secret-rotate-function.function_name
+    condition     = aws_lambda_permission.rotate-function-invoke-permission[""].function_name == aws_lambda_function.origin-secret-rotate-function[""].function_name
     error_message = "Invalid function_name for aws_lambda_permission.rotate-function-invoke-permission"
   }
 
   assert {
-    condition     = aws_lambda_permission.rotate-function-invoke-permission.principal == "secretsmanager.amazonaws.com"
+    condition     = aws_lambda_permission.rotate-function-invoke-permission[""].principal == "secretsmanager.amazonaws.com"
     error_message = "Invalid principal for aws_lambda_permission.rotate-function-invoke-permission"
   }
 
 
   assert {
-    condition     = aws_iam_role.origin-secret-rotate-execution-role.name == "${var.application}-${var.environment}-origin-secret-rotate-role"
+    condition     = aws_iam_role.origin-secret-rotate-execution-role[""].name == "${var.application}-${var.environment}-origin-secret-rotate-role"
     error_message = "Invalid name for aws_iam_role.origin-secret-rotate-execution-role"
   }
 
   assert {
-    condition     = aws_iam_role.origin-secret-rotate-execution-role.assume_role_policy != null
+    condition     = aws_iam_role.origin-secret-rotate-execution-role[""].assume_role_policy != null
     error_message = "Invalid assume_role_policy for aws_iam_role.origin-secret-rotate-execution-role"
   }
 
@@ -535,7 +535,7 @@ run "waf_and_rotate_lambda" {
 
 
   assert {
-    condition     = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule.rotation_rules[0].automatically_after_days == 7
+    condition     = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule[""].rotation_rules[0].automatically_after_days == 7
     error_message = "Invalid rotation_rules.automatically_after_days for aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule"
   }
 

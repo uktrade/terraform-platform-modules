@@ -1,13 +1,14 @@
-
 resource "aws_secretsmanager_secret" "origin-verify-secret" {
+  for_each                = toset(local.cdn_enabled ? [""] : [])
   name                    = "${var.application}-${var.environment}-origin-verify-header-secret"
   description             = "Secret used for Origin verification in WAF rules"
-  kms_key_id              = aws_kms_key.origin_verify_secret_key.key_id
+  kms_key_id              = aws_kms_key.origin_verify_secret_key[""].key_id
   recovery_window_in_days = 0
   tags                    = local.tags
 }
 
 data "aws_iam_policy_document" "secret_manager_policy" {
+  for_each = toset(local.cdn_enabled ? [""] : [])
   statement {
     sid    = "AllowAssumedRoleToAccessSecret"
     effect = "Allow"
@@ -22,16 +23,18 @@ data "aws_iam_policy_document" "secret_manager_policy" {
     actions = [
       "secretsmanager:GetSecretValue",
     "secretsmanager:DescribeSecret"]
-    resources = [aws_secretsmanager_secret.origin-verify-secret.arn]
+    resources = [aws_secretsmanager_secret.origin-verify-secret[""].arn]
   }
 }
 
 resource "aws_secretsmanager_secret_policy" "secret_policy" {
-  secret_arn = aws_secretsmanager_secret.origin-verify-secret.arn
-  policy     = data.aws_iam_policy_document.secret_manager_policy.json
+  for_each   = toset(local.cdn_enabled ? [""] : [])
+  secret_arn = aws_secretsmanager_secret.origin-verify-secret[""].arn
+  policy     = data.aws_iam_policy_document.secret_manager_policy[""].json
 }
 
 resource "aws_kms_key" "origin_verify_secret_key" {
+  for_each                = toset(local.cdn_enabled ? [""] : [])
   description             = "KMS key for ${var.application}-${var.environment}-origin-verify-header-secret"
   deletion_window_in_days = 10
   enable_key_rotation     = true
@@ -66,14 +69,16 @@ resource "aws_kms_key" "origin_verify_secret_key" {
 }
 
 resource "aws_kms_alias" "origin_verify_secret_key_alias" {
+  for_each      = toset(local.cdn_enabled ? [""] : [])
   name          = "alias/${var.application}-${var.environment}-origin-verify-header-secret-key"
-  target_key_id = aws_kms_key.origin_verify_secret_key.key_id
+  target_key_id = aws_kms_key.origin_verify_secret_key[""].key_id
 }
 
 # Secrets Manager Rotation Schedule
 resource "aws_secretsmanager_secret_rotation" "origin-verify-rotate-schedule" {
-  secret_id           = aws_secretsmanager_secret.origin-verify-secret.id
-  rotation_lambda_arn = aws_lambda_function.origin-secret-rotate-function.arn
+  for_each            = toset(local.cdn_enabled ? [""] : [])
+  secret_id           = aws_secretsmanager_secret.origin-verify-secret[""].id
+  rotation_lambda_arn = aws_lambda_function.origin-secret-rotate-function[""].arn
   rotate_immediately  = true
   rotation_rules {
     automatically_after_days = 7
@@ -82,6 +87,6 @@ resource "aws_secretsmanager_secret_rotation" "origin-verify-rotate-schedule" {
 
 # Output used in CDN module
 output "origin_verify_secret_id" {
-  value       = aws_secretsmanager_secret.origin-verify-secret.id
+  value       = local.cdn_enabled ? aws_secretsmanager_secret.origin-verify-secret[""].id : null
   description = "The secret ID for origin verification header."
 }
