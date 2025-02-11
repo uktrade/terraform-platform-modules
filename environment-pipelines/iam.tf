@@ -540,11 +540,13 @@ data "aws_iam_policy_document" "redis" {
 
   statement {
     actions = [
-      "elasticache:CreateReplicationGroup",
       "elasticache:AddTagsToResource",
+      "elasticache:CreateReplicationGroup",
+      "elasticache:DecreaseReplicaCount",
+      "elasticache:DeleteReplicationGroup",
       "elasticache:DescribeReplicationGroups",
+      "elasticache:IncreaseReplicaCount",
       "elasticache:ListTagsForResource",
-      "elasticache:DeleteReplicationGroup"
     ]
     resources = [
       "arn:aws:elasticache:${local.account_region}:replicationgroup:*",
