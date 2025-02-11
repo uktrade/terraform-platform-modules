@@ -454,7 +454,6 @@ run "waf_and_rotate_lambda" {
     error_message = "Invalid timeout for aws_lambda_function.origin-secret-rotate-function"
   }
 
-
   assert {
     condition     = aws_lambda_function.origin-secret-rotate-function[""].environment[0].variables.WAFACLNAME == split("|", aws_wafv2_web_acl.waf-acl[""].name)[0]
     error_message = "Invalid WAFACLNAME environment variable for aws_lambda_function.origin-secret-rotate-function"
@@ -520,7 +519,6 @@ run "waf_and_rotate_lambda" {
     error_message = "Invalid principal for aws_lambda_permission.rotate-function-invoke-permission"
   }
 
-
   assert {
     condition     = aws_iam_role.origin-secret-rotate-execution-role[""].name == "${var.application}-${var.environment}-origin-secret-rotate-role"
     error_message = "Invalid name for aws_iam_role.origin-secret-rotate-execution-role"
@@ -533,10 +531,128 @@ run "waf_and_rotate_lambda" {
 
   # Cannot assert against the arn in a plan. Requires an apply to evaluate.
 
-
   assert {
     condition     = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule[""].rotation_rules[0].automatically_after_days == 7
     error_message = "Invalid rotation_rules.automatically_after_days for aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule"
   }
+}
 
+run "waf_and_rotate_lambda_no_cdn_domains" {
+  command = plan
+
+  variables {
+    config = {
+      cdn_domains_list = null
+    }
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret.origin-verify-secret) == 0
+    error_message = "Resource should not be created"
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret_policy.secret_policy) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_kms_key.origin_verify_secret_key) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_kms_alias.origin_verify_secret_key_alias) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule) == 0
+    error_message = "No secret should be created"
+  }
+  assert {
+    condition     = length(aws_wafv2_web_acl.waf-acl) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_lambda_function.origin-secret-rotate-function) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_iam_role.origin-secret-rotate-execution-role) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_lambda_permission.rotate-function-invoke-permission) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_iam_role_policy.origin_secret_rotate_policy) == 0
+    error_message = "No secret should be created"
+  }
+}
+
+run "waf_and_rotate_lambda_cdn_domains_disabled" {
+  command = plan
+
+  variables {
+    config = {
+      cdn_domains_list = {
+        "web.dev.my-application.uktrade.digital" : ["internal.web", "my-application.uktrade.digital", "disable_cdn"]
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret.origin-verify-secret) == 0
+    error_message = "Resource should not be created"
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret_policy.secret_policy) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_kms_key.origin_verify_secret_key) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_kms_alias.origin_verify_secret_key_alias) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule) == 0
+    error_message = "No secret should be created"
+  }
+  assert {
+    condition     = length(aws_wafv2_web_acl.waf-acl) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_lambda_function.origin-secret-rotate-function) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_iam_role.origin-secret-rotate-execution-role) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_lambda_permission.rotate-function-invoke-permission) == 0
+    error_message = "No secret should be created"
+  }
+
+  assert {
+    condition     = length(aws_iam_role_policy.origin_secret_rotate_policy) == 0
+    error_message = "No secret should be created"
+  }
 }

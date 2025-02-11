@@ -429,3 +429,35 @@ resource "aws_wafv2_web_acl_association" "waf-alb-association" {
   resource_arn = aws_lb.this.arn
   web_acl_arn  = aws_wafv2_web_acl.waf-acl[""].arn
 }
+
+
+# These moved blocks are to prevent resources being recreated
+moved {
+  from = aws_wafv2_web_acl.waf-acl
+  to   = aws_wafv2_web_acl.waf-acl[""]
+}
+
+moved {
+  from = aws_wafv2_web_acl_association.waf-alb-association
+  to   = aws_wafv2_web_acl_association.waf-alb-association[""]
+}
+
+moved {
+  from = aws_lambda_function.origin-secret-rotate-function
+  to   = aws_lambda_function.origin-secret-rotate-function[""]
+}
+
+moved {
+  from = aws_iam_role.origin-secret-rotate-execution-role
+  to   = aws_iam_role.origin-secret-rotate-execution-role[""]
+}
+
+moved {
+  from = aws_lambda_permission.rotate-function-invoke-permission
+  to   = aws_lambda_permission.rotate-function-invoke-permission[""]
+}
+
+moved {
+  from = aws_iam_role_policy.origin_secret_rotate_policy
+  to   = aws_iam_role_policy.origin_secret_rotate_policy[""]
+}

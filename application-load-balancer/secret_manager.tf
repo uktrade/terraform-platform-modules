@@ -90,3 +90,29 @@ output "origin_verify_secret_id" {
   value       = local.cdn_enabled ? aws_secretsmanager_secret.origin-verify-secret[""].id : null
   description = "The secret ID for origin verification header."
 }
+
+# These moved blocks are to prevent resources being recreated
+moved {
+  from = aws_secretsmanager_secret.origin-verify-secret
+  to   = aws_secretsmanager_secret.origin-verify-secret[""]
+}
+
+moved {
+  from = aws_secretsmanager_secret_policy.secret_policy
+  to   = aws_secretsmanager_secret_policy.secret_policy[""]
+}
+
+moved {
+  from = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule
+  to   = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule[""]
+}
+
+moved {
+  from = aws_kms_key.origin_verify_secret_key
+  to   = aws_kms_key.origin_verify_secret_key[""]
+}
+
+moved {
+  from = aws_kms_alias.origin_verify_secret_key_alias
+  to   = aws_kms_alias.origin_verify_secret_key_alias[""]
+}

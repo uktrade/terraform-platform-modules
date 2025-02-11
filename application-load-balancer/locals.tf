@@ -43,6 +43,6 @@ locals {
 
   config_with_defaults = { slack_alert_channel_alb_secret_rotation = coalesce(try(var.config.slack_alert_channel_alb_secret_rotation, null), "C31KW7NLE") } # Slack ID for P2 alerts channel
 
-  # Does the environment have CDN
-  cdn_enabled = var.config.cdn_domains_list != null
+  # Does the environment have a CDN configured
+  cdn_enabled = length(try({ for k, v in var.config.cdn_domains_list : k => v if !contains(v, "disable_cdn") }, {})) > 0
 }
