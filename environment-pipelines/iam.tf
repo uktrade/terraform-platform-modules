@@ -547,6 +547,7 @@ data "aws_iam_policy_document" "redis" {
       "elasticache:DescribeReplicationGroups",
       "elasticache:IncreaseReplicaCount",
       "elasticache:ListTagsForResource",
+      "elasticache:ModifyReplicationGroup",
     ]
     resources = [
       "arn:aws:elasticache:${local.account_region}:replicationgroup:*",
