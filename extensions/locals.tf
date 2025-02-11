@@ -7,11 +7,11 @@ locals {
 
   # So we don't hit a Parameter Store limit, filter environment config for extensions so it only includes the defaults (`"*"`) and the current environment
   extensions_for_environment = {
-    for k, v in var.args.services :
-    k => merge(v, {
+    for extension_name, extension_config in var.args.services :
+    extension_name => merge(extension_config, {
       environments = {
-        for ek, ev in v["environments"] :
-        ek => ev if contains(["*", var.environment], ek)
+        for environment_name, environment_config in extension_config["environments"] :
+        environment_name => environment_config if contains(["*", var.environment], environment_name)
       }
     })
   }
@@ -50,13 +50,34 @@ locals {
   }
 
   // Filter extensions by type
-  postgres   = { for k, v in local.extensions : k => v if v.type == "postgres" }
-  s3         = { for k, v in local.extensions : k => v if v.type == "s3" }
-  redis      = { for k, v in local.extensions : k => v if v.type == "redis" }
-  opensearch = { for k, v in local.extensions : k => v if v.type == "opensearch" }
-  monitoring = { for k, v in local.extensions : k => v if v.type == "monitoring" }
-  alb        = { for k, v in local.extensions : k => v if v.type == "alb" }
-  cdn        = { for k, v in local.extensions : k => v if v.type == "alb" }
+  postgres = {
+    for extension_name, extension_config in local.extensions :
+    extension_name => extension_config if extension_config.type == "postgres"
+  }
+  s3 = {
+    for extension_name, extension_config in local.extensions :
+    extension_name => extension_config if extension_config.type == "s3"
+  }
+  redis = {
+    for extension_name, extension_config in local.extensions :
+    extension_name => extension_config if extension_config.type == "redis"
+  }
+  opensearch = {
+    for extension_name, extension_config in local.extensions :
+    extension_name => extension_config if extension_config.type == "opensearch"
+  }
+  monitoring = {
+    for extension_name, extension_config in local.extensions :
+    extension_name => extension_config if extension_config.type == "monitoring"
+  }
+  alb = {
+    for extension_name, extension_config in local.extensions :
+    extension_name => extension_config if extension_config.type == "alb"
+  }
+  cdn = {
+    for extension_name, extension_config in local.extensions :
+    extension_name => extension_config if extension_config.type == "alb"
+  }
 
   tags = {
     application         = var.args.application
