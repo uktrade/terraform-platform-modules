@@ -255,14 +255,13 @@ A postgres database can be added by configuring the `platform-config.yml` file. 
 ```yaml
 my-postgres-db:
   type: postgres
-  version: 16.2
+  version: 16
   environments:
     '*':
       plan: tiny
-      backup_retention_days: 1 # Optional.  Must be between 1 and 35.  If none, defaults to 7.
+      backup_retention_days: 1 # Optional.  Must be between 1 and 35. Defaults to 7.
     prod:
       deletion_protection: true # Optional
-      deletion_policy: Retain # Optional: Delete or Retain
 ```
 
 ## S3 to S3 data migration module
