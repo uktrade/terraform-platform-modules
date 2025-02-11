@@ -1,5 +1,9 @@
 locals {
-  plans = yamldecode(file("${path.module}/plans.yml"))
+  plans = {
+    opensearch        = yamldecode(file("${path.module}/../opensearch/plans.yml"))
+    postgres          = yamldecode(file("${path.module}/../postgres/plans.yml"))
+    elasticache-redis = yamldecode(file("${path.module}/../elasticache-redis/plans.yml"))
+  }
 
   # So we don't hit a Parameter Store limit, filter environment config for extensions so it only includes the defaults (`"*"`) and the current environment
   extensions_for_environment = {
@@ -12,7 +16,7 @@ locals {
     })
   }
 
-  // select environment for each service and expand config from "*"
+  // Select environment for each service and expand config from "*"
   extensions_with_default_and_environment_settings_merged = {
     for extension_name, extension_config in var.args.services :
     extension_name => merge(
@@ -29,14 +33,15 @@ locals {
     for extension_name, extension_config in local.extensions_with_default_and_environment_settings_merged :
     extension_name => merge(
       lookup(
-        local.plans[extension_config.type],
-        lookup(extension_config, "plan", "NO-PLAN"), {}
+        lookup(local.plans, extension_config.type, {}),
+        lookup(extension_config, "plan", "NO-PLAN"),
+        {}
       ),
       extension_config
     )
   }
 
-  // remove unnecessary fields
+  // Remove unnecessary fields
   extensions = {
     for extension_name, extension_config in local.extensions_with_plan_expanded :
     extension_name => {
@@ -44,7 +49,7 @@ locals {
     }
   }
 
-  // filter extensions by type
+  // Filter extensions by type
   postgres   = { for k, v in local.extensions : k => v if v.type == "postgres" }
   s3         = { for k, v in local.extensions : k => v if v.type == "s3" }
   redis      = { for k, v in local.extensions : k => v if v.type == "redis" }

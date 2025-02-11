@@ -256,14 +256,14 @@ postgres:
     storage_type: io2
     iops: 40000
 
-s3: {}
-
-s3-policy: {}
-
-monitoring: {}
-
-alb: {}
-
-cdn: {}
-
-prometheus-policy: {}
+#s3: {}
+#
+#s3-policy: {}
+#
+#monitoring: {}
+#
+#alb: {}
+#
+#cdn: {}
+#
+#prometheus-policy: {}
