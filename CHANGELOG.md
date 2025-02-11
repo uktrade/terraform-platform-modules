@@ -13,7 +13,7 @@
 * DBTP-1736 - Add custom slack channel id to image build project ([#326](https://github.com/uktrade/terraform-platform-modules/issues/326)) ([781b2f8](https://github.com/uktrade/terraform-platform-modules/commit/781b2f87a5adcf440f35bb561933e1c661ce4052))
 * DBTP-1749 - Fix deploy status is null error ([#329](https://github.com/uktrade/terraform-platform-modules/issues/329)) ([430ff02](https://github.com/uktrade/terraform-platform-modules/commit/430ff02c90ef26d627b36001dde828fb25512b03))
 * DBTP-1786 - Use service environment variable to get task count ([#332](https://github.com/uktrade/terraform-platform-modules/issues/332)) ([974e054](https://github.com/uktrade/terraform-platform-modules/commit/974e054cd1fd6598a537961ad13a4c817992cbfe))
-* Fix deploy repository name ([#330](https://github.com/uktrade/terraform-platform-modules/issues/330)) ([67e5394](https://github.com/uktrade/terraform-platform-modules/commit/67e5394ec3fbb7e7e5584ae22f1416ab362a8a64))
+* DBTP-1787 - Fix deploy repository name ([#330](https://github.com/uktrade/terraform-platform-modules/issues/330)) ([67e5394](https://github.com/uktrade/terraform-platform-modules/commit/67e5394ec3fbb7e7e5584ae22f1416ab362a8a64))
 
 ## [7.1.0](https://github.com/uktrade/terraform-platform-modules/compare/7.0.0...7.1.0) (2025-01-31)
 
