@@ -90,18 +90,18 @@ phases:
 
       # If count is a range, get the first value otherwise get count
       - |
-        if [ $(yq '.count | type == "object"' copilot/web/manifest.yml) == "true" ]; then
-          count=$(yq '.count.range' copilot/web/manifest.yml | tr -d '"' | cut -d '-' -f1)
+        if [ $(yq '.count | type == "object"' copilot/${SERVICE}/manifest.yml) == "true" ]; then
+          count=$(yq '.count.range' copilot/${SERVICE}/manifest.yml | tr -d '"' | cut -d '-' -f1)
         else
-          count=$(yq '.count' copilot/web/manifest.yml)
+          count=$(yq '.count' copilot/${SERVICE}/manifest.yml)
         fi
 
       # Check for environment overrides
       - |
-        if [ $(yq '.environments.'${ENVIRONMENT}'.count | type == "object"' copilot/web/manifest.yml) == "true" ]; then
-          env_count=$(yq '.environments.'${ENVIRONMENT}'.count.range' copilot/web/manifest.yml | tr -d '"' | cut -d '-' -f1)
+        if [ $(yq '.environments.'${ENVIRONMENT}'.count | type == "object"' copilot/${SERVICE}/manifest.yml) == "true" ]; then
+          env_count=$(yq '.environments.'${ENVIRONMENT}'.count.range' copilot/${SERVICE}/manifest.yml | tr -d '"' | cut -d '-' -f1)
         else
-          env_count=$(yq '.environments.'${ENVIRONMENT}'.count' copilot/web/manifest.yml)
+          env_count=$(yq '.environments.'${ENVIRONMENT}'.count' copilot/${SERVICE}/manifest.yml)
         fi
 
       - |
