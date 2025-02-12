@@ -27,6 +27,7 @@ override_data {
   values = {
     id         = "vpc-00112233aabbccdef"
     cidr_block = "10.0.0.0/16"
+    tags       = { "Name" : "vpc-name" }
   }
 }
 override_data {
@@ -35,6 +36,14 @@ override_data {
     ids = ["subnet-000111222aaabbb01"]
   }
 }
+
+override_data {
+  target = data.aws_subnets.private-subnets
+  values = {
+    ids = ["subnet-aaa111", "subnet-bbb222"]
+  }
+}
+
 override_data {
   target = data.aws_route53_zone.domain-root
   values = {
@@ -54,6 +63,12 @@ override_data {
   target = data.aws_iam_policy_document.origin_verify_rotate_policy
   values = {
     json = "{\"Sid\": \"LambdaExecutionRolePolicy\"}"
+  }
+}
+override_data {
+  target = data.aws_security_group.vpc_base_sg
+  values = {
+    id = "!abcd5f"
   }
 }
 
@@ -501,6 +516,40 @@ run "waf_and_rotate_lambda" {
   }
 
   assert {
+    condition     = aws_lambda_function.origin-secret-rotate-function.environment[0].variables.WAF_SLEEP_DURATION == "75"
+    error_message = "WAF_SLEEP_DURATION should be 75"
+  }
+
+  assert {
+    condition     = contains(aws_lambda_function.origin-secret-rotate-function.vpc_config[0].security_group_ids, data.aws_security_group.vpc_base_sg.id)
+    error_message = "Security group should include VPC base security group"
+  }
+
+  # Requires executing run block with 'apply' to evaluate despite configuring with an override block
+  #  assert {
+  #   condition     = contains(aws_lambda_function.origin-secret-rotate-function.vpc_config[0].security_group_ids, aws_security_group.alb-security-group["http"].id)
+  #   error_message = "Security group should include ALB HTTP security group"
+  # }
+
+  assert {
+    condition     = length(aws_lambda_function.origin-secret-rotate-function.vpc_config[0].subnet_ids) == 2
+    error_message = "Lambda function should be associated with 2 subnets"
+  }
+
+  assert {
+    condition     = contains(aws_lambda_function.origin-secret-rotate-function.vpc_config[0].subnet_ids, "subnet-aaa111")
+    error_message = "Lambda function should be in subnet-aaa111"
+  }
+
+  assert {
+    condition     = contains(aws_lambda_function.origin-secret-rotate-function.vpc_config[0].subnet_ids, "subnet-bbb222")
+    error_message = "Lambda function should be in subnet-bbb222"
+  }
+
+
+  # ---- End of testing LAMBDA FUNCTION -----
+
+  assert {
     condition     = aws_lambda_permission.rotate-function-invoke-permission.statement_id == "AllowSecretsManagerInvocation"
     error_message = "Invalid statement_id for aws_lambda_permission.rotate-function-invoke-permission"
   }
@@ -520,6 +569,7 @@ run "waf_and_rotate_lambda" {
     error_message = "Invalid principal for aws_lambda_permission.rotate-function-invoke-permission"
   }
 
+  # ---- End of testing LAMBDA PERMISSIONS -----
 
   assert {
     condition     = aws_iam_role.origin-secret-rotate-execution-role.name == "${var.application}-${var.environment}-origin-secret-rotate-role"

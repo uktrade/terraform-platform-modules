@@ -456,7 +456,6 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   vpc_config {
     security_group_ids = [aws_security_group.alb-security-group["http"].id, data.aws_security_group.vpc_base_sg.id]
     subnet_ids         = tolist(data.aws_subnets.private-subnets.ids)
-
   }
 
   tags = local.tags
