@@ -35,7 +35,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
 
       configuration = {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
-        FullRepositoryId = "${var.repository}-deploy"
+        FullRepositoryId = "uktrade/${var.application}-deploy"
         BranchName       = "main"
         DetectChanges    = false
       }
@@ -137,7 +137,7 @@ resource "aws_codepipeline" "manual_release_pipeline" {
 
       configuration = {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
-        FullRepositoryId = "${var.repository}-deploy"
+        FullRepositoryId = "uktrade/${var.application}-deploy"
         BranchName       = "main"
         DetectChanges    = false
       }
@@ -194,7 +194,6 @@ resource "terraform_data" "update_pipeline" {
   }
   triggers_replace = [
     aws_codepipeline.codebase_pipeline,
-    aws_codepipeline.manual_release_pipeline,
     file("${path.module}/custom_pipeline_update/update_pipeline.py")
   ]
   depends_on = [

@@ -1,3 +1,5 @@
+# Todo: Delete me in a follow up pull request once not longer linked to anywhere
+
 # t-shirt sizes for extensions that support configurable storage/CPU/etc. such as RDS, OpenSearch and ElastiCache Redis
 
 redis:
@@ -253,15 +255,3 @@ postgres:
     instance: db.m5.4xlarge
     storage_type: io2
     iops: 40000
-
-s3: {}
-
-s3-policy: {}
-
-monitoring: {}
-
-alb: {}
-
-cdn: {}
-
-prometheus-policy: {}

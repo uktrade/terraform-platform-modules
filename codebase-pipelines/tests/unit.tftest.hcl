@@ -958,8 +958,8 @@ run "test_main_pipeline" {
     error_message = "Should be: deploy_source"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.FullRepositoryId == "my-repository-deploy"
-    error_message = "Should be: my-repository-deploy"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.FullRepositoryId == "uktrade/my-app-deploy"
+    error_message = "Should be: uktrade/my-app-deploy"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.BranchName == "main"
@@ -1250,8 +1250,8 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: deploy_source"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.FullRepositoryId == "my-repository-deploy"
-    error_message = "Should be: my-repository-deploy"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.FullRepositoryId == "uktrade/my-app-deploy"
+    error_message = "Should be: uktrade/my-app-deploy"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.BranchName == "main"
@@ -1741,7 +1741,7 @@ run "test_pipeline_update_script" {
   command = plan
 
   assert {
-    condition     = length(terraform_data.update_pipeline.triggers_replace) == 3
-    error_message = "Should be: 3"
+    condition     = length(terraform_data.update_pipeline.triggers_replace) == 2
+    error_message = "Should be: 2"
   }
 }
