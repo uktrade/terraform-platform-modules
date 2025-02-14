@@ -9,7 +9,7 @@ locals {
 
   ecr_name                 = "${var.application}/${var.codebase}"
   prefixed_repository_name = "uktrade/${var.application}"
-  repository_url           = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}"
+  repository_url           = coalesce(var.additional_ecr_repository, "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}")
 
   pipeline_branches = distinct([
     for pipeline in var.pipelines : pipeline.branch if lookup(pipeline, "branch", null) != null
@@ -32,10 +32,6 @@ locals {
       ]
     })
   }
-
-  pipeline_environments = distinct(flatten([
-    for pipeline in local.pipeline_map : [for env in pipeline.environments : env]
-  ]))
 
   services = sort(flatten([
     for run_group in var.services : [for service in flatten(values(run_group)) : service]

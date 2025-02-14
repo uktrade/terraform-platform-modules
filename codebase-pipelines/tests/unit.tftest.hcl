@@ -84,10 +84,9 @@ variables {
       }
     }
   }
-  application               = "my-app"
-  codebase                  = "my-codebase"
-  repository                = "my-repository"
-  additional_ecr_repository = "my-additional-repository"
+  application = "my-app"
+  codebase    = "my-codebase"
+  repository  = "my-repository"
   services = [
     {
       "run_group_1" : [
@@ -171,7 +170,7 @@ run "test_artifact_store" {
     error_message = "Should be: AWS"
   }
   assert {
-    condition     = flatten([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy", "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy", "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy"]
+    condition     = flatten([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::000123456789:root", "arn:aws:iam::123456789000:root"]
     error_message = "Bucket policy principals incorrect"
   }
   assert {
@@ -230,14 +229,6 @@ run "test_codebuild_images" {
   assert {
     condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].value == "/fake/slack/channel"
     error_message = "Should be: '/fake/slack/channel'"
-  }
-  assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].name == "ADDITIONAL_ECR_REPOSITORY"
-    error_message = "Should be: 'ADDITIONAL_ECR_REPOSITORY'"
-  }
-  assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].value == "my-additional-repository"
-    error_message = "Should be: 'my-additional-repository'"
   }
   assert {
     condition = aws_codebuild_project.codebase_image_build[""].logs_config[0].cloudwatch_logs[
@@ -345,6 +336,31 @@ run "test_codebuild_images_not_required" {
   assert {
     condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"latest\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
     error_message = "Event pattern is incorrect"
+  }
+}
+
+run "test_additional_ecr_repository" {
+  command = plan
+
+  variables {
+    additional_ecr_repository = "my-additional-repository"
+  }
+
+  assert {
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].name == "ADDITIONAL_ECR_REPOSITORY"
+    error_message = "Should be: 'ADDITIONAL_ECR_REPOSITORY'"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].value == "my-additional-repository"
+    error_message = "Should be: 'my-additional-repository'"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"my-additional-repository\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
+    error_message = "Configuration environment variables incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"my-additional-repository\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
+    error_message = "Configuration environment variables incorrect"
   }
 }
 
@@ -1386,27 +1402,27 @@ run "test_event_bridge" {
 
   # IAM roles
   assert {
-    condition     = aws_iam_role.event_bridge_pipeline_trigger.name == "my-app-my-codebase-event-bridge-pipeline-trigger"
+    condition     = aws_iam_role.event_bridge_pipeline_trigger[""].name == "my-app-my-codebase-event-bridge-pipeline-trigger"
     error_message = "Should be: 'my-app-my-codebase-event-bridge-pipeline-trigger'"
   }
   assert {
-    condition     = aws_iam_role.event_bridge_pipeline_trigger.assume_role_policy == "{\"Sid\": \"AssumeEventBridge\"}"
+    condition     = aws_iam_role.event_bridge_pipeline_trigger[""].assume_role_policy == "{\"Sid\": \"AssumeEventBridge\"}"
     error_message = "Should be: {\"Sid\": \"AssumeEventBridge\"}"
   }
   assert {
-    condition     = jsonencode(aws_iam_role.event_bridge_pipeline_trigger.tags) == jsonencode(var.expected_tags)
+    condition     = jsonencode(aws_iam_role.event_bridge_pipeline_trigger[""].tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.name == "event-bridge-access"
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger[""].name == "event-bridge-access"
     error_message = "Should be: 'event-bridge-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.role == "my-app-my-codebase-event-bridge-pipeline-trigger"
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger[""].role == "my-app-my-codebase-event-bridge-pipeline-trigger"
     error_message = "Should be: 'my-app-my-codebase-event-bridge-pipeline-trigger'"
   }
   assert {
-    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.policy == "{\"Sid\": \"EventBridgePipelineTrigger\"}"
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger[""].policy == "{\"Sid\": \"EventBridgePipelineTrigger\"}"
     error_message = "Unexpected policy"
   }
 

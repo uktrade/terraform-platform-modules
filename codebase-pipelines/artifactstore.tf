@@ -53,10 +53,7 @@ data "aws_iam_policy_document" "artifact_store_bucket_policy" {
     effect = "Allow"
     principals {
       type = "AWS"
-      identifiers = [
-        for env in local.pipeline_environments :
-        "arn:aws:iam::${env.account}:role/${var.application}-${env.name}-codebase-pipeline-deploy"
-      ]
+      identifiers = [for id in local.deploy_account_ids : "arn:aws:iam::${id}:root"]
     }
     actions = [
       "s3:*"

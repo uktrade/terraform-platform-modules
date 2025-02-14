@@ -19,18 +19,20 @@ resource "aws_cloudwatch_event_target" "codepipeline" {
   for_each = local.pipeline_map
   rule     = aws_cloudwatch_event_rule.ecr_image_publish[each.key].name
   arn      = aws_codepipeline.codebase_pipeline[each.key].arn
-  role_arn = aws_iam_role.event_bridge_pipeline_trigger.arn
+  role_arn = aws_iam_role.event_bridge_pipeline_trigger[""].arn
 }
 
 resource "aws_iam_role" "event_bridge_pipeline_trigger" {
+  for_each = toset(length(local.pipeline_map) > 0 ? [""] : [])
   name               = "${var.application}-${var.codebase}-event-bridge-pipeline-trigger"
   assume_role_policy = data.aws_iam_policy_document.assume_event_bridge_policy.json
   tags               = local.tags
 }
 
 resource "aws_iam_role_policy" "event_bridge_pipeline_trigger" {
+  for_each = toset(length(local.pipeline_map) > 0 ? [""] : [])
   name   = "event-bridge-access"
-  role   = aws_iam_role.event_bridge_pipeline_trigger.name
+  role   = aws_iam_role.event_bridge_pipeline_trigger[""].name
   policy = data.aws_iam_policy_document.event_bridge_pipeline_trigger.json
 }
 
