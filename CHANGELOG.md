@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.2.1](https://github.com/uktrade/terraform-platform-modules/compare/7.2.0...7.2.1) (2025-02-14)
+
+
+### Bug Fixes
+
+* DBTP-1991 Allow environment pipeline to adjust ElastiCache replication count ([#335](https://github.com/uktrade/terraform-platform-modules/issues/335)) ([2052b95](https://github.com/uktrade/terraform-platform-modules/commit/2052b951f8fe0b655a07e66ab3ab3ede36e9ca23))
+
 ## [7.2.0](https://github.com/uktrade/terraform-platform-modules/compare/7.1.0...7.2.0) (2025-02-11)
 
 
