@@ -17,3 +17,15 @@ variable "security_group_map" {
 variable "vpc_name" {
   type = string
 }
+
+variable "source_vpc" {
+  type = string
+}
+
+variable "target_zone" {
+  type = string
+}
+
+variable "accept_remote_dns" {
+  type = bool
+}
