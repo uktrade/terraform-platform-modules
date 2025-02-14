@@ -52,7 +52,7 @@ data "aws_iam_policy_document" "artifact_store_bucket_policy" {
   statement {
     effect = "Allow"
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = [for id in local.deploy_account_ids : "arn:aws:iam::${id}:root"]
     }
     actions = [

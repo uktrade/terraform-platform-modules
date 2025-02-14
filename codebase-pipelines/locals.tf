@@ -7,8 +7,8 @@ locals {
 
   account_region = "${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}"
 
-  ecr_name                 = "${var.application}/${var.codebase}"
-  repository_url           = coalesce(var.additional_ecr_repository, "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}")
+  ecr_name       = "${var.application}/${var.codebase}"
+  repository_url = coalesce(var.additional_ecr_repository, "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}")
 
   pipeline_branches = distinct([
     for pipeline in var.pipelines : pipeline.branch if lookup(pipeline, "branch", null) != null

@@ -23,7 +23,7 @@ resource "aws_cloudwatch_event_target" "codepipeline" {
 }
 
 resource "aws_iam_role" "event_bridge_pipeline_trigger" {
-  for_each = toset(length(local.pipeline_map) > 0 ? [""] : [])
+  for_each           = toset(length(local.pipeline_map) > 0 ? [""] : [])
   name               = "${var.application}-${var.codebase}-event-bridge-pipeline-trigger"
   assume_role_policy = data.aws_iam_policy_document.assume_event_bridge_policy.json
   tags               = local.tags
@@ -31,9 +31,9 @@ resource "aws_iam_role" "event_bridge_pipeline_trigger" {
 
 resource "aws_iam_role_policy" "event_bridge_pipeline_trigger" {
   for_each = toset(length(local.pipeline_map) > 0 ? [""] : [])
-  name   = "event-bridge-access"
-  role   = aws_iam_role.event_bridge_pipeline_trigger[""].name
-  policy = data.aws_iam_policy_document.event_bridge_pipeline_trigger.json
+  name     = "event-bridge-access"
+  role     = aws_iam_role.event_bridge_pipeline_trigger[""].name
+  policy   = data.aws_iam_policy_document.event_bridge_pipeline_trigger.json
 }
 
 data "aws_iam_policy_document" "assume_event_bridge_policy" {
