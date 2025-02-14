@@ -18,9 +18,10 @@ phases:
       - set -e
 
       # Check if the specified image tag exists
+      - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - |
-        if ! aws ecr describe-images --repository-name "${REPOSITORY_NAME}" --image-ids "imageTag=${IMAGE_TAG}" > /dev/null 2>&1; then
-          echo "Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_NAME}"
+        if ! regctl manifest head "${REPOSITORY_URL}:${IMAGE_TAG}" > /dev/null 2>&1; then
+          echo "Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_URL}"
           exit 1
         fi
 
@@ -30,9 +31,6 @@ phases:
           echo "Error: environment ${ENVIRONMENT} not listed in environment config"
           exit 1
         fi
-
-      # Extract timestamp from image config and check if it exists
-      - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
       # Construct Slack message env vars
       - SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
