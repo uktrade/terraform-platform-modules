@@ -581,8 +581,168 @@ run "waf_and_rotate_lambda" {
     error_message = "Invalid assume_role_policy for aws_iam_role.origin-secret-rotate-execution-role"
   }
 
-  # Cannot assert against the arn in a plan. Requires an apply to evaluate.
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[0].effect == "Allow"
+    error_message = "First statement effect should be: Allow"
+  }
 
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[0].actions == toset(["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogStreams"])
+    error_message = "First statement actions incorrect"
+  }
+
+  assert {
+    condition     = one(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[0].resources) == "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*origin-secret-rotate*"
+    error_message = "Unexpected resources"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[1].effect == "Allow"
+    error_message = "Second statement effect should be: Allow"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[1].actions == toset(["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue", "secretsmanager:PutSecretValue", "secretsmanager:UpdateSecretVersionStage"])
+    error_message = "Second statement actions incorrect"
+  }
+
+  assert {
+    condition     = one(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[1].resources) == "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${var.environment}-origin-verify-header-secret-*"
+    error_message = "Unexpected resources"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[2].effect == "Allow"
+    error_message = "Third statement effect should be: Allow"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[2].actions == toset(["secretsmanager:GetRandomPassword"])
+    error_message = "Third statement action should be: secretsmanager:GetRandomPassword"
+  }
+
+  assert {
+    condition     = one(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[2].resources) == "*"
+    error_message = "Unexpected resources"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[3].effect == "Allow"
+    error_message = "Fourth statement effect should be: Allow"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[3].actions == toset(["cloudfront:GetDistribution", "cloudfront:GetDistributionConfig", "cloudfront:ListDistributions", "cloudfront:UpdateDistribution"])
+    error_message = "Fourth statement actions incorrect"
+  }
+
+  assert {
+    condition     = one(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[3].resources) == "arn:aws:cloudfront::${var.dns_account_id}:distribution/*"
+    error_message = "Unexpected resources"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[4].effect == "Allow"
+    error_message = "Fifth statement effect should be: Allow"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[4].actions == toset(["wafv2:*"])
+    error_message = "Fifth statement action should be: wafv2:*"
+  }
+
+  # Requires executing run block with 'apply' to evaluate
+  # assert {
+  #   condition     = one(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[4].resources) == aws_wafv2_web_acl.waf-acl.arn
+  #   error_message = "Unexpected resources"
+  # }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[5].effect == "Allow"
+    error_message = "Sixth statement effect should be: Allow"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[5].actions == toset(["wafv2:UpdateWebACL"])
+    error_message = "Sixth statement action should be: wafv2:UpdateWebACL"
+  }
+
+  assert {
+    condition     = one(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[5].resources) == "arn:aws:wafv2:eu-west-2:${data.aws_caller_identity.current.account_id}:regional/managedruleset/*/*"
+    error_message = "Unexpected resources"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[6].effect == "Allow"
+    error_message = "Seventh statement effect should be: Allow"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[6].actions == toset(["sts:AssumeRole"])
+    error_message = "Seventh statement action should be: sts:AssumeRole"
+  }
+
+  assert {
+    condition     = one(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[6].resources) == "arn:aws:iam::${var.dns_account_id}:role/dbt_platform_cloudfront_token_rotation"
+    error_message = "Unexpected resources"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[7].effect == "Allow"
+    error_message = "Eighth statement effect should be: Allow"
+  }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[7].actions == toset(["kms:Decrypt", "kms:DescribeKey", "kms:Encrypt", "kms:GenerateDataKey"])
+    error_message = "Eighth statement actions incorrect"
+  }
+
+  # Requires executing run block with 'apply' to evaluate
+  # assert {
+  #   condition     = one(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[7].resources) ==  aws_kms_key.origin_verify_secret_key.arn
+  #   error_message = "Unexpected resources"
+  # }
+
+  assert {
+    condition     = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].effect == "Allow"
+    error_message = "Ninth statement effect should be: Allow"
+  }
+
+  assert {
+    condition = data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].actions == toset([
+      "ec2:CreateNetworkInterface",
+      "ec2:DeleteNetworkInterface",
+      "ec2:DescribeInstances",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:AttachNetworkInterface",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups"
+    ])
+    error_message = "Ninth statement actions incorrect"
+  }
+
+  # Requires executing run block with 'apply' to evaluate "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${aws_security_group.alb-security-group["http"].id}
+  assert {
+    condition = alltrue(
+      concat(
+        [
+          contains(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*"),
+          contains(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*"),
+          contains(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${data.aws_security_group.vpc_base_sg.id}"),
+        ],
+        [for subnet_id in data.aws_subnets.private-subnets.ids :
+          contains(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/${subnet_id}")
+        ]
+      )
+    )
+    error_message = "Missing expected resources in IAM policy"
+  }
+
+  #  ---- End of testing LAMBDA DATA POLICY PERMISSIONS -----
 
   assert {
     condition     = aws_secretsmanager_secret_rotation.origin-verify-rotate-schedule.rotation_rules[0].automatically_after_days == 7
