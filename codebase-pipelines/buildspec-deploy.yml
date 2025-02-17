@@ -20,7 +20,7 @@ phases:
       # Check if the specified image tag exists
       - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - |
-        if ! regctl manifest head "${REPOSITORY_URL}:${IMAGE_TAG}" > /dev/null 2>&1; then
+        if ! docker manifest inspect "${REPOSITORY_URL}:${IMAGE_TAG}" > /dev/null 2>&1; then
           echo "Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_URL}"
           exit 1
         fi

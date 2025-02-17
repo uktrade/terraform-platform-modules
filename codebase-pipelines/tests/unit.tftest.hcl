@@ -63,6 +63,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline
+  values = {
+    json = "{\"Sid\": \"PipelineECRAccess\"}"
+  }
+}
+
 variables {
   env_config = {
     "*" = {
@@ -331,7 +338,7 @@ run "test_codebuild_images_not_required" {
   }
   assert {
     condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"latest\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
-    error_message = "Event pattern is incorrect ${jsonencode(aws_cloudwatch_event_rule.ecr_image_publish[0].event_pattern)}"
+    error_message = "Event pattern is incorrect"
   }
   assert {
     condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"latest\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
@@ -339,28 +346,94 @@ run "test_codebuild_images_not_required" {
   }
 }
 
-run "test_additional_ecr_repository" {
+run "test_additional_private_ecr_repository" {
   command = plan
 
   variables {
-    additional_ecr_repository = "my-additional-repository"
+    additional_ecr_repository = "repository-namespace/repository-name"
   }
 
+  assert {
+    condition     = local.is_additional_repo_public == false
+    error_message = "Should be: false"
+  }
   assert {
     condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].name == "ADDITIONAL_ECR_REPOSITORY"
     error_message = "Should be: 'ADDITIONAL_ECR_REPOSITORY'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].value == "my-additional-repository"
-    error_message = "Should be: 'my-additional-repository'"
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].value == "repository-namespace/repository-name"
+    error_message = "Should be: repository-namespace/repository-name"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"my-additional-repository\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/repository-namespace/repository-name\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
     error_message = "Configuration environment variables incorrect"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"my-additional-repository\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
+    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/repository-namespace/repository-name\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
     error_message = "Configuration environment variables incorrect"
+  }
+  assert {
+    condition     = length(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == 2
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = length(data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources) == 2
+    error_message = "Unexpected resources"
+  }
+}
+
+run "test_additional_ecr_repository_public" {
+  command = plan
+
+  variables {
+    additional_ecr_repository = "public.ecr.aws/repository-namespace/repository-name"
+  }
+
+  assert {
+    condition     = local.is_additional_repo_public == true
+    error_message = "Should be: true"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].value == "public.ecr.aws/repository-namespace/repository-name"
+    error_message = "Should be: 'public.ecr.aws/repository-namespace/repository-name'"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"public.ecr.aws/repository-namespace/repository-name\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
+    error_message = "Configuration environment variables incorrect"
+  }
+  assert {
+    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"public.ecr.aws/repository-namespace/repository-name\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
+    error_message = "Configuration environment variables incorrect"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].actions == toset([
+      "ecr-public:DescribeImageScanFindings",
+      "ecr-public:GetLifecyclePolicyPreview",
+      "ecr-public:GetDownloadUrlForLayer",
+      "ecr-public:BatchGetImage",
+      "ecr-public:DescribeImages",
+      "ecr-public:ListTagsForResource",
+      "ecr-public:BatchCheckLayerAvailability",
+      "ecr-public:GetLifecyclePolicy",
+      "ecr-public:GetRepositoryPolicy",
+      "ecr-public:PutImage",
+      "ecr-public:InitiateLayerUpload",
+      "ecr-public:UploadLayerPart",
+      "ecr-public:CompleteLayerUpload",
+      "ecr-public:BatchDeleteImage",
+      "ecr-public:DescribeRepositories",
+      "ecr-public:ListImages"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].resources) == "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
+    error_message = "Unexpected resources"
   }
 }
 
@@ -635,35 +708,6 @@ run "test_iam_documents" {
   }
   assert {
     condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].actions == toset([
-      "ecr-public:DescribeImageScanFindings",
-      "ecr-public:GetLifecyclePolicyPreview",
-      "ecr-public:GetDownloadUrlForLayer",
-      "ecr-public:BatchGetImage",
-      "ecr-public:DescribeImages",
-      "ecr-public:ListTagsForResource",
-      "ecr-public:BatchCheckLayerAvailability",
-      "ecr-public:GetLifecyclePolicy",
-      "ecr-public:GetRepositoryPolicy",
-      "ecr-public:PutImage",
-      "ecr-public:InitiateLayerUpload",
-      "ecr-public:UploadLayerPart",
-      "ecr-public:CompleteLayerUpload",
-      "ecr-public:BatchDeleteImage",
-      "ecr-public:DescribeRepositories",
-      "ecr-public:ListImages"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].actions == toset([
       "ecr:DescribeImageScanFindings",
       "ecr:GetLifecyclePolicyPreview",
       "ecr:GetDownloadUrlForLayer",
@@ -682,6 +726,10 @@ run "test_iam_documents" {
       "ecr:ListImages"
     ])
     error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = length(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == 1
+    error_message = "Unexpected resources"
   }
 
   # Codestar connection
@@ -787,6 +835,10 @@ run "test_iam_documents" {
     ])
     error_message = "Unexpected actions"
   }
+  assert {
+    condition     = length(data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources) == 1
+    error_message = "Unexpected resources"
+  }
 
   # SSM access
   assert {
@@ -854,7 +906,7 @@ run "test_codebuild_deploy" {
   }
   assert {
     condition     = one(aws_codebuild_project.codebase_deploy.environment).environment_variable[0].name == "ENV_CONFIG"
-    error_message = "Should be: 'ENV_CONFIG' ${jsonencode(one(aws_codebuild_project.codebase_deploy.environment).environment_variable[0])}"
+    error_message = "Should be: 'ENV_CONFIG'"
   }
   assert {
     condition     = one(aws_codebuild_project.codebase_deploy.environment).environment_variable[0].value == "{\"dev\":{\"account\":\"000123456789\"},\"prod\":{\"account\":\"123456789000\"},\"staging\":{\"account\":\"000123456789\"}}"
