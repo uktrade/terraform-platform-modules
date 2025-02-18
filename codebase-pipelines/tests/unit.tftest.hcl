@@ -370,12 +370,14 @@ run "test_additional_private_ecr_repository" {
     error_message = "Should be: repository-namespace/repository-name"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/repository-namespace/repository-name\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/repository-namespace/repository-name"
+    error_message = "REPOSITORY_URL environment variable incorrect"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/repository-namespace/repository-name\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/repository-namespace/repository-name"
+    error_message = "REPOSITORY_URL environment variable incorrect"
   }
   assert {
     condition     = length(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == 2
@@ -403,12 +405,14 @@ run "test_additional_ecr_repository_public" {
     error_message = "Should be: 'public.ecr.aws/repository-namespace/repository-name'"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"public.ecr.aws/repository-namespace/repository-name\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "public.ecr.aws/repository-namespace/repository-name"
+    error_message = "REPOSITORY_URL environment variable incorrect"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"public.ecr.aws/repository-namespace/repository-name\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "public.ecr.aws/repository-namespace/repository-name"
+    error_message = "REPOSITORY_URL environment variable incorrect"
   }
   assert {
     condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].effect == "Allow"
@@ -1077,12 +1081,56 @@ run "test_main_pipeline" {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
-
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "APPLICATION"]) == "my-app"
+    error_message = "APPLICATION environment variable incorrect"
   }
-
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "AWS_REGION"]) == "${data.aws_region.current.name}"
+    error_message = "AWS_REGION environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "AWS_ACCOUNT_ID"]) == "${data.aws_caller_identity.current.account_id}"
+    error_message = "AWS_ACCOUNT_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "dev"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "IMAGE_TAG"]) == "#{variables.IMAGE_TAG}"
+    error_message = "IMAGE_TAG environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "PIPELINE_EXECUTION_ID"]) == "#{codepipeline.PipelineExecutionId}"
+    error_message = "PIPELINE_EXECUTION_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase"
+    error_message = "REPOSITORY_URL environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-1"
+    error_message = "SERVICE environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_CHANNEL_ID"]) == "/fake/slack/channel"
+    error_message = "SLACK_CHANNEL_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.type if var.name == "SLACK_CHANNEL_ID"]) == "PARAMETER_STORE"
+    error_message = "SLACK_CHANNEL_ID environment variable type is incorrect"
+  }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].run_order == 2
     error_message = "Run order incorrect"
@@ -1118,10 +1166,15 @@ run "test_main_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "dev"
+    error_message = "ENVIRONMENT environment variable incorrect"
   }
-
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-2"
+    error_message = "SERVICE environment variable incorrect"
+  }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].run_order == 3
     error_message = "Run order incorrect"
@@ -1156,10 +1209,15 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "staging"
+    error_message = "ENVIRONMENT environment variable incorrect"
   }
-
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-1"
+    error_message = "SERVICE environment variable incorrect"
+  }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].run_order == 2
     error_message = "Run order incorrect"
@@ -1168,11 +1226,17 @@ run "test_tagged_pipeline" {
   # Deploy service-2 action
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[1].name == "service-2"
-    error_message = "Should be: service-1"
+    error_message = "Should be: service-2"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "staging"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-2"
+    error_message = "SERVICE environment variable incorrect"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[1].run_order == 3
@@ -1217,8 +1281,14 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "prod"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-1"
+    error_message = "SERVICE environment variable incorrect"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].run_order == 2
@@ -1231,8 +1301,14 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[2].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[2].action[2].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "prod"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[2].action[2].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-2"
+    error_message = "SERVICE environment variable incorrect"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[2].run_order == 3
@@ -1370,8 +1446,54 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "APPLICATION"]) == "my-app"
+    error_message = "APPLICATION environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "AWS_REGION"]) == "${data.aws_region.current.name}"
+    error_message = "AWS_REGION environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "AWS_ACCOUNT_ID"]) == "${data.aws_caller_identity.current.account_id}"
+    error_message = "AWS_ACCOUNT_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "#{variables.ENVIRONMENT}"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "IMAGE_TAG"]) == "#{variables.IMAGE_TAG}"
+    error_message = "IMAGE_TAG environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "PIPELINE_EXECUTION_ID"]) == "#{codepipeline.PipelineExecutionId}"
+    error_message = "PIPELINE_EXECUTION_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase"
+    error_message = "REPOSITORY_URL environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-1"
+    error_message = "SERVICE environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_CHANNEL_ID"]) == "/fake/slack/channel"
+    error_message = "SLACK_CHANNEL_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.type if var.name == "SLACK_CHANNEL_ID"]) == "PARAMETER_STORE"
+    error_message = "SLACK_CHANNEL_ID environment variable type is incorrect"
   }
   assert {
     condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[0].run_order == 2
@@ -1408,8 +1530,14 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "#{variables.ENVIRONMENT}"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-2"
+    error_message = "SERVICE environment variable incorrect"
   }
   assert {
     condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].run_order == 3
