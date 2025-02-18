@@ -181,6 +181,10 @@ run "test_artifact_store" {
     error_message = "Bucket policy principals incorrect"
   }
   assert {
+    condition     = flatten([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].condition : el.values]) == ["arn:aws:iam::000123456789:role/my-app-*-codebase-pipeline-deploy", "arn:aws:iam::123456789000:role/my-app-*-codebase-pipeline-deploy"]
+    error_message = "Bucket policy condition incorrect"
+  }
+  assert {
     condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].actions : el][0] == "s3:*"
     error_message = "Should be: s3:*"
   }

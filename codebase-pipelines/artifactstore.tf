@@ -55,6 +55,14 @@ data "aws_iam_policy_document" "artifact_store_bucket_policy" {
       type        = "AWS"
       identifiers = [for id in local.deploy_account_ids : "arn:aws:iam::${id}:root"]
     }
+    condition {
+      test = "ArnLike"
+      values = [
+        for id in local.deploy_account_ids :
+        "arn:aws:iam::${id}:role/${var.application}-*-codebase-pipeline-deploy"
+      ]
+      variable = "aws:PrincipalArn"
+    }
     actions = [
       "s3:*"
     ]
