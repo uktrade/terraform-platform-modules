@@ -181,6 +181,14 @@ run "test_artifact_store" {
     error_message = "Bucket policy principals incorrect"
   }
   assert {
+    condition     = one([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].condition : el.test]) == "ArnLike"
+    error_message = "Bucket policy condition incorrect"
+  }
+  assert {
+    condition     = one([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].condition : el.variable]) == "aws:PrincipalArn"
+    error_message = "Bucket policy condition incorrect"
+  }
+  assert {
     condition     = flatten([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].condition : el.values]) == ["arn:aws:iam::000123456789:role/my-app-*-codebase-pipeline-deploy", "arn:aws:iam::123456789000:role/my-app-*-codebase-pipeline-deploy"]
     error_message = "Bucket policy condition incorrect"
   }
@@ -226,19 +234,13 @@ run "test_codebuild_images" {
     error_message = "Should be: 'public.ecr.aws/uktrade/ci-image-builder:tag-latest'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[1].name == "ECR_REPOSITORY"
-    error_message = "Should be: 'ECR_REPOSITORY'"
-  }
-  assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[1].value == "my-app/my-codebase"
+    condition = one([for var in one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable :
+    var.value if var.name == "ECR_REPOSITORY"]) == "my-app/my-codebase"
     error_message = "Should be: 'my-app/my-codebase'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].name == "SLACK_CHANNEL_ID"
-    error_message = "Should be: 'SLACK_CHANNEL_ID'"
-  }
-  assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].value == "/fake/slack/channel"
+    condition = one([for var in one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable :
+    var.value if var.name == "SLACK_CHANNEL_ID"]) == "/fake/slack/channel"
     error_message = "Should be: '/fake/slack/channel'"
   }
   assert {
@@ -362,11 +364,8 @@ run "test_additional_private_ecr_repository" {
     error_message = "Should be: false"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].name == "ADDITIONAL_ECR_REPOSITORY"
-    error_message = "Should be: 'ADDITIONAL_ECR_REPOSITORY'"
-  }
-  assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].value == "repository-namespace/repository-name"
+    condition = one([for var in one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable :
+    var.value if var.name == "ADDITIONAL_ECR_REPOSITORY"]) == "repository-namespace/repository-name"
     error_message = "Should be: repository-namespace/repository-name"
   }
   assert {
@@ -380,7 +379,21 @@ run "test_additional_private_ecr_repository" {
     error_message = "REPOSITORY_URL environment variable incorrect"
   }
   assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources == toset([
+      "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase",
+      "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/repository-namespace/repository-name"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
     condition     = length(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == 2
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources == toset([
+      "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase",
+      "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/repository-namespace/repository-name"
+    ])
     error_message = "Unexpected resources"
   }
   assert {
@@ -401,7 +414,8 @@ run "test_additional_ecr_repository_public" {
     error_message = "Should be: true"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].value == "public.ecr.aws/repository-namespace/repository-name"
+    condition = one([for var in one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable :
+    var.value if var.name == "ADDITIONAL_ECR_REPOSITORY"]) == "public.ecr.aws/repository-namespace/repository-name"
     error_message = "Should be: 'public.ecr.aws/repository-namespace/repository-name'"
   }
   assert {
@@ -736,6 +750,10 @@ run "test_iam_documents" {
     error_message = "Unexpected actions"
   }
   assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources == toset(["arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase"])
+    error_message = "Unexpected resources"
+  }
+  assert {
     condition     = length(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == 1
     error_message = "Unexpected resources"
   }
@@ -844,6 +862,10 @@ run "test_iam_documents" {
     error_message = "Unexpected actions"
   }
   assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources == toset(["arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase"])
+    error_message = "Unexpected resources"
+  }
+  assert {
     condition     = length(data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources) == 1
     error_message = "Unexpected resources"
   }
@@ -853,7 +875,6 @@ run "test_iam_documents" {
     condition     = data.aws_iam_policy_document.deploy_ssm_access.statement[0].effect == "Allow"
     error_message = "Should be: Allow"
   }
-
   assert {
     condition = data.aws_iam_policy_document.deploy_ssm_access.statement[0].actions == toset([
       "ssm:GetParameter",
@@ -861,7 +882,6 @@ run "test_iam_documents" {
     ])
     error_message = "Unexpected actions"
   }
-
   assert {
     condition     = one(data.aws_iam_policy_document.deploy_ssm_access.statement[0].resources) == "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/codebuild/slack_*"
     error_message = "Unexpected resources"
