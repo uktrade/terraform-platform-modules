@@ -370,12 +370,12 @@ run "test_additional_private_ecr_repository" {
     error_message = "Should be: repository-namespace/repository-name"
   }
   assert {
-    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
     var.value if var.name == "REPOSITORY_URL"]) == "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/repository-namespace/repository-name"
     error_message = "REPOSITORY_URL environment variable incorrect"
   }
   assert {
-    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
     var.value if var.name == "REPOSITORY_URL"]) == "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/repository-namespace/repository-name"
     error_message = "REPOSITORY_URL environment variable incorrect"
   }
@@ -410,7 +410,7 @@ run "test_additional_ecr_repository_public" {
     error_message = "REPOSITORY_URL environment variable incorrect"
   }
   assert {
-    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
     var.value if var.name == "REPOSITORY_URL"]) == "public.ecr.aws/repository-namespace/repository-name"
     error_message = "REPOSITORY_URL environment variable incorrect"
   }
