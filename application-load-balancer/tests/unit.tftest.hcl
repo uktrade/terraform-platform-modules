@@ -724,23 +724,30 @@ run "waf_and_rotate_lambda" {
   # Requires executing run block with 'apply' to evaluate "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${aws_security_group.alb-security-group["http"].id}
   assert {
     condition = alltrue(
-      concat(
-        [
-          contains(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*"),
-          contains(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*"),
-          contains(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${data.aws_security_group.vpc_base_sg.id}"),
-        ],
-        [for subnet_id in data.aws_subnets.private-subnets.ids :
-          contains(data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/${subnet_id}")
-        ]
-      )
+      [
+        contains(
+          data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*"
+        ),
+        contains(
+          data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*"
+        ),
+        contains(
+          data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${data.aws_security_group.vpc_base_sg.id}"
+        ),
+        contains(
+          data.aws_iam_policy_document.origin_verify_rotate_policy.statement[8].resources,
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/*"
+        )
+      ]
     )
     error_message = "Missing expected resources in IAM policy"
   }
+
+
+
 
   #  ---- End of testing LAMBDA DATA POLICY PERMISSIONS -----
 
