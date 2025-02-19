@@ -1,6 +1,6 @@
 resource "aws_codepipeline" "codebase_pipeline" {
   for_each       = local.pipeline_map
-  name           = "${var.application}-${var.codebase}-${each.value.name}-codebase-pipeline"
+  name           = "${var.application}-${var.codebase}-${each.value.name}-codebase"
   role_arn       = aws_iam_role.codebase_deploy_pipeline.arn
   depends_on     = [aws_iam_role_policy.artifact_store_access_for_codebase_pipeline]
   pipeline_type  = "V2"
@@ -95,7 +95,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
 
 
 resource "aws_codepipeline" "manual_release_pipeline" {
-  name           = "${var.application}-${var.codebase}-manual-release-pipeline"
+  name           = "${var.application}-${var.codebase}-manual-release"
   role_arn       = aws_iam_role.codebase_deploy_pipeline.arn
   pipeline_type  = "V2"
   execution_mode = "QUEUED"
