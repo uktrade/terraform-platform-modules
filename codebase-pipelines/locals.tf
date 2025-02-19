@@ -7,9 +7,12 @@ locals {
 
   account_region = "${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}"
 
-  ecr_name                 = "${var.application}/${var.codebase}"
-  prefixed_repository_name = "uktrade/${var.application}"
-  repository_url           = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${local.ecr_name}"
+  ecr_name                    = "${var.application}/${var.codebase}"
+  private_repo_url            = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"
+  is_additional_repo_public   = var.additional_ecr_repository != null ? strcontains(var.additional_ecr_repository, "public.ecr.aws") : false
+  additional_ecr_url          = var.additional_ecr_repository != null ? local.is_additional_repo_public ? var.additional_ecr_repository : "${local.private_repo_url}/${var.additional_ecr_repository}" : null
+  repository_url              = coalesce(local.additional_ecr_url, "${local.private_repo_url}/${local.ecr_name}")
+  additional_private_repo_arn = var.additional_ecr_repository != null && !local.is_additional_repo_public ? "arn:aws:ecr:${local.account_region}:repository/${var.additional_ecr_repository}" : ""
 
   pipeline_branches = distinct([
     for pipeline in var.pipelines : pipeline.branch if lookup(pipeline, "branch", null) != null
@@ -32,10 +35,6 @@ locals {
       ]
     })
   }
-
-  pipeline_environments = distinct(flatten([
-    for pipeline in local.pipeline_map : [for env in pipeline.environments : env]
-  ]))
 
   services = sort(flatten([
     for run_group in var.services : [for service in flatten(values(run_group)) : service]
