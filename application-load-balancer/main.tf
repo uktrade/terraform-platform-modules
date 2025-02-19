@@ -1,3 +1,7 @@
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
 data "aws_ssm_parameter" "slack_token" {
   name = "/codebuild/slack_oauth_token"
 }
@@ -14,6 +18,17 @@ data "aws_subnets" "public-subnets" {
     name   = "tag:Name"
     values = ["${var.vpc_name}-public-*"]
   }
+}
+
+data "aws_subnets" "private-subnets" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.vpc_name}-private-*"]
+  }
+}
+
+data "aws_security_group" "vpc_base_sg" {
+  name = "${data.aws_vpc.vpc.tags["Name"]}-base-sg"
 }
 
 resource "aws_lb" "this" {
@@ -173,8 +188,6 @@ output "alb-arn" {
 
 
 ## This section configures WAF on ALB to attach security token.
-
-data "aws_caller_identity" "current" {}
 
 # Random password for the secret value
 resource "random_password" "origin-secret" {
@@ -346,7 +359,29 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
       aws_kms_key.origin_verify_secret_key.arn
     ]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:CreateNetworkInterface",
+      "ec2:DeleteNetworkInterface",
+      "ec2:DescribeInstances",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:AttachNetworkInterface",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups"
+    ]
+
+    resources = [
+      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*",
+      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*",
+      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${data.aws_security_group.vpc_base_sg.id}",
+      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${aws_security_group.alb-security-group["http"].id}",
+      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/*"
+    ]
+  }
 }
+
 
 resource "aws_iam_role_policy" "origin_secret_rotate_policy" {
   name   = "OriginVerifyRotatePolicy"
@@ -372,7 +407,6 @@ data "archive_file" "lambda" {
     aws_iam_role.origin-secret-rotate-execution-role
   ]
 }
-
 
 # Secrets Manager Rotation Lambda Function
 resource "aws_lambda_function" "origin-secret-rotate-function" {
@@ -414,7 +448,13 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
 
   layers           = ["arn:aws:lambda:eu-west-2:763451185160:layer:python-requests:1"]
   source_code_hash = data.archive_file.lambda.output_base64sha256
-  tags             = local.tags
+
+  vpc_config {
+    security_group_ids = [aws_security_group.alb-security-group["http"].id, data.aws_security_group.vpc_base_sg.id]
+    subnet_ids         = tolist(data.aws_subnets.private-subnets.ids)
+  }
+
+  tags = local.tags
 }
 
 # Lambda Permission for Secrets Manager Rotation
