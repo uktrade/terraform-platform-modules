@@ -58,6 +58,7 @@ data "aws_cloudfront_origin_request_policy" "request-policy-name" {
 }
 
 data "aws_secretsmanager_secret_version" "origin_verify_secret_version" {
+  for_each  = toset(length(local.cdn_domains_list) > 0 ? [""] : [])
   secret_id = var.origin_verify_secret_id
 }
 
@@ -91,7 +92,7 @@ resource "aws_cloudfront_distribution" "standard" {
     }
     custom_header {
       name  = "x-origin-verify"
-      value = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version.secret_string)["HEADERVALUE"]
+      value = jsondecode(data.aws_secretsmanager_secret_version.origin_verify_secret_version[""].secret_string)["HEADERVALUE"]
     }
   }
 
@@ -161,11 +162,6 @@ resource "aws_cloudfront_distribution" "standard" {
       include_cookies = false
       prefix          = each.key
     }
-  }
-
-  lifecycle {
-    # Use `ignore_changes` to allow custom_header secret rotation without Terraform overwriting the value
-    ignore_changes = [origin]
   }
 
   tags = local.tags
