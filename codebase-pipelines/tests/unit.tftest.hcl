@@ -750,7 +750,7 @@ run "test_iam_documents" {
     error_message = "Unexpected actions"
   }
   assert {
-    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources == toset(["arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase"])
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources == toset(["arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase"])
     error_message = "Unexpected resources"
   }
   assert {
@@ -862,7 +862,7 @@ run "test_iam_documents" {
     error_message = "Unexpected actions"
   }
   assert {
-    condition = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources == toset(["arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase"])
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources == toset(["arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase"])
     error_message = "Unexpected resources"
   }
   assert {
