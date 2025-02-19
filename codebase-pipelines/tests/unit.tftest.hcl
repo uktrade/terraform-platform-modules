@@ -459,6 +459,19 @@ run "test_additional_ecr_repository_public" {
   }
 }
 
+run "test_deploy_repository" {
+  command = plan
+
+  variables {
+    deploy_repository = "uktrade/application-deploy"
+  }
+
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.FullRepositoryId == "uktrade/application-deploy"
+    error_message = "Should be: uktrade/application-deploy"
+  }
+}
+
 run "test_main_branch_filter" {
   command = plan
 
