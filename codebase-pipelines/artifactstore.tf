@@ -52,11 +52,16 @@ data "aws_iam_policy_document" "artifact_store_bucket_policy" {
   statement {
     effect = "Allow"
     principals {
-      type = "AWS"
-      identifiers = [
-        for env in local.pipeline_environments :
-        "arn:aws:iam::${env.account}:role/${var.application}-${env.name}-codebase-pipeline-deploy"
+      type        = "AWS"
+      identifiers = [for id in local.deploy_account_ids : "arn:aws:iam::${id}:root"]
+    }
+    condition {
+      test = "ArnLike"
+      values = [
+        for id in local.deploy_account_ids :
+        "arn:aws:iam::${id}:role/${var.application}-*-codebase-pipeline-deploy"
       ]
+      variable = "aws:PrincipalArn"
     }
     actions = [
       "s3:*"
