@@ -76,32 +76,6 @@ data "aws_iam_policy_document" "ecr_access_for_codebuild_images" {
   statement {
     effect = "Allow"
     actions = [
-      "ecr-public:DescribeImageScanFindings",
-      "ecr-public:GetLifecyclePolicyPreview",
-      "ecr-public:GetDownloadUrlForLayer",
-      "ecr-public:BatchGetImage",
-      "ecr-public:DescribeImages",
-      "ecr-public:ListTagsForResource",
-      "ecr-public:BatchCheckLayerAvailability",
-      "ecr-public:GetLifecyclePolicy",
-      "ecr-public:GetRepositoryPolicy",
-      "ecr-public:PutImage",
-      "ecr-public:InitiateLayerUpload",
-      "ecr-public:UploadLayerPart",
-      "ecr-public:CompleteLayerUpload",
-      "ecr-public:BatchDeleteImage",
-      "ecr-public:DescribeRepositories",
-      "ecr-public:ListImages"
-    ]
-    resources = [
-      # We have to wildcard the repository name because we currently expect the repository URL and it's not possible to get the ARN from that
-      "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
       "ecr:DescribeImageScanFindings",
       "ecr:GetLifecyclePolicyPreview",
       "ecr:GetDownloadUrlForLayer",
@@ -119,9 +93,40 @@ data "aws_iam_policy_document" "ecr_access_for_codebuild_images" {
       "ecr:DescribeRepositories",
       "ecr:ListImages"
     ]
-    resources = [
-      aws_ecr_repository.this.arn
-    ]
+    resources = compact([
+      "arn:aws:ecr:${local.account_region}:repository/${local.ecr_name}",
+      local.additional_private_repo_arn
+    ])
+  }
+
+  dynamic "statement" {
+    for_each = toset(local.is_additional_repo_public ? [""] : [])
+
+    content {
+      effect = "Allow"
+      actions = [
+        "ecr-public:DescribeImageScanFindings",
+        "ecr-public:GetLifecyclePolicyPreview",
+        "ecr-public:GetDownloadUrlForLayer",
+        "ecr-public:BatchGetImage",
+        "ecr-public:DescribeImages",
+        "ecr-public:ListTagsForResource",
+        "ecr-public:BatchCheckLayerAvailability",
+        "ecr-public:GetLifecyclePolicy",
+        "ecr-public:GetRepositoryPolicy",
+        "ecr-public:PutImage",
+        "ecr-public:InitiateLayerUpload",
+        "ecr-public:UploadLayerPart",
+        "ecr-public:CompleteLayerUpload",
+        "ecr-public:BatchDeleteImage",
+        "ecr-public:DescribeRepositories",
+        "ecr-public:ListImages"
+      ]
+      resources = [
+        # We have to wildcard the repository name because we currently expect the repository URL and it's not possible to get the ARN from that
+        "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
+      ]
+    }
   }
 }
 
@@ -184,9 +189,10 @@ data "aws_iam_policy_document" "ecr_access_for_codebase_pipeline" {
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer"
     ]
-    resources = [
-      aws_ecr_repository.this.arn
-    ]
+    resources = compact([
+      "arn:aws:ecr:${local.account_region}:repository/${local.ecr_name}",
+      local.additional_private_repo_arn
+    ])
   }
   statement {
     effect = "Allow"
