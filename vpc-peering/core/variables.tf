@@ -18,11 +18,11 @@ variable "vpc_name" {
   type = string
 }
 
-variable "source_vpc" {
+variable "source_vpc_id" {
   type = string
 }
 
-variable "target_zone" {
+variable "target_hosted_zone_id" {
   type = string
 }
 
