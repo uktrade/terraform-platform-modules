@@ -1004,8 +1004,45 @@ run "test_triggering_pipelines" {
   }
 
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.EnvironmentVariables == "[{\"name\":\"TRIGGERED_ACCOUNT_ROLE_ARN\",\"value\":\"arn:aws:iam::123456789000:role/my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline\"},{\"name\":\"TRIGGERED_PIPELINE_NAME\",\"value\":\"my-app-triggered-pipeline-environment-pipeline\"},{\"name\":\"TRIGGERED_PIPELINE_AWS_PROFILE\",\"value\":\"prod\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TRIGGERED_ACCOUNT_ROLE_ARN"]) == "arn:aws:iam::123456789000:role/my-app-triggered-pipeline-trigger-pipeline-from-my-pipeline"
+    error_message = "TRIGGERED_ACCOUNT_ROLE_ARN environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TRIGGERED_PIPELINE_NAME"]) == "my-app-triggered-pipeline-environment-pipeline"
+    error_message = "TRIGGERED_PIPELINE_NAME environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TRIGGERED_PIPELINE_AWS_PROFILE"]) == "prod"
+    error_message = "TRIGGERED_PIPELINE_AWS_PROFILE environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_THREAD_ID"]) == "#{variables.SLACK_THREAD_ID}"
+    error_message = "SLACK_THREAD_ID environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.EnvironmentVariables) :
+    var.type if var.name == "SLACK_CHANNEL_ID"]) == "PARAMETER_STORE"
+    error_message = "SLACK_CHANNEL_ID environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_CHANNEL_ID"]) == "/codebuild/slack_pipeline_notifications_channel"
+    error_message = "SLACK_CHANNEL_ID environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[7].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_REF"]) == "#{slack.SLACK_REF}"
+    error_message = "SLACK_REF environment variable incorrect"
   }
 
   assert {
@@ -1129,13 +1166,63 @@ run "test_triggered_pipelines" {
   }
 
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"CURRENT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-triggered-pipeline-environment-pipeline-codebuild\"},{\"name\":\"TRIGGERING_ACCOUNT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::000123456789:role/my-app-my-pipeline-environment-pipeline-codebuild\"},{\"name\":\"TRIGGERING_ACCOUNT_AWS_PROFILE\",\"value\":\"sandbox\"}]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "dev"
+    error_message = "ENVIRONMENT environment variable incorrect"
   }
 
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"CURRENT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-triggered-pipeline-environment-pipeline-codebuild\"},{\"name\":\"TRIGGERING_ACCOUNT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::000123456789:role/my-app-my-pipeline-environment-pipeline-codebuild\"},{\"name\":\"TRIGGERING_ACCOUNT_AWS_PROFILE\",\"value\":\"sandbox\"}]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "AWS_PROFILE_FOR_COPILOT"]) == "sandbox"
+    error_message = "AWS_PROFILE_FOR_COPILOT environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "CURRENT_CODEBUILD_ROLE"]) == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-triggered-pipeline-environment-pipeline-codebuild"
+    error_message = "CURRENT_CODEBUILD_ROLE environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TRIGGERING_ACCOUNT_CODEBUILD_ROLE"]) == "arn:aws:iam::000123456789:role/my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "TRIGGERING_ACCOUNT_CODEBUILD_ROLE environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TRIGGERING_ACCOUNT_AWS_PROFILE"]) == "sandbox"
+    error_message = "TRIGGERING_ACCOUNT_AWS_PROFILE environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "prod"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "AWS_PROFILE_FOR_COPILOT"]) == "prod"
+    error_message = "AWS_PROFILE_FOR_COPILOT environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "CURRENT_CODEBUILD_ROLE"]) == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-triggered-pipeline-environment-pipeline-codebuild"
+    error_message = "CURRENT_CODEBUILD_ROLE environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TRIGGERING_ACCOUNT_CODEBUILD_ROLE"]) == "arn:aws:iam::000123456789:role/my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "TRIGGERING_ACCOUNT_CODEBUILD_ROLE environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TRIGGERING_ACCOUNT_AWS_PROFILE"]) == "sandbox"
+    error_message = "TRIGGERING_ACCOUNT_AWS_PROFILE environment variable incorrect"
   }
 }
 
@@ -1235,10 +1322,55 @@ run "test_stages" {
     condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.PrimarySource == "build_output"
     error_message = "Configuration PrimarySource incorrect"
   }
+
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"PIPELINE_NAME\",\"value\":\"my-pipeline\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"no\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"}]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "APPLICATION"]) == "my-app"
+    error_message = "APPLICATION environment variable incorrect"
   }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "dev"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "PIPELINE_NAME"]) == "my-pipeline"
+    error_message = "PIPELINE_NAME environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_THREAD_ID"]) == "#{variables.SLACK_THREAD_ID}"
+    error_message = "SLACK_THREAD_ID environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.type if var.name == "SLACK_CHANNEL_ID"]) == "PARAMETER_STORE"
+    error_message = "SLACK_CHANNEL_ID environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_CHANNEL_ID"]) == "/codebuild/slack_pipeline_notifications_channel"
+    error_message = "SLACK_CHANNEL_ID environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_REF"]) == "#{slack.SLACK_REF}"
+    error_message = "SLACK_REF environment variable incorrect"
+  }
+
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "NEEDS_APPROVAL"]) == "no"
+    error_message = "NEEDS_APPROVAL environment variable incorrect"
+  }
+
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[2].action[0].namespace == "dev-plan"
     error_message = "Input artifacts incorrect"
@@ -1290,8 +1422,19 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"sandbox\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"CURRENT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-my-pipeline-environment-pipeline-codebuild\"},null,null]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if try(var.name, "") == "ENVIRONMENT"]) == "dev"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if try(var.name, "") == "AWS_PROFILE_FOR_COPILOT"]) == "sandbox"
+    error_message = "AWS_PROFILE_FOR_COPILOT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if try(var.name, "") == "CURRENT_CODEBUILD_ROLE"]) == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "CURRENT_CODEBUILD_ROLE environment variable incorrect"
   }
 
   # Stage: prod Plan
@@ -1344,8 +1487,14 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"PIPELINE_NAME\",\"value\":\"my-pipeline\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"NEEDS_APPROVAL\",\"value\":\"yes\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"}]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables) :
+    var.value if try(var.name, "") == "ENVIRONMENT"]) == "prod"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[4].action[0].configuration.EnvironmentVariables) :
+    var.value if try(var.name, "") == "NEEDS_APPROVAL"]) == "yes"
+    error_message = "NEEDS_APPROVAL environment variable incorrect"
   }
   assert {
     condition     = aws_codepipeline.environment_pipeline.stage[4].action[0].namespace == "prod-plan"
@@ -1440,8 +1589,19 @@ run "test_stages" {
     error_message = "Configuration PrimarySource incorrect"
   }
   assert {
-    condition     = aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables == "[{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"AWS_PROFILE_FOR_COPILOT\",\"value\":\"prod\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/codebuild/slack_pipeline_notifications_channel\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"},{\"name\":\"SLACK_THREAD_ID\",\"value\":\"#{variables.SLACK_THREAD_ID}\"},{\"name\":\"CURRENT_CODEBUILD_ROLE\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-my-pipeline-environment-pipeline-codebuild\"},null,null]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables) :
+    var.value if try(var.name, "") == "ENVIRONMENT"]) == "prod"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables) :
+    var.value if try(var.name, "") == "AWS_PROFILE_FOR_COPILOT"]) == "prod"
+    error_message = "AWS_PROFILE_FOR_COPILOT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.environment_pipeline.stage[6].action[0].configuration.EnvironmentVariables) :
+    var.value if try(var.name, "") == "CURRENT_CODEBUILD_ROLE"]) == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-my-pipeline-environment-pipeline-codebuild"
+    error_message = "CURRENT_CODEBUILD_ROLE environment variable incorrect"
   }
 }
 

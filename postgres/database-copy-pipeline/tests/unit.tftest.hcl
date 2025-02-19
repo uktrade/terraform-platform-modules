@@ -177,8 +177,24 @@ run "test_pipeline" {
     error_message = "Should be: project_deployment_source"
   }
   assert {
-    condition     = aws_codepipeline.database_copy_pipeline.stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"PIPELINE_NAME\",\"value\":\"test-db-prod-to-dev-copy-pipeline\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"}]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "PIPELINE_NAME"]) == "test-db-prod-to-dev-copy-pipeline"
+    error_message = "PIPELINE_NAME environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "DATABASE_NAME"]) == "test-db"
+    error_message = "DATABASE_NAME environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "FROM_ENVIRONMENT"]) == "prod"
+    error_message = "FROM_ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TO_ENVIRONMENT"]) == "dev"
+    error_message = "TO_ENVIRONMENT environment variable incorrect"
   }
 
   # Dump stage
@@ -223,8 +239,49 @@ run "test_pipeline" {
     error_message = "Should be: build_output"
   }
   assert {
-    condition     = aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"DUMP_ROLE_ARN\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-prod-test-db-dump-task\"},{\"name\":\"LOAD_ROLE_ARN\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-dev-test-db-load-task\"},{\"name\":\"FROM_ACCOUNT\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"TO_ACCOUNT\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "APPLICATION"]) == "test-app"
+    error_message = "APPLICATION environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "DATABASE_NAME"]) == "test-db"
+    error_message = "DATABASE_NAME environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "FROM_ENVIRONMENT"]) == "prod"
+    error_message = "FROM_ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TO_ENVIRONMENT"]) == "dev"
+    error_message = "TO_ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "DUMP_ROLE_ARN"]) == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-prod-test-db-dump-task"
+    error_message = "DUMP_ROLE_ARN environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "LOAD_ROLE_ARN"]) == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-dev-test-db-load-task"
+    error_message = "LOAD_ROLE_ARN environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "FROM_ACCOUNT"]) == "${data.aws_caller_identity.current.account_id}"
+    error_message = "FROM_ACCOUNT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TO_ACCOUNT"]) == "${data.aws_caller_identity.current.account_id}"
+    error_message = "TO_ACCOUNT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_REF"]) == "#{slack.SLACK_REF}"
+    error_message = "SLACK_REF environment variable incorrect"
   }
 
   # Load stage
@@ -269,8 +326,34 @@ run "test_pipeline" {
     error_message = "Should be: build_output"
   }
   assert {
-    condition     = aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"LOAD_ROLE_ARN\",\"value\":\"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-dev-test-db-load-task\"},{\"name\":\"TO_ACCOUNT\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "APPLICATION"]) == "test-app"
+    error_message = "APPLICATION environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "FROM_ENVIRONMENT"]) == "prod"
+    error_message = "FROM_ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TO_ENVIRONMENT"]) == "dev"
+    error_message = "TO_ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "LOAD_ROLE_ARN"]) == "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/test-app-dev-test-db-load-task"
+    error_message = "LOAD_ROLE_ARN environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TO_ACCOUNT"]) == "${data.aws_caller_identity.current.account_id}"
+    error_message = "TO_ACCOUNT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_REF"]) == "#{slack.SLACK_REF}"
+    error_message = "SLACK_REF environment variable incorrect"
   }
 }
 
@@ -680,12 +763,34 @@ run "test_cross_account_iam" {
   }
 
   assert {
-    condition     = aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"DUMP_ROLE_ARN\",\"value\":\"arn:aws:iam::123456789000:role/test-app-prod-test-db-dump-task\"},{\"name\":\"LOAD_ROLE_ARN\",\"value\":\"arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task\"},{\"name\":\"FROM_ACCOUNT\",\"value\":\"123456789000\"},{\"name\":\"TO_ACCOUNT\",\"value\":\"000123456789\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "DUMP_ROLE_ARN"]) == "arn:aws:iam::123456789000:role/test-app-prod-test-db-dump-task"
+    error_message = "DUMP_ROLE_ARN environment variable incorrect"
   }
   assert {
-    condition     = aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"test-app\"},{\"name\":\"DATABASE_NAME\",\"value\":\"test-db\"},{\"name\":\"FROM_ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"TO_ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"LOAD_ROLE_ARN\",\"value\":\"arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task\"},{\"name\":\"TO_ACCOUNT\",\"value\":\"000123456789\"},{\"name\":\"SLACK_REF\",\"value\":\"#{slack.SLACK_REF}\"}]"
-    error_message = "Configuration Env Vars incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "LOAD_ROLE_ARN"]) == "arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task"
+    error_message = "LOAD_ROLE_ARN environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "FROM_ACCOUNT"]) == "123456789000"
+    error_message = "FROM_ACCOUNT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[2].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TO_ACCOUNT"]) == "000123456789"
+    error_message = "TO_ACCOUNT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "LOAD_ROLE_ARN"]) == "arn:aws:iam::000123456789:role/test-app-dev-test-db-load-task"
+    error_message = "LOAD_ROLE_ARN environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.database_copy_pipeline.stage[3].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "TO_ACCOUNT"]) == "000123456789"
+    error_message = "TO_ACCOUNT environment variable incorrect"
   }
   assert {
     condition = data.aws_iam_policy_document.assume_account_role.statement[0].resources == toset([
