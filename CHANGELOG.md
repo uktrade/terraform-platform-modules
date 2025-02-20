@@ -1,5 +1,21 @@
 # Changelog
 
+## [7.3.0](https://github.com/uktrade/terraform-platform-modules/compare/7.2.0...7.3.0) (2025-02-20)
+
+
+### Features
+
+* DBTP-1788 Add deploy_repository key ([#341](https://github.com/uktrade/terraform-platform-modules/issues/341)) ([8c44ce7](https://github.com/uktrade/terraform-platform-modules/commit/8c44ce784fbc22c0455f477b9b41d0b49ee85ca6))
+
+
+### Bug Fixes
+
+* DBTP-1746 - Allow CDN origin options to be updated ([#334](https://github.com/uktrade/terraform-platform-modules/issues/334)) ([51ee145](https://github.com/uktrade/terraform-platform-modules/commit/51ee145c21dc9686d65eb744a6ff0961b22823eb))
+* DBTP-1789 - Remove required pipelines config ([#338](https://github.com/uktrade/terraform-platform-modules/issues/338)) ([4c76c94](https://github.com/uktrade/terraform-platform-modules/commit/4c76c946d2f50468d31597b81c64ca7a1492e001))
+* DBTP-1803 - Failure to retrieve service name ([#340](https://github.com/uktrade/terraform-platform-modules/issues/340)) ([916843d](https://github.com/uktrade/terraform-platform-modules/commit/916843dc9df626027162d3b1d2d14c22e2dde0db))
+* DBTP-1991 Allow environment pipeline to adjust ElastiCache replication count ([#335](https://github.com/uktrade/terraform-platform-modules/issues/335)) ([2052b95](https://github.com/uktrade/terraform-platform-modules/commit/2052b951f8fe0b655a07e66ab3ab3ede36e9ca23))
+* Redis plans being ignored ([#344](https://github.com/uktrade/terraform-platform-modules/issues/344)) ([808748e](https://github.com/uktrade/terraform-platform-modules/commit/808748eb0d8fed6cb0edf524c8c2e8c09fe86616))
+
 ## [7.2.0](https://github.com/uktrade/terraform-platform-modules/compare/7.1.0...7.2.0) (2025-02-11)
 
 
