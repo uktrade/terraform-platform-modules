@@ -43,7 +43,9 @@ variable "config" {
     })))
     # NOTE: allows access to S3 bucket from DBT Platform managed service roles, also generates Copilot addon for service access
     cross_environment_service_access = optional(map(object({
-      application       = string
+      # Deprecated: We didn't implement cross application access, no service teams are asking for it.
+      # application should be removed once we can confirm that no-one is using it.
+      application       = optional(string)
       account           = string
       environment       = string
       service           = string
