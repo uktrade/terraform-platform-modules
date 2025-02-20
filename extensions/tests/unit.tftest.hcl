@@ -383,7 +383,11 @@ run "codebase_deploy_iam_test" {
     error_message = "Should be: aws:PrincipalArn"
   }
   assert {
-    condition     = flatten([for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.values][0]) == ["arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline", "arn:aws:iam::000123456789:role/test-application-*-codebase-*"]
+    condition = flatten([for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.values][0]) == [
+      "arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline",
+      "arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline-*",
+      "arn:aws:iam::000123456789:role/test-application-*-codebase-*"
+    ]
     error_message = "Unexpected condition values"
   }
   assert {
