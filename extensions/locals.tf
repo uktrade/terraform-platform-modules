@@ -1,8 +1,8 @@
 locals {
   plans = {
-    opensearch        = yamldecode(file("${path.module}/../opensearch/plans.yml"))
-    postgres          = yamldecode(file("${path.module}/../postgres/plans.yml"))
-    elasticache-redis = yamldecode(file("${path.module}/../elasticache-redis/plans.yml"))
+    opensearch = yamldecode(file("${path.module}/../opensearch/plans.yml"))
+    postgres   = yamldecode(file("${path.module}/../postgres/plans.yml"))
+    redis      = yamldecode(file("${path.module}/../elasticache-redis/plans.yml"))
   }
 
   # So we don't hit a Parameter Store limit, filter environment config for extensions so it only includes the defaults (`"*"`) and the current environment
