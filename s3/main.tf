@@ -72,7 +72,7 @@ data "aws_iam_policy_document" "bucket-policy" {
       }
       condition {
         test     = "StringLike"
-        values   = ["arn:aws:iam::${statement.value.account}:role/${statement.value.application}-${statement.value.environment}-${statement.value.service}-TaskRole-*"]
+        values   = ["arn:aws:iam::${statement.value.account}:role/${var.application}-${statement.value.environment}-${statement.value.service}-TaskRole-*"]
         variable = "aws:PrincipalArn"
       }
       resources = [aws_s3_bucket.this.arn, "${aws_s3_bucket.this.arn}/*"]
@@ -162,7 +162,7 @@ data "aws_iam_policy_document" "key-policy" {
       }
       condition {
         test     = "StringLike"
-        values   = ["arn:aws:iam::${statement.value.account}:role/${statement.value.application}-${statement.value.environment}-${statement.value.service}-TaskRole-*"]
+        values   = ["arn:aws:iam::${statement.value.account}:role/${var.application}-${statement.value.environment}-${statement.value.service}-TaskRole-*"]
         variable = "aws:PrincipalArn"
       }
       resources = [aws_kms_key.kms-key[0].arn]
