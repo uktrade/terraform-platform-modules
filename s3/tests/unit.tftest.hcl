@@ -521,7 +521,6 @@ run "aws_s3_bucket_cross_environment_service_access_read_write_unit_test" {
       "type"        = "s3",
       "cross_environment_service_access" = {
         "test-access" = {
-          "application"       = "app",
           "environment"       = "test",
           "account"           = "123456789012",
           "service"           = "service",
@@ -573,7 +572,6 @@ run "aws_s3_bucket_cross_environment_service_access_read_only_unit_test" {
       "type"        = "s3",
       "cross_environment_service_access" = {
         "test-access" = {
-          "application"       = "app",
           "environment"       = "test",
           "account"           = "123456789012",
           "service"           = "service",
@@ -609,7 +607,6 @@ run "aws_s3_bucket_cross_environment_service_access_write_only_unit_test" {
       "type"        = "s3",
       "cross_environment_service_access" = {
         "test-access" = {
-          "application"       = "app",
           "environment"       = "test",
           "account"           = "123456789012",
           "service"           = "service",
@@ -645,7 +642,6 @@ run "aws_s3_bucket_cross_environment_service_access_invalid_cyber_sign_off" {
       "type"        = "s3",
       "cross_environment_service_access" = {
         "test-access" = {
-          "application"       = "app",
           "environment"       = "test",
           "account"           = "123456789012",
           "service"           = "service",
