@@ -42,6 +42,7 @@ phases:
 
       - UPPERCASE_SERVICE=$(echo "${SERVICE}" | tr '[:lower:]' '[:upper:]')
       - UPPERCASE_TAG=$(echo "${IMAGE_TAG}" | tr '[:lower:]' '[:upper:]')
+      - UPPERCASE_ENVIRONMENT=$(echo "${ENVIRONMENT}" | tr '[:lower:]' '[:upper:]')
 
       # Extract the pipeline name from CODEBUILD_INITIATOR default env var
       - |
@@ -57,7 +58,7 @@ phases:
       - BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)
 
       - |
-        MESSAGE=":rocket: STARTED - Deployment of ${UPPERCASE_SERVICE} service - Tag: ${UPPERCASE_TAG} - <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|Build log> | <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
+        MESSAGE=":rocket: STARTED - Deployment of ${UPPERCASE_SERVICE} service - Tag: ${UPPERCASE_TAG} - in the ${UPPERCASE_ENVIRONMENT} environment - <https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=${AWS_REGION}|Build log> | <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
 
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
 
@@ -153,7 +154,7 @@ phases:
             ;;
         esac
 
-      - MESSAGE="${STATUS_EMOJI} ${STATUS_TEXT} - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
+      - MESSAGE="${STATUS_EMOJI} ${STATUS_TEXT} - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service in the ${UPPERCASE_ENVIRONMENT} environment - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
 
       # Exit with an error code if deployment did not succeed
@@ -168,7 +169,7 @@ phases:
       - |
         if [ "${CODEBUILD_BUILD_SUCCEEDING}" != "1" ]; then
           BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)          
-          MESSAGE=":red_circle::warning: Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - FAILED <https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=eu-west-2|Build log>"
+          MESSAGE=":red_circle::warning: Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service in the ${UPPERCASE_ENVIRONMENT} environment - FAILED <https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=eu-west-2|Build log>"
           
           platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
         fi
