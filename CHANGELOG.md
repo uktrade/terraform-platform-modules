@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.3.1](https://github.com/uktrade/terraform-platform-modules/compare/7.3.0...7.3.1) (2025-02-21)
+
+
+### Bug Fixes
+
+* DBTP-1700 Deprecate cross_enviroment_service_access application property ([#345](https://github.com/uktrade/terraform-platform-modules/issues/345)) ([bf431c6](https://github.com/uktrade/terraform-platform-modules/commit/bf431c6b4e38b41310818976c74f2cf6ad4cecff))
+
 ## [7.3.0](https://github.com/uktrade/terraform-platform-modules/compare/7.2.0...7.3.0) (2025-02-20)
 
 
