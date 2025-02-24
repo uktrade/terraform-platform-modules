@@ -18,9 +18,10 @@ phases:
       - set -e
 
       # Check if the specified image tag exists
+      - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - |
-        if ! aws ecr describe-images --repository-name "${REPOSITORY_NAME}" --image-ids "imageTag=${IMAGE_TAG}" > /dev/null 2>&1; then
-          echo "Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_NAME}"
+        if ! docker manifest inspect "${REPOSITORY_URL}:${IMAGE_TAG}" > /dev/null 2>&1; then
+          echo "Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_URL}"
           exit 1
         fi
 
@@ -30,9 +31,6 @@ phases:
           echo "Error: environment ${ENVIRONMENT} not listed in environment config"
           exit 1
         fi
-
-      # Extract timestamp from image config and check if it exists
-      - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
       # Construct Slack message env vars
       - SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
@@ -76,7 +74,7 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo $assumed_role | jq -r .Credentials.SessionToken)
 
       # Get service name
-      - service_name=$(aws ecs list-services --cluster "${cluster}" | jq -r '.serviceArns[] | select(contains("'${cluster}'-'${SERVICE}'-Service"))' | cut -d '/' -f3)
+      - service_name=$(aws ecs list-services --cluster "${cluster}" | jq -r '.serviceArns[] | select(test("'${cluster}'-'${SERVICE}'($|-Service.*)"))' | cut -d '/' -f3)
 
       # Update task definition
       - task_definition=$(aws ecs describe-task-definition --task-definition "${task_family}")
@@ -170,7 +168,7 @@ phases:
       - |
         if [ "${CODEBUILD_BUILD_SUCCEEDING}" != "1" ]; then
           BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)          
-          MESSAGE=":red_circle::warning: ERROR - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - FAILED <https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=eu-west-2|Build log>"
+          MESSAGE=":red_circle::warning: Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - FAILED <https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=eu-west-2|Build log>"
           
           platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
         fi

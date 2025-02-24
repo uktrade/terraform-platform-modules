@@ -10,8 +10,14 @@ variable "repository" {
   type = string
 }
 
+variable "deploy_repository" {
+  type    = string
+  default = null
+}
+
 variable "additional_ecr_repository" {
-  type = string
+  type    = string
+  default = null
 }
 
 variable "pipelines" {

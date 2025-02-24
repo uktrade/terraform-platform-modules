@@ -199,8 +199,7 @@ resource "random_password" "origin-secret" {
 resource "aws_wafv2_web_acl" "waf-acl" {
   # checkov:skip=CKV2_AWS_31: Ensure WAF2 has a Logging Configuration to be done new ticket
   # checkov:skip=CKV_AWS_192: AWSManagedRulesKnownBadInputsRuleSet handles on the CDN
-  depends_on = [random_password.origin-secret]
-
+  for_each    = toset(local.cdn_enabled ? [""] : [])
   name        = "${var.application}-${var.environment}-ACL"
   description = "CloudFront Origin Verify"
   scope       = "REGIONAL"
@@ -263,7 +262,8 @@ resource "aws_wafv2_web_acl" "waf-acl" {
 
 # IAM Role for Lambda Execution
 resource "aws_iam_role" "origin-secret-rotate-execution-role" {
-  name = "${var.application}-${var.environment}-origin-secret-rotate-role"
+  for_each = toset(local.cdn_enabled ? [""] : [])
+  name     = "${var.application}-${var.environment}-origin-secret-rotate-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -278,6 +278,7 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
 }
 
 data "aws_iam_policy_document" "origin_verify_rotate_policy" {
+  for_each = toset(local.cdn_enabled ? [""] : [])
   statement {
     effect = "Allow"
     actions = [
@@ -327,7 +328,7 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
     effect  = "Allow"
     actions = ["wafv2:*"]
     resources = [
-      aws_wafv2_web_acl.waf-acl.arn
+      aws_wafv2_web_acl.waf-acl[""].arn
     ]
   }
 
@@ -356,7 +357,7 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
       "kms:GenerateDataKey"
     ]
     resources = [
-      aws_kms_key.origin_verify_secret_key.arn
+      aws_kms_key.origin_verify_secret_key[""].arn
     ]
   }
 
@@ -384,16 +385,16 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
 
 
 resource "aws_iam_role_policy" "origin_secret_rotate_policy" {
-  name   = "OriginVerifyRotatePolicy"
-  role   = aws_iam_role.origin-secret-rotate-execution-role.name
-  policy = data.aws_iam_policy_document.origin_verify_rotate_policy.json
+  for_each = toset(local.cdn_enabled ? [""] : [])
+  name     = "OriginVerifyRotatePolicy"
+  role     = aws_iam_role.origin-secret-rotate-execution-role[""].name
+  policy   = data.aws_iam_policy_document.origin_verify_rotate_policy[""].json
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
   role       = aws_iam_role.origin-secret-rotate-execution-role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
-
 
 # This file needs to exist, but it's not directly used in the Terraform so...
 # tflint-ignore: terraform_unused_declarations
@@ -420,6 +421,7 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   # checkov:skip=CKV_AWS_173:Encryption of environmental variables is not configured with KMS key
   # checkov:skip=CKV_AWS_117:Run Lambda inside VPC with security groups & private subnets not necessary
   # checkov:skip=CKV_AWS_50:XRAY tracing not used
+  for_each      = toset(local.cdn_enabled ? [""] : [])
   depends_on    = [data.archive_file.lambda, aws_iam_role.origin-secret-rotate-execution-role]
   filename      = data.archive_file.lambda.output_path
   function_name = "${var.application}-${var.environment}-origin-secret-rotate"
@@ -427,16 +429,16 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
   handler       = "rotate_secret_lambda.lambda_handler"
   runtime       = "python3.9"
   timeout       = 300
-  role          = aws_iam_role.origin-secret-rotate-execution-role.arn
+  role          = aws_iam_role.origin-secret-rotate-execution-role[""].arn
   # this is not a user-facing function that needs to scale rapidly
   reserved_concurrent_executions = 5
 
   environment {
     variables = {
-      SECRETID = aws_secretsmanager_secret.origin-verify-secret.arn
-      WAFACLID = aws_wafv2_web_acl.waf-acl.id
+      SECRETID = aws_secretsmanager_secret.origin-verify-secret[""].arn
+      WAFACLID = aws_wafv2_web_acl.waf-acl[""].id
       # todo: why are we splitting on |, should it just be aws_wafv2_web_acl.waf-acl.name?
-      WAFACLNAME         = split("|", aws_wafv2_web_acl.waf-acl.name)[0]
+      WAFACLNAME         = split("|", aws_wafv2_web_acl.waf-acl[""].name)[0]
       WAFRULEPRI         = "0"
       DISTROIDLIST       = local.domain_list
       HEADERNAME         = "x-origin-verify"
@@ -463,9 +465,10 @@ resource "aws_lambda_function" "origin-secret-rotate-function" {
 
 # Lambda Permission for Secrets Manager Rotation
 resource "aws_lambda_permission" "rotate-function-invoke-permission" {
+  for_each      = toset(local.cdn_enabled ? [""] : [])
   statement_id  = "AllowSecretsManagerInvocation"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.origin-secret-rotate-function.function_name
+  function_name = aws_lambda_function.origin-secret-rotate-function[""].function_name
   principal     = "secretsmanager.amazonaws.com"
 
   # chekov CKV_AWS_364 requirement: limit lambda invocation by secrets in the same AWS account
@@ -474,6 +477,39 @@ resource "aws_lambda_permission" "rotate-function-invoke-permission" {
 
 # Associate WAF ACL with ALB
 resource "aws_wafv2_web_acl_association" "waf-alb-association" {
+  for_each     = toset(local.cdn_enabled ? [""] : [])
   resource_arn = aws_lb.this.arn
-  web_acl_arn  = aws_wafv2_web_acl.waf-acl.arn
+  web_acl_arn  = aws_wafv2_web_acl.waf-acl[""].arn
+}
+
+
+# These moved blocks are to prevent resources being recreated
+moved {
+  from = aws_wafv2_web_acl.waf-acl
+  to   = aws_wafv2_web_acl.waf-acl[""]
+}
+
+moved {
+  from = aws_wafv2_web_acl_association.waf-alb-association
+  to   = aws_wafv2_web_acl_association.waf-alb-association[""]
+}
+
+moved {
+  from = aws_lambda_function.origin-secret-rotate-function
+  to   = aws_lambda_function.origin-secret-rotate-function[""]
+}
+
+moved {
+  from = aws_iam_role.origin-secret-rotate-execution-role
+  to   = aws_iam_role.origin-secret-rotate-execution-role[""]
+}
+
+moved {
+  from = aws_lambda_permission.rotate-function-invoke-permission
+  to   = aws_lambda_permission.rotate-function-invoke-permission[""]
+}
+
+moved {
+  from = aws_iam_role_policy.origin_secret_rotate_policy
+  to   = aws_iam_role_policy.origin_secret_rotate_policy[""]
 }

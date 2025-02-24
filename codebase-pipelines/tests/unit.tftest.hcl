@@ -63,6 +63,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline
+  values = {
+    json = "{\"Sid\": \"PipelineECRAccess\"}"
+  }
+}
+
 variables {
   env_config = {
     "*" = {
@@ -84,10 +91,9 @@ variables {
       }
     }
   }
-  application               = "my-app"
-  codebase                  = "my-codebase"
-  repository                = "my-repository"
-  additional_ecr_repository = "my-additional-repository"
+  application = "my-app"
+  codebase    = "my-codebase"
+  repository  = "my-repository"
   services = [
     {
       "run_group_1" : [
@@ -171,8 +177,20 @@ run "test_artifact_store" {
     error_message = "Should be: AWS"
   }
   assert {
-    condition     = flatten([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::000123456789:role/my-app-dev-codebase-pipeline-deploy", "arn:aws:iam::000123456789:role/my-app-staging-codebase-pipeline-deploy", "arn:aws:iam::123456789000:role/my-app-prod-codebase-pipeline-deploy"]
+    condition     = flatten([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].principals : el.identifiers]) == ["arn:aws:iam::000123456789:root", "arn:aws:iam::123456789000:root"]
     error_message = "Bucket policy principals incorrect"
+  }
+  assert {
+    condition     = one([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].condition : el.test]) == "ArnLike"
+    error_message = "Bucket policy condition incorrect"
+  }
+  assert {
+    condition     = one([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].condition : el.variable]) == "aws:PrincipalArn"
+    error_message = "Bucket policy condition incorrect"
+  }
+  assert {
+    condition     = flatten([for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].condition : el.values]) == ["arn:aws:iam::000123456789:role/my-app-*-codebase-pipeline-deploy", "arn:aws:iam::123456789000:role/my-app-*-codebase-pipeline-deploy"]
+    error_message = "Bucket policy condition incorrect"
   }
   assert {
     condition     = [for el in data.aws_iam_policy_document.artifact_store_bucket_policy.statement[1].actions : el][0] == "s3:*"
@@ -216,28 +234,14 @@ run "test_codebuild_images" {
     error_message = "Should be: 'public.ecr.aws/uktrade/ci-image-builder:tag-latest'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[1].name == "ECR_REPOSITORY"
-    error_message = "Should be: 'ECR_REPOSITORY'"
-  }
-  assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[1].value == "my-app/my-codebase"
+    condition = one([for var in one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable :
+    var.value if var.name == "ECR_REPOSITORY"]) == "my-app/my-codebase"
     error_message = "Should be: 'my-app/my-codebase'"
   }
   assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].name == "SLACK_CHANNEL_ID"
-    error_message = "Should be: 'SLACK_CHANNEL_ID'"
-  }
-  assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[3].value == "/fake/slack/channel"
+    condition = one([for var in one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable :
+    var.value if var.name == "SLACK_CHANNEL_ID"]) == "/fake/slack/channel"
     error_message = "Should be: '/fake/slack/channel'"
-  }
-  assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].name == "ADDITIONAL_ECR_REPOSITORY"
-    error_message = "Should be: 'ADDITIONAL_ECR_REPOSITORY'"
-  }
-  assert {
-    condition     = one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable[4].value == "my-additional-repository"
-    error_message = "Should be: 'my-additional-repository'"
   }
   assert {
     condition = aws_codebuild_project.codebase_image_build[""].logs_config[0].cloudwatch_logs[
@@ -340,11 +344,136 @@ run "test_codebuild_images_not_required" {
   }
   assert {
     condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"latest\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
-    error_message = "Event pattern is incorrect ${jsonencode(aws_cloudwatch_event_rule.ecr_image_publish[0].event_pattern)}"
+    error_message = "Event pattern is incorrect"
   }
   assert {
     condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].event_pattern == "{\"detail\":{\"action-type\":[\"PUSH\"],\"image-tag\":[\"latest\"],\"repository-name\":[\"my-app/my-codebase\"],\"result\":[\"SUCCESS\"]},\"detail-type\":[\"ECR Image Action\"],\"source\":[\"aws.ecr\"]}"
     error_message = "Event pattern is incorrect"
+  }
+}
+
+run "test_additional_private_ecr_repository" {
+  command = plan
+
+  variables {
+    additional_ecr_repository = "repository-namespace/repository-name"
+  }
+
+  assert {
+    condition     = local.is_additional_repo_public == false
+    error_message = "Should be: false"
+  }
+  assert {
+    condition = one([for var in one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable :
+    var.value if var.name == "ADDITIONAL_ECR_REPOSITORY"]) == "repository-namespace/repository-name"
+    error_message = "Should be: repository-namespace/repository-name"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/repository-namespace/repository-name"
+    error_message = "REPOSITORY_URL environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/repository-namespace/repository-name"
+    error_message = "REPOSITORY_URL environment variable incorrect"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources == toset([
+      "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase",
+      "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/repository-namespace/repository-name"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = length(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == 2
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources == toset([
+      "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase",
+      "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/repository-namespace/repository-name"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = length(data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources) == 2
+    error_message = "Unexpected resources"
+  }
+}
+
+run "test_additional_ecr_repository_public" {
+  command = plan
+
+  variables {
+    additional_ecr_repository = "public.ecr.aws/repository-namespace/repository-name"
+  }
+
+  assert {
+    condition     = local.is_additional_repo_public == true
+    error_message = "Should be: true"
+  }
+  assert {
+    condition = one([for var in one(aws_codebuild_project.codebase_image_build[""].environment).environment_variable :
+    var.value if var.name == "ADDITIONAL_ECR_REPOSITORY"]) == "public.ecr.aws/repository-namespace/repository-name"
+    error_message = "Should be: 'public.ecr.aws/repository-namespace/repository-name'"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "public.ecr.aws/repository-namespace/repository-name"
+    error_message = "REPOSITORY_URL environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "public.ecr.aws/repository-namespace/repository-name"
+    error_message = "REPOSITORY_URL environment variable incorrect"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].actions == toset([
+      "ecr-public:DescribeImageScanFindings",
+      "ecr-public:GetLifecyclePolicyPreview",
+      "ecr-public:GetDownloadUrlForLayer",
+      "ecr-public:BatchGetImage",
+      "ecr-public:DescribeImages",
+      "ecr-public:ListTagsForResource",
+      "ecr-public:BatchCheckLayerAvailability",
+      "ecr-public:GetLifecyclePolicy",
+      "ecr-public:GetRepositoryPolicy",
+      "ecr-public:PutImage",
+      "ecr-public:InitiateLayerUpload",
+      "ecr-public:UploadLayerPart",
+      "ecr-public:CompleteLayerUpload",
+      "ecr-public:BatchDeleteImage",
+      "ecr-public:DescribeRepositories",
+      "ecr-public:ListImages"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].resources) == "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
+    error_message = "Unexpected resources"
+  }
+}
+
+run "test_deploy_repository" {
+  command = plan
+
+  variables {
+    deploy_repository = "uktrade/application-deploy"
+  }
+
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.FullRepositoryId == "uktrade/application-deploy"
+    error_message = "Should be: uktrade/application-deploy"
+  }
+
+  assert {
+    condition     = aws_codepipeline.manual_release_pipeline.stage[0].action[0].configuration.FullRepositoryId == "uktrade/application-deploy"
+    error_message = "Should be: uktrade/application-deploy"
   }
 }
 
@@ -619,35 +748,6 @@ run "test_iam_documents" {
   }
   assert {
     condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].actions == toset([
-      "ecr-public:DescribeImageScanFindings",
-      "ecr-public:GetLifecyclePolicyPreview",
-      "ecr-public:GetDownloadUrlForLayer",
-      "ecr-public:BatchGetImage",
-      "ecr-public:DescribeImages",
-      "ecr-public:ListTagsForResource",
-      "ecr-public:BatchCheckLayerAvailability",
-      "ecr-public:GetLifecyclePolicy",
-      "ecr-public:GetRepositoryPolicy",
-      "ecr-public:PutImage",
-      "ecr-public:InitiateLayerUpload",
-      "ecr-public:UploadLayerPart",
-      "ecr-public:CompleteLayerUpload",
-      "ecr-public:BatchDeleteImage",
-      "ecr-public:DescribeRepositories",
-      "ecr-public:ListImages"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition     = one(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == "arn:aws:ecr-public::${data.aws_caller_identity.current.account_id}:repository/*"
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[2].actions == toset([
       "ecr:DescribeImageScanFindings",
       "ecr:GetLifecyclePolicyPreview",
       "ecr:GetDownloadUrlForLayer",
@@ -666,6 +766,14 @@ run "test_iam_documents" {
       "ecr:ListImages"
     ])
     error_message = "Unexpected actions"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources == toset(["arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase"])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = length(data.aws_iam_policy_document.ecr_access_for_codebuild_images.statement[1].resources) == 1
+    error_message = "Unexpected resources"
   }
 
   # Codestar connection
@@ -771,13 +879,20 @@ run "test_iam_documents" {
     ])
     error_message = "Unexpected actions"
   }
+  assert {
+    condition     = data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources == toset(["arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/my-app/my-codebase"])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = length(data.aws_iam_policy_document.ecr_access_for_codebase_pipeline.statement[0].resources) == 1
+    error_message = "Unexpected resources"
+  }
 
   # SSM access
   assert {
     condition     = data.aws_iam_policy_document.deploy_ssm_access.statement[0].effect == "Allow"
     error_message = "Should be: Allow"
   }
-
   assert {
     condition = data.aws_iam_policy_document.deploy_ssm_access.statement[0].actions == toset([
       "ssm:GetParameter",
@@ -785,7 +900,6 @@ run "test_iam_documents" {
     ])
     error_message = "Unexpected actions"
   }
-
   assert {
     condition     = one(data.aws_iam_policy_document.deploy_ssm_access.statement[0].resources) == "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/codebuild/slack_*"
     error_message = "Unexpected resources"
@@ -838,7 +952,7 @@ run "test_codebuild_deploy" {
   }
   assert {
     condition     = one(aws_codebuild_project.codebase_deploy.environment).environment_variable[0].name == "ENV_CONFIG"
-    error_message = "Should be: 'ENV_CONFIG' ${jsonencode(one(aws_codebuild_project.codebase_deploy.environment).environment_variable[0])}"
+    error_message = "Should be: 'ENV_CONFIG'"
   }
   assert {
     condition     = one(aws_codebuild_project.codebase_deploy.environment).environment_variable[0].value == "{\"dev\":{\"account\":\"000123456789\"},\"prod\":{\"account\":\"123456789000\"},\"staging\":{\"account\":\"000123456789\"}}"
@@ -1005,12 +1119,56 @@ run "test_main_pipeline" {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
-
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "APPLICATION"]) == "my-app"
+    error_message = "APPLICATION environment variable incorrect"
   }
-
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "AWS_REGION"]) == "${data.aws_region.current.name}"
+    error_message = "AWS_REGION environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "AWS_ACCOUNT_ID"]) == "${data.aws_caller_identity.current.account_id}"
+    error_message = "AWS_ACCOUNT_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "dev"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "IMAGE_TAG"]) == "#{variables.IMAGE_TAG}"
+    error_message = "IMAGE_TAG environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "PIPELINE_EXECUTION_ID"]) == "#{codepipeline.PipelineExecutionId}"
+    error_message = "PIPELINE_EXECUTION_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase"
+    error_message = "REPOSITORY_URL environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-1"
+    error_message = "SERVICE environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_CHANNEL_ID"]) == "/fake/slack/channel"
+    error_message = "SLACK_CHANNEL_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.type if var.name == "SLACK_CHANNEL_ID"]) == "PARAMETER_STORE"
+    error_message = "SLACK_CHANNEL_ID environment variable type is incorrect"
+  }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].run_order == 2
     error_message = "Run order incorrect"
@@ -1046,10 +1204,15 @@ run "test_main_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"dev\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "dev"
+    error_message = "ENVIRONMENT environment variable incorrect"
   }
-
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-2"
+    error_message = "SERVICE environment variable incorrect"
+  }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].run_order == 3
     error_message = "Run order incorrect"
@@ -1084,10 +1247,15 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "staging"
+    error_message = "ENVIRONMENT environment variable incorrect"
   }
-
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-1"
+    error_message = "SERVICE environment variable incorrect"
+  }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[0].run_order == 2
     error_message = "Run order incorrect"
@@ -1096,11 +1264,17 @@ run "test_tagged_pipeline" {
   # Deploy service-2 action
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[1].name == "service-2"
-    error_message = "Should be: service-1"
+    error_message = "Should be: service-2"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"staging\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "staging"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-2"
+    error_message = "SERVICE environment variable incorrect"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[1].action[1].run_order == 3
@@ -1145,8 +1319,14 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "prod"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[2].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-1"
+    error_message = "SERVICE environment variable incorrect"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[1].run_order == 2
@@ -1159,8 +1339,14 @@ run "test_tagged_pipeline" {
     error_message = "Should be: service-1"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[2].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"prod\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[2].action[2].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "prod"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[1].stage[2].action[2].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-2"
+    error_message = "SERVICE environment variable incorrect"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[2].action[2].run_order == 3
@@ -1298,8 +1484,54 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-1\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "APPLICATION"]) == "my-app"
+    error_message = "APPLICATION environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "AWS_REGION"]) == "${data.aws_region.current.name}"
+    error_message = "AWS_REGION environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "AWS_ACCOUNT_ID"]) == "${data.aws_caller_identity.current.account_id}"
+    error_message = "AWS_ACCOUNT_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "#{variables.ENVIRONMENT}"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "IMAGE_TAG"]) == "#{variables.IMAGE_TAG}"
+    error_message = "IMAGE_TAG environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "PIPELINE_EXECUTION_ID"]) == "#{codepipeline.PipelineExecutionId}"
+    error_message = "PIPELINE_EXECUTION_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "REPOSITORY_URL"]) == "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase"
+    error_message = "REPOSITORY_URL environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-1"
+    error_message = "SERVICE environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.value if var.name == "SLACK_CHANNEL_ID"]) == "/fake/slack/channel"
+    error_message = "SLACK_CHANNEL_ID environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
+    var.type if var.name == "SLACK_CHANNEL_ID"]) == "PARAMETER_STORE"
+    error_message = "SLACK_CHANNEL_ID environment variable type is incorrect"
   }
   assert {
     condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[0].run_order == 2
@@ -1336,8 +1568,14 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables == "[{\"name\":\"APPLICATION\",\"value\":\"my-app\"},{\"name\":\"AWS_REGION\",\"value\":\"${data.aws_region.current.name}\"},{\"name\":\"AWS_ACCOUNT_ID\",\"value\":\"${data.aws_caller_identity.current.account_id}\"},{\"name\":\"ENVIRONMENT\",\"value\":\"#{variables.ENVIRONMENT}\"},{\"name\":\"IMAGE_TAG\",\"value\":\"#{variables.IMAGE_TAG}\"},{\"name\":\"PIPELINE_EXECUTION_ID\",\"value\":\"#{codepipeline.PipelineExecutionId}\"},{\"name\":\"PREFIXED_REPOSITORY_NAME\",\"value\":\"uktrade/my-app\"},{\"name\":\"REPOSITORY_URL\",\"value\":\"${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/my-app/my-codebase\"},{\"name\":\"REPOSITORY_NAME\",\"value\":\"my-app/my-codebase\"},{\"name\":\"SERVICE\",\"value\":\"service-2\"},{\"name\":\"SLACK_CHANNEL_ID\",\"type\":\"PARAMETER_STORE\",\"value\":\"/fake/slack/channel\"}]"
-    error_message = "Configuration environment variables incorrect"
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "ENVIRONMENT"]) == "#{variables.ENVIRONMENT}"
+    error_message = "ENVIRONMENT environment variable incorrect"
+  }
+  assert {
+    condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables) :
+    var.value if var.name == "SERVICE"]) == "service-2"
+    error_message = "SERVICE environment variable incorrect"
   }
   assert {
     condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].run_order == 3
@@ -1386,27 +1624,27 @@ run "test_event_bridge" {
 
   # IAM roles
   assert {
-    condition     = aws_iam_role.event_bridge_pipeline_trigger.name == "my-app-my-codebase-event-bridge-pipeline-trigger"
+    condition     = aws_iam_role.event_bridge_pipeline_trigger[""].name == "my-app-my-codebase-event-bridge-pipeline-trigger"
     error_message = "Should be: 'my-app-my-codebase-event-bridge-pipeline-trigger'"
   }
   assert {
-    condition     = aws_iam_role.event_bridge_pipeline_trigger.assume_role_policy == "{\"Sid\": \"AssumeEventBridge\"}"
+    condition     = aws_iam_role.event_bridge_pipeline_trigger[""].assume_role_policy == "{\"Sid\": \"AssumeEventBridge\"}"
     error_message = "Should be: {\"Sid\": \"AssumeEventBridge\"}"
   }
   assert {
-    condition     = jsonencode(aws_iam_role.event_bridge_pipeline_trigger.tags) == jsonencode(var.expected_tags)
+    condition     = jsonencode(aws_iam_role.event_bridge_pipeline_trigger[""].tags) == jsonencode(var.expected_tags)
     error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
   assert {
-    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.name == "event-bridge-access"
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger[""].name == "event-bridge-access"
     error_message = "Should be: 'event-bridge-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.role == "my-app-my-codebase-event-bridge-pipeline-trigger"
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger[""].role == "my-app-my-codebase-event-bridge-pipeline-trigger"
     error_message = "Should be: 'my-app-my-codebase-event-bridge-pipeline-trigger'"
   }
   assert {
-    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger.policy == "{\"Sid\": \"EventBridgePipelineTrigger\"}"
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger[""].policy == "{\"Sid\": \"EventBridgePipelineTrigger\"}"
     error_message = "Unexpected policy"
   }
 

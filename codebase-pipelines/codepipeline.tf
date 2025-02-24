@@ -35,7 +35,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
 
       configuration = {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
-        FullRepositoryId = "uktrade/${var.application}-deploy"
+        FullRepositoryId = var.deploy_repository != null ? var.deploy_repository : "uktrade/${var.application}-deploy"
         BranchName       = "main"
         DetectChanges    = false
       }
@@ -80,9 +80,7 @@ resource "aws_codepipeline" "codebase_pipeline" {
               { name : "ENVIRONMENT", value : stage.value.name },
               { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" },
               { name : "PIPELINE_EXECUTION_ID", value : "#{codepipeline.PipelineExecutionId}" },
-              { name : "PREFIXED_REPOSITORY_NAME", value : local.prefixed_repository_name },
               { name : "REPOSITORY_URL", value : local.repository_url },
-              { name : "REPOSITORY_NAME", value : local.ecr_name },
               { name : "SERVICE", value : action.value.name },
               { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
             ])
@@ -137,7 +135,7 @@ resource "aws_codepipeline" "manual_release_pipeline" {
 
       configuration = {
         ConnectionArn    = data.aws_codestarconnections_connection.github_codestar_connection.arn
-        FullRepositoryId = "uktrade/${var.application}-deploy"
+        FullRepositoryId = var.deploy_repository != null ? var.deploy_repository : "uktrade/${var.application}-deploy"
         BranchName       = "main"
         DetectChanges    = false
       }
@@ -168,9 +166,7 @@ resource "aws_codepipeline" "manual_release_pipeline" {
             { name : "ENVIRONMENT", value : "#{variables.ENVIRONMENT}" },
             { name : "IMAGE_TAG", value : "#{variables.IMAGE_TAG}" },
             { name : "PIPELINE_EXECUTION_ID", value : "#{codepipeline.PipelineExecutionId}" },
-            { name : "PREFIXED_REPOSITORY_NAME", value : local.prefixed_repository_name },
             { name : "REPOSITORY_URL", value : local.repository_url },
-            { name : "REPOSITORY_NAME", value : local.ecr_name },
             { name : "SERVICE", value : action.value.name },
             { name : "SLACK_CHANNEL_ID", value : var.slack_channel, type : "PARAMETER_STORE" },
           ])
