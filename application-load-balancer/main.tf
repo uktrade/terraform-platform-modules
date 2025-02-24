@@ -392,7 +392,7 @@ resource "aws_iam_role_policy" "origin_secret_rotate_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
-  role       = aws_iam_role.origin-secret-rotate-execution-role.name
+  role       = aws_iam_role.origin-secret-rotate-execution-role[""].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
