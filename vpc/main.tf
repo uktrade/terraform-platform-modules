@@ -118,7 +118,13 @@ resource "aws_ssm_parameter" "combined_nat_gateway_eips" {
   name  = "/${var.arg_name}/EGRESS_IPS"
   type  = "String"
   value = join(",", local.nat_gateway_eips)
-  tags  = local.tags
+  tags = merge(
+    local.tags,
+    {
+      "copilot-application" = "__all__"
+    }
+  )
+
 }
 
 
