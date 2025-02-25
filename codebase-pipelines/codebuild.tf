@@ -4,7 +4,7 @@ data "aws_codestarconnections_connection" "github_codestar_connection" {
 
 resource "aws_codebuild_project" "codebase_image_build" {
   for_each      = toset(var.requires_image_build ? [""] : [])
-  name          = "${var.application}-${var.codebase}-codebase-pipeline-image-build"
+  name          = "${var.application}-${var.codebase}-codebase-image-build"
   description   = "Publish images on push to ${var.repository}"
   build_timeout = 30
   service_role  = aws_iam_role.codebase_image_build[""].arn
@@ -126,7 +126,7 @@ resource "aws_codebuild_webhook" "codebuild_webhook" {
 
 
 resource "aws_codebuild_project" "codebase_deploy" {
-  name           = "${var.application}-${var.codebase}-codebase-pipeline-deploy"
+  name           = "${var.application}-${var.codebase}-codebase-deploy"
   description    = "Deploy specified image tag to specified environment"
   build_timeout  = 30
   service_role   = aws_iam_role.codebase_deploy.arn
