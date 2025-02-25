@@ -9,7 +9,7 @@ resource "aws_cloudwatch_dashboard" "compute" {
         x : 0,
         type : "log",
         properties : {
-          query : "SOURCE '/aws/ecs/containerinsights/${var.application}-${var.environment}/performance' | fields fromMillis(Timestamp) as Time, ClusterName as Cluster, TaskDefinitionFamily as Service, ContainerName as Container, Image\n| filter @message like 'application:'\n| sort Cluster, Service, Container\n| dedup Service, Container",
+          query : "SOURCE '/aws/ecs/containerinsights/${var.application}-${var.environment}/performance' | fields fromMillis(Timestamp) as Time, ClusterName as Cluster, TaskDefinitionFamily as Service, ContainerName as Container, Image\n| filter @message like '${var.application}/'\n| sort Cluster, Service, Container\n| dedup Service, Container",
           region : "eu-west-2",
           stacked : false,
           title : "Deployed Application Images",
@@ -23,7 +23,7 @@ resource "aws_cloudwatch_dashboard" "compute" {
         x : 0,
         type : "log",
         properties : {
-          query : "SOURCE '/aws/ecs/containerinsights/${var.application}-${var.environment}/performance' | fields fromMillis(Timestamp) as Time, ClusterName as Cluster, TaskDefinitionFamily as Service, ContainerName as Container, Image\n| filter @message like '\"Image\":'\n| filter @message not like 'application:'\n| sort Cluster, Service, Container\n| dedup Service, Container",
+          query : "SOURCE '/aws/ecs/containerinsights/${var.application}-${var.environment}/performance' | fields fromMillis(Timestamp) as Time, ClusterName as Cluster, TaskDefinitionFamily as Service, ContainerName as Container, Image\n| filter @message like '\"Image\":'\n| filter @message not like '${var.application}/'\n| sort Cluster, Service, Container\n| dedup Service, Container",
           region : "eu-west-2",
           stacked : false,
           title : "Deployed Sidecar Images",

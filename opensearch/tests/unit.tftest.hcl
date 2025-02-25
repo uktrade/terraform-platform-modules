@@ -462,4 +462,14 @@ run "aws_kms_key_unit_test" {
     condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].principals), "ecs-tasks.amazonaws.com")
     error_message = "Should be: ecs-tasks.amazonaws.com"
   }
+
+  # Check kms access role policy
+  assert {
+    condition     = aws_iam_role_policy.kms_access_for_conduit_ecs_task.name == "AllowReadingofCMKSecrets"
+    error_message = "Should be: 'AllowReadingofCMKSecrets'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.kms_access_for_conduit_ecs_task.role == "my_name-my_app-my_env-conduitEcsTask"
+    error_message = "Should be: 'my_name-my_app-my_env-conduitEcsTask'"
+  }
 }

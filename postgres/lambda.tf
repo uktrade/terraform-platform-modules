@@ -44,11 +44,12 @@ resource "aws_iam_role" "lambda-execution-role" {
   name               = "${local.name}-lambda-role"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.lambda-assume-role-policy.json
+}
 
-  inline_policy {
-    name   = "${local.name}-execution-policy"
-    policy = data.aws_iam_policy_document.lambda-execution-policy.json
-  }
+resource "aws_iam_role_policy" "lambda-execution-role-policy" {
+  name   = "${local.name}-execution-policy"
+  role   = aws_iam_role.lambda-execution-role.name
+  policy = data.aws_iam_policy_document.lambda-execution-policy.json
 }
 
 data "aws_security_group" "rds-endpoint" {

@@ -660,6 +660,20 @@ run "aws_iam_role_unit_test" {
     error_message = "Should be: {\"Sid\": \"AllowLambdaAssumeRole\"}"
   }
 
+  # Check lambda execution role policy
+  assert {
+    condition     = aws_iam_role_policy.lambda-execution-role-policy.name == "test-application-test-env-test-name-execution-policy"
+    error_message = "Should be: 'test-application-test-env-test-name-execution-policy'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.lambda-execution-role-policy.role == "test-application-test-env-test-name-lambda-role"
+    error_message = "Should be: 'test-application-test-env-test-name-lambda-role'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.lambda-execution-role-policy.policy == "{\"Sid\": \"LambdaExecutionPolicy\"}"
+    error_message = "Unexpected policy"
+  }
+
   # Check the contents of the policy document
   assert {
     condition     = contains(data.aws_iam_policy_document.lambda-assume-role-policy.statement[0].actions, "sts:AssumeRole")
