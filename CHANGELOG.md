@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.3.2](https://github.com/uktrade/terraform-platform-modules/compare/7.3.1...7.3.2) (2025-02-25)
+
+
+### Bug Fixes
+
+* DBTP-1563 - Use iam_role_policy instead of deprecated inline policies ([#347](https://github.com/uktrade/terraform-platform-modules/issues/347)) ([d146e73](https://github.com/uktrade/terraform-platform-modules/commit/d146e7371dde6b88f3b3c2a1b2f57dfac9c6b73c))
+
 ## [7.3.1](https://github.com/uktrade/terraform-platform-modules/compare/7.3.0...7.3.1) (2025-02-21)
 
 
