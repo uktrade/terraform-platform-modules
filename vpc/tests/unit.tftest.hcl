@@ -64,6 +64,12 @@ run "aws_vpc_unit_test" {
   }
 
   # aws_ssm_parameter.combined_nat_gateway_eips.value cannot be tested on a plan
+
+  assert {
+    condition     = lookup(aws_ssm_parameter.combined_nat_gateway_eips.tags, "copilot-application", "") == "__all__"
+    error_message = "Tag 'copilot-application' should be set to '__all__'"
+  }
+
 }
 
 run "aws_security_group_unit_test" {
