@@ -1,5 +1,18 @@
 # Changelog
 
+## [7.4.0](https://github.com/uktrade/terraform-platform-modules/compare/7.3.1...7.4.0) (2025-02-28)
+
+
+### Features
+
+* dbtp-1769 cross aws account service to service connectivity ([#339](https://github.com/uktrade/terraform-platform-modules/issues/339)) ([7807d30](https://github.com/uktrade/terraform-platform-modules/commit/7807d307e4b62abb8268d2e0a2018ad5ea01e2f7))
+
+
+### Bug Fixes
+
+* DBTP-1563 - Use iam_role_policy instead of deprecated inline policies ([#347](https://github.com/uktrade/terraform-platform-modules/issues/347)) ([d146e73](https://github.com/uktrade/terraform-platform-modules/commit/d146e7371dde6b88f3b3c2a1b2f57dfac9c6b73c))
+* Fix missing tag for SSM parameter EGRESS_IP ([#349](https://github.com/uktrade/terraform-platform-modules/issues/349)) ([8483746](https://github.com/uktrade/terraform-platform-modules/commit/84837468ddd86383306a68b15caacc4aa61bc4d0))
+
 ## [7.3.1](https://github.com/uktrade/terraform-platform-modules/compare/7.3.0...7.3.1) (2025-02-21)
 
 
