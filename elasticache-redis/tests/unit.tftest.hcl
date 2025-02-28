@@ -443,4 +443,14 @@ run "test_create_conduit_iam_role" {
     condition     = strcontains(jsonencode(data.aws_iam_policy_document.assume_ecstask_role.statement[0].principals), "ecs-tasks.amazonaws.com")
     error_message = "Should be: ecs-tasks.amazonaws.com"
   }
+
+  # Check kms access role policy
+  assert {
+    condition     = aws_iam_role_policy.kms_access_for_conduit_ecs_task.name == "AllowReadingofCMKSecrets"
+    error_message = "Should be: 'AllowReadingofCMKSecrets'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.kms_access_for_conduit_ecs_task.role == "test-redis-test-application-test-environment-conduitEcsTask"
+    error_message = "Should be: 'test-redis-test-application-test-environment-conduitEcsTask'"
+  }
 }
