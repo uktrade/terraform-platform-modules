@@ -83,3 +83,4 @@ x-large-ha:
   instance: cache.m6g.2xlarge
   automatic_failover_enabled: true
   multi_az_enabled: true
+  
