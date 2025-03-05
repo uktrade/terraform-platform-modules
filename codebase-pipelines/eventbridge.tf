@@ -1,6 +1,6 @@
 resource "aws_cloudwatch_event_rule" "ecr_image_publish" {
   for_each    = local.pipeline_map
-  name        = "${var.application}-${var.codebase}-ecr-image-publish-${each.value.name}"
+  name        = "${var.application}-${var.codebase}-publish-${each.value.name}"
   description = "Trigger ${each.value.name} deploy pipeline when an ECR image is published"
 
   event_pattern = jsonencode({
@@ -24,7 +24,7 @@ resource "aws_cloudwatch_event_target" "codepipeline" {
 
 resource "aws_iam_role" "event_bridge_pipeline_trigger" {
   for_each           = toset(length(local.pipeline_map) > 0 ? [""] : [])
-  name               = "${var.application}-${var.codebase}-event-bridge-pipeline-trigger"
+  name               = "${var.application}-${var.codebase}-pipeline-trigger"
   assume_role_policy = data.aws_iam_policy_document.assume_event_bridge_policy.json
   tags               = local.tags
 }
@@ -58,7 +58,7 @@ data "aws_iam_policy_document" "event_bridge_pipeline_trigger" {
         "codepipeline:StartPipelineExecution"
       ]
       resources = [
-        "arn:aws:codepipeline:${local.account_region}:${var.application}-${var.codebase}-${statement.value.name}-codebase-pipeline"
+        "arn:aws:codepipeline:${local.account_region}:${var.application}-${var.codebase}-${statement.value.name}-codebase"
       ]
     }
   }

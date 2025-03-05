@@ -202,8 +202,8 @@ run "test_codebuild_images" {
   command = plan
 
   assert {
-    condition     = aws_codebuild_project.codebase_image_build[""].name == "my-app-my-codebase-codebase-pipeline-image-build"
-    error_message = "Should be: my-app-my-codebase-codebase-pipeline-image-build"
+    condition     = aws_codebuild_project.codebase_image_build[""].name == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: my-app-my-codebase-codebase-image-build"
   }
   assert {
     condition     = aws_codebuild_project.codebase_image_build[""].description == "Publish images on push to my-repository"
@@ -292,8 +292,8 @@ run "test_codebuild_images" {
 
   # Webhook config:
   assert {
-    condition     = aws_codebuild_webhook.codebuild_webhook[""].project_name == "my-app-my-codebase-codebase-pipeline-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
+    condition     = aws_codebuild_webhook.codebuild_webhook[""].project_name == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
   assert {
     condition     = aws_codebuild_webhook.codebuild_webhook[""].build_type == "BUILD"
@@ -546,8 +546,8 @@ run "test_iam" {
 
   # CodeBuild image build
   assert {
-    condition     = aws_iam_role.codebase_image_build[""].name == "my-app-my-codebase-codebase-pipeline-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
+    condition     = aws_iam_role.codebase_image_build[""].name == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
   assert {
     condition     = aws_iam_role.codebase_image_build[""].assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
@@ -562,28 +562,28 @@ run "test_iam" {
     error_message = "Should be: 'log-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_images[""].role == "my-app-my-codebase-codebase-pipeline-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
+    condition     = aws_iam_role_policy.log_access_for_codebuild_images[""].role == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
   assert {
     condition     = aws_iam_role_policy.ecr_access_for_codebuild_images[""].name == "ecr-access"
     error_message = "Should be: 'ecr-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images[""].role == "my-app-my-codebase-codebase-pipeline-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_images[""].role == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
   assert {
     condition     = aws_iam_role_policy.codestar_connection_access_for_codebuild_images[""].name == "codestar-connection-policy"
     error_message = "Should be: 'codestar-connection-policy'"
   }
   assert {
-    condition     = aws_iam_role_policy.codestar_connection_access_for_codebuild_images[""].role == "my-app-my-codebase-codebase-pipeline-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
+    condition     = aws_iam_role_policy.codestar_connection_access_for_codebuild_images[""].role == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
   assert {
-    condition     = aws_iam_role_policy_attachment.ssm_access[""].role == "my-app-my-codebase-codebase-pipeline-image-build"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-image-build'"
+    condition     = aws_iam_role_policy_attachment.ssm_access[""].role == "my-app-my-codebase-codebase-image-build"
+    error_message = "Should be: 'my-app-my-codebase-codebase-image-build'"
   }
   assert {
     condition     = aws_iam_role_policy_attachment.ssm_access[""].policy_arn == "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
@@ -592,8 +592,8 @@ run "test_iam" {
 
   # CodeBuild deploy
   assert {
-    condition     = aws_iam_role.codebase_deploy.name == "my-app-my-codebase-codebase-pipeline-deploy"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy'"
+    condition     = aws_iam_role.codebase_deploy.name == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-deploy'"
   }
   assert {
     condition     = aws_iam_role.codebase_deploy.assume_role_policy == "{\"Sid\": \"AssumeCodebuildRole\"}"
@@ -608,32 +608,32 @@ run "test_iam" {
     error_message = "Should be: 'artifact-store-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_deploy.role == "my-app-my-codebase-codebase-pipeline-deploy"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy'"
+    condition     = aws_iam_role_policy.artifact_store_access_for_codebuild_deploy.role == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-deploy'"
   }
   assert {
     condition     = aws_iam_role_policy.log_access_for_codebuild_deploy.name == "log-access"
     error_message = "Should be: 'log-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.log_access_for_codebuild_deploy.role == "my-app-my-codebase-codebase-pipeline-deploy"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy'"
+    condition     = aws_iam_role_policy.log_access_for_codebuild_deploy.role == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-deploy'"
   }
   assert {
     condition     = aws_iam_role_policy.ecr_access_for_codebuild_deploy.name == "ecr-access"
     error_message = "Should be: 'ecr-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.ecr_access_for_codebuild_deploy.role == "my-app-my-codebase-codebase-pipeline-deploy"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy'"
+    condition     = aws_iam_role_policy.ecr_access_for_codebuild_deploy.role == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-deploy'"
   }
   assert {
     condition     = aws_iam_role_policy.environment_deploy_role_access_for_codebuild_deploy.name == "environment-deploy-role-access"
     error_message = "Should be: 'environment-deploy-role-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.environment_deploy_role_access_for_codebuild_deploy.role == "my-app-my-codebase-codebase-pipeline-deploy"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy'"
+    condition     = aws_iam_role_policy.environment_deploy_role_access_for_codebuild_deploy.role == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-deploy'"
   }
 
   assert {
@@ -642,8 +642,8 @@ run "test_iam" {
   }
 
   assert {
-    condition     = aws_iam_role_policy.deploy_ssm_access.role == "my-app-my-codebase-codebase-pipeline-deploy"
-    error_message = "Should be: 'my-app-my-codebase-codebase-pipeline-deploy'"
+    condition     = aws_iam_role_policy.deploy_ssm_access.role == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-deploy'"
   }
 
   # CodePipeline
@@ -911,7 +911,7 @@ run "test_codebuild_deploy" {
   command = plan
 
   assert {
-    condition     = aws_codebuild_project.codebase_deploy.name == "my-app-my-codebase-codebase-pipeline-deploy"
+    condition     = aws_codebuild_project.codebase_deploy.name == "my-app-my-codebase-codebase-deploy"
     error_message = "Should be: 'my-app-my-codebase-codebase-deploy'"
   }
   assert {
@@ -1006,8 +1006,8 @@ run "test_main_pipeline" {
   command = plan
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].name == "my-app-my-codebase-main-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-main-codebase-pipeline'"
+    condition     = aws_codepipeline.codebase_pipeline[0].name == "my-app-my-codebase-main-codebase"
+    error_message = "Should be: 'my-app-my-codebase-main-codebase'"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].variable[0].name == "IMAGE_TAG"
@@ -1116,8 +1116,8 @@ run "test_main_pipeline" {
     error_message = "Should be: deploy_source"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
-    error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: my-app-my-codebase-codebase-deploy"
   }
   assert {
     condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[0].configuration.EnvironmentVariables) :
@@ -1200,8 +1200,8 @@ run "test_main_pipeline" {
     error_message = "Should be: deploy_source"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
-    error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.ProjectName == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: my-app-my-codebase-codebase-deploy"
   }
   assert {
     condition = one([for var in jsondecode(aws_codepipeline.codebase_pipeline[0].stage[1].action[1].configuration.EnvironmentVariables) :
@@ -1223,8 +1223,8 @@ run "test_tagged_pipeline" {
   command = plan
 
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[1].name == "my-app-my-codebase-tagged-codebase-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-tagged-codebase-pipeline'"
+    condition     = aws_codepipeline.codebase_pipeline[1].name == "my-app-my-codebase-tagged-codebase"
+    error_message = "Should be: 'my-app-my-codebase-tagged-codebase'"
   }
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].variable[0].default_value == "tag-latest"
@@ -1358,8 +1358,8 @@ run "test_manual_release_pipeline" {
   command = plan
 
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.name == "my-app-my-codebase-manual-release-pipeline"
-    error_message = "Should be: 'my-app-my-codebase-manual-release-pipeline'"
+    condition     = aws_codepipeline.manual_release_pipeline.name == "my-app-my-codebase-manual-release"
+    error_message = "Should be: 'my-app-my-codebase-manual-release'"
   }
   assert {
     condition     = aws_codepipeline.manual_release_pipeline.variable[0].name == "IMAGE_TAG"
@@ -1480,8 +1480,8 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: deploy_source"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
-    error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
+    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.ProjectName == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: my-app-my-codebase-codebase-deploy"
   }
   assert {
     condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[0].configuration.EnvironmentVariables) :
@@ -1564,8 +1564,8 @@ run "test_manual_release_pipeline" {
     error_message = "Should be: deploy_source"
   }
   assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.ProjectName == "my-app-my-codebase-codebase-pipeline-deploy"
-    error_message = "Should be: my-app-my-codebase-codebase-pipeline-deploy"
+    condition     = aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.ProjectName == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: my-app-my-codebase-codebase-deploy"
   }
   assert {
     condition = one([for var in jsondecode(aws_codepipeline.manual_release_pipeline.stage[1].action[1].configuration.EnvironmentVariables) :
@@ -1588,8 +1588,8 @@ run "test_event_bridge" {
 
   # Main pipeline trigger
   assert {
-    condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].name == "my-app-my-codebase-ecr-image-publish-main"
-    error_message = "Should be: 'my-app-my-codebase-ecr-image-publish-main'"
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].name == "my-app-my-codebase-publish-main"
+    error_message = "Should be: 'my-app-my-codebase-publish-main'"
   }
   assert {
     condition     = aws_cloudwatch_event_rule.ecr_image_publish[0].description == "Trigger main deploy pipeline when an ECR image is published"
@@ -1600,14 +1600,14 @@ run "test_event_bridge" {
     error_message = "Event pattern is incorrect"
   }
   assert {
-    condition     = aws_cloudwatch_event_target.codepipeline[0].rule == "my-app-my-codebase-ecr-image-publish-main"
-    error_message = "Should be: 'my-app-my-codebase-ecr-image-publish-main'"
+    condition     = aws_cloudwatch_event_target.codepipeline[0].rule == "my-app-my-codebase-publish-main"
+    error_message = "Should be: 'my-app-my-codebase-publish-main'"
   }
 
   # Tagged pipeline trigger
   assert {
-    condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].name == "my-app-my-codebase-ecr-image-publish-tagged"
-    error_message = "Should be: 'my-app-my-codebase-ecr-image-publish-tagged'"
+    condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].name == "my-app-my-codebase-publish-tagged"
+    error_message = "Should be: 'my-app-my-codebase-publish-tagged'"
   }
   assert {
     condition     = aws_cloudwatch_event_rule.ecr_image_publish[1].description == "Trigger tagged deploy pipeline when an ECR image is published"
@@ -1618,14 +1618,14 @@ run "test_event_bridge" {
     error_message = "Event pattern is incorrect"
   }
   assert {
-    condition     = aws_cloudwatch_event_target.codepipeline[1].rule == "my-app-my-codebase-ecr-image-publish-tagged"
-    error_message = "Should be: 'my-app-my-codebase-ecr-image-publish-tagged'"
+    condition     = aws_cloudwatch_event_target.codepipeline[1].rule == "my-app-my-codebase-publish-tagged"
+    error_message = "Should be: 'my-app-my-codebase-publish-tagged'"
   }
 
   # IAM roles
   assert {
-    condition     = aws_iam_role.event_bridge_pipeline_trigger[""].name == "my-app-my-codebase-event-bridge-pipeline-trigger"
-    error_message = "Should be: 'my-app-my-codebase-event-bridge-pipeline-trigger'"
+    condition     = aws_iam_role.event_bridge_pipeline_trigger[""].name == "my-app-my-codebase-pipeline-trigger"
+    error_message = "Should be: 'my-app-my-codebase-pipeline-trigger'"
   }
   assert {
     condition     = aws_iam_role.event_bridge_pipeline_trigger[""].assume_role_policy == "{\"Sid\": \"AssumeEventBridge\"}"
@@ -1640,8 +1640,8 @@ run "test_event_bridge" {
     error_message = "Should be: 'event-bridge-access'"
   }
   assert {
-    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger[""].role == "my-app-my-codebase-event-bridge-pipeline-trigger"
-    error_message = "Should be: 'my-app-my-codebase-event-bridge-pipeline-trigger'"
+    condition     = aws_iam_role_policy.event_bridge_pipeline_trigger[""].role == "my-app-my-codebase-pipeline-trigger"
+    error_message = "Should be: 'my-app-my-codebase-pipeline-trigger'"
   }
   assert {
     condition     = aws_iam_role_policy.event_bridge_pipeline_trigger[""].policy == "{\"Sid\": \"EventBridgePipelineTrigger\"}"
@@ -1658,7 +1658,7 @@ run "test_event_bridge" {
     error_message = "Should be: codepipeline:StartPipelineExecution"
   }
   assert {
-    condition     = one(data.aws_iam_policy_document.event_bridge_pipeline_trigger.statement[0].resources) == "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:my-app-my-codebase-main-codebase-pipeline"
+    condition     = one(data.aws_iam_policy_document.event_bridge_pipeline_trigger.statement[0].resources) == "arn:aws:codepipeline:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:my-app-my-codebase-main-codebase"
     error_message = "Unexpected resources"
   }
   assert {
