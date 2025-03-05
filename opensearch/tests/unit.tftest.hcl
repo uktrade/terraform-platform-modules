@@ -50,7 +50,7 @@ run "test_create_opensearch" {
       instance                    = "t3.small.search"
       instances                   = 1
       volume_size                 = 80
-      master                      = false
+      multi_az_support            = false
       password_special_characters = "-_.,()"
       urlencode_password          = false
     }
@@ -67,13 +67,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == null
-    error_message = "Should be: null"
-  }
-
-  assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == false
-    error_message = "Should be: false"
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == "t3.small.search"
+    error_message = "Should be: t3.small.search"
   }
 
   assert {
@@ -167,23 +162,18 @@ run "test_create_opensearch_x_large_ha" {
     vpc_name    = "terraform-tests-vpc"
 
     config = {
-      name        = "my_name"
-      engine      = "2.5"
-      instance    = "m6g.2xlarge.search"
-      instances   = 2
-      volume_size = 1500
-      master      = false
+      name             = "my_name"
+      engine           = "2.5"
+      instance         = "m6g.2xlarge.search"
+      instances        = 2
+      volume_size      = 1500
+      multi_az_support = true
     }
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == null
-    error_message = "Should be: null"
-  }
-
-  assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == false
-    error_message = "Should be: false"
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == "m6g.2xlarge.search"
+    error_message = "Should be: m6g.2xlarge.search"
   }
 
   assert {
@@ -232,7 +222,7 @@ run "test_overrides" {
       instance                          = "t3.small.search"
       instances                         = 1
       volume_size                       = 80
-      master                            = false
+      multi_az_support                  = false
       ebs_volume_type                   = "gp3"
       ebs_throughput                    = 500
       index_slow_log_retention_in_days  = 3
@@ -288,7 +278,7 @@ run "test_volume_type_validation" {
       instance                          = "t3.small.search"
       instances                         = 1
       volume_size                       = 80
-      master                            = false
+      multi_az_support                  = false
       ebs_volume_type                   = "banana"
       index_slow_log_retention_in_days  = 9
       search_slow_log_retention_in_days = 10
@@ -316,11 +306,11 @@ run "test_domain_name_truncation" {
     vpc_name    = "terraform-tests-vpc"
 
     config = {
-      engine      = "2.5"
-      instance    = "t3.small.search"
-      instances   = 1
-      volume_size = 80
-      master      = false
+      engine                = "2.5"
+      instance              = "t3.small.search"
+      instances             = 1
+      volume_size           = 80
+      multi_az_support      = false
     }
   }
 
@@ -340,11 +330,11 @@ run "test_create_cloudwatch_subscription_filters" {
     vpc_name    = "terraform-tests-vpc"
 
     config = {
-      engine      = "2.5"
-      instance    = "t3.small.search"
-      instances   = 1
-      volume_size = 80
-      master      = false
+      engine           = "2.5"
+      instance         = "t3.small.search"
+      instances        = 1
+      volume_size      = 80
+      multi_az_support = false
     }
   }
 
@@ -420,11 +410,11 @@ run "aws_kms_key_unit_test" {
     vpc_name    = "terraform-tests-vpc"
 
     config = {
-      engine      = "2.5"
-      instance    = "t3.small.search"
-      instances   = 1
-      volume_size = 80
-      master      = false
+      engine                = "2.5"
+      instance              = "t3.small.search"
+      instances             = 1
+      volume_size           = 80
+      multi_az_support      = false
     }
   }
 
