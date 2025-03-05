@@ -17,20 +17,21 @@ phases:
     commands:
       - set -e
 
+      - UPPERCASE_SERVICE=$(echo "${SERVICE}" | tr '[:lower:]' '[:upper:]')
+      - UPPERCASE_TAG=$(echo "${IMAGE_TAG}" | tr '[:lower:]' '[:upper:]')
+
       # Check if the specified image tag exists
       - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - |
         if ! docker manifest inspect "${REPOSITORY_URL}:${IMAGE_TAG}" > /dev/null 2>&1; then
-          ERROR_MESSAGE="Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_URL}"
-          echo "${ERROR_MESSAGE}"
+          echo "Image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_URL}" | tee output.log
           exit 1
         fi
 
       # Check environment exists in config
       - |
         if [ $(echo $ENV_CONFIG | jq 'has('\"${ENVIRONMENT}\"')') == "false" ]; then
-          ERROR_MESSAGE="Error: environment ${ENVIRONMENT} not listed in environment config"
-          echo "${ERROR_MESSAGE}"
+          echo "Environment ${ENVIRONMENT} not listed in environment config" | tee output.log
           exit 1
         fi
 
@@ -38,21 +39,16 @@ phases:
       - SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
       - |
         if [ "${SLACK_REF}" = "null" ] || [ -z "${SLACK_REF}" ]; then
-          ERROR_MESSAGE="Error: Image contains no timestamp label"
-          echo "${ERROR_MESSAGE}"
+          echo "Image contains no timestamp label" | tee output.log
           exit 1
         fi
-
-      - UPPERCASE_SERVICE=$(echo "${SERVICE}" | tr '[:lower:]' '[:upper:]')
-      - UPPERCASE_TAG=$(echo "${IMAGE_TAG}" | tr '[:lower:]' '[:upper:]')
 
       # Extract the pipeline name from CODEBUILD_INITIATOR default env var
       - |
         if [[ "${CODEBUILD_INITIATOR}" == codepipeline/* ]]; then 
           PIPELINE_NAME=$(echo "${CODEBUILD_INITIATOR}" | cut -d'/' -f2) 
         else 
-          ERROR_MESSAGE="Error: Build not triggered by CodePipeline."
-          echo "${ERROR_MESSAGE=}"
+          echo "Build not triggered by CodePipeline." | tee output.log
           exit 1 
         fi
 
@@ -131,7 +127,7 @@ phases:
           echo "Deployment status after ${elapsed} seconds: ${deploy_status}"
 
           if [[ ${elapsed} -gt ${DEPLOY_TIMEOUT} ]]; then
-            echo "Error: deployment not completed in ${DEPLOY_TIMEOUT} seconds"
+            echo "Deployment not completed within ${DEPLOY_TIMEOUT} seconds timeout" | tee output.log
             exit 1
           fi
         done
@@ -157,14 +153,13 @@ phases:
             ;;
         esac
 
-      - MESSAGE="${STATUS_EMOJI} ${STATUS_TEXT} - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
-      - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
-
-      # Exit with an error code if deployment did not succeed
+      # Send notification on successful deployment or exit with an error code
       - |
-        if [ "${deploy_status}" != "SUCCESSFUL" ]; then
-          ERROR_MESSAGE="Error: deployment status is ${deploy_status}"
-          echo "${ERROR_MESSAGE}"
+        if [ "${deploy_status}" == "SUCCESSFUL" ]; then
+          MESSAGE="${STATUS_EMOJI} ${STATUS_TEXT} - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
+          platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
+        else
+          echo "Deployment status is ${deploy_status}" | tee output.log
           exit 1
         fi
 
@@ -173,7 +168,7 @@ phases:
       - |
         if [ "${CODEBUILD_BUILD_SUCCEEDING}" != "1" ]; then
           BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)          
-          MESSAGE=":red_circle::warning: Deployment of ${IMAGE_TAG} to ${SERVICE} service - FAILED - ${ERROR_MESSAGE} <https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=eu-west-2|Build log>"
+          MESSAGE=":red_circle::warning: Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - FAILED $(cat output.log) - <https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=eu-west-2|Build log>"
           
           platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
         fi
