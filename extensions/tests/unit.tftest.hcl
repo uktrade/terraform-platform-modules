@@ -203,7 +203,7 @@ run "opensearch_plan_small_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-opensearch.master == false
+    condition     = output.resolved_config.test-opensearch.multi_az_support == false
     error_message = "Should be: false"
   }
 
@@ -289,7 +289,7 @@ run "opensearch_plan_medium_ha_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-opensearch.master == false
+    condition     = output.resolved_config.test-opensearch.multi_az_support == true
     error_message = "Should be: false"
   }
 
