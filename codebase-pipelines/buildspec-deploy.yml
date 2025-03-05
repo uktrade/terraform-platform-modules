@@ -21,14 +21,16 @@ phases:
       - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - |
         if ! docker manifest inspect "${REPOSITORY_URL}:${IMAGE_TAG}" > /dev/null 2>&1; then
-          echo "Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_URL}"
+          ERROR_MESSAGE="Error: image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_URL}"
+          echo "${ERROR_MESSAGE}"
           exit 1
         fi
 
       # Check environment exists in config
       - |
         if [ $(echo $ENV_CONFIG | jq 'has('\"${ENVIRONMENT}\"')') == "false" ]; then
-          echo "Error: environment ${ENVIRONMENT} not listed in environment config"
+          ERROR_MESSAGE="Error: environment ${ENVIRONMENT} not listed in environment config"
+          echo "${ERROR_MESSAGE}"
           exit 1
         fi
 
@@ -36,7 +38,8 @@ phases:
       - SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
       - |
         if [ "${SLACK_REF}" = "null" ] || [ -z "${SLACK_REF}" ]; then
-          echo "Error: Image contains no timestamp label"
+          ERROR_MESSAGE="Error: Image contains no timestamp label"
+          echo "${ERROR_MESSAGE}"
           exit 1
         fi
 
@@ -48,7 +51,8 @@ phases:
         if [[ "${CODEBUILD_INITIATOR}" == codepipeline/* ]]; then 
           PIPELINE_NAME=$(echo "${CODEBUILD_INITIATOR}" | cut -d'/' -f2) 
         else 
-          echo "Error: Build not triggered by CodePipeline." 
+          ERROR_MESSAGE="Error: Build not triggered by CodePipeline."
+          echo "${ERROR_MESSAGE=}"
           exit 1 
         fi
 
@@ -159,7 +163,8 @@ phases:
       # Exit with an error code if deployment did not succeed
       - |
         if [ "${deploy_status}" != "SUCCESSFUL" ]; then
-          echo "Error: deployment status is ${deploy_status}"
+          ERROR_MESSAGE="Error: deployment status is ${deploy_status}"
+          echo "${ERROR_MESSAGE}"
           exit 1
         fi
 
@@ -168,7 +173,7 @@ phases:
       - |
         if [ "${CODEBUILD_BUILD_SUCCEEDING}" != "1" ]; then
           BUILD_ID_PREFIX=$(echo $CODEBUILD_BUILD_ID | cut -d':' -f1)          
-          MESSAGE=":red_circle::warning: Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - FAILED <https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=eu-west-2|Build log>"
+          MESSAGE=":red_circle::warning: Deployment of ${IMAGE_TAG} to ${SERVICE} service - FAILED - ${ERROR_MESSAGE} <https://eu-west-2.console.aws.amazon.com/codesuite/codebuild/${AWS_ACCOUNT_ID}/projects/${BUILD_ID_PREFIX}/build/${CODEBUILD_BUILD_ID}/?region=eu-west-2|Build log>"
           
           platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
         fi
