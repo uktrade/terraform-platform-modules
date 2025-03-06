@@ -3,7 +3,7 @@ data "aws_region" "current" {}
 
 resource "aws_iam_role" "codebase_image_build" {
   for_each           = toset(var.requires_image_build ? [""] : [])
-  name               = "${var.application}-${var.codebase}-codebase-pipeline-image-build"
+  name               = "${var.application}-${var.codebase}-codebase-image-build"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
   tags               = local.tags
 }
@@ -255,7 +255,7 @@ data "aws_iam_policy_document" "access_artifact_store" {
 }
 
 resource "aws_iam_role" "codebase_deploy" {
-  name               = "${var.application}-${var.codebase}-codebase-pipeline-deploy"
+  name               = "${var.application}-${var.codebase}-codebase-deploy"
   assume_role_policy = data.aws_iam_policy_document.assume_codebuild_role.json
   tags               = local.tags
 }
