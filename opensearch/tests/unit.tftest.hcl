@@ -72,6 +72,11 @@ run "test_create_opensearch" {
   }
 
   assert {
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == false
+    error_message = "Should be: false"
+  }
+
+  assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].instance_type == "t3.small.search"
     error_message = "Should be: 't3.small.search'"
   }
@@ -174,6 +179,11 @@ run "test_create_opensearch_x_large_ha" {
   assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == "m6g.2xlarge.search"
     error_message = "Should be: m6g.2xlarge.search"
+  }
+
+  assert {
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == true
+    error_message = "Should be: true"
   }
 
   assert {

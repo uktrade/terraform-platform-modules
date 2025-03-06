@@ -37,6 +37,11 @@ run "opensearch_e2e_test" {
   }
 
   assert {
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == true
+    error_message = "Should be: true"
+  }
+
+  assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].multi_az_support == false
     error_message = "Should be: false"
   }

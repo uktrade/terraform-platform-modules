@@ -7,6 +7,13 @@ tiny:
   instance: t3.small.search
   multi_az_support: false
 
+# 2 vCPU, 2GB RAM, volume size range 10-100GB
+tiny-ha:
+  volume_size: 80
+  instances: 2
+  instance: t3.small.search
+  multi_az_support: true
+
 # 2 vCPU, 4GB RAM, volume size range 10-200GB
 small:
   volume_size: 200
