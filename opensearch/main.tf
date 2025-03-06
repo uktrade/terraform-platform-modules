@@ -115,7 +115,7 @@ resource "aws_opensearch_domain" "this" {
   ]
 
   cluster_config {
-    dedicated_master_count   = var.config.multi_az_support ? 3 : 0
+    dedicated_master_count   = 3
     dedicated_master_type    = var.config.multi_az_support ? var.config.instance : null
     dedicated_master_enabled = var.config.multi_az_support
     instance_type            = var.config.instance
