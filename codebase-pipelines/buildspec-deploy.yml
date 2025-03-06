@@ -24,14 +24,14 @@ phases:
       - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - |
         if ! docker manifest inspect "${REPOSITORY_URL}:${IMAGE_TAG}" > /dev/null 2>&1; then
-          echo "Image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_URL}" | tee output.log
+          echo "Error: Image tag ${IMAGE_TAG} not found in repository ${REPOSITORY_URL}" | tee output.log
           exit 1
         fi
 
       # Check environment exists in config
       - |
         if [ $(echo $ENV_CONFIG | jq 'has('\"${ENVIRONMENT}\"')') == "false" ]; then
-          echo "Environment ${ENVIRONMENT} not listed in environment config" | tee output.log
+          echo "Error: Environment ${ENVIRONMENT} not listed in environment config" | tee output.log
           exit 1
         fi
 
@@ -39,7 +39,7 @@ phases:
       - SLACK_REF=$(regctl image config "${REPOSITORY_URL}:${IMAGE_TAG}" | jq -r '.config.Labels."uk.gov.trade.digital.build.timestamp"')
       - |
         if [ "${SLACK_REF}" = "null" ] || [ -z "${SLACK_REF}" ]; then
-          echo "Image contains no timestamp label" | tee output.log
+          echo "Error: Image contains no timestamp label" | tee output.log
           exit 1
         fi
 
@@ -48,7 +48,7 @@ phases:
         if [[ "${CODEBUILD_INITIATOR}" == codepipeline/* ]]; then 
           PIPELINE_NAME=$(echo "${CODEBUILD_INITIATOR}" | cut -d'/' -f2) 
         else 
-          echo "Build not triggered by CodePipeline." | tee output.log
+          echo "Error: Build not triggered by CodePipeline." | tee output.log
           exit 1 
         fi
 
@@ -127,7 +127,7 @@ phases:
           echo "Deployment status after ${elapsed} seconds: ${deploy_status}"
 
           if [[ ${elapsed} -gt ${DEPLOY_TIMEOUT} ]]; then
-            echo "Deployment not completed within ${DEPLOY_TIMEOUT} seconds timeout" | tee output.log
+            echo "Error: Deployment not completed within ${DEPLOY_TIMEOUT} seconds timeout" | tee output.log
             exit 1
           fi
         done
@@ -159,7 +159,7 @@ phases:
           MESSAGE="${STATUS_EMOJI} ${STATUS_TEXT} - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
           platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
         else
-          echo "Deployment status is ${deploy_status}" | tee output.log
+          echo "Error: Deployment status is ${deploy_status}" | tee output.log
           exit 1
         fi
 
