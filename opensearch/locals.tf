@@ -19,8 +19,7 @@ locals {
   urlencode_password = coalesce(var.config.urlencode_password, true)
 
   instances              = coalesce(var.config.instances, 1)
-  zone_awareness_enabled = var.config.multi_az_support
-  zone_count             = local.zone_awareness_enabled ? 2 : null
+  zone_count             = var.config.multi_az_support ? 2 : null
   subnets                = slice(tolist(data.aws_subnets.private-subnets.ids), 0, local.instances)
 
   auto_tune_desired_state       = startswith(var.config.instance, "t2") || startswith(var.config.instance, "t3") ? "DISABLED" : "ENABLED"
