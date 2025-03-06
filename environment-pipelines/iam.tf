@@ -526,12 +526,7 @@ data "aws_iam_policy_document" "kms_key" {
 data "aws_iam_policy_document" "redis" {
   statement {
     actions = [
-      "elasticache:CreateCacheSubnetGroup",
-      "elasticache:AddTagsToResource",
-      "elasticache:DescribeCacheSubnetGroups",
-      "elasticache:ListTagsForResource",
-      "elasticache:DeleteCacheSubnetGroup",
-      "elasticache:CreateReplicationGroup"
+      "elasticache:*"
     ]
     resources = [
       "arn:aws:elasticache:${local.account_region}:subnetgroup:*"
@@ -540,14 +535,7 @@ data "aws_iam_policy_document" "redis" {
 
   statement {
     actions = [
-      "elasticache:AddTagsToResource",
-      "elasticache:CreateReplicationGroup",
-      "elasticache:DecreaseReplicaCount",
-      "elasticache:DeleteReplicationGroup",
-      "elasticache:DescribeReplicationGroups",
-      "elasticache:IncreaseReplicaCount",
-      "elasticache:ListTagsForResource",
-      "elasticache:ModifyReplicationGroup",
+      "elasticache:*"
     ]
     resources = [
       "arn:aws:elasticache:${local.account_region}:replicationgroup:*",
@@ -598,19 +586,7 @@ data "aws_iam_policy_document" "postgres" {
     for_each = local.environment_config
     content {
       actions = [
-        "iam:CreateRole",
-        "iam:GetRole",
-        "iam:ListRolePolicies",
-        "iam:ListAttachedRolePolicies",
-        "iam:ListInstanceProfilesForRole",
-        "iam:DeleteRole",
-        "iam:AttachRolePolicy",
-        "iam:PutRolePolicy",
-        "iam:GetRolePolicy",
-        "iam:DeleteRolePolicy",
-        "iam:PassRole",
-        "iam:UpdateAssumeRolePolicy",
-        "iam:DetachRolePolicy"
+        "iam:*"
       ]
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-${statement.value.name}-*",
@@ -623,14 +599,7 @@ data "aws_iam_policy_document" "postgres" {
     for_each = local.environment_config
     content {
       actions = [
-        "lambda:GetFunction",
-        "lambda:InvokeFunction",
-        "lambda:ListVersionsByFunction",
-        "lambda:GetFunctionCodeSigningConfig",
-        "lambda:UpdateFunctionCode",
-        "lambda:UpdateFunctionConfiguration",
-        "lambda:CreateFunction",
-        "lambda:DeleteFunction"
+        "lambda:*"
       ]
       resources = [
         "arn:aws:lambda:${local.account_region}:function:${var.application}-${statement.value.name}-*"
@@ -654,15 +623,7 @@ data "aws_iam_policy_document" "postgres" {
     for_each = local.environment_config
     content {
       actions = [
-        "rds:CreateDBParameterGroup",
-        "rds:AddTagsToResource",
-        "rds:ModifyDBParameterGroup",
-        "rds:DescribeDBParameterGroups",
-        "rds:DescribeDBParameters",
-        "rds:ListTagsForResource",
-        "rds:CreateDBInstance",
-        "rds:ModifyDBInstance",
-        "rds:DeleteDBParameterGroup"
+        "rds:*"
       ]
       resources = [
         "arn:aws:rds:${local.account_region}:pg:${var.application}-${statement.value.name}-*"
@@ -834,13 +795,7 @@ data "aws_iam_policy_document" "origin_secret_rotate_access" {
   statement {
     effect = "Allow"
     actions = [
-      "lambda:GetPolicy",
-      "lambda:RemovePermission",
-      "lambda:DeleteFunction",
-      "lambda:TagResource",
-      "lambda:PutFunctionConcurrency",
-      "lambda:AddPermission",
-      "lambda:DeleteFunction"
+      "lambda:*"
     ]
     resources = [
       for env in local.environment_config : "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.application}-${env.name}-origin-secret-rotate"
@@ -861,13 +816,7 @@ data "aws_iam_policy_document" "origin_secret_rotate_access" {
     sid    = "WAFv2ReadAccess"
     effect = "Allow"
     actions = [
-      "wafv2:GetWebACL",
-      "wafv2:GetWebACLForResource",
-      "wafv2:ListTagsForResource",
-      "wafv2:DeleteWebACL",
-      "wafv2:CreateWebACL",
-      "wafv2:TagResource",
-      "wafv2:AssociateWebACL"
+      "wafv2:*"
     ]
     resources = [
       "arn:aws:wafv2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:regional/webacl/*/*"
@@ -888,17 +837,7 @@ data "aws_iam_policy_document" "origin_secret_rotate_access" {
   statement {
     effect = "Allow"
     actions = [
-      "secretsmanager:DescribeSecret",
-      "secretsmanager:GetSecretValue",
-      "secretsmanager:GetResourcePolicy",
-      "secretsmanager:DeleteResourcePolicy",
-      "secretsmanager:CancelRotateSecret",
-      "secretsmanager:DeleteSecret",
-      "secretsmanager:CreateSecret",
-      "secretsmanager:TagResource",
-      "secretsmanager:PutResourcePolicy",
-      "secretsmanager:PutSecretValue",
-      "secretsmanager:RotateSecret"
+      "secretsmanager:*"
     ]
     resources = [
       for env in local.environment_config : "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.application}-${env.name}-origin-verify-header-secret-*"
@@ -953,18 +892,7 @@ data "aws_iam_policy_document" "copilot_assume_role" {
 data "aws_iam_policy_document" "cloudformation" {
   statement {
     actions = [
-      "cloudformation:GetTemplate",
-      "cloudformation:GetTemplateSummary",
-      "cloudformation:DescribeStackSet",
-      "cloudformation:UpdateStackSet",
-      "cloudformation:DescribeStackSetOperation",
-      "cloudformation:ListStackInstances",
-      "cloudformation:DescribeStacks",
-      "cloudformation:DescribeChangeSet",
-      "cloudformation:CreateChangeSet",
-      "cloudformation:ExecuteChangeSet",
-      "cloudformation:DescribeStackEvents",
-      "cloudformation:DeleteStack"
+      "cloudformation:*"
     ]
     resources = [
       "arn:aws:cloudformation:${local.account_region}:stack/${var.application}-*",
@@ -993,22 +921,7 @@ data "aws_iam_policy_document" "iam" {
     for_each = local.environment_config
     content {
       actions = [
-        "iam:AttachRolePolicy",
-        "iam:DetachRolePolicy",
-        "iam:CreatePolicy",
-        "iam:DeletePolicy",
-        "iam:CreateRole",
-        "iam:DeleteRole",
-        "iam:TagRole",
-        "iam:PutRolePolicy",
-        "iam:GetRole",
-        "iam:ListRolePolicies",
-        "iam:GetRolePolicy",
-        "iam:ListAttachedRolePolicies",
-        "iam:ListInstanceProfilesForRole",
-        "iam:DeleteRolePolicy",
-        "iam:UpdateAssumeRolePolicy",
-        "iam:TagRole"
+        "iam:*"
       ]
       resources = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*-${var.application}-*-conduitEcsTask",
