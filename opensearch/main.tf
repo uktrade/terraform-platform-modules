@@ -117,10 +117,10 @@ resource "aws_opensearch_domain" "this" {
   cluster_config {
     dedicated_master_count   = var.config.multi_az_support ? 3 : null
     dedicated_master_type    = var.config.multi_az_support ? var.config.instance : null
-    dedicated_master_enabled = var.config.multi_az_support
+    dedicated_master_enabled = var.config.multi_az_support ? true : null
     instance_type            = var.config.instance
     instance_count           = local.instances
-    zone_awareness_enabled   = var.config.multi_az_support
+    zone_awareness_enabled   = var.config.multi_az_support ? true : null
     dynamic "zone_awareness_config" {
       for_each = var.config.multi_az_support ? [1] : []
       content {
