@@ -115,9 +115,9 @@ resource "aws_opensearch_domain" "this" {
   ]
 
   cluster_config {
-    dedicated_master_count   = 3
+    dedicated_master_count   = null
     dedicated_master_type    = var.config.instance
-    dedicated_master_enabled = true
+    dedicated_master_enabled = false
     instance_type            = var.config.instance
     instance_count           = local.instances
     zone_awareness_enabled   = local.zone_awareness_enabled
