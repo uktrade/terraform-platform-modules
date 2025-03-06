@@ -121,12 +121,12 @@ resource "aws_opensearch_domain" "this" {
     instance_type            = var.config.instance
     instance_count           = local.instances
     zone_awareness_enabled   = local.zone_awareness_enabled
-    dynamic "zone_awareness_config" {
-      for_each = local.zone_awareness_enabled ? [1] : []
-      content {
-        availability_zone_count = local.zone_count
-      }
-    }
+    # dynamic "zone_awareness_config" {
+    #   for_each = local.zone_awareness_enabled ? [1] : []
+    #   content {
+    #     availability_zone_count = local.zone_count
+    #   }
+    # }
   }
 
   advanced_security_options {
