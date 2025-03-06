@@ -67,8 +67,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == "t3.small.search"
-    error_message = "Should be: t3.small.search"
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == null
+    error_message = "Should be: null"
   }
 
   assert {
