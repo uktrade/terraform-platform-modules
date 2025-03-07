@@ -1,5 +1,19 @@
 # Changelog
 
+## [7.5.0](https://github.com/uktrade/terraform-platform-modules/compare/7.4.0...7.5.0) (2025-03-07)
+
+
+### Features
+
+* DBTP-1688 adding multi-az and failover options for ElastiCache Redis HA plans ([#350](https://github.com/uktrade/terraform-platform-modules/issues/350)) ([5da529d](https://github.com/uktrade/terraform-platform-modules/commit/5da529db47c1d364c49dc4ad1e563aa9282f0aec))
+* DBTP-1689 opensearch ha plan improvements ([#352](https://github.com/uktrade/terraform-platform-modules/issues/352)) ([38f852a](https://github.com/uktrade/terraform-platform-modules/commit/38f852a35335453a178015dcf93f5da97237e5fd))
+
+
+### Bug Fixes
+
+* DBTP-1804 - Pipeline resource names too long ([#343](https://github.com/uktrade/terraform-platform-modules/issues/343)) ([f3cf2b4](https://github.com/uktrade/terraform-platform-modules/commit/f3cf2b43041a62a5677890855898ff7c5d2e2267))
+* DBTP-1818 - Fix failed pipeline notifications ([#354](https://github.com/uktrade/terraform-platform-modules/issues/354)) ([e81a8d6](https://github.com/uktrade/terraform-platform-modules/commit/e81a8d699c3e966fc16555aba7475b521eb87cfb))
+
 ## [7.4.0](https://github.com/uktrade/terraform-platform-modules/compare/7.3.1...7.4.0) (2025-02-28)
 
 
