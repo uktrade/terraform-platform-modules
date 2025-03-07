@@ -365,17 +365,11 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
     sid    = "AllowVPCOperations"
     effect = "Allow"
     actions = [
-      "ec2:CreateNetworkInterface",
-      "ec2:DeleteNetworkInterface",
       "ec2:AttachNetworkInterface",
     ]
 
     resources = [
       "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*",
-      # "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*",
-      # "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${data.aws_security_group.vpc_base_sg.id}",
-      # "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${aws_security_group.alb-security-group["http"].id}",
-      # "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/*"
     ]
   }
 
@@ -383,6 +377,8 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
     sid    = "AllowDescribeVPCOperations"
     effect = "Allow"
     actions = [
+      "ec2:CreateNetworkInterface",
+      "ec2:DeleteNetworkInterface",
       "ec2:DescribeSubnets",
       "ec2:DescribeVpcs",
       "ec2:DescribeInstances",
