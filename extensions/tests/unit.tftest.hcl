@@ -410,7 +410,7 @@ run "redis_plan_medium_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-redis.enable_ha == false
+    condition     = output.resolved_config.test-redis.multi_az_enabled == false
     error_message = "Should be: false"
   }
 }
@@ -486,7 +486,7 @@ run "redis_plan_medium_ha_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-redis.enable_ha == true
+    condition     = output.resolved_config.test-redis.multi_az_enabled == true
     error_message = "Should be: true"
   }
 }
