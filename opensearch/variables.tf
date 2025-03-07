@@ -29,7 +29,7 @@ variable "config" {
     audit_log_retention_in_days       = optional(number)
     password_special_characters       = optional(string)
     urlencode_password                = optional(bool)
-    master                            = optional(bool)
+    master                            = optional(bool) # Keeping for now to avoid a breaking change. This is deprecated and will need to be removed in a future update.
   })
 
   validation {

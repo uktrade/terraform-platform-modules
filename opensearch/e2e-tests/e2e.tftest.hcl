@@ -4,11 +4,8 @@ variables {
   environment = "test"
   name        = "opensearch-name"
   config = {
-    engine      = "2.5"
-    instance    = "t3.small.search"
-    instances   = 1
-    volume_size = 80
-    enable_ha   = false
+    engine = "2.5"
+    plan   = "tiny"
   }
 }
 
