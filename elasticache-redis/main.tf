@@ -89,11 +89,6 @@ resource "aws_iam_role" "conduit_ecs_task_role" {
   name               = "${var.name}-${var.application}-${var.environment}-conduitEcsTask"
   assume_role_policy = data.aws_iam_policy_document.assume_ecstask_role.json
 
-  inline_policy {
-    name   = "AllowReadingofCMKSecrets"
-    policy = data.aws_iam_policy_document.access_ssm_with_kms.json
-  }
-
   tags = local.tags
 }
 
@@ -108,6 +103,12 @@ data "aws_iam_policy_document" "assume_ecstask_role" {
 
     actions = ["sts:AssumeRole"]
   }
+}
+
+resource "aws_iam_role_policy" "kms_access_for_conduit_ecs_task" {
+  name   = "AllowReadingofCMKSecrets"
+  role   = aws_iam_role.conduit_ecs_task_role.name
+  policy = data.aws_iam_policy_document.access_ssm_with_kms.json
 }
 
 data "aws_iam_policy_document" "access_ssm_with_kms" {

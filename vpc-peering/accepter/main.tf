@@ -13,4 +13,7 @@ module "core" {
   vpc_peering_connection_id = aws_vpc_peering_connection_accepter.this.id
   security_group_map        = coalesce(var.config.security_group_map, {})
   vpc_name                  = var.config.requester_vpc_name
+  source_vpc_id             = var.config.source_vpc_id
+  target_hosted_zone_id     = var.config.target_hosted_zone_id
+  accept_remote_dns         = var.config.accept_remote_dns
 }

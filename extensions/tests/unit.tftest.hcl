@@ -115,6 +115,36 @@ override_data {
   }
 }
 
+override_data {
+  target = module.elasticache-redis["test-redis"].data.aws_ssm_parameter.log-destination-arn
+  values = {
+    value = "{\"dev\":\"arn:aws:logs:eu-west-2:763451185160:log-group:/copilot/tools/central_log_groups_dev\"}"
+  }
+}
+
+override_data {
+  target = module.elasticache-redis["test-redis"].data.aws_vpc.vpc
+  values = {
+    id         = "vpc-00112233aabbccdef"
+    cidr_block = "10.0.0.0/16"
+  }
+}
+
+override_data {
+  target = module.elasticache-redis["test-redis"].data.aws_iam_policy_document.assume_ecstask_role
+  values = {
+    json = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Principal\": {\"Service\": \"ecs-tasks.amazonaws.com\"}, \"Action\": \"sts:AssumeRole\"}]}"
+  }
+}
+
+override_data {
+  target = module.elasticache-redis["test-redis"].data.aws_caller_identity.current
+  values = {
+    account_id = "123456789012"
+  }
+}
+
+
 run "aws_ssm_parameter_unit_test" {
   command = plan
 
@@ -309,6 +339,159 @@ run "opensearch_plan_medium_ha_service_test" {
   }
 }
 
+run "redis_plan_medium_service_test" {
+  command = plan
+
+  variables {
+    args = {
+      application = "test-application",
+      services = {
+        "test-redis" : {
+          "type" : "redis",
+          "name" : "test-medium",
+          "environments" : {
+            "test-environment" : {
+              "engine" : "7.1",
+              "plan" : "medium"
+            }
+          }
+        }
+      },
+      env_config = {
+        "*" = {
+          accounts = {
+            deploy = {
+              name = "sandbox"
+              id   = "000123456789"
+            }
+            dns = {
+              name = "dev"
+              id   = "123456"
+            }
+          }
+          vpc : "test-vpc"
+        },
+        "test-environment" = {
+          accounts = {
+            deploy = {
+              name = "sandbox"
+              id   = "000123456789"
+            }
+            dns = {
+              name = "dev"
+              id   = "123456"
+            }
+          }
+          vpc : "test-vpc"
+        }
+      }
+    }
+    environment = "test-environment"
+  }
+
+  assert {
+    condition     = output.resolved_config.test-redis.engine == "7.1"
+    error_message = "Should be: 7.1"
+  }
+
+  assert {
+    condition     = output.resolved_config.test-redis.instance == "cache.m6g.large"
+    error_message = "Should be: cache.m6g.large"
+  }
+
+  assert {
+    condition     = output.resolved_config.test-redis.replicas == 0
+    error_message = "Should be: 0 (single node)"
+  }
+
+  assert {
+    condition     = output.resolved_config.test-redis.automatic_failover_enabled == false
+    error_message = "Should be: false"
+  }
+
+  assert {
+    condition     = output.resolved_config.test-redis.multi_az_enabled == false
+    error_message = "Should be: false"
+  }
+}
+
+run "redis_plan_medium_ha_service_test" {
+  command = plan
+
+  variables {
+    args = {
+      application = "test-application",
+      services = {
+        "test-redis" : {
+          "type" : "redis",
+          "name" : "test-medium-ha",
+          "environments" : {
+            "test-environment" : {
+              "engine" : "7.1",
+              "plan" : "medium-ha"
+            }
+          }
+        }
+      },
+      env_config = {
+        "*" = {
+          accounts = {
+            deploy = {
+              name = "sandbox"
+              id   = "000123456789"
+            }
+            dns = {
+              name = "dev"
+              id   = "123456"
+            }
+          }
+          vpc : "test-vpc"
+        },
+        "test-environment" = {
+          accounts = {
+            deploy = {
+              name = "sandbox"
+              id   = "000123456789"
+            }
+            dns = {
+              name = "dev"
+              id   = "123456"
+            }
+          }
+          vpc : "test-vpc"
+        }
+      }
+    }
+    environment = "test-environment"
+  }
+
+  assert {
+    condition     = output.resolved_config.test-redis.engine == "7.1"
+    error_message = "Should be: 7.1"
+  }
+
+  assert {
+    condition     = output.resolved_config.test-redis.instance == "cache.m6g.large"
+    error_message = "Should be: cache.m6g.large"
+  }
+
+  assert {
+    condition     = output.resolved_config.test-redis.replicas == 2
+    error_message = "Should be: 2 (highly available)"
+  }
+
+  assert {
+    condition     = output.resolved_config.test-redis.automatic_failover_enabled == true
+    error_message = "Should be: true"
+  }
+
+  assert {
+    condition     = output.resolved_config.test-redis.multi_az_enabled == true
+    error_message = "Should be: true"
+  }
+}
+
+
 override_data {
   target = data.aws_iam_policy_document.assume_codebase_pipeline
   values = {
@@ -383,7 +566,11 @@ run "codebase_deploy_iam_test" {
     error_message = "Should be: aws:PrincipalArn"
   }
   assert {
-    condition     = flatten([for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.values][0]) == ["arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline", "arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline-*"]
+    condition = flatten([for el in data.aws_iam_policy_document.assume_codebase_pipeline.statement[0].condition : el.values][0]) == [
+      "arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline",
+      "arn:aws:iam::000123456789:role/test-application-*-codebase-pipeline-*",
+      "arn:aws:iam::000123456789:role/test-application-*-codebase-*"
+    ]
     error_message = "Unexpected condition values"
   }
   assert {
