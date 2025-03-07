@@ -381,6 +381,41 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
       "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/*"
     ]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:CreateNetworkInterface",
+      "ec2:DeleteNetworkInterface",
+      "ec2:AttachNetworkInterface",
+    ]
+
+    resources = [
+      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*",
+      # "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*",
+      # "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${data.aws_security_group.vpc_base_sg.id}",
+      # "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${aws_security_group.alb-security-group["http"].id}",
+      # "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowDescribeVPCOperations"
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeSubnets",
+      "ec2:DescribeVpcs",
+      "ec2:DescribeInstances",
+      "ec2:DescribeDhcpOptions",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeNetworkInterfaces",
+    ]
+
+    # Describe & List actions will often require non-resource level permissions so must use a '*'
+    resources = [
+      "*",
+    ]
+  }
 }
 
 
@@ -391,10 +426,10 @@ resource "aws_iam_role_policy" "origin_secret_rotate_policy" {
   policy   = data.aws_iam_policy_document.origin_verify_rotate_policy[""].json
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
-  role       = aws_iam_role.origin-secret-rotate-execution-role[""].name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-}
+# resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
+#   role       = aws_iam_role.origin-secret-rotate-execution-role[""].name
+#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+# }
 
 # This file needs to exist, but it's not directly used in the Terraform so...
 # tflint-ignore: terraform_unused_declarations
