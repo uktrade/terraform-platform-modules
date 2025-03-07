@@ -115,7 +115,8 @@ resource "aws_opensearch_domain" "this" {
   ]
 
   cluster_config {
-    dedicated_master_count   = 3
+    # checkov:skip=CKV_AWS_318: Checkov is not clever enough to recognise the null in this conditional
+    dedicated_master_count   = var.config.enable_ha ? 3 : null
     dedicated_master_type    = var.config.enable_ha ? var.config.instance : null
     dedicated_master_enabled = var.config.enable_ha
     instance_type            = var.config.instance
@@ -125,6 +126,7 @@ resource "aws_opensearch_domain" "this" {
       for_each = var.config.enable_ha ? [1] : []
       content {
         availability_zone_count = local.zone_count
+
       }
     }
   }

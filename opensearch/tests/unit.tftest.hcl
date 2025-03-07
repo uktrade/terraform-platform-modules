@@ -77,8 +77,8 @@ run "test_create_opensearch" {
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_count == 3
-    error_message = "Should be: 3"
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_count == null
+    error_message = "Should be: null"
   }
 
   assert {
