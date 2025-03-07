@@ -362,27 +362,7 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
   }
 
   statement {
-    effect = "Allow"
-    actions = [
-      "ec2:CreateNetworkInterface",
-      "ec2:DeleteNetworkInterface",
-      "ec2:DescribeInstances",
-      "ec2:DescribeNetworkInterfaces",
-      "ec2:AttachNetworkInterface",
-      "ec2:DescribeSubnets",
-      "ec2:DescribeSecurityGroups"
-    ]
-
-    resources = [
-      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*",
-      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*",
-      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${data.aws_security_group.vpc_base_sg.id}",
-      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:security-group/${aws_security_group.alb-security-group["http"].id}",
-      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:subnet/*"
-    ]
-  }
-
-  statement {
+    sid    = "AllowVPCOperations"
     effect = "Allow"
     actions = [
       "ec2:CreateNetworkInterface",
