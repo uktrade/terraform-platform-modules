@@ -233,7 +233,7 @@ run "opensearch_plan_small_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-opensearch.multi_az_support == false
+    condition     = output.resolved_config.test-opensearch.enable_ha == false
     error_message = "Should be: false"
   }
 
@@ -319,8 +319,8 @@ run "opensearch_plan_medium_ha_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-opensearch.multi_az_support == true
-    error_message = "Should be: false"
+    condition     = output.resolved_config.test-opensearch.enable_ha == true
+    error_message = "Should be: true"
   }
 
   assert {
@@ -410,7 +410,7 @@ run "redis_plan_medium_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-redis.multi_az_enabled == false
+    condition     = output.resolved_config.test-redis.enable_ha == false
     error_message = "Should be: false"
   }
 }
@@ -486,7 +486,7 @@ run "redis_plan_medium_ha_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-redis.multi_az_enabled == true
+    condition     = output.resolved_config.test-redis.enable_ha == true
     error_message = "Should be: true"
   }
 }

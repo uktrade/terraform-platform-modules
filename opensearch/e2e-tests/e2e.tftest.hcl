@@ -4,11 +4,11 @@ variables {
   environment = "test"
   name        = "opensearch-name"
   config = {
-    engine           = "2.5"
-    instance         = "t3.small.search"
-    instances        = 1
-    volume_size      = 80
-    multi_az_support = false
+    engine      = "2.5"
+    instance    = "t3.small.search"
+    instances   = 1
+    volume_size = 80
+    enable_ha   = false
   }
 }
 
@@ -32,17 +32,17 @@ run "opensearch_e2e_test" {
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == "t3.small.search"
-    error_message = "Should be: t3.small.search"
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == null
+    error_message = "Should be: null"
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == true
-    error_message = "Should be: true"
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == false
+    error_message = "Should be: false"
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].multi_az_support == false
+    condition     = aws_opensearch_domain.this.cluster_config[0].enable_ha == false
     error_message = "Should be: false"
   }
 
