@@ -50,7 +50,7 @@ run "test_create_opensearch" {
       instance                    = "t3.small.search"
       instances                   = 1
       volume_size                 = 80
-      master                      = false
+      enable_ha                   = false
       password_special_characters = "-_.,()"
       urlencode_password          = false
     }
@@ -74,6 +74,11 @@ run "test_create_opensearch" {
   assert {
     condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == false
     error_message = "Should be: false"
+  }
+
+  assert {
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_count == null
+    error_message = "Should be: null"
   }
 
   assert {
@@ -172,18 +177,23 @@ run "test_create_opensearch_x_large_ha" {
       instance    = "m6g.2xlarge.search"
       instances   = 2
       volume_size = 1500
-      master      = false
+      enable_ha   = true
     }
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == null
-    error_message = "Should be: null"
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_type == "m6g.2xlarge.search"
+    error_message = "Should be: m6g.2xlarge.search"
   }
 
   assert {
-    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == false
-    error_message = "Should be: false"
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_enabled == true
+    error_message = "Should be: true"
+  }
+
+  assert {
+    condition     = aws_opensearch_domain.this.cluster_config[0].dedicated_master_count == 3
+    error_message = "Should be: 3"
   }
 
   assert {
@@ -232,7 +242,7 @@ run "test_overrides" {
       instance                          = "t3.small.search"
       instances                         = 1
       volume_size                       = 80
-      master                            = false
+      enable_ha                         = false
       ebs_volume_type                   = "gp3"
       ebs_throughput                    = 500
       index_slow_log_retention_in_days  = 3
@@ -288,7 +298,7 @@ run "test_volume_type_validation" {
       instance                          = "t3.small.search"
       instances                         = 1
       volume_size                       = 80
-      master                            = false
+      enable_ha                         = false
       ebs_volume_type                   = "banana"
       index_slow_log_retention_in_days  = 9
       search_slow_log_retention_in_days = 10
@@ -320,7 +330,7 @@ run "test_domain_name_truncation" {
       instance    = "t3.small.search"
       instances   = 1
       volume_size = 80
-      master      = false
+      enable_ha   = false
     }
   }
 
@@ -344,7 +354,7 @@ run "test_create_cloudwatch_subscription_filters" {
       instance    = "t3.small.search"
       instances   = 1
       volume_size = 80
-      master      = false
+      enable_ha   = false
     }
   }
 
@@ -424,7 +434,7 @@ run "aws_kms_key_unit_test" {
       instance    = "t3.small.search"
       instances   = 1
       volume_size = 80
-      master      = false
+      enable_ha   = false
     }
   }
 
