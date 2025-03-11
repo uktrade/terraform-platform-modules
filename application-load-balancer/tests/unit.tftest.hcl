@@ -878,3 +878,5 @@ run "waf_and_rotate_lambda_cdn_domains_disabled" {
     error_message = "No secret should be created"
   }
 }
+
+# Trigger repo run tests actions
