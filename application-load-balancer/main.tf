@@ -402,11 +402,6 @@ resource "aws_iam_role_policy" "origin_secret_rotate_policy" {
   policy   = data.aws_iam_policy_document.origin_verify_rotate_policy[""].json
 }
 
-# resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
-#   role       = aws_iam_role.origin-secret-rotate-execution-role[""].name
-#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-# }
-
 # This file needs to exist, but it's not directly used in the Terraform so...
 # tflint-ignore: terraform_unused_declarations
 # This resource creates the Lambda function code zip file
