@@ -233,7 +233,7 @@ run "opensearch_plan_small_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-opensearch.master == false
+    condition     = output.resolved_config.test-opensearch.enable_ha == false
     error_message = "Should be: false"
   }
 
@@ -319,8 +319,8 @@ run "opensearch_plan_medium_ha_service_test" {
   }
 
   assert {
-    condition     = output.resolved_config.test-opensearch.master == false
-    error_message = "Should be: false"
+    condition     = output.resolved_config.test-opensearch.enable_ha == true
+    error_message = "Should be: true"
   }
 
   assert {
