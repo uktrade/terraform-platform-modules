@@ -611,6 +611,36 @@ run "waf_and_rotate_lambda" {
   }
 
   assert {
+    condition     = length(data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[1].condition) > 0
+    error_message = "Second statement should have a condition block"
+  }
+
+  assert {
+    condition = anytrue([
+      for c in data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[1].condition :
+      c.test == "ArnEquals"
+    ])
+    error_message = "Second statement condition test should be 'ArnEquals'"
+  }
+
+  assert {
+    condition = anytrue([
+      for c in data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[1].condition :
+      c.variable == "aws:PrincipalArn"
+    ])
+    error_message = "Second statement condition variable should be 'aws:PrincipalArn'"
+  }
+
+  # Requires executing run block with 'apply' to evaluate "aws_iam_role.origin-secret-rotate-execution-role[""].arn"
+  # assert {
+  #   condition = anytrue([
+  #     for c in data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[1].condition :
+  #     contains(c.values, aws_iam_role.origin-secret-rotate-execution-role[""].arn)
+  #   ])
+  #   error_message = "Second statement condition values should contain the expected IAM role ARN"
+  # }
+
+  assert {
     condition     = data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[2].effect == "Allow"
     error_message = "Third statement effect should be: Allow"
   }
@@ -710,6 +740,8 @@ run "waf_and_rotate_lambda" {
   assert {
     condition = data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[8].actions == toset([
       "ec2:AttachNetworkInterface",
+      "ec2:CreateNetworkInterface",
+      "ec2:DeleteNetworkInterface",
     ])
     error_message = "Ninth statement actions incorrect"
   }
@@ -720,12 +752,43 @@ run "waf_and_rotate_lambda" {
       [
         contains(
           data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[8].resources,
-          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:network-interface/*"
+          "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
         )
       ]
     )
     error_message = "Missing expected resources in IAM policy"
   }
+
+  assert {
+    condition     = length(data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[8].condition) > 0
+    error_message = "Ninth statement should have a condition block"
+  }
+
+  assert {
+    condition = anytrue([
+      for c in data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[8].condition :
+      c.test == "ArnEquals"
+    ])
+    error_message = "Ninth statement condition test should be 'ArnEquals'"
+  }
+
+  assert {
+    condition = anytrue([
+      for c in data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[8].condition :
+      c.variable == "aws:PrincipalArn"
+    ])
+    error_message = "Ninth statement condition variable should be 'aws:PrincipalArn'"
+  }
+
+  # Requires executing run block with 'apply' to evaluate "aws_iam_role.origin-secret-rotate-execution-role[""].arn"
+  # assert {
+  #   condition = anytrue([
+  #     for c in data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[8].condition :
+  #     contains(c.values, aws_iam_role.origin-secret-rotate-execution-role[""].arn)
+  #   ])
+  #   error_message = "Ninth statement condition values should contain the expected IAM role ARN"
+  # }
+
 
   assert {
     condition     = data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[9].effect == "Allow"
@@ -734,8 +797,6 @@ run "waf_and_rotate_lambda" {
 
   assert {
     condition = data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[9].actions == toset([
-      "ec2:CreateNetworkInterface",
-      "ec2:DeleteNetworkInterface",
       "ec2:DescribeSubnets",
       "ec2:DescribeVpcs",
       "ec2:DescribeInstances",
@@ -749,6 +810,27 @@ run "waf_and_rotate_lambda" {
   assert {
     condition     = one(data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[9].resources) == "*"
     error_message = "Resources should be '*' when non-resource level actions are used"
+  }
+
+  assert {
+    condition     = length(data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[9].condition) > 0
+    error_message = "Tenth statement should have a condition block"
+  }
+
+  assert {
+    condition = anytrue([
+      for c in data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[9].condition :
+      c.test == "ArnEquals"
+    ])
+    error_message = "Tenth statement condition test should be 'ArnEquals'"
+  }
+
+  assert {
+    condition = anytrue([
+      for c in data.aws_iam_policy_document.origin_verify_rotate_policy[""].statement[9].condition :
+      c.variable == "aws:PrincipalArn"
+    ])
+    error_message = "Tenth statement condition variable should be 'aws:PrincipalArn'"
   }
 
   #  ---- End of testing LAMBDA DATA POLICY PERMISSIONS -----
