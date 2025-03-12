@@ -384,6 +384,13 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
     resources = [
       "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*",
     ]
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:PrincipalArn"
+      values = [
+        aws_iam_role.origin-secret-rotate-execution-role[""].arn
+      ]
+    }
   }
 
   statement {
@@ -402,6 +409,13 @@ data "aws_iam_policy_document" "origin_verify_rotate_policy" {
     resources = [
       "*",
     ]
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:PrincipalArn"
+      values = [
+        aws_iam_role.origin-secret-rotate-execution-role[""].arn
+      ]
+    }
   }
 }
 
