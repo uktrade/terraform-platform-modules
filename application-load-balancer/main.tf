@@ -278,6 +278,7 @@ resource "aws_iam_role" "origin-secret-rotate-execution-role" {
 }
 
 data "aws_iam_policy_document" "origin_verify_rotate_policy" {
+  # checkov:skip=CKV_AWS_111:Permissions required to access VPC using non resource level permissions. You can't specify resource ARNS.
   # checkov:skip=CKV_AWS_356:Permissions required for '*' resource when using non resource level permissions.Restricting to allowed resource ARNs fails.
   # https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonec2.html
 
