@@ -75,6 +75,46 @@ phases:
 
       # Get service name
       - service_name=$(aws ecs list-services --cluster "${cluster}" | jq -r '.serviceArns[] | select(test("'${cluster}'-'${SERVICE}'($|-Service.*)"))' | cut -d '/' -f3)
+      
+      ################################################
+      ################################################
+      
+      # Run Copilot package command and clean the manifest output
+      - IMAGE_TAG=$IMAGE_TAG copilot svc package --env "$ENVIRONMENT" --name "$SERVICE" | yq eval -P > copilot-template.yml
+
+      # Get the current CloudFormation template and clean it for comparison
+      - aws cloudformation get-template --stack-name "$APPLICATION"-"$ENVIRONMENT"-"$SERVICE" --output json --query TemplateBody | jq -r . | yq eval -P > cloudformation-template.yml
+
+      # Standardise YAML formatting
+      - |
+        python -c "
+        import yaml
+        
+        with open('copilot-template.yml') as file:
+            data = yaml.safe_load(file)
+        with open('copilot-template-cleaned.yml', 'w') as file:
+            yaml.dump(data, file, default_flow_style=False, indent=2)
+
+        with open('cloudformation-template.yml') as file:
+            data = yaml.safe_load(file)
+        with open('cloudformation-template-cleaned.yml', 'w') as file:
+            yaml.dump(data, file, default_flow_style=False, indent=2)
+                "
+                
+        - diff copilot-template-cleaned.yml cloudformation-template-cleaned.yml
+        - |
+          if [[ $? -ne 0]]; then
+            echo "Service templates differ, running copilot svc deploy..."
+            copilot svc deploy --env "$ENVIRONMENT" --name "$SERVICE"
+          else
+            echo "Templates are the same, running ECS update-service deploy..."
+            ecs-update-service-command-here  # Replace this with the actual ECS update-service deploy command
+          fi
+          
+      ################################################
+      ################################################
+
+      
 
       # Update task definition
       - task_definition=$(aws ecs describe-task-definition --task-definition "${task_family}")
