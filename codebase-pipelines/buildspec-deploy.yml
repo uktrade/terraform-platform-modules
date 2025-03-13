@@ -115,7 +115,7 @@ phases:
               fi
               exit 0
             else
-              echo "Templates are the same..."
+              echo "No differences detected between deployed and committed service templates..."
             fi
 
 
