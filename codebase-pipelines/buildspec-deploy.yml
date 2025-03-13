@@ -106,7 +106,7 @@ phases:
             DIFF_EXIT_CODE=$?
 
             if [[ $DIFF_EXIT_CODE -ne 0 ]]; then
-              echo "Service templates differ, running copilot svc deploy..."
+              echo "Differences detected between deployed and committed service templates, running copilot svc deploy..."
               copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
               EXIT_CODE=$?
               if [[ $EXIT_CODE -ne 0 ]]; then
