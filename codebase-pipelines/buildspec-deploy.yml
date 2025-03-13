@@ -80,41 +80,44 @@ phases:
       ################################################
       
       # Run Copilot package command and clean the manifest output
-      - IMAGE_TAG=$IMAGE_TAG copilot svc package --env "$ENVIRONMENT" --name "$SERVICE" | yq eval -P > copilot-template.yml
+      - IMAGE_TAG=$IMAGE_TAG copilot svc package --env "${ENVIRONMENT}" --name "${SERVICE}" | yq eval -P > copilot-template.yml
 
       # Get the current CloudFormation template and clean it for comparison
-      - aws cloudformation get-template --stack-name "$APPLICATION"-"$ENVIRONMENT"-"$SERVICE" --output json --query TemplateBody | jq -r . | yq eval -P > cloudformation-template.yml
+      - aws cloudformation get-template --stack-name "${APPLICATION}"-"${ENVIRONMENT}"-"${SERVICE}" --output json --query TemplateBody | jq -r . | yq eval -P > cloudformation-template.yml
 
       # Standardise YAML formatting
       - |
-        python -c "
-        import yaml
-        
-        with open('copilot-template.yml') as file:
-            data = yaml.safe_load(file)
-        with open('copilot-template-cleaned.yml', 'w') as file:
-            yaml.dump(data, file, default_flow_style=False, indent=2)
-
-        with open('cloudformation-template.yml') as file:
-            data = yaml.safe_load(file)
-        with open('cloudformation-template-cleaned.yml', 'w') as file:
-            yaml.dump(data, file, default_flow_style=False, indent=2)
-                "
-                
-        - diff copilot-template-cleaned.yml cloudformation-template-cleaned.yml
-        - |
-          if [[ $? -ne 0]]; then
-            echo "Service templates differ, running copilot svc deploy..."
-            copilot svc deploy --env "$ENVIRONMENT" --name "$SERVICE"
-          else
-            echo "Templates are the same, running ECS update-service deploy..."
-            ecs-update-service-command-here  # Replace this with the actual ECS update-service deploy command
-          fi
+          python -c "
+          import yaml
           
-      ################################################
-      ################################################
+          with open('copilot-template.yml') as file:
+              data = yaml.safe_load(file)
+          with open('copilot-template-cleaned.yml', 'w') as file:
+              yaml.dump(data, file, default_flow_style=False, indent=2)
 
-      
+          with open('cloudformation-template.yml') as file:
+              data = yaml.safe_load(file)
+          with open('cloudformation-template-cleaned.yml', 'w') as file:
+              yaml.dump(data, file, default_flow_style=False, indent=2)
+                  "
+                
+        - |
+            diff copilot-template-cleaned.yml cloudformation-template-cleaned.yml
+            DIFF_EXIT_CODE=$?
+
+            if [[ $DIFF_EXIT_CODE -ne 0 ]]; then
+              echo "Service templates differ, running copilot svc deploy..."
+              copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
+              EXIT_CODE=$?
+              if [[ $EXIT_CODE -ne 0 ]]; then
+                echo "Copilot service deployment for ${SERVICE} failed!"
+                exit $EXIT_CODE
+              fi
+              exit 0
+            else
+              echo "Templates are the same..."
+            fi
+
 
       # Update task definition
       - task_definition=$(aws ecs describe-task-definition --task-definition "${task_family}")
