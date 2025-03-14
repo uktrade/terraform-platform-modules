@@ -101,23 +101,25 @@ phases:
               yaml.dump(data, file, default_flow_style=False, indent=2)
                   "
                 
-        - |
-            diff copilot-template-cleaned.yml cloudformation-template-cleaned.yml
-            DIFF_EXIT_CODE=$?
+      - |
+          diff copilot-template-cleaned.yml cloudformation-template-cleaned.yml
+          DIFF_EXIT_CODE=$?
 
-            if [[ $DIFF_EXIT_CODE -ne 0 ]]; then
-              echo "Differences detected between deployed and committed service templates, running copilot svc deploy..."
-              copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
-              EXIT_CODE=$?
-              if [[ $EXIT_CODE -ne 0 ]]; then
-                echo "Copilot service deployment for ${SERVICE} failed!"
-                exit $EXIT_CODE
-              fi
-              exit 0
-            else
-              echo "No differences detected between deployed and committed service templates..."
+          if [[ $DIFF_EXIT_CODE -ne 0 ]]; then
+            echo "Differences detected between deployed and committed service templates, running copilot svc deploy..."
+            copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
+            EXIT_CODE=$?
+            if [[ $EXIT_CODE -ne 0 ]]; then
+              echo "Copilot service deployment for ${SERVICE} failed!"
+              exit $EXIT_CODE
             fi
+            exit 0
+          else
+            echo "No differences detected between deployed and committed service templates..."
+          fi
 
+      ################################################
+      ################################################
 
       # Update task definition
       - task_definition=$(aws ecs describe-task-definition --task-definition "${task_family}")
