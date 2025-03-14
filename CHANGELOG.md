@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.6.0](https://github.com/uktrade/terraform-platform-modules/compare/7.5.0...7.6.0) (2025-03-14)
+
+
+### Features
+
+* DBTP-1738 Attach secret rotation lambda to correct VPC to ensure rotation tests pass ([#336](https://github.com/uktrade/terraform-platform-modules/issues/336)) ([0512962](https://github.com/uktrade/terraform-platform-modules/commit/0512962032ec90af56c2a9e019c255e2a2394989))
+
 ## [7.5.0](https://github.com/uktrade/terraform-platform-modules/compare/7.4.0...7.5.0) (2025-03-07)
 
 
