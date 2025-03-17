@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.6.1](https://github.com/uktrade/terraform-platform-modules/compare/7.6.0...7.6.1) (2025-03-17)
+
+
+### Bug Fixes
+
+* Implement pipeline stage rollback in Terraform (DBTP-1886) ([#359](https://github.com/uktrade/terraform-platform-modules/issues/359)) ([aabb10b](https://github.com/uktrade/terraform-platform-modules/commit/aabb10bd47e1d56cb2ce1c24723cb3f5a51f93ca))
+
 ## [7.6.0](https://github.com/uktrade/terraform-platform-modules/compare/7.5.0...7.6.0) (2025-03-14)
 
 
