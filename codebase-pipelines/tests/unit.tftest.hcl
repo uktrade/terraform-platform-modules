@@ -1089,6 +1089,10 @@ run "test_main_pipeline" {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].name == "Deploy-dev"
     error_message = "Should be: Deploy-dev"
   }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].on_failure[0].result == "ROLLBACK"
+    error_message = "Should be: ROLLBACK"
+  }
 
   # Deploy service-1 action
   assert {
@@ -1239,6 +1243,10 @@ run "test_tagged_pipeline" {
   assert {
     condition     = aws_codepipeline.codebase_pipeline[1].stage[1].name == "Deploy-staging"
     error_message = "Should be: Deploy-staging"
+  }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[1].stage[1].on_failure[0].result == "ROLLBACK"
+    error_message = "Should be: ROLLBACK"
   }
 
   # Deploy service-1 action
@@ -1452,6 +1460,10 @@ run "test_manual_release_pipeline" {
   assert {
     condition     = aws_codepipeline.manual_release_pipeline.stage[1].name == "Deploy"
     error_message = "Should be: Deploy"
+  }
+  assert {
+    condition     = aws_codepipeline.manual_release_pipeline.stage[1].on_failure[0].result == "ROLLBACK"
+    error_message = "Should be: ROLLBACK"
   }
 
   # Deploy service-1 action
@@ -1877,6 +1889,10 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[1].name == "Deploy-dev"
     error_message = "Should be: Deploy-dev"
   }
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].on_failure[0].result == "ROLLBACK"
+    error_message = "Should be: ROLLBACK"
+  }
 
   # service-1
   assert {
@@ -1972,14 +1988,5 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
   assert {
     condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[4].run_order == 4
     error_message = "Run order incorrect"
-  }
-}
-
-run "test_pipeline_update_script" {
-  command = plan
-
-  assert {
-    condition     = length(terraform_data.update_pipeline.triggers_replace) == 2
-    error_message = "Should be: 2"
   }
 }
