@@ -108,7 +108,7 @@ phases:
   
       - diff new.yml current.yml; DIFF_EXIT_CODE=$?
       - echo "DIFF EXIT CODE IS ${DIFF_EXIT_CODE}"
-      - echo "NO_DEPLOY" > /tmp/exit_now
+      - echo "ECS_DEPLOY" > /tmp/exit_now
       
       - |
         set -e
@@ -116,12 +116,10 @@ phases:
         
         if [[ $DIFF_EXIT_CODE -ne 0 ]]; then
           echo "Differences detected between deployed and committed service templates, running copilot svc deploy..."
-          # copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
-          true
+          copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
           COPILOT_EXIT_CODE=$?
           
           echo "COPILOT EXIT CODE IS ${COPILOT_EXIT_CODE}"
-          
           echo "${COPILOT_EXIT_CODE}" > /tmp/exit_now
         fi
         
@@ -129,12 +127,12 @@ phases:
       - EXIT_CODE=$(cat /tmp/exit_now 2>/dev/null)
       - echo "EXIT CODE IS ---- ${EXIT_CODE}"
       
+      # exit here is not working
       - if [[ "${EXIT_CODE}" == "0" || "${EXIT_CODE}" == "1" ]]; then exit ${EXIT_CODE}; fi
+      - echo "CODE SHOULD ONLY REACH THIS FAR if no Copilot deployment was needed"
 
-      - echo "No differences detected between deployed and committed service templates..."
-      
-      - echo "Commencing ECS service update process..."
-      - echo "CODE SHOULD REACH THIS FAR only if no deployment was needed"
+      # these lines still being executed
+      - echo "Commencing ECS service update process......"
       - echo $(date +%s)
 
 
