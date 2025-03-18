@@ -477,6 +477,24 @@ run "test_deploy_repository" {
   }
 }
 
+run "test_deploy_repository_branch" {
+  command = plan
+
+  variables {
+    deploy_repository_branch = "feature-branch"
+  }
+
+  assert {
+    condition     = aws_codepipeline.codebase_pipeline[0].stage[0].action[0].configuration.BranchName == "feature-branch"
+    error_message = "Should be: feature-branch"
+  }
+
+  assert {
+    condition     = aws_codepipeline.manual_release_pipeline.stage[0].action[0].configuration.BranchName == "feature-branch"
+    error_message = "Should be: feature-branch"
+  }
+}
+
 run "test_main_branch_filter" {
   command = plan
 
