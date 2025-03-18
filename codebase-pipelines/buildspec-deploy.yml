@@ -9,18 +9,7 @@ env:
 phases:
   install:
     commands:
-      - ls -la
       - COPILOT_VERSION=`cat .copilot-version`
-      
-      # - COPILOT_VERSION="1.34.0"
-      # - |
-      #     if [ -f .copilot-version ]; then
-      #       COPILOT_VERSION=`cat .copilot-version`  
-      #       echo "Using COPILOT_VERSION from .copilot-version: ${COPILOT_VERSION}"
-      #     else
-      #       echo ".copilot-version not found, using default COPILOT_VERSION: ${COPILOT_VERSION}"
-      #     fi
-      # - echo "COPILOT_VERSION is ${COPILOT_VERSION}"
       
       - curl -s -qL -o copilot-binary https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION}
       - chmod +x copilot-binary
@@ -104,123 +93,95 @@ phases:
 
       # Get the current CloudFormation template and clean it for comparison
       - aws cloudformation get-template --stack-name "${APPLICATION}-${ENVIRONMENT}-${SERVICE}" --output json --query TemplateBody | jq -r . | yq .Metadata.Manifest | jq -r . | yq 'del(.image.location)' > current.yml
-                
   
       - diff new.yml current.yml; DIFF_EXIT_CODE=$?
       - echo "DIFF EXIT CODE IS ${DIFF_EXIT_CODE}"
-      - echo "ECS_DEPLOY" > /tmp/exit_now
       
       - |
-        set -e
-        set -x
-        
         if [[ $DIFF_EXIT_CODE -ne 0 ]]; then
           echo "Differences detected between deployed and committed service templates, running copilot svc deploy..."
           copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
-          COPILOT_EXIT_CODE=$?
+        else
+          # Update task definition
+          task_definition=$(aws ecs describe-task-definition --task-definition "${task_family}")
+          new_task_definition=$(echo ${task_definition} | jq '.taskDefinition | .containerDefinitions |= map(if .name == '\"${SERVICE}\"' then .image = '\"${image_uri}\"' else . end) | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) |  del(.registeredAt)  | del(.registeredBy)')
+          new_task_info=$(aws ecs register-task-definition --cli-input-json "${new_task_definition}")
+          new_revision=$(echo ${new_task_info} | jq '.taskDefinition.revision')
+
+          # Get desired task count
+          count=0
+          cd "${CODEBUILD_SRC_DIR}"
+
+          # If count is a range, get the first value otherwise get count
+          if [ $(yq '.count | type == "object"' copilot/${SERVICE}/manifest.yml) == "true" ]; then
+            count=$(yq '.count.range' copilot/${SERVICE}/manifest.yml | tr -d '"' | cut -d '-' -f1)
+          else
+            count=$(yq '.count' copilot/${SERVICE}/manifest.yml)
+          fi
+
+          # Check for environment overrides
+          if [ $(yq '.environments.'${ENVIRONMENT}'.count | type == "object"' copilot/${SERVICE}/manifest.yml) == "true" ]; then
+            env_count=$(yq '.environments.'${ENVIRONMENT}'.count.range' copilot/${SERVICE}/manifest.yml | tr -d '"' | cut -d '-' -f1)
+          else
+            env_count=$(yq '.environments.'${ENVIRONMENT}'.count' copilot/${SERVICE}/manifest.yml)
+          fi
+
+          if [[ "${env_count}" != "null" ]]; then
+            count=${env_count}
+          fi
+
+          # Start deployment
+          echo "Deploying ${image_uri} to ${service_name} in ${cluster} with task count ${count}"
+          start=$( date +%s )
+          deploy_status="IN_PROGRESS"
+          aws ecs update-service --cluster "${cluster}" --service "${service_name}" --task-definition "${task_family}:${new_revision}" --desired-count ${count} > /dev/null 2>&1
+
+          # Check deployment status
+          while [[ "${deploy_status}" == "IN_PROGRESS" || "${deploy_status}" == "PENDING" || "${deploy_status}" == "ROLLBACK_IN_PROGRESS" || "${deploy_status}" == "null" ]];
+          do
+            sleep 10
+            now=$( date +%s )
+            elapsed=$(( now-start ))
+
+            deploy_status=$(aws ecs list-service-deployments --cluster "${cluster}" --service "${service_name}" --created-at "after=${start}" | jq -r '.serviceDeployments[0].status')
           
-          echo "COPILOT EXIT CODE IS ${COPILOT_EXIT_CODE}"
-          echo "${COPILOT_EXIT_CODE}" > /tmp/exit_now
-        fi
-        
-      ###### parent shell ######
-      - EXIT_CODE=$(cat /tmp/exit_now 2>/dev/null)
-      - echo "EXIT CODE IS ---- ${EXIT_CODE}"
-      
-      # exit here is not working
-      - if [[ "${EXIT_CODE}" == "0" || "${EXIT_CODE}" == "1" ]]; then exit ${EXIT_CODE}; fi
-      - echo "CODE SHOULD ONLY REACH THIS FAR if no Copilot deployment was needed"
+            if [[ "${deploy_status}" == "null" ]]; then deploy_status="PENDING"; fi
+            echo "Deployment status after ${elapsed} seconds: ${deploy_status}"
 
-      # these lines still being executed
-      - echo "Commencing ECS service update process......"
-      - echo $(date +%s)
+            if [[ ${elapsed} -gt ${DEPLOY_TIMEOUT} ]]; then
+              echo "Error: Deployment not completed within ${DEPLOY_TIMEOUT} seconds timeout" | tee output.log
+              exit 1
+            fi
+          done
 
+          # Check deployment success
+          case "${deploy_status}" in
+            SUCCESSFUL)
+              STATUS_EMOJI=":large_green_circle:"
+              STATUS_TEXT="COMPLETE"
+              ;;
+            ROLLBACK_SUCCESSFUL)
+              STATUS_EMOJI=":red_circle:"
+              STATUS_TEXT="FAILED"
+              ;;
+            ROLLBACK_FAILED)
+              STATUS_EMOJI=":red_circle::warning:"
+              STATUS_TEXT="FAILED"
+              ;;
+            *)
+              STATUS_EMOJI=":large_blue_circle:"
+              STATUS_TEXT="STOP_REQUESTED/STOPPED/PENDING/IN_PROGRESS"
+              ;;
+          esac
 
-      # Update task definition
-      - task_definition=$(aws ecs describe-task-definition --task-definition "${task_family}")
-      - new_task_definition=$(echo ${task_definition} | jq '.taskDefinition | .containerDefinitions |= map(if .name == '\"${SERVICE}\"' then .image = '\"${image_uri}\"' else . end) | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) |  del(.registeredAt)  | del(.registeredBy)')
-      - new_task_info=$(aws ecs register-task-definition --cli-input-json "${new_task_definition}")
-      - new_revision=$(echo ${new_task_info} | jq '.taskDefinition.revision')
-
-      # Get desired task count
-      - count=0
-      - cd "${CODEBUILD_SRC_DIR}"
-
-      # If count is a range, get the first value otherwise get count
-      - |
-        if [ $(yq '.count | type == "object"' copilot/${SERVICE}/manifest.yml) == "true" ]; then
-          count=$(yq '.count.range' copilot/${SERVICE}/manifest.yml | tr -d '"' | cut -d '-' -f1)
-        else
-          count=$(yq '.count' copilot/${SERVICE}/manifest.yml)
-        fi
-
-      # Check for environment overrides
-      - |
-        if [ $(yq '.environments.'${ENVIRONMENT}'.count | type == "object"' copilot/${SERVICE}/manifest.yml) == "true" ]; then
-          env_count=$(yq '.environments.'${ENVIRONMENT}'.count.range' copilot/${SERVICE}/manifest.yml | tr -d '"' | cut -d '-' -f1)
-        else
-          env_count=$(yq '.environments.'${ENVIRONMENT}'.count' copilot/${SERVICE}/manifest.yml)
-        fi
-
-      - |
-        if [[ "${env_count}" != "null" ]]; then
-          count=${env_count}
-        fi
-
-      # Start deployment
-      - echo "Deploying ${image_uri} to ${service_name} in ${cluster} with task count ${count}"
-      - start=$( date +%s )
-      - deploy_status="IN_PROGRESS"
-      - aws ecs update-service --cluster "${cluster}" --service "${service_name}" --task-definition "${task_family}:${new_revision}" --desired-count ${count} > /dev/null 2>&1
-
-      # Check deployment status
-      - |
-        while [[ "${deploy_status}" == "IN_PROGRESS" || "${deploy_status}" == "PENDING" || "${deploy_status}" == "ROLLBACK_IN_PROGRESS" || "${deploy_status}" == "null" ]];
-        do
-          sleep 10
-          now=$( date +%s )
-          elapsed=$(( now-start ))
-
-          deploy_status=$(aws ecs list-service-deployments --cluster "${cluster}" --service "${service_name}" --created-at "after=${start}" | jq -r '.serviceDeployments[0].status')
-        
-          if [[ "${deploy_status}" == "null" ]]; then deploy_status="PENDING"; fi
-          echo "Deployment status after ${elapsed} seconds: ${deploy_status}"
-
-          if [[ ${elapsed} -gt ${DEPLOY_TIMEOUT} ]]; then
-            echo "Error: Deployment not completed within ${DEPLOY_TIMEOUT} seconds timeout" | tee output.log
+          # Send notification on successful deployment or exit with an error code
+          if [ "${deploy_status}" == "SUCCESSFUL" ]; then
+            MESSAGE="${STATUS_EMOJI} ${STATUS_TEXT} - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
+            platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
+          else
+            echo "Error: Deployment status is ${deploy_status}" | tee output.log
             exit 1
           fi
-        done
-
-      # Check deployment success
-      - |
-        case "${deploy_status}" in
-          SUCCESSFUL)
-            STATUS_EMOJI=":large_green_circle:"
-            STATUS_TEXT="COMPLETE"
-            ;;
-          ROLLBACK_SUCCESSFUL)
-            STATUS_EMOJI=":red_circle:"
-            STATUS_TEXT="FAILED"
-            ;;
-          ROLLBACK_FAILED)
-            STATUS_EMOJI=":red_circle::warning:"
-            STATUS_TEXT="FAILED"
-            ;;
-          *)
-            STATUS_EMOJI=":large_blue_circle:"
-            STATUS_TEXT="STOP_REQUESTED/STOPPED/PENDING/IN_PROGRESS"
-            ;;
-        esac
-
-      # Send notification on successful deployment or exit with an error code
-      - |
-        if [ "${deploy_status}" == "SUCCESSFUL" ]; then
-          MESSAGE="${STATUS_EMOJI} ${STATUS_TEXT} - Deployment of ${UPPERCASE_TAG} to ${UPPERCASE_SERVICE} service - ${deploy_status} - <${PIPELINE_EXECUTION_URL}|Pipeline execution url>"
-          platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
-        else
-          echo "Error: Deployment status is ${deploy_status}" | tee output.log
-          exit 1
         fi
 
   post_build:
