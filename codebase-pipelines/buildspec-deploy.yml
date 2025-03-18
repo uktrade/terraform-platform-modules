@@ -9,6 +9,26 @@ env:
 phases:
   install:
     commands:
+      - ls -la
+      - COPILOT_VERSION=`cat .copilot-version`
+      
+      # - COPILOT_VERSION="1.34.0"
+      # - |
+      #     if [ -f .copilot-version ]; then
+      #       COPILOT_VERSION=`cat .copilot-version`  
+      #       echo "Using COPILOT_VERSION from .copilot-version: ${COPILOT_VERSION}"
+      #     else
+      #       echo ".copilot-version not found, using default COPILOT_VERSION: ${COPILOT_VERSION}"
+      #     fi
+      # - echo "COPILOT_VERSION is ${COPILOT_VERSION}"
+      
+      - curl -s -qL -o copilot-binary https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION}
+      - chmod +x copilot-binary
+      - mkdir -p /codebuild/bin
+      - mv copilot-binary /codebuild/bin/copilot
+      - export PATH=$PATH:/codebuild/bin
+      - copilot --version
+
       - pip install yq dbt-platform-helper --quiet
       - curl -s -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > /usr/local/bin/regctl
       - chmod +x /usr/local/bin/regctl
@@ -80,46 +100,43 @@ phases:
       ################################################
       
       # Run Copilot package command and clean the manifest output
-      - IMAGE_TAG=$IMAGE_TAG copilot svc package --env "${ENVIRONMENT}" --name "${SERVICE}" | yq eval -P > copilot-template.yml
+      - copilot svc package --env "${ENVIRONMENT}" --name "${SERVICE}" | yq .Metadata.Manifest | jq -r . | yq 'del(.image.location)' > new.yml
 
       # Get the current CloudFormation template and clean it for comparison
-      - aws cloudformation get-template --stack-name "${APPLICATION}"-"${ENVIRONMENT}"-"${SERVICE}" --output json --query TemplateBody | jq -r . | yq eval -P > cloudformation-template.yml
-
-      # Standardise YAML formatting
-      - |
-          python -c "
-          import yaml
-          
-          with open('copilot-template.yml') as file:
-              data = yaml.safe_load(file)
-          with open('copilot-template-cleaned.yml', 'w') as file:
-              yaml.dump(data, file, default_flow_style=False, indent=2)
-
-          with open('cloudformation-template.yml') as file:
-              data = yaml.safe_load(file)
-          with open('cloudformation-template-cleaned.yml', 'w') as file:
-              yaml.dump(data, file, default_flow_style=False, indent=2)
-                  "
+      - aws cloudformation get-template --stack-name "${APPLICATION}-${ENVIRONMENT}-${SERVICE}" --output json --query TemplateBody | jq -r . | yq .Metadata.Manifest | jq -r . | yq 'del(.image.location)' > current.yml
                 
+  
+      - diff new.yml current.yml; DIFF_EXIT_CODE=$?
+      - echo "DIFF EXIT CODE IS ${DIFF_EXIT_CODE}"
+      - echo "NO_DEPLOY" > /tmp/exit_now
+      
       - |
-          diff copilot-template-cleaned.yml cloudformation-template-cleaned.yml
-          DIFF_EXIT_CODE=$?
+        set -e
+        set -x
+        
+        if [[ $DIFF_EXIT_CODE -ne 0 ]]; then
+          echo "Differences detected between deployed and committed service templates, running copilot svc deploy..."
+          # copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
+          true
+          COPILOT_EXIT_CODE=$?
+          
+          echo "COPILOT EXIT CODE IS ${COPILOT_EXIT_CODE}"
+          
+          echo "${COPILOT_EXIT_CODE}" > /tmp/exit_now
+        fi
+        
+      ###### parent shell ######
+      - EXIT_CODE=$(cat /tmp/exit_now 2>/dev/null)
+      - echo "EXIT CODE IS ---- ${EXIT_CODE}"
+      
+      - if [[ "${EXIT_CODE}" == "0" || "${EXIT_CODE}" == "1" ]]; then exit ${EXIT_CODE}; fi
 
-          if [[ $DIFF_EXIT_CODE -ne 0 ]]; then
-            echo "Differences detected between deployed and committed service templates, running copilot svc deploy..."
-            copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
-            EXIT_CODE=$?
-            if [[ $EXIT_CODE -ne 0 ]]; then
-              echo "Copilot service deployment for ${SERVICE} failed!"
-              exit $EXIT_CODE
-            fi
-            exit 0
-          else
-            echo "No differences detected between deployed and committed service templates..."
-          fi
+      - echo "No differences detected between deployed and committed service templates..."
+      
+      - echo "Commencing ECS service update process..."
+      - echo "CODE SHOULD REACH THIS FAR only if no deployment was needed"
+      - echo $(date +%s)
 
-      ################################################
-      ################################################
 
       # Update task definition
       - task_definition=$(aws ecs describe-task-definition --task-definition "${task_family}")
