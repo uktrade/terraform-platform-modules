@@ -1,6 +1,7 @@
-import pytest
 import unittest
 from unittest.mock import MagicMock
+
+import pytest
 from update_pipeline import update_pipeline_stage_failure
 
 
@@ -15,7 +16,7 @@ class TestUpdatePipeline(unittest.TestCase):
                     {
                         "name": "Deploy",
                     }
-                ]
+                ],
             }
         }
 
@@ -33,14 +34,16 @@ class TestUpdatePipeline(unittest.TestCase):
                     {
                         "name": "Source",
                     }
-                ]
+                ],
             }
         }
 
         with pytest.raises(ValueError) as error_msg:
             update_pipeline_stage_failure(mock_client, ["test-pipeline"])
 
-        assert "Stage Deploy not found in pipeline test-pipeline" in str(error_msg.value)
+        assert "Stage Deploy not found in pipeline test-pipeline" in str(
+            error_msg.value
+        )
 
     def test_update_pipeline_stage_failure_sets_rollback_multiple_stages(self):
         mock_client = MagicMock()
@@ -56,12 +59,14 @@ class TestUpdatePipeline(unittest.TestCase):
                     },
                     {
                         "name": "Deploy-Prod",
-                    }
-                ]
+                    },
+                ],
             }
         }
 
-        update_pipeline_stage_failure(mock_client, ["test-pipeline-main, test-pipeline-tagged"])
+        update_pipeline_stage_failure(
+            mock_client, ["test-pipeline-main, test-pipeline-tagged"]
+        )
 
         call_args = mock_client.update_pipeline.call_args[1]
         assert not hasattr(call_args["pipeline"]["stages"][0], "onFailure")
@@ -75,10 +80,10 @@ class TestUpdatePipeline(unittest.TestCase):
             error_response={
                 "Error": {
                     "Code": "PipelineNotFoundException",
-                    "Message": "Pipeline not found"
+                    "Message": "Pipeline not found",
                 }
             },
-            operation_name="GetPipeline"
+            operation_name="GetPipeline",
         )
         mock_client.get_pipeline.side_effect = Exception(not_found_exception)
 
