@@ -85,9 +85,6 @@ phases:
       # Get service name
       - service_name=$(aws ecs list-services --cluster "${cluster}" | jq -r '.serviceArns[] | select(test("'${cluster}'-'${SERVICE}'($|-Service.*)"))' | cut -d '/' -f3)
       
-      ################################################
-      ################################################
-      
       # Run Copilot package command and clean the manifest output
       - copilot svc package --env "${ENVIRONMENT}" --name "${SERVICE}" | yq .Metadata.Manifest | jq -r . | yq 'del(.image.location)' > new.yml
 
