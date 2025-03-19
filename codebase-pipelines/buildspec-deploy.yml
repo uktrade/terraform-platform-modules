@@ -86,10 +86,10 @@ phases:
       - service_name=$(aws ecs list-services --cluster "${cluster}" | jq -r '.serviceArns[] | select(test("'${cluster}'-'${SERVICE}'($|-Service.*)"))' | cut -d '/' -f3)
       
       # Run Copilot package command and clean the manifest output
-      - copilot svc package --env "${ENVIRONMENT}" --name "${SERVICE}" | yq .Metadata.Manifest | jq -r . | yq 'del(.image.location)' > new.yml
+      - copilot svc package --env "${ENVIRONMENT}" --name "${SERVICE}" | yq .Metadata.Manifest | yq 'del(.image.location)' > new.yml
 
       # Get the current CloudFormation template and clean it for comparison
-      - aws cloudformation get-template --stack-name "${APPLICATION}-${ENVIRONMENT}-${SERVICE}" --output json --query TemplateBody | jq -r . | yq .Metadata.Manifest | jq -r . | yq 'del(.image.location)' > current.yml
+      - aws cloudformation get-template --stack-name "${APPLICATION}-${ENVIRONMENT}-${SERVICE}" --output json --query TemplateBody  | jq -r . | yq .Metadata.Manifest | yq 'del(.image.location)' > current.yml
   
       - diff new.yml current.yml; DIFF_EXIT_CODE=$?
       - echo "DIFF EXIT CODE IS ${DIFF_EXIT_CODE}"
