@@ -105,3 +105,26 @@ resource "aws_ssm_parameter" "addons" {
   value = jsonencode(local.extensions_for_environment)
   tags  = local.tags
 }
+
+data "aws_ssm_parameter" "datadog_api_key" {
+  name = "datadog_daveg_api_key"
+}
+data "aws_ssm_parameter" "datadog_app_key" {
+  name = "datadog_daveg_app_key"
+}
+
+module "datadog" {
+
+  source = "../datadog"
+
+  for_each = local.datadog
+  providers = {
+    datadog.dd = datadog.dd
+  }
+
+  application = var.args.application
+  environment = var.environment
+  vpc_name    = local.vpc_name
+
+  config = each.value
+}
