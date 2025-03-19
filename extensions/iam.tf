@@ -210,6 +210,7 @@ data "aws_iam_policy_document" "env_manager_access" {
   }
 
   statement {
+    effect = "Allow"
     actions = [
       "cloudformation:GetTemplate",
       "cloudformation:GetTemplateSummary",
