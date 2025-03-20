@@ -1,19 +1,19 @@
-import os
 import json
-import boto3
 import unittest
-
 from unittest.mock import MagicMock
 from unittest.mock import patch
+
+import boto3
 from moto import mock_aws
 
-from postgres.manage_users import create_or_update_db_user, create_or_update_user_secret, handler
+from postgres.manage_users import create_or_update_db_user
+from postgres.manage_users import create_or_update_user_secret
+from postgres.manage_users import handler
 
 
 class TestManageUsers(unittest.TestCase):
     def setUp(self):
         self.cursor = MagicMock()
-
 
     @classmethod
     def setUpClass(cls):
@@ -35,7 +35,6 @@ class TestManageUsers(unittest.TestCase):
         cls.context = MagicMock()
         cls.conn = MagicMock()
         cls.cursor = MagicMock()
-
 
     def test_create_or_update_db_user(self):
         self.cursor.fetchone.return_value = None
@@ -59,7 +58,6 @@ class TestManageUsers(unittest.TestCase):
 
         conn.commit.assert_called_once()
 
-        
     def test_create_or_update_db_user_when_user_exists(self):
         self.cursor.fetchone.return_value = ["test_user"]
         conn = MagicMock()
@@ -74,18 +72,19 @@ class TestManageUsers(unittest.TestCase):
         )
 
         conn.commit.assert_called_once()
-        
 
     @mock_aws
     def test_create_or_update_user_secret(self):
         ssm = boto3.client("ssm")
         user_secret_name = "/test/secret"
         user_secret_string = {"username": "test_user", "password": "test_password"}
-        
+
         response = create_or_update_user_secret(
             ssm, user_secret_name, user_secret_string, self.event
         )
-        parameter = ssm.get_parameter(Name=user_secret_name, WithDecryption=True)["Parameter"]
+        parameter = ssm.get_parameter(Name=user_secret_name, WithDecryption=True)[
+            "Parameter"
+        ]
         parameter_described = ssm.describe_parameters()["Parameters"][0]
 
         assert response["Version"] == 1
@@ -94,7 +93,6 @@ class TestManageUsers(unittest.TestCase):
         assert parameter["Value"] == json.dumps(user_secret_string)
         assert parameter_described["Description"] == "used for testing"
 
-
     @mock_aws
     def test_create_or_update_user_secret_overwrites(self):
         ssm = boto3.client("ssm")
@@ -102,13 +100,14 @@ class TestManageUsers(unittest.TestCase):
         user_secret_string = {"username": "test_user", "password": "test_password"}
         ssm.put_parameter(Name=user_secret_name, Value="blah", Type="String")
 
-        create_or_update_user_secret(ssm, user_secret_name, user_secret_string, self.event)
+        create_or_update_user_secret(
+            ssm, user_secret_name, user_secret_string, self.event
+        )
 
         parameter = ssm.get_parameter(Name=user_secret_name)["Parameter"]
 
         assert parameter["Version"] == 2
         assert parameter["Value"] == json.dumps(user_secret_string)
-    
 
     @patch("postgres.manage_users.create_or_update_db_user")
     @patch("postgres.manage_users.psycopg2.connect")
@@ -118,18 +117,20 @@ class TestManageUsers(unittest.TestCase):
         secret_id = secretsmanager.create_secret(
             Name=self.secret_name, SecretString=self.secret_string
         )["ARN"]
-        
+
         self.event["MasterUserSecretArn"] = secret_id
-        
+
         mock_connect.return_value = self.conn
         self.conn.cursor = self.cursor
 
         handler(self.event, self.context)
 
-        user_password = json.loads(boto3.client("ssm").get_parameter(Name=self.secret_name, WithDecryption=True)["Parameter"]["Value"])[
-            "password"
-        ]
-        
+        user_password = json.loads(
+            boto3.client("ssm").get_parameter(
+                Name=self.secret_name, WithDecryption=True
+            )["Parameter"]["Value"]
+        )["password"]
+
         mock_create_or_update_db_user.assert_called_once_with(
             self.conn, self.cursor(), "test-user", user_password, ["SELECT"]
         )
