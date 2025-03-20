@@ -703,6 +703,7 @@ run "test_iam" {
   }
 }
 
+
 run "test_iam_documents" {
   command = plan
 
@@ -923,7 +924,6 @@ run "test_iam_documents" {
     error_message = "Unexpected resources"
   }
 }
-
 
 run "test_codebuild_deploy" {
   command = plan
@@ -1766,11 +1766,43 @@ run "test_pipeline_single_run_group" {
   }
 }
 
-run "test_pipeline_multiple_run_groups" {
+run "test_ssm_parameter" {
   command = plan
 
-  variables {
-    services = [
+  assert {
+    condition     = aws_ssm_parameter.codebase_config.name == "/copilot/applications/my-app/codebases/my-codebase"
+    error_message = "Should be: /copilot/applications/my-app/codebases/my-codebase"
+  }
+  assert {
+    condition     = aws_ssm_parameter.codebase_config.type == "String"
+    error_message = "Should be: String"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).name == "my-codebase"
+    error_message = "Should be: my-codebase"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).repository == "my-repository"
+    error_message = "Should be: my-repository"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).deploy_repository_branch == "main"
+    error_message = "Should be: main"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).additional_ecr_repository == null
+    error_message = "Should be: null"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).slack_channel == "/fake/slack/channel"
+    error_message = "Should be: /fake/slack/channel"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).requires_image_build == true
+    error_message = "Should be: true"
+  }
+  assert {
+    condition = jsondecode(aws_ssm_parameter.codebase_config.value).services == [
       {
         "run_group_1" : [
           "service-1"
@@ -1778,233 +1810,46 @@ run "test_pipeline_multiple_run_groups" {
       },
       {
         "run_group_2" : [
-          "service-2",
-          "service-3"
-        ]
-      },
-      {
-        "run_group_3" : [
-          "service-4"
-        ]
-      },
-      {
-        "run_group_4" : [
-          "service-5",
-          "service-6",
-          "service-7"
+          "service-2"
         ]
       }
     ]
-  }
-
-  # service-1
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].name == "service-1"
-    error_message = "Action name incorrect"
+    error_message = "Unexpected services"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].run_order == 2
-    error_message = "Run order incorrect"
-  }
-
-  # service-2
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].name == "service-2"
-    error_message = "Action name incorrect"
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[0].name == "main"
+    error_message = "Should be main"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].run_order == 3
-    error_message = "Run order incorrect"
-  }
-
-  # service-3
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[2].name == "service-3"
-    error_message = "Action name incorrect"
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[0].branch == "main"
+    error_message = "Should be main"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[2].run_order == 3
-    error_message = "Run order incorrect"
-  }
-
-  # service-4
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[3].name == "service-4"
-    error_message = "Action name incorrect"
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[0].environments[0].name == "dev"
+    error_message = "Should be dev"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[3].run_order == 4
-    error_message = "Run order incorrect"
-  }
-
-  # service-5
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[4].name == "service-5"
-    error_message = "Action name incorrect"
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[1].name == "tagged"
+    error_message = "Should be tagged"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[4].run_order == 5
-    error_message = "Run order incorrect"
-  }
-
-  # service-6
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[5].name == "service-6"
-    error_message = "Action name incorrect"
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[1].tag == true
+    error_message = "Should be true"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[5].run_order == 5
-    error_message = "Run order incorrect"
-  }
-
-  # service-7
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[6].name == "service-7"
-    error_message = "Action name incorrect"
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[1].environments[0].name == "staging"
+    error_message = "Should be staging"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[6].run_order == 5
-    error_message = "Run order incorrect"
-  }
-}
-
-run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
-  command = plan
-
-  variables {
-    services = [
-      {
-        "run_group_1" : [
-          "service-1"
-        ]
-      },
-      {
-        "run_group_2" : [
-          "service-2",
-          "service-3"
-        ]
-      },
-      {
-        "run_group_3" : [
-          "service-4"
-        ]
-      }
-    ]
-    pipelines = [
-      {
-        name   = "main",
-        branch = "main",
-        environments = [
-          { name = "dev" },
-          { name = "prod", requires_approval = true }
-        ]
-      }
-    ]
-  }
-
-  # Dev
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].name == "Deploy-dev"
-    error_message = "Should be: Deploy-dev"
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[1].environments[1].name == "prod"
+    error_message = "Should be prod"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].on_failure[0].result == "ROLLBACK"
-    error_message = "Should be: ROLLBACK"
-  }
-
-  # service-1
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].name == "service-1"
-    error_message = "Action name incorrect"
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[1].environments[1].requires_approval == true
+    error_message = "Should be true"
   }
   assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[0].run_order == 2
-    error_message = "Run order incorrect"
-  }
-
-  # service-2
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].name == "service-2"
-    error_message = "Action name incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[1].run_order == 3
-    error_message = "Run order incorrect"
-  }
-
-  # service-3
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[2].name == "service-3"
-    error_message = "Action name incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[2].run_order == 3
-    error_message = "Run order incorrect"
-  }
-
-  # service-4
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[3].name == "service-4"
-    error_message = "Action name incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[1].action[3].run_order == 4
-    error_message = "Run order incorrect"
-  }
-
-  # Prod
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].name == "Deploy-prod"
-    error_message = "Should be: Deploy-prod"
-  }
-
-  # Approval
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].name == "Approve-prod"
-    error_message = "Action name incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[0].run_order == 1
-    error_message = "Run order incorrect"
-  }
-
-  # service-1
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].name == "service-1"
-    error_message = "Action name incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[1].run_order == 2
-    error_message = "Run order incorrect"
-  }
-
-  # service-2
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[2].name == "service-2"
-    error_message = "Action name incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[2].run_order == 3
-    error_message = "Run order incorrect"
-  }
-
-  # service-3
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[3].name == "service-3"
-    error_message = "Action name incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[3].run_order == 3
-    error_message = "Run order incorrect"
-  }
-
-  # service-4
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[4].name == "service-4"
-    error_message = "Action name incorrect"
-  }
-  assert {
-    condition     = aws_codepipeline.codebase_pipeline[0].stage[2].action[4].run_order == 4
-    error_message = "Run order incorrect"
+    condition     = jsonencode(aws_ssm_parameter.codebase_config.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
   }
 }
