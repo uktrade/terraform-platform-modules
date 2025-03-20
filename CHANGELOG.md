@@ -1,5 +1,13 @@
 # Changelog
 
+## [7.7.0](https://github.com/uktrade/terraform-platform-modules/compare/7.6.1...7.7.0) (2025-03-19)
+
+
+### Features
+
+* Deploy service manifest changes in codebase pipelines (DBTP-1828) ([#364](https://github.com/uktrade/terraform-platform-modules/issues/364)) ([4aab0a3](https://github.com/uktrade/terraform-platform-modules/commit/4aab0a36b5f3f7bbe611c52107eff740926fdbd8))
+* Implement deploy repository branch variable (DBTP-1896) ([#363](https://github.com/uktrade/terraform-platform-modules/issues/363)) ([ca2fe0a](https://github.com/uktrade/terraform-platform-modules/commit/ca2fe0a1ae085109f08c6b06f4b3a937a684c9a7))
+
 ## [7.6.1](https://github.com/uktrade/terraform-platform-modules/compare/7.6.0...7.6.1) (2025-03-17)
 
 
