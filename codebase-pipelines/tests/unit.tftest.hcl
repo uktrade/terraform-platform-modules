@@ -2008,3 +2008,91 @@ run "test_pipeline_multiple_run_groups_multiple_environment_approval" {
     error_message = "Run order incorrect"
   }
 }
+
+run "test_ssm_parameter" {
+  command = plan
+
+  assert {
+    condition     = aws_ssm_parameter.codebase_config.name == "/copilot/applications/my-app/codebases/my-codebase"
+    error_message = "Should be: /copilot/applications/my-app/codebases/my-codebase"
+  }
+  assert {
+    condition     = aws_ssm_parameter.codebase_config.type == "String"
+    error_message = "Should be: String"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).name == "my-codebase"
+    error_message = "Should be: my-codebase"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).repository == "my-repository"
+    error_message = "Should be: my-repository"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).deploy_repository_branch == "main"
+    error_message = "Should be: main"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).additional_ecr_repository == null
+    error_message = "Should be: null"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).slack_channel == "/fake/slack/channel"
+    error_message = "Should be: /fake/slack/channel"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).requires_image_build == true
+    error_message = "Should be: true"
+  }
+  assert {
+    condition = jsondecode(aws_ssm_parameter.codebase_config.value).services == [
+      {
+        "run_group_1" : [
+          "service-1"
+        ]
+      },
+      {
+        "run_group_2" : [
+          "service-2"
+        ]
+      }
+    ]
+    error_message = "Unexpected services"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[0].name == "main"
+    error_message = "Should be main"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[0].branch == "main"
+    error_message = "Should be main"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[0].environments[0].name == "dev"
+    error_message = "Should be dev"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[1].name == "tagged"
+    error_message = "Should be tagged"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[1].tag == true
+    error_message = "Should be true"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[1].environments[0].name == "staging"
+    error_message = "Should be staging"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[1].environments[1].name == "prod"
+    error_message = "Should be prod"
+  }
+  assert {
+    condition     = jsondecode(aws_ssm_parameter.codebase_config.value).pipelines[1].environments[1].requires_approval == true
+    error_message = "Should be true"
+  }
+  assert {
+    condition     = jsonencode(aws_ssm_parameter.codebase_config.tags) == jsonencode(var.expected_tags)
+    error_message = "Should be: ${jsonencode(var.expected_tags)}"
+  }
+}
