@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.7.1](https://github.com/uktrade/terraform-platform-modules/compare/7.7.0...7.7.1) (2025-03-20)
+
+
+### Bug Fixes
+
+* Create codebase parameter with codebase config (DBTP-1892) ([#367](https://github.com/uktrade/terraform-platform-modules/issues/367)) ([4fce25a](https://github.com/uktrade/terraform-platform-modules/commit/4fce25a0377567fbeb192f4f9c5bd66763eb6b70))
+
 ## [7.7.0](https://github.com/uktrade/terraform-platform-modules/compare/7.6.1...7.7.0) (2025-03-19)
 
 
