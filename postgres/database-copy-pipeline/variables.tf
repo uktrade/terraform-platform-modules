@@ -10,6 +10,10 @@ variable "database_name" {
   type = string
 }
 
+variable "env_config" {
+  type = any
+}
+
 variable "task" {
   type = object({
     from         = string
