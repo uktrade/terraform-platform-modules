@@ -1,5 +1,6 @@
 resource "aws_ssm_parameter" "codebase_config" {
   # checkov:skip=CKV2_AWS_34: AWS SSM Parameter doesn't need to be Encrypted
+  # checkov:skip=CKV_AWS_337: AWS SSM Parameter doesn't need to be Encrypted
   name        = "/copilot/applications/${var.application}/codebases/${var.codebase}"
   description = "Configuration for the ${var.codebase} codebase, used by platform-helper commands"
   type        = "String"
