@@ -1565,10 +1565,6 @@ run "test_manual_release_pipeline" {
     condition     = aws_codepipeline.manual_release_pipeline.stage[1].name == "Deploy"
     error_message = "Should be: Deploy"
   }
-  assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].on_failure[0].result == "ROLLBACK"
-    error_message = "Should be: ROLLBACK"
-  }
 
   # Deploy service-1 action
   assert {

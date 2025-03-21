@@ -147,9 +147,6 @@ resource "aws_codepipeline" "manual_release_pipeline" {
 
   stage {
     name = "Deploy"
-    on_failure {
-      result = "ROLLBACK"
-    }
 
     dynamic "action" {
       for_each = local.service_order_list
