@@ -955,7 +955,8 @@ run "test_iam_documents" {
   }
   assert {
     condition = data.aws_iam_policy_document.env_manager_access.statement[0].resources == toset([
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/my-app-*-EnvManagerRole"
+      "arn:aws:iam::000123456789:role/my-app-*-EnvManagerRole",
+      "arn:aws:iam::123456789000:role/my-app-*-EnvManagerRole"
     ])
     error_message = "Unexpected resources"
   }

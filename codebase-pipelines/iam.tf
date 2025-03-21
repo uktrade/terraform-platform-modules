@@ -329,7 +329,8 @@ data "aws_iam_policy_document" "env_manager_access" {
       "sts:AssumeRole"
     ]
     resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.application}-*-EnvManagerRole"
+      for id in local.deploy_account_ids :
+      "arn:aws:iam::${id}:role/${var.application}-*-EnvManagerRole"
     ]
   }
 

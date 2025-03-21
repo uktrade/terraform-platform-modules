@@ -144,13 +144,6 @@ override_data {
   }
 }
 
-override_data {
-  target = data.aws_iam_policy_document.env_manager_access
-  values = {
-    json = "{\"Sid\": \"AssumeEnvManagerAccess\"}"
-  }
-}
-
 
 run "aws_ssm_parameter_unit_test" {
   command = plan
@@ -799,83 +792,4 @@ run "codebase_deploy_iam_test" {
     condition     = one(data.aws_iam_policy_document.ecs_deploy_access.statement[6].resources) == "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/test-application-test-environment/*"
     error_message = "Unexpected resources"
   }
-
-  assert {
-    condition     = aws_iam_role_policy.env_manager_access.name == "env-manager-access"
-    error_message = "Should be: 'env-manager-access'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.env_manager_access.role == "test-application-test-environment-codebase-pipeline-deploy"
-    error_message = "Should be: 'test-application-test-environment-codebase-pipeline-deploy'"
-  }
-  assert {
-    condition     = aws_iam_role_policy.env_manager_access.policy == "{\"Sid\": \"AssumeEnvManagerAccess\"}"
-    error_message = "Should be: {\"Sid\": \"AssumeEnvManagerAccess\"}"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.env_manager_access.statement[0].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.env_manager_access.statement[0].actions == toset([
-      "sts:AssumeRole"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.env_manager_access.statement[0].resources == toset([
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.args.application}-${var.environment}-EnvManagerRole"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.env_manager_access.statement[1].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.env_manager_access.statement[1].actions == toset([
-      "ssm:GetParameter"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.env_manager_access.statement[1].resources == toset([
-      "arn:aws:ssm:eu-west-2:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.args.application}",
-      "arn:aws:ssm:eu-west-2:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.args.application}/environments/${var.environment}",
-      "arn:aws:ssm:eu-west-2:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.args.application}/components/*"
-    ])
-    error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = data.aws_iam_policy_document.env_manager_access.statement[2].effect == "Allow"
-    error_message = "Should be: Allow"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.env_manager_access.statement[2].actions == toset([
-      "cloudformation:GetTemplate",
-      "cloudformation:GetTemplateSummary",
-      "cloudformation:DescribeStackSet",
-      "cloudformation:UpdateStackSet",
-      "cloudformation:DescribeStackSetOperation",
-      "cloudformation:ListStackInstances",
-      "cloudformation:DescribeStacks",
-      "cloudformation:DescribeChangeSet",
-      "cloudformation:CreateChangeSet",
-      "cloudformation:ExecuteChangeSet",
-      "cloudformation:DescribeStackEvents",
-      "cloudformation:DeleteStack"
-    ])
-    error_message = "Unexpected actions"
-  }
-  assert {
-    condition = data.aws_iam_policy_document.env_manager_access.statement[2].resources == toset([
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.args.application}-${var.environment}",
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/StackSet-${var.args.application}-infrastructure-*",
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stackset/${var.args.application}-infrastructure:*",
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.args.application}-${var.environment}-*"
-    ])
-    error_message = "Unexpected resources"
-  }
-
-
 }
