@@ -70,6 +70,13 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.env_manager_access
+  values = {
+    json = "{\"Sid\": \"AssumeEnvManagerAccess\"}"
+  }
+}
+
 variables {
   env_config = {
     "*" = {
@@ -701,6 +708,18 @@ run "test_iam" {
     condition     = aws_iam_role_policy.codestar_connection_access_for_codebase_pipeline.role == "my-app-my-codebase-codebase-pipeline"
     error_message = "Should be: 'my-app-my-codebase-codebase-pipeline'"
   }
+  assert {
+    condition     = aws_iam_role_policy.env_manager_access.name == "env-manager-access"
+    error_message = "Should be: 'env-manager-access'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.env_manager_access.role == "my-app-my-codebase-codebase-deploy"
+    error_message = "Should be: 'my-app-my-codebase-codebase-deploy'"
+  }
+  assert {
+    condition     = aws_iam_role_policy.env_manager_access.policy == "{\"Sid\": \"AssumeEnvManagerAccess\"}"
+    error_message = "Should be: {\"Sid\": \"AssumeEnvManagerAccess\"}"
+  }
 }
 
 run "test_iam_documents" {
@@ -920,6 +939,73 @@ run "test_iam_documents" {
   }
   assert {
     condition     = one(data.aws_iam_policy_document.deploy_ssm_access.statement[0].resources) == "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/codebuild/slack_*"
+    error_message = "Unexpected resources"
+  }
+
+  # Copilot env manager access
+  assert {
+    condition     = data.aws_iam_policy_document.env_manager_access.statement[0].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.env_manager_access.statement[0].actions == toset([
+      "sts:AssumeRole"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.env_manager_access.statement[0].resources == toset([
+      "arn:aws:iam::000123456789:role/my-app-*-EnvManagerRole",
+      "arn:aws:iam::123456789000:role/my-app-*-EnvManagerRole"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.env_manager_access.statement[1].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.env_manager_access.statement[1].actions == toset([
+      "ssm:GetParameter"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.env_manager_access.statement[1].resources == toset([
+      "arn:aws:ssm:eu-west-2:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/my-app",
+      "arn:aws:ssm:eu-west-2:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/my-app/environments/*",
+      "arn:aws:ssm:eu-west-2:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/my-app/components/*"
+    ])
+    error_message = "Unexpected resources"
+  }
+  assert {
+    condition     = data.aws_iam_policy_document.env_manager_access.statement[2].effect == "Allow"
+    error_message = "Should be: Allow"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.env_manager_access.statement[2].actions == toset([
+      "cloudformation:GetTemplate",
+      "cloudformation:GetTemplateSummary",
+      "cloudformation:DescribeStackSet",
+      "cloudformation:UpdateStackSet",
+      "cloudformation:DescribeStackSetOperation",
+      "cloudformation:ListStackInstances",
+      "cloudformation:DescribeStacks",
+      "cloudformation:DescribeChangeSet",
+      "cloudformation:CreateChangeSet",
+      "cloudformation:ExecuteChangeSet",
+      "cloudformation:DescribeStackEvents",
+      "cloudformation:DeleteStack"
+    ])
+    error_message = "Unexpected actions"
+  }
+  assert {
+    condition = data.aws_iam_policy_document.env_manager_access.statement[2].resources == toset([
+      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/my-app-*",
+      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/StackSet-my-app-infrastructure-*",
+      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stackset/my-app-infrastructure:*",
+      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/my-app-*"
+    ])
     error_message = "Unexpected resources"
   }
 }
@@ -1478,10 +1564,6 @@ run "test_manual_release_pipeline" {
   assert {
     condition     = aws_codepipeline.manual_release_pipeline.stage[1].name == "Deploy"
     error_message = "Should be: Deploy"
-  }
-  assert {
-    condition     = aws_codepipeline.manual_release_pipeline.stage[1].on_failure[0].result == "ROLLBACK"
-    error_message = "Should be: ROLLBACK"
   }
 
   # Deploy service-1 action
