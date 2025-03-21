@@ -93,7 +93,7 @@ phases:
         
           copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
         else
-          # Build image uri
+          # Build image URI
           task_family="${APPLICATION}-${ENVIRONMENT}-${SERVICE}"
           cluster="${APPLICATION}-${ENVIRONMENT}"
           image_uri="${REPOSITORY_URL}:${IMAGE_TAG}"
