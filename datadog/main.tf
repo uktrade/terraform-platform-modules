@@ -6,7 +6,7 @@ apiVersion: v3
 kind: system
 metadata:
   name: ${var.application}
-  displayName: ${var.application}-system
+  displayName: ${var.application}
   links:
     - name: ${var.application}
       type: repo
@@ -27,15 +27,17 @@ resource "datadog_software_catalog" "service_v3" {
 apiVersion: v3
 kind: service
 metadata:
+  tags:
+    - application:demodjango
   name: ${each.value}
-  displayName: ${var.application}-service:${each.value}
+  displayName: ${var.application}:${each.value}
   links:
     - name: ${var.application}
       type: repo
       url: ${var.config.repository}
-    - name: Scorecard Test
+    - name: readme
       type: doc
-      url: https://github.com/uktrade/platform-documentation
+      url: ${var.config.docs}
   contacts:
     - name: ${var.config.contact_name}
       type: email
@@ -44,7 +46,7 @@ metadata:
 spec:
   lifecycle: production
   tier: "1"
-  type: "web"
+  type: web
   componentOf: 
     - system:${var.application}
   languages:

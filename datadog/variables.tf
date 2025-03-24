@@ -13,6 +13,7 @@ variable "config" {
       contact_name = string
       contact_email = string
       repository = string
+      docs = string
       services_to_monitor = list(string)
     }
   )
