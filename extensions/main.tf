@@ -106,25 +106,25 @@ resource "aws_ssm_parameter" "addons" {
   tags  = local.tags
 }
 
-# data "aws_ssm_parameter" "datadog_api_key" {
-#   name = "datadog_chiara_api_key"
-# }
-# data "aws_ssm_parameter" "datadog_app_key" {
-#   name = "datadog_chiara_app_key"
-# }
+data "aws_ssm_parameter" "datadog_api_key" {
+  name = "datadog_daveg_api_key"
+}
+data "aws_ssm_parameter" "datadog_app_key" {
+  name = "datadog_daveg_app_key"
+}
 
-# module "datadog" {
+module "datadog" {
 
-#   source = "../datadog"
+  source = "../datadog"
 
-#   for_each = local.datadog
-#   providers = {
-#     datadog.dd = datadog.dd
-#   }
+  for_each = local.datadog
+  providers = {
+    datadog.dd = datadog.dd
+  }
 
-#   application = var.args.application
-#   environment = var.environment
-#   vpc_name    = local.vpc_name
+  application = var.args.application
+  environment = var.environment
+  vpc_name    = local.vpc_name
 
-#   config = each.value
-# }
+  config = each.value
+}
