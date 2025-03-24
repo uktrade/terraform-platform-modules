@@ -1,5 +1,13 @@
 # Changelog
 
+## [7.7.1](https://github.com/uktrade/terraform-platform-modules/compare/7.7.0...7.7.1) (2025-03-24)
+
+
+### Bug Fixes
+
+* Assume environment deploy role after copilot commands (DBTP-1914) ([#369](https://github.com/uktrade/terraform-platform-modules/issues/369)) ([f234eaa](https://github.com/uktrade/terraform-platform-modules/commit/f234eaadb1cfcb82145b9f3c2eaf71cb1a52f8ed))
+* Create codebase parameter with codebase config (DBTP-1892) ([#367](https://github.com/uktrade/terraform-platform-modules/issues/367)) ([4fce25a](https://github.com/uktrade/terraform-platform-modules/commit/4fce25a0377567fbeb192f4f9c5bd66763eb6b70))
+
 ## [7.7.0](https://github.com/uktrade/terraform-platform-modules/compare/7.6.1...7.7.0) (2025-03-19)
 
 
