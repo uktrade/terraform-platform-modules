@@ -180,56 +180,21 @@ data "aws_iam_policy_document" "ecs_deploy_access" {
   }
 }
 
-resource "aws_iam_role_policy" "env_manager_access" {
-  name   = "env-manager-access"
+resource "aws_iam_role_policy" "cloudformation_access" {
+  name   = "cloudformation-access"
   role   = aws_iam_role.codebase_pipeline_deploy.name
-  policy = data.aws_iam_policy_document.env_manager_access.json
+  policy = data.aws_iam_policy_document.cloudformation_access.json
 }
 
-data "aws_iam_policy_document" "env_manager_access" {
+data "aws_iam_policy_document" "cloudformation_access" {
   statement {
     effect = "Allow"
     actions = [
-      "sts:AssumeRole"
+      "cloudformation:GetTemplate"
     ]
     resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.args.application}-${var.environment}-EnvManagerRole"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "ssm:GetParameter"
-    ]
-    resources = [
-      "arn:aws:ssm:eu-west-2:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.args.application}",
-      "arn:aws:ssm:eu-west-2:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.args.application}/environments/${var.environment}",
-      "arn:aws:ssm:eu-west-2:${data.aws_caller_identity.current.account_id}:parameter/copilot/applications/${var.args.application}/components/*"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "cloudformation:GetTemplate",
-      "cloudformation:GetTemplateSummary",
-      "cloudformation:DescribeStackSet",
-      "cloudformation:UpdateStackSet",
-      "cloudformation:DescribeStackSetOperation",
-      "cloudformation:ListStackInstances",
-      "cloudformation:DescribeStacks",
-      "cloudformation:DescribeChangeSet",
-      "cloudformation:CreateChangeSet",
-      "cloudformation:ExecuteChangeSet",
-      "cloudformation:DescribeStackEvents",
-      "cloudformation:DeleteStack"
-    ]
-    resources = [
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.args.application}-${var.environment}",
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/StackSet-${var.args.application}-infrastructure-*",
-      "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stackset/${var.args.application}-infrastructure:*",
       "arn:aws:cloudformation:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stack/${var.args.application}-${var.environment}-*"
     ]
   }
 }
+

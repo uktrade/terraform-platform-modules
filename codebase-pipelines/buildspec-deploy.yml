@@ -10,14 +10,11 @@ phases:
   install:
     commands:
       - COPILOT_VERSION=`cat .copilot-version`
-      
       - curl -s -qL -o copilot-binary https://ecs-cli-v2-release.s3.amazonaws.com/copilot-linux-v${COPILOT_VERSION}
       - chmod +x copilot-binary
       - mkdir -p /codebuild/bin
       - mv copilot-binary /codebuild/bin/copilot
       - export PATH=$PATH:/codebuild/bin
-      - copilot --version
-
       - pip install yq dbt-platform-helper --quiet
       - curl -s -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > /usr/local/bin/regctl
       - chmod +x /usr/local/bin/regctl
@@ -70,10 +67,8 @@ phases:
 
       - platform-helper notify add-comment "${SLACK_CHANNEL_ID}" "${SLACK_TOKEN}" "${SLACK_REF}" "${MESSAGE}"
 
-      # Build image uri
-      - task_family="${APPLICATION}-${ENVIRONMENT}-${SERVICE}"
-      - cluster="${APPLICATION}-${ENVIRONMENT}"
-      - image_uri="${REPOSITORY_URL}:${IMAGE_TAG}"
+      # Run Copilot package command and clean the manifest output
+      - copilot svc package --env "${ENVIRONMENT}" --name "${SERVICE}" | yq .Metadata.Manifest | jq -r . | yq 'del(.image.location)' > new.yml
 
       # Assume environment role
       - account_id=$(echo ${ENV_CONFIG} | jq -c -r .${ENVIRONMENT}.account)
@@ -81,12 +76,6 @@ phases:
       - export AWS_ACCESS_KEY_ID=$(echo $assumed_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $assumed_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $assumed_role | jq -r .Credentials.SessionToken)
-
-      # Get service name
-      - service_name=$(aws ecs list-services --cluster "${cluster}" | jq -r '.serviceArns[] | select(test("'${cluster}'-'${SERVICE}'($|-Service.*)"))' | cut -d '/' -f3)
-      
-      # Run Copilot package command and clean the manifest output
-      - copilot svc package --env "${ENVIRONMENT}" --name "${SERVICE}" | yq .Metadata.Manifest | jq -r . | yq 'del(.image.location)' > new.yml
 
       # Get the current CloudFormation template and clean it for comparison
       - aws cloudformation get-template --stack-name "${APPLICATION}-${ENVIRONMENT}-${SERVICE}" --output json --query TemplateBody | jq -r . | yq .Metadata.Manifest | jq -r . | yq 'del(.image.location)' > current.yml
@@ -97,8 +86,21 @@ phases:
       - |
         if [[ $DIFF_EXIT_CODE -ne 0 ]]; then
           echo "Differences detected between deployed and committed service templates, running copilot svc deploy..."
+
+          unset AWS_ACCESS_KEY_ID
+          unset AWS_SECRET_ACCESS_KEY
+          unset AWS_SESSION_TOKEN
+        
           copilot svc deploy --env "${ENVIRONMENT}" --name "${SERVICE}"
         else
+          # Build image URI
+          task_family="${APPLICATION}-${ENVIRONMENT}-${SERVICE}"
+          cluster="${APPLICATION}-${ENVIRONMENT}"
+          image_uri="${REPOSITORY_URL}:${IMAGE_TAG}"
+        
+          # Get service name
+          service_name=$(aws ecs list-services --cluster "${cluster}" | jq -r '.serviceArns[] | select(test("'${cluster}'-'${SERVICE}'($|-Service.*)"))' | cut -d '/' -f3)
+        
           # Update task definition
           task_definition=$(aws ecs describe-task-definition --task-definition "${task_family}")
           new_task_definition=$(echo ${task_definition} | jq '.taskDefinition | .containerDefinitions |= map(if .name == '\"${SERVICE}\"' then .image = '\"${image_uri}\"' else . end) | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) |  del(.registeredAt)  | del(.registeredBy)')
