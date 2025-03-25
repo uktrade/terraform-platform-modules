@@ -15,4 +15,10 @@ locals {
   region_account = "${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}"
 
   ecr_repository_arn = "arn:aws:ecr-public::763451185160:repository/database-copy"
+
+  prod_account_tasks = {
+    for task in toset([for task in var.tasks :
+    merge(task, tomap({ to = null, to_account = null })) if task.from_prod_account == true]) :
+    task.from => task
+  }
 }
