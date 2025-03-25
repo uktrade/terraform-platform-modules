@@ -3,8 +3,10 @@ variables {
   environment   = "test-env"
   database_name = "test-db"
   task = {
-    from = "some-other-env"
-    to   = "test-env"
+    from         = "some-other-env"
+    from_account = "000123456789"
+    to           = "test-env"
+    to_account   = "000123456789"
   }
 }
 
@@ -177,7 +179,7 @@ run "data_load_unit_test" {
   }
 
   assert {
-    condition     = one(data.aws_iam_policy_document.data_load.statement[2].resources) == "arn:aws:kms:eu-west-2:${data.aws_caller_identity.current.account_id}:key/*"
+    condition     = one(data.aws_iam_policy_document.data_load.statement[2].resources) == "arn:aws:kms:eu-west-2:000123456789:key/*"
     error_message = "Unexpected resources"
   }
 

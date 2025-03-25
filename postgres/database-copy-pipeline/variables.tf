@@ -10,16 +10,12 @@ variable "database_name" {
   type = string
 }
 
-variable "env_config" {
-  type = any
-}
-
 variable "task" {
   type = object({
     from         = string
     to           = string
-    from_account = optional(string)
-    to_account   = optional(string)
+    from_account = string
+    to_account   = string
     pipeline = optional(object({
       schedule = optional(string)
     }))

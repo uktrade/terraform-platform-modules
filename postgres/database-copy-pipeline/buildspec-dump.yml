@@ -18,6 +18,7 @@ phases:
       - export AWS_ACCESS_KEY_ID=$(echo $assumed_dump_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $assumed_dump_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $assumed_dump_role | jq -r .Credentials.SessionToken)
+
       - platform-helper database dump --app ${APPLICATION} --database ${DATABASE_NAME} --from ${FROM_ENVIRONMENT} --filename "data_dump_${TO_ENVIRONMENT}"
 
   post_build:

@@ -150,6 +150,18 @@ variables {
       }
     ]
   }
+  env_config = {
+    "*" = {
+      accounts = {
+        deploy = {
+          name = "sandbox"
+          id   = "000123456789"
+        }
+      }
+    },
+    "test-env"  = null,
+    "other-env" = null
+  }
 }
 
 
@@ -443,6 +455,26 @@ run "aws_db_instance_unit_test_database_dump_multiple_source" {
           to   = "other-env-2"
         }
       ]
+    }
+    env_config = {
+      "*" = {
+        accounts = {
+          deploy = {
+            name = "sandbox"
+            id   = "000123456789"
+          }
+        }
+      },
+      "test-env"  = null,
+      "other-env" = null,
+      "other-env-2" = {
+        accounts = {
+          deploy = {
+            name = "prod"
+            id   = "123456789000"
+          }
+        }
+      }
     }
   }
 

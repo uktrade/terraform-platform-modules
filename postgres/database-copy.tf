@@ -26,5 +26,4 @@ module "database-copy-pipeline" {
   environment   = var.environment
   database_name = var.name
   task          = local.pipeline_tasks[count.index]
-  env_config    = var.env_config
 }
