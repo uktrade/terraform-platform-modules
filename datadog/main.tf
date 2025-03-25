@@ -11,6 +11,9 @@ metadata:
     - name: ${var.application}
       type: repo
       url: ${var.config.repository}
+    - name: readme
+      type: doc
+      url: ${var.config.docs}
   contacts:
     - name: ${var.config.contact_name}
       type: email
@@ -27,8 +30,6 @@ resource "datadog_software_catalog" "service_v3" {
 apiVersion: v3
 kind: service
 metadata:
-  tags:
-    - application:demodjango
   name: ${each.value}
   displayName: ${var.application}:${each.value}
   links:
