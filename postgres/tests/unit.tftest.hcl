@@ -876,7 +876,7 @@ run "aws_db_instance_database_copy_pipeline" {
   }
 }
 
-run "aws_db_prod_account_environment_dump_task" {
+run "aws_db_prod_account_environment_parameter" {
   command = plan
 
   variables {
@@ -886,63 +886,7 @@ run "aws_db_prod_account_environment_dump_task" {
         {
           from = "test-env"
           to   = "other-env"
-        }
-      ]
-    }
-    env_config = {
-      "*" = {
-        accounts = {
-          deploy = {
-            name = "sandbox"
-            id   = "000123456789"
-          }
-        }
-      },
-      "other-env" = null,
-      "test-env" = {
-        accounts = {
-          deploy = {
-            name = "prod"
-            id   = "123456789000"
-          }
-        }
-      }
-    }
-  }
-
-  assert {
-    condition     = aws_ssm_parameter.dump_environment_config["test-env"].name == "/copilot/applications/test-application/environments/test-env"
-    error_message = "Should be: /copilot/applications/test-application/environments/test-env"
-  }
-  assert {
-    condition     = aws_ssm_parameter.dump_environment_config["test-env"].type == "String"
-    error_message = "Should be: String"
-  }
-  assert {
-    condition     = jsondecode(aws_ssm_parameter.dump_environment_config["test-env"].value).app == "test-application"
-    error_message = "Should be: test-application"
-  }
-  assert {
-    condition     = jsondecode(aws_ssm_parameter.dump_environment_config["test-env"].value).name == "test-env"
-    error_message = "Should be: test-env"
-  }
-  assert {
-    condition     = jsondecode(aws_ssm_parameter.dump_environment_config["test-env"].value).region == "eu-west-2"
-    error_message = "Should be: eu-west-2"
-  }
-  assert {
-    condition     = jsondecode(aws_ssm_parameter.dump_environment_config["test-env"].value).accountID == "123456789000"
-    error_message = "Should be: 123456789000"
-  }
-}
-
-run "aws_db_prod_account_environment_load_task" {
-  command = plan
-
-  variables {
-    config = {
-      version = 14,
-      database_copy = [
+        },
         {
           from = "other-env"
           to   = "test-env"
@@ -959,7 +903,6 @@ run "aws_db_prod_account_environment_load_task" {
         }
       },
       "other-env" = null,
-      "other-env1" = null,
       "test-env" = {
         accounts = {
           deploy = {
@@ -972,27 +915,31 @@ run "aws_db_prod_account_environment_load_task" {
   }
 
   assert {
-    condition     = aws_ssm_parameter.load_environment_config["test-env"].name == "/copilot/applications/test-application/environments/test-env"
+    condition     = length(aws_ssm_parameter.environment_config) == 1
+    error_message = "Should be: 1"
+  }
+  assert {
+    condition     = aws_ssm_parameter.environment_config["test-env"].name == "/copilot/applications/test-application/environments/test-env"
     error_message = "Should be: /copilot/applications/test-application/environments/test-env"
   }
   assert {
-    condition     = aws_ssm_parameter.load_environment_config["test-env"].type == "String"
+    condition     = aws_ssm_parameter.environment_config["test-env"].type == "String"
     error_message = "Should be: String"
   }
   assert {
-    condition     = jsondecode(aws_ssm_parameter.load_environment_config["test-env"].value).app == "test-application"
+    condition     = jsondecode(aws_ssm_parameter.environment_config["test-env"].value).app == "test-application"
     error_message = "Should be: test-application"
   }
   assert {
-    condition     = jsondecode(aws_ssm_parameter.load_environment_config["test-env"].value).name == "test-env"
+    condition     = jsondecode(aws_ssm_parameter.environment_config["test-env"].value).name == "test-env"
     error_message = "Should be: test-env"
   }
   assert {
-    condition     = jsondecode(aws_ssm_parameter.load_environment_config["test-env"].value).region == "eu-west-2"
+    condition     = jsondecode(aws_ssm_parameter.environment_config["test-env"].value).region == "eu-west-2"
     error_message = "Should be: eu-west-2"
   }
   assert {
-    condition     = jsondecode(aws_ssm_parameter.load_environment_config["test-env"].value).accountID == "123456789000"
+    condition     = jsondecode(aws_ssm_parameter.environment_config["test-env"].value).accountID == "123456789000"
     error_message = "Should be: 123456789000"
   }
 }

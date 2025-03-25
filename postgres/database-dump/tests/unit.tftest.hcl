@@ -384,7 +384,6 @@ run "pipeline_unit_test" {
       from_account : "123456789000"
       to : "dev"
       to_account : "000123456789"
-      from_prod_account = true
       pipeline : {}
     }]
   }

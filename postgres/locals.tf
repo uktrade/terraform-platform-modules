@@ -62,17 +62,9 @@ locals {
   pipeline_tasks = [for task in local.data_load_tasks :
   task if lookup(task, "pipeline", null) != null]
 
-  // Distinct list of tasks where the DUMP environment is in the prod account
-  prod_account_dump_tasks = {
-    for task in toset([for task in local.data_dump_tasks :
-    merge(task, tomap({ to = null, to_account = null })) if task.from_account != local.base_account_id]) :
-    task.from => task
-  }
-
-  // Distinct list of tasks where the LOAD environment is in the prod account
-  prod_account_load_tasks = {
-    for task in toset([for task in local.data_load_tasks :
-    merge(task, tomap({ from = null, from_account = null })) if task.to_account != local.base_account_id]) :
-    task.to => task
-  }
+  // Distinct list of environments with a dump or load operation in the prod AWS account
+  prod_account_environments = { for env in toset(concat(
+    [for task in local.data_dump_tasks : task.from if task.from_account != local.base_account_id],
+    [for task in local.data_load_tasks : task.to if task.to_account != local.base_account_id]
+  )) : env => lookup(local.base_env_config, env, null) }
 }
