@@ -51,14 +51,14 @@ locals {
     merge(task, {
       from_account : lookup(local.base_env_config, task.from, null),
       to_account : lookup(local.base_env_config, task.to, null),
-      from_prod_account : lookup(local.base_env_config, task.from, null) == local.base_account_id
+      from_prod_account : lookup(local.base_env_config, task.from, null) != local.base_account_id
   }) if task.from == var.environment && !strcontains(task.to, "prod")]
 
   data_load_tasks = [for task in local.data_copy_tasks :
     merge(task, {
       from_account : lookup(local.base_env_config, task.from, null),
       to_account : lookup(local.base_env_config, task.to, null),
-      to_prod_account : lookup(local.base_env_config, task.to, null) == local.base_account_id
+      to_prod_account : lookup(local.base_env_config, task.to, null) != local.base_account_id
   }) if task.to == var.environment && !strcontains(task.to, "prod")]
 
   pipeline_tasks = [for task in local.data_load_tasks :

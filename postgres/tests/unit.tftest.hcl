@@ -875,3 +875,83 @@ run "aws_db_instance_database_copy_pipeline" {
     error_message = "database-copy-pipeline module should be created"
   }
 }
+
+run "aws_db_prod_account_environment_dump_task" {
+  command = plan
+
+  variables {
+    config = {
+      version = 14,
+      database_copy = [
+        {
+          from = "test-env"
+          to   = "other-env"
+        }
+      ]
+    }
+    env_config = {
+      "*" = {
+        accounts = {
+          deploy = {
+            name = "sandbox"
+            id   = "000123456789"
+          }
+        }
+      },
+      "other-env" = null,
+      "test-env" = {
+        accounts = {
+          deploy = {
+            name = "prod"
+            id   = "123456789000"
+          }
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = strcontains(jsonencode(local.data_dump_tasks), "\"from_prod_account\":true")
+    error_message = "Unexpected dump task property"
+  }
+}
+
+run "aws_db_prod_account_environment_load_task" {
+  command = plan
+
+  variables {
+    config = {
+      version = 14,
+      database_copy = [
+        {
+          from = "other-env"
+          to   = "test-env"
+        }
+      ]
+    }
+    env_config = {
+      "*" = {
+        accounts = {
+          deploy = {
+            name = "sandbox"
+            id   = "000123456789"
+          }
+        }
+      },
+      "other-env" = null,
+      "test-env" = {
+        accounts = {
+          deploy = {
+            name = "prod"
+            id   = "123456789000"
+          }
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = strcontains(jsonencode(local.data_load_tasks), "\"to_prod_account\":true")
+    error_message = "Unexpected load task property"
+  }
+}
