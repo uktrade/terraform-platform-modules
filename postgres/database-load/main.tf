@@ -310,20 +310,3 @@ resource "aws_ecs_task_definition" "service" {
     operating_system_family = "LINUX"
   }
 }
-
-resource "aws_ssm_parameter" "environment_config" {
-  # checkov:skip=CKV_AWS_337: Used by copilot doesn't need to be encrypted
-  # checkov:skip=CKV2_AWS_34: Used by copilot doesn't need to be encrypted
-  for_each    = toset(var.task.to_prod_account ? [""] : [])
-  name        = "/copilot/applications/${var.application}/environments/${var.task.to}"
-  description = "Configuration for the ${var.task.to} environment, used by platform-helper commands"
-  type        = "String"
-  value = jsonencode({
-    "app" : var.application,
-    "name" : var.task.to,
-    "region" : "eu-west-2",
-    "accountID" : var.task.to_account
-  })
-
-  tags = local.tags
-}

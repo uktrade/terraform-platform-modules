@@ -50,17 +50,29 @@ locals {
   data_dump_tasks = [for task in local.data_copy_tasks :
     merge(task, {
       from_account : lookup(local.base_env_config, task.from, null),
-      to_account : lookup(local.base_env_config, task.to, null),
-      from_prod_account : lookup(local.base_env_config, task.from, null) != local.base_account_id
+      to_account : lookup(local.base_env_config, task.to, null)
   }) if task.from == var.environment && !strcontains(task.to, "prod")]
 
   data_load_tasks = [for task in local.data_copy_tasks :
     merge(task, {
       from_account : lookup(local.base_env_config, task.from, null),
-      to_account : lookup(local.base_env_config, task.to, null),
-      to_prod_account : lookup(local.base_env_config, task.to, null) != local.base_account_id
+      to_account : lookup(local.base_env_config, task.to, null)
   }) if task.to == var.environment && !strcontains(task.to, "prod")]
 
   pipeline_tasks = [for task in local.data_load_tasks :
   task if lookup(task, "pipeline", null) != null]
+
+  // Distinct list of tasks where the DUMP environment is in the prod account
+  prod_account_dump_tasks = {
+    for task in toset([for task in local.data_dump_tasks :
+    merge(task, tomap({ to = null, to_account = null })) if task.from_account != local.base_account_id]) :
+    task.from => task
+  }
+
+  // Distinct list of tasks where the LOAD environment is in the prod account
+  prod_account_load_tasks = {
+    for task in toset([for task in local.data_load_tasks :
+    merge(task, tomap({ from = null, from_account = null })) if task.to_account != local.base_account_id]) :
+    task.to => task
+  }
 }

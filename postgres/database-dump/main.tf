@@ -419,20 +419,3 @@ resource "aws_s3_bucket_public_access_block" "public_access_block" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
-
-resource "aws_ssm_parameter" "environment_config" {
-  # checkov:skip=CKV_AWS_337: Used by copilot doesn't need to be encrypted
-  # checkov:skip=CKV2_AWS_34: Used by copilot doesn't need to be encrypted
-  for_each    = local.prod_account_tasks
-  name        = "/copilot/applications/${var.application}/environments/${each.value.from}"
-  description = "Configuration for the ${each.value.from} environment, used by platform-helper commands"
-  type        = "String"
-  value = jsonencode({
-    "app" : var.application,
-    "name" : each.value.from,
-    "region" : "eu-west-2",
-    "accountID" : each.value.from_account
-  })
-
-  tags = local.tags
-}

@@ -3,11 +3,10 @@ variables {
   environment   = "test-env"
   database_name = "test-db"
   task = {
-    from            = "some-other-env"
-    from_account    = "000123456789"
-    to              = "test-env"
-    to_account      = "000123456789"
-    to_prod_account = false
+    from         = "some-other-env"
+    from_account = "000123456789"
+    to           = "test-env"
+    to_account   = "000123456789"
   }
 }
 
@@ -257,11 +256,6 @@ run "data_load_unit_test" {
     condition     = aws_ecs_task_definition.service.runtime_platform[0].operating_system_family == "LINUX"
     error_message = "OS family should be LINUX"
   }
-
-  assert {
-    condition     = aws_ssm_parameter.environment_config == {}
-    error_message = "Should be: {}"
-  }
 }
 
 run "cross_account_data_load_unit_test" {
@@ -269,41 +263,16 @@ run "cross_account_data_load_unit_test" {
 
   variables {
     task = {
-      from            = "dev"
-      from_account    = "000123456789"
-      to              = "prod"
-      to_account      = "123456789000"
-      to_prod_account = true
+      from         = "dev"
+      from_account = "000123456789"
+      to           = "prod"
+      to_account   = "123456789000"
     }
   }
 
   assert {
     condition     = one(data.aws_iam_policy_document.data_load.statement[2].resources) == "arn:aws:kms:eu-west-2:000123456789:key/*"
     error_message = "Unexpected resources"
-  }
-  assert {
-    condition     = aws_ssm_parameter.environment_config[""].name == "/copilot/applications/test-app/environments/prod"
-    error_message = "Should be: /copilot/applications/test-app/environments/prod"
-  }
-  assert {
-    condition     = aws_ssm_parameter.environment_config[""].type == "String"
-    error_message = "Should be: String"
-  }
-  assert {
-    condition     = jsondecode(aws_ssm_parameter.environment_config[""].value).app == "test-app"
-    error_message = "Should be: test-app"
-  }
-  assert {
-    condition     = jsondecode(aws_ssm_parameter.environment_config[""].value).name == "prod"
-    error_message = "Should be: prod"
-  }
-  assert {
-    condition     = jsondecode(aws_ssm_parameter.environment_config[""].value).region == "eu-west-2"
-    error_message = "Should be: eu-west-2"
-  }
-  assert {
-    condition     = jsondecode(aws_ssm_parameter.environment_config[""].value).accountID == "123456789000"
-    error_message = "Should be: 123456789000"
   }
 }
 
@@ -316,7 +285,6 @@ run "pipeline_unit_test" {
       from_account : "123456789000"
       to : "dev"
       to_account : "000123456789"
-      to_prod_account = false
       pipeline : {}
     }
   }

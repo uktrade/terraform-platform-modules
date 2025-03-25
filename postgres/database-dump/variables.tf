@@ -12,11 +12,10 @@ variable "database_name" {
 
 variable "tasks" {
   type = list(object({
-    from              = string
-    to                = string
-    from_account      = string
-    to_account        = string
-    from_prod_account = bool
-    pipeline          = optional(object({}))
+    from         = string
+    to           = string
+    from_account = string
+    to_account   = string
+    pipeline     = optional(object({}))
   }))
 }
