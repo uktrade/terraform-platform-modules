@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.7.2](https://github.com/uktrade/terraform-platform-modules/compare/7.7.1...7.7.2) (2025-03-26)
+
+
+### Bug Fixes
+
+* Allow database copy pipeline within same account (DBTP-1847) ([#370](https://github.com/uktrade/terraform-platform-modules/issues/370)) ([3c41b34](https://github.com/uktrade/terraform-platform-modules/commit/3c41b34314f739835f3c48dc33075ef346a70a86))
+
 ## [7.7.1](https://github.com/uktrade/terraform-platform-modules/compare/7.7.0...7.7.1) (2025-03-24)
 
 
