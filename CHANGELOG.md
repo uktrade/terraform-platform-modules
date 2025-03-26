@@ -1,5 +1,28 @@
 # Changelog
 
+## [7.7.2](https://github.com/uktrade/terraform-platform-modules/compare/7.7.1...7.7.2) (2025-03-26)
+
+
+### Bug Fixes
+
+* Allow database copy pipeline within same account (DBTP-1847) ([#370](https://github.com/uktrade/terraform-platform-modules/issues/370)) ([3c41b34](https://github.com/uktrade/terraform-platform-modules/commit/3c41b34314f739835f3c48dc33075ef346a70a86))
+
+## [7.7.1](https://github.com/uktrade/terraform-platform-modules/compare/7.7.0...7.7.1) (2025-03-24)
+
+
+### Bug Fixes
+
+* Assume environment deploy role after copilot commands (DBTP-1914) ([#369](https://github.com/uktrade/terraform-platform-modules/issues/369)) ([f234eaa](https://github.com/uktrade/terraform-platform-modules/commit/f234eaadb1cfcb82145b9f3c2eaf71cb1a52f8ed))
+* Create codebase parameter with codebase config (DBTP-1892) ([#367](https://github.com/uktrade/terraform-platform-modules/issues/367)) ([4fce25a](https://github.com/uktrade/terraform-platform-modules/commit/4fce25a0377567fbeb192f4f9c5bd66763eb6b70))
+
+## [7.7.0](https://github.com/uktrade/terraform-platform-modules/compare/7.6.1...7.7.0) (2025-03-19)
+
+
+### Features
+
+* Deploy service manifest changes in codebase pipelines (DBTP-1828) ([#364](https://github.com/uktrade/terraform-platform-modules/issues/364)) ([4aab0a3](https://github.com/uktrade/terraform-platform-modules/commit/4aab0a36b5f3f7bbe611c52107eff740926fdbd8))
+* Implement deploy repository branch variable (DBTP-1896) ([#363](https://github.com/uktrade/terraform-platform-modules/issues/363)) ([ca2fe0a](https://github.com/uktrade/terraform-platform-modules/commit/ca2fe0a1ae085109f08c6b06f4b3a937a684c9a7))
+
 ## [7.6.1](https://github.com/uktrade/terraform-platform-modules/compare/7.6.0...7.6.1) (2025-03-17)
 
 
