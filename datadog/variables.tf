@@ -5,11 +5,11 @@ variable "application" {
 variable "config" {
   type = object(
     {
-      team_name = string
-      contact_name = string
-      contact_email = string
-      repository = string
-      docs = string
+      team_name           = string
+      contact_name        = string
+      contact_email       = string
+      repository          = string
+      docs                = string
       services_to_monitor = list(string)
     }
   )

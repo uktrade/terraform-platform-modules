@@ -1,7 +1,7 @@
 // Create the System (parent) component in DataDog Software Catalog
 resource "datadog_software_catalog" "datadog-software-catalog-system" {
   provider = datadog.ddog
-  entity = <<EOF
+  entity   = <<EOF
 apiVersion: v3
 kind: system
 metadata:
@@ -26,7 +26,7 @@ EOF
 resource "datadog_software_catalog" "datadog-software-catalog-service" {
   provider = datadog.ddog
   for_each = toset(var.config.services_to_monitor)
-  entity = <<EOF
+  entity   = <<EOF
 apiVersion: v3
 kind: service
 metadata:

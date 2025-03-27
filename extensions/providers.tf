@@ -14,7 +14,7 @@ provider "aws" {
 }
 
 provider "datadog" {
-  alias = "ddog"
+  alias   = "ddog"
   api_key = data.aws_ssm_parameter.datadog_api_key.value
   app_key = data.aws_ssm_parameter.datadog_app_key.value
   api_url = "https://api.datadoghq.eu/"
@@ -32,9 +32,9 @@ terraform {
       ]
     }
     datadog = {
-      source  = "DataDog/datadog"
-      version = "3.57.0" 
-      configuration_aliases = [ datadog.ddog ]
+      source                = "DataDog/datadog"
+      version               = "3.57.0"
+      configuration_aliases = [datadog.ddog]
     }
   }
 }

@@ -6,11 +6,11 @@ variables {
   application = "test-app"
   environment = "test-env"
   config = {
-    team_name    = "test-team",
-    contact_name = "test-contact-name",
-    contact_email    = "test-contact-email",
-    repository = "test-repo"
-    docs = "test-docs",    
+    team_name           = "test-team",
+    contact_name        = "test-contact-name",
+    contact_email       = "test-contact-email",
+    repository          = "test-repo"
+    docs                = "test-docs",
     services_to_monitor = ["test-web", "test-postgres"] #, "test-redis", "test-elasticsearch"]
   }
 }
