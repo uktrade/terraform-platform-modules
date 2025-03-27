@@ -8,8 +8,7 @@ variable "config" {
       team_name           = string
       contact_name        = string
       contact_email       = string
-      repository          = string
-      docs                = string
+      documentation_url   = string
       services_to_monitor = list(string)
     }
   )

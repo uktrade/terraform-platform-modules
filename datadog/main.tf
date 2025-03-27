@@ -8,12 +8,9 @@ metadata:
   name: ${var.application}
   displayName: ${var.application}
   links:
-    - name: ${var.application}
-      type: repo
-      url: ${var.config.repository}
     - name: readme
       type: doc
-      url: ${var.config.docs}
+      url: ${var.config.documentation_url}
   contacts:
     - name: ${var.config.contact_name}
       type: email
@@ -33,12 +30,9 @@ metadata:
   name: ${each.value}
   displayName: ${var.application}:${each.value}
   links:
-    - name: ${var.application}
-      type: repo
-      url: ${var.config.repository}
     - name: readme
       type: doc
-      url: ${var.config.docs}
+      url: ${var.config.documentation_url}
   contacts:
     - name: ${var.config.contact_name}
       type: email
