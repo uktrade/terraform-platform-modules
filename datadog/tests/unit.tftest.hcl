@@ -14,22 +14,34 @@ variables {
   }
 }
 
-run "datadog_system_entity_test" {
+run "datadog_system_entity_test_application" {
   command = plan
   assert {
-    condition     = datadog_software_catalog.datadog-software-catalog-system.entity == "apiVersion: v3\nkind: system\nmetadata:\n  name: test-app\n  displayName: test-app\n  links:\n    - name: readme\n      type: doc\n      url: test-docs\n  contacts:\n    - name: test-contact-name\n      type: email\n      contact: test-contact-email\n  owner: test-team\n"
-    error_message = "Should be: apiVersion: v3\nkind: system\nmetadata:\n  name: test-app\n  displayName: test-app\n  links:\n    - name: readme\n      type: doc\n      url: test-docs\n  contacts:\n    - name: test-contact-name\n      type: email\n      contact: test-contact-email\n  owner: test-team\n"
+    condition     = yamldecode(datadog_software_catalog.datadog-software-catalog-system.entity).metadata.name == var.application
+    error_message = "Should be: metadata.name = ${var.application}"
   }
 }
 
-run "datadog_service_entity_test" {
+run "datadog_system_entity_test_owner" {
   command = plan
   assert {
-    condition     = datadog_software_catalog.datadog-software-catalog-service["test-web"].entity == "apiVersion: v3\nkind: service\nmetadata:\n  name: test-web\n  displayName: test-app:test-web\n  links:\n    - name: readme\n      type: doc\n      url: test-docs\n  contacts:\n    - name: test-contact-name\n      type: email\n      contact: test-contact-email\n  owner: test-team\nspec:\n  lifecycle: production\n  tier: \"1\"\n  type: web\n  componentOf: \n    - system:test-app\n  languages:\n    - python\ndatadog:\n  pipelines:\n    fingerprints:\n      - SheHsDihoccN\n"
-    error_message = "Should be: apiVersion: v3\nkind: service\nmetadata:\n  name: test-web\n  displayName: test-app:test-web\n  links:\n    - name: readme\n      type: doc\n      url: test-docs\n  contacts:\n    - name: test-contact-name\n      type: email\n      contact: test-contact-email\n  owner: test-team\nspec:\n  lifecycle: production\n  tier: \"1\"\n  type: web\n  componentOf: \n    - system:test-app\n  languages:\n    - python\ndatadog:\n  pipelines:\n    fingerprints:\n      - SheHsDihoccN\n"
+    condition     = yamldecode(datadog_software_catalog.datadog-software-catalog-system.entity).metadata.owner == var.config.team_name
+    error_message = "Should be: metadata.owner = ${var.config.team_name}"
   }
+}
+
+run "datadog_service_entity_test_displayname" {
+  command = plan
   assert {
-    condition     = datadog_software_catalog.datadog-software-catalog-service["test-postgres"].entity == "apiVersion: v3\nkind: service\nmetadata:\n  name: test-postgres\n  displayName: test-app:test-postgres\n  links:\n    - name: readme\n      type: doc\n      url: test-docs\n  contacts:\n    - name: test-contact-name\n      type: email\n      contact: test-contact-email\n  owner: test-team\nspec:\n  lifecycle: production\n  tier: \"1\"\n  type: web\n  componentOf: \n    - system:test-app\n  languages:\n    - python\ndatadog:\n  pipelines:\n    fingerprints:\n      - SheHsDihoccN\n"
-    error_message = "Should be: apiVersion: v3\nkind: service\nmetadata:\n  name: test-postgres\n  displayName: test-app:test-postgres\n  links:\n    - name: readme\n      type: doc\n      url: test-docs\n  contacts:\n    - name: test-contact-name\n      type: email\n      contact: test-contact-email\n  owner: test-team\nspec:\n  lifecycle: production\n  tier: \"1\"\n  type: web\n  componentOf: \n    - system:test-app\n  languages:\n    - python\ndatadog:\n  pipelines:\n    fingerprints:\n      - SheHsDihoccN\n"
+    condition     = yamldecode(datadog_software_catalog.datadog-software-catalog-service["test-web"].entity).metadata.displayName == "${var.application}:${var.config.services_to_monitor[0]}"
+    error_message = "Should be: metadata.displayName = ${var.application}:${var.config.services_to_monitor[0]}"
+  }
+}
+
+run "datadog_service_entity_test_parent" {
+  command = plan
+  assert {
+    condition     = yamldecode(datadog_software_catalog.datadog-software-catalog-service["test-postgres"].entity).spec.componentOf[0] == "system:test-app"
+    error_message = "Should be: spec.componentOf = system:test-app"
   }
 }
