@@ -1,3 +1,11 @@
+module "ecs_cluster" {
+  source = "../ecs-cluster"
+
+  application = var.args.application
+  environment = var.environment
+  
+}
+
 module "s3" {
   source = "../s3"
 
