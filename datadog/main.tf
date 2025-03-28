@@ -8,7 +8,10 @@ metadata:
   name: ${var.application}
   displayName: ${var.application}
   links:
-    - name: readme
+    - name: ${var.application}
+      type: repo
+      url: ${var.config.repository}
+    - name: Documentation
       type: doc
       url: ${var.config.documentation_url}
   contacts:
@@ -30,7 +33,10 @@ metadata:
   name: ${each.value}
   displayName: ${var.application}:${each.value}
   links:
-    - name: readme
+    - name: ${var.application}
+      type: repo
+      url: ${var.config.repository}
+    - name: Documentation
       type: doc
       url: ${var.config.documentation_url}
   contacts:

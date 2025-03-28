@@ -1,3 +1,7 @@
+# An 'alias' is required in some cases to help Terraform to run for_each loops inside of 
+# extension modules that are themselves being called in a for_each loop. 
+# Without the alias, Terraform forgets the provider on the next iteration and the plan will fail.
+
 provider "aws" {
   alias = "domain"
   assume_role {
