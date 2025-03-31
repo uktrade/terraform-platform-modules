@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.8.0](https://github.com/uktrade/terraform-platform-modules/compare/7.7.2...7.8.0) (2025-03-31)
+
+
+### Features
+
+* Adding Datadog modules (DBTP-1879) ([#373](https://github.com/uktrade/terraform-platform-modules/issues/373)) ([aa200c9](https://github.com/uktrade/terraform-platform-modules/commit/aa200c940cd75ba1e40c5e7eacd8fdbc64a051ab))
+
 ## [7.7.2](https://github.com/uktrade/terraform-platform-modules/compare/7.7.1...7.7.2) (2025-03-26)
 
 
