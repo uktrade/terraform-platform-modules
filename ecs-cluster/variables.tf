@@ -5,3 +5,7 @@ variable "application" {
 variable "environment" {
   type = string
 }
+
+variable "vpc_name" {
+  type = string
+}

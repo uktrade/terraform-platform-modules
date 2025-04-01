@@ -3,7 +3,7 @@ module "ecs_cluster" {
 
   application = var.args.application
   environment = var.environment
-  
+  vpc_name    = local.vpc_name
 }
 
 module "s3" {
