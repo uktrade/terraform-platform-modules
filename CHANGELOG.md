@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.8.1](https://github.com/uktrade/terraform-platform-modules/compare/7.8.0...7.8.1) (2025-04-01)
+
+
+### Bug Fixes
+
+* Update DD_APP_KEY and DD_API_KEY variable names (DBTP-1879) ([#377](https://github.com/uktrade/terraform-platform-modules/issues/377)) ([5fa8538](https://github.com/uktrade/terraform-platform-modules/commit/5fa8538adfd678e16390746aa6735ad0be90246d))
+
 ## [7.8.0](https://github.com/uktrade/terraform-platform-modules/compare/7.7.2...7.8.0) (2025-03-31)
 
 
