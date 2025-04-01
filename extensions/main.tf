@@ -1,9 +1,9 @@
 // The DataDog Provider requires an API and APP key which we'll get from AWS Parameter Store
 data "aws_ssm_parameter" "datadog_api_key" {
-  name = "datadog_daveg_api_key" # manually created in AWS for testing purposes
+  name = "DATADOG_API_KEY"
 }
 data "aws_ssm_parameter" "datadog_app_key" {
-  name = "datadog_daveg_app_key" # manually created in AWS for testing purposes
+  name = "DATADOG_APP_KEY"
 }
 
 module "s3" {
