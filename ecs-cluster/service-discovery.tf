@@ -13,7 +13,8 @@ resource "aws_service_discovery_private_dns_namespace" "private_dns_namespace" {
 
 # TODO - Need to iterate over a list of services here. Need to get that from platform-config?
 resource "aws_service_discovery_service" "service_discovery_service" {
-  name = "web"
+  for_each = local.web_services
+  name     = each.key
 
   dns_config {
     namespace_id = aws_service_discovery_private_dns_namespace.private_dns_namespace.id
