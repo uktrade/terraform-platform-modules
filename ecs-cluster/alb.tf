@@ -29,8 +29,8 @@ resource "aws_security_group" "environment_security_group" {
     to_port = 0
     protocol    = "-1"
     security_groups = [ 
-      data.aws_security_group.https_security_group,
-      data.aws_security_group.http_security_group # TODO remove? As we redirect to https this may not be needed
+      data.aws_security_group.https_security_group.id,
+      data.aws_security_group.http_security_group.id # TODO remove? As we redirect to https this may not be needed
       ]
   }
 
