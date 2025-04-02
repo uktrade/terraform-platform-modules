@@ -1,4 +1,7 @@
-resource "aws_ecs_cluster" "cluster" {    
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_ecs_cluster" "cluster" {
   name = local.cluster_name
 
   setting {

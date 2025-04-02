@@ -29,7 +29,6 @@ resource "aws_lb_listener_rule" "https" {
   }
 }
 
-
 resource "aws_lb_target_group" "target_group" {
   name        = "${var.application}-${var.environment}-tg-tf"
   port        = 443
