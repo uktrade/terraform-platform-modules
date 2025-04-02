@@ -4,6 +4,8 @@ module "ecs_cluster" {
   application = var.args.application
   environment = var.environment
   vpc_name    = local.vpc_name
+  services    = var.args.services
+  s3_config   = local.s3
 }
 
 module "s3" {

@@ -9,15 +9,15 @@ data "aws_lb_listener" "environment_alb_listener" {
 
 resource "aws_lb_listener_rule" "https" {
   listener_arn = data.aws_lb_listener.environment_alb_listener.arn
-  priority = 100
+  priority     = 100
   action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = aws_lb_target_group.target_group.arn
   }
 
   condition {
     path_pattern {
-       values = ["/*"]
+      values = ["/*"]
     }
   }
 
@@ -40,7 +40,7 @@ resource "aws_lb_target_group" "target_group" {
 
   # TODO - Healthcheck settings can be changed in the service-manifest.yml, how will this be updated?
   health_check {
-    port = 8080
+    port                = 8080
     healthy_threshold   = 3
     interval            = 35
     protocol            = "HTTP"
