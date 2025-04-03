@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.8.2](https://github.com/uktrade/terraform-platform-modules/compare/7.8.1...7.8.2) (2025-04-03)
+
+
+### Bug Fixes
+
+* Add missing action to environment pipelines (DBTP-1972) ([#380](https://github.com/uktrade/terraform-platform-modules/issues/380)) ([803a24d](https://github.com/uktrade/terraform-platform-modules/commit/803a24d2d5f1f85f7935ee9ce2566de22567bd7b))
+
 ## [7.8.1](https://github.com/uktrade/terraform-platform-modules/compare/7.8.0...7.8.1) (2025-04-01)
 
 
