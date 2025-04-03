@@ -23,3 +23,12 @@ resource "aws_ecs_cluster_capacity_providers" "capacity" {
 
   capacity_providers = ["FARGATE", "FARGATE_SPOT"]
 }
+
+resource "aws_cloudwatch_log_group" "service_logs" {
+  for_each = var.services
+
+  name = "terraform/${var.application}/${var.environment}/${each.key}"
+
+  retention_in_days = 30
+  tags = local.tags
+}

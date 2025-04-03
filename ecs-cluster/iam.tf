@@ -53,6 +53,15 @@ data "aws_iam_policy_document" "secrets_policy" {
   }
 
   statement {
+      effect = "Allow"
+      actions = [
+        "kms:Decrypt"
+      ]
+      resources = [
+        "arn:aws:kms:eu-west-2:${data.aws_caller_identity.current.account_id}:key/*"
+        ]
+  }
+  statement {
     effect = "Allow"
     actions = [
       "kms:Decrypt"
@@ -223,7 +232,7 @@ data "aws_iam_policy_document" "bucket_access_policy" {
       "s3:ListBucket"
     ]
     resources = [
-      for bucket_key, bucket_config in var.s3_config : "arn:aws:s3:::${bucket_config.bucket_name}"
+      for bucket_key, bucket_config in var.s3_config : "arn:aws:s3:::${bucket_config.bucket_name}/*"
       if contains(bucket_config.services, each.key)
     ]
   }
