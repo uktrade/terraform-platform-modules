@@ -2,9 +2,14 @@ data "aws_lb" "environment_load_balancer" {
   name = "${var.application}-${var.environment}"
 }
 
-data "aws_lb_listener" "environment_alb_listener" {
+data "aws_lb_listener" "environment_alb_listener_https" {
   load_balancer_arn = data.aws_lb.environment_load_balancer.arn
   port              = 443
+}
+
+data "aws_lb_listener" "environment_alb_listener_http" {
+  load_balancer_arn = data.aws_lb.environment_load_balancer.arn
+  port              = 80
 }
 
 data "aws_security_group" "http_security_group" {
@@ -29,9 +34,8 @@ resource "aws_security_group" "environment_security_group" {
     to_port = 0
     protocol    = "-1"
     security_groups = [ 
-      data.aws_security_group.https_security_group.id,
-      data.aws_security_group.http_security_group.id # TODO remove? As we redirect to https this may not be needed
-      ]
+      data.aws_security_group.https_security_group.id
+    ]
   }
 
   ingress {
@@ -51,12 +55,44 @@ resource "aws_security_group" "environment_security_group" {
 }
 
 resource "aws_lb_listener_rule" "https" {
-   listener_arn = data.aws_lb_listener.environment_alb_listener.arn
+   listener_arn = data.aws_lb_listener.environment_alb_listener_https.arn
    priority     = 100
+   tags         = local.tags
    action {
      type             = "forward"
      target_group_arn = aws_lb_target_group.target_group.arn
    }
+
+  condition {
+    path_pattern {
+      values = ["/*"]
+    }
+  }
+
+  condition {
+    host_header {
+      # TODO - What if the alias is updated in the service manifest? Would need to run terraform anyway?
+      values = ["web.${var.environment}.${var.application}.uktrade.digital"]
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "http_to_https" {
+  listener_arn = data.aws_lb_listener.environment_alb_listener_http.arn
+  priority     = 100
+  tags         = local.tags
+
+  action {
+    type = "redirect"
+    redirect {
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+      port        = "443"
+      host        = "#{host}"
+      path        = "/#{path}"
+      query       = "#{query}"
+    }
+  }
 
   condition {
     path_pattern {
