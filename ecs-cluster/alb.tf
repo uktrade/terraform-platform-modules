@@ -55,10 +55,10 @@ resource "aws_security_group" "environment_security_group" {
 }
 
 resource "aws_lb_listener_rule" "https" {
-  for_each = local.web_services
+  for_each = local.web_services_with_priority
 
   listener_arn = data.aws_lb_listener.environment_alb_listener_https.arn
-  priority     = coalesce(each.value.alb.alb_rule_priority, 100) + 10000
+  priority     = each.value.computed_priority
 
   action {
     type             = "forward"
@@ -67,13 +67,13 @@ resource "aws_lb_listener_rule" "https" {
 
   condition {
     host_header {
-      values = coalesce(each.value.alb.alb_rule_alias, ["${each.key}.${var.environment}.${var.application}.uktrade.digital"])
+      values = try(each.value.alb.alb_rule_alias, ["${each.key}.${var.environment}.${var.application}.uktrade.digital"])
     }
   }
 
   condition {
     path_pattern {
-      values = coalesce(each.value.alb.alb_rule_path, ["/*"])
+      values = try(each.value.alb.alb_rule_path, ["/*"])
     }
   }
 
@@ -116,14 +116,14 @@ resource "aws_lb_target_group" "target_group" {
   deregistration_delay = 60
 
   health_check {
-    port                = coalesce(each.value.healthcheck.port, 8080)
-    path                = coalesce(each.value.healthcheck.path, "/")
+    port                = try(each.value.healthcheck.port, 8080)
+    path                = try(each.value.healthcheck.path, "/")
     protocol            = "HTTP"
-    matcher             = coalesce(each.value.healthcheck.success_codes, "200")
-    healthy_threshold   = coalesce(each.value.healthcheck.healthy_threshold, 3)
-    unhealthy_threshold = coalesce(each.value.healthcheck.unhealthy_threshold, 3)
-    interval            = tonumber(trim(coalesce(each.value.healthcheck.interval, "35s"), "s"))
-    timeout             = tonumber(trim(coalesce(each.value.healthcheck.timeout, "30s"), "s"))
+    matcher             = try(each.value.healthcheck.success_codes, "200")
+    healthy_threshold   = try(each.value.healthcheck.healthy_threshold, 3)
+    unhealthy_threshold = try(each.value.healthcheck.unhealthy_threshold, 3)
+    interval            = tonumber(trim(try(each.value.healthcheck.interval, "35s"), "s"))
+    timeout             = tonumber(trim(try(each.value.healthcheck.timeout, "30s"), "s"))
   }
 }
 
