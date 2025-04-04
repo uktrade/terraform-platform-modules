@@ -55,10 +55,10 @@ resource "aws_security_group" "environment_security_group" {
 }
 
 resource "aws_lb_listener_rule" "https" {
-  for_each = local.web_services_with_priority
+  for_each = local.web_services
 
   listener_arn = data.aws_lb_listener.environment_alb_listener_https.arn
-  priority     = each.value.computed_priority
+  priority     = 100 + each.value.alb.alb_rule_priority
 
   action {
     type             = "forward"

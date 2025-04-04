@@ -20,11 +20,4 @@ locals {
     service_name => service_config
     if service_config.type == "web" && contains(keys(service_config), "alb")
   }
-
-  web_services_with_priority = {
-    for service_name, service_config in local.web_services :
-    service_name => merge(service_config, {
-      computed_priority = 100 + service_config.alb.alb_rule_priority
-    })
-  }
 }
