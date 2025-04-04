@@ -12,21 +12,15 @@ data "aws_lb_listener" "environment_alb_listener_http" {
   port              = 80
 }
 
-data "aws_security_group" "http_security_group" {
-  name = "${var.application}-${var.environment}-alb-http"
-}
-
 data "aws_security_group" "https_security_group" {
   name = "${var.application}-${var.environment}-alb-https"
 }
 
 resource "aws_security_group" "environment_security_group" {
-
   name        = "${var.application}-${var.environment}-environment"
   description = "Managed by Terraform"
   vpc_id      = data.aws_vpc.vpc.id
   tags        = local.tags
-
 
   ingress {
     description = "Allow from ALB"
@@ -45,6 +39,7 @@ resource "aws_security_group" "environment_security_group" {
     protocol    = "-1"
     self        = true
   }
+
   egress {
     description = "Allow traffic out"
     protocol    = "-1"
@@ -67,13 +62,14 @@ resource "aws_lb_listener_rule" "https" {
 
   condition {
     host_header {
-      values = try(each.value.alb.alb_rule_alias, ["${each.key}.${var.environment}.${var.application}.uktrade.digital"])
+      # TODO - The domain is different for prod environments
+      values = ["${lookup(each.value.alb, "alb_rule_alias", each.key)}.${var.environment}.${var.application}.uktrade.digital"]
     }
   }
 
   condition {
     path_pattern {
-      values = try(each.value.alb.alb_rule_path, ["/*"])
+      values = lookup(each.value.alb, "alb_rule_path", ["/*"])
     }
   }
 
@@ -107,7 +103,7 @@ resource "aws_lb_listener_rule" "http_to_https" {
 resource "aws_lb_target_group" "target_group" {
   for_each = local.web_services
 
-  name        = "${var.application}-${var.environment}-${each.key}-tg"
+  name        = "${each.key}-tg"
   port        = 443
   protocol    = "HTTPS"
   target_type = "ip"
@@ -116,15 +112,17 @@ resource "aws_lb_target_group" "target_group" {
   deregistration_delay = 60
 
   health_check {
-    port                = try(each.value.healthcheck.port, 8080)
-    path                = try(each.value.healthcheck.path, "/")
+    port                = lookup(each.value.healthcheck, "port", 8080)
+    path                = lookup(each.value.healthcheck, "path", "/")
     protocol            = "HTTP"
-    matcher             = try(each.value.healthcheck.success_codes, "200")
-    healthy_threshold   = try(each.value.healthcheck.healthy_threshold, 3)
-    unhealthy_threshold = try(each.value.healthcheck.unhealthy_threshold, 3)
-    interval            = tonumber(trim(try(each.value.healthcheck.interval, "35s"), "s"))
-    timeout             = tonumber(trim(try(each.value.healthcheck.timeout, "30s"), "s"))
+    matcher             = lookup(each.value.healthcheck, "success_codes", "200")
+    healthy_threshold   = lookup(each.value.healthcheck, "healthy_threshold", 3)
+    unhealthy_threshold = lookup(each.value.healthcheck, "unhealthy_threshold", 3)
+    interval            = tonumber(trim(lookup(each.value.healthcheck, "interval", "35s"), "s"))
+    timeout             = tonumber(trim(lookup(each.value.healthcheck, "timeout", "30s"), "s"))
   }
+
+  tags = local.tags
 }
 
 

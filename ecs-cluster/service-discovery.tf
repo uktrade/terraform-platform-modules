@@ -11,7 +11,6 @@ resource "aws_service_discovery_private_dns_namespace" "private_dns_namespace" {
   vpc         = data.aws_vpc.vpc.id
 }
 
-# TODO - Need to iterate over a list of services here. Need to get that from platform-config?
 resource "aws_service_discovery_service" "service_discovery_service" {
   for_each = local.web_services
   name     = each.key
