@@ -30,5 +30,5 @@ resource "aws_cloudwatch_log_group" "service_logs" {
   name = "/terraform/${var.application}/${var.environment}/${each.key}"
 
   retention_in_days = 30
-  tags = local.tags
+  tags              = local.tags
 }

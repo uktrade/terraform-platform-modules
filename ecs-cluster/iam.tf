@@ -53,13 +53,13 @@ data "aws_iam_policy_document" "secrets_policy" {
   }
 
   statement {
-      effect = "Allow"
-      actions = [
-        "kms:Decrypt"
-      ]
-      resources = [
-        "arn:aws:kms:eu-west-2:${data.aws_caller_identity.current.account_id}:key/*"
-        ]
+    effect = "Allow"
+    actions = [
+      "kms:Decrypt"
+    ]
+    resources = [
+      "arn:aws:kms:eu-west-2:${data.aws_caller_identity.current.account_id}:key/*"
+    ]
   }
   statement {
     effect = "Allow"

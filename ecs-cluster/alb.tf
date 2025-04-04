@@ -27,23 +27,23 @@ resource "aws_security_group" "environment_security_group" {
   vpc_id      = data.aws_vpc.vpc.id
   tags        = local.tags
 
-  
+
   ingress {
     description = "Allow from ALB"
-    from_port = 0
-    to_port = 0
+    from_port   = 0
+    to_port     = 0
     protocol    = "-1"
-    security_groups = [ 
+    security_groups = [
       data.aws_security_group.https_security_group.id
     ]
   }
 
   ingress {
     description = "Ingress from other containers in the same security group"
-    from_port = 0
-    to_port = 0
+    from_port   = 0
+    to_port     = 0
     protocol    = "-1"
-    self = true
+    self        = true
   }
   egress {
     description = "Allow traffic out"
@@ -55,42 +55,42 @@ resource "aws_security_group" "environment_security_group" {
 }
 
 resource "aws_lb_listener_rule" "https" {
-   listener_arn = data.aws_lb_listener.environment_alb_listener_https.arn
-   priority     = 100
-   tags         = local.tags
-   action {
-     type             = "forward"
-     target_group_arn = aws_lb_target_group.target_group.arn
-   }
+  for_each = local.web_services
 
-  condition {
-    path_pattern {
-      values = ["/*"]
-    }
+  listener_arn = data.aws_lb_listener.environment_alb_listener_https.arn
+  priority     = coalesce(each.value.alb.alb_rule_priority, 100) + 10000
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.target_group[each.key].arn
   }
 
   condition {
     host_header {
-      # TODO - What if the alias is updated in the service manifest? Would need to run terraform anyway?
-      values = ["web.${var.environment}.${var.application}.uktrade.digital"]
+      values = coalesce(each.value.alb.alb_rule_alias, ["${each.key}.${var.environment}.${var.application}.uktrade.digital"])
     }
   }
+
+  condition {
+    path_pattern {
+      values = coalesce(each.value.alb.alb_rule_path, ["/*"])
+    }
+  }
+
+  tags = local.tags
 }
+
 
 resource "aws_lb_listener_rule" "http_to_https" {
   listener_arn = data.aws_lb_listener.environment_alb_listener_http.arn
-  priority     = 100
-  tags         = local.tags
+  priority     = 1
 
   action {
     type = "redirect"
     redirect {
       protocol    = "HTTPS"
-      status_code = "HTTP_301"
       port        = "443"
-      host        = "#{host}"
-      path        = "/#{path}"
-      query       = "#{query}"
+      status_code = "HTTP_301"
     }
   }
 
@@ -100,16 +100,14 @@ resource "aws_lb_listener_rule" "http_to_https" {
     }
   }
 
-  condition {
-    host_header {
-      # TODO - What if the alias is updated in the service manifest? Would need to run terraform anyway?
-      values = ["web.${var.environment}.${var.application}.uktrade.digital"]
-    }
-  }
+  tags = local.tags
 }
 
+
 resource "aws_lb_target_group" "target_group" {
-  name        = "${var.application}-${var.environment}-tg-tf"
+  for_each = local.web_services
+
+  name        = "${var.application}-${var.environment}-${each.key}-tg"
   port        = 443
   protocol    = "HTTPS"
   target_type = "ip"
@@ -117,16 +115,17 @@ resource "aws_lb_target_group" "target_group" {
 
   deregistration_delay = 60
 
-  # TODO - Healthcheck settings can be changed in the service-manifest.yml, how will this be updated?
   health_check {
-    port                = 8080
-    healthy_threshold   = 3
-    interval            = 35
+    port                = coalesce(each.value.healthcheck.port, 8080)
+    path                = coalesce(each.value.healthcheck.path, "/")
     protocol            = "HTTP"
-    matcher             = "200"
-    timeout             = 30
-    path                = "/"
-    unhealthy_threshold = 3
+    matcher             = coalesce(each.value.healthcheck.success_codes, "200")
+    healthy_threshold   = coalesce(each.value.healthcheck.healthy_threshold, 3)
+    unhealthy_threshold = coalesce(each.value.healthcheck.unhealthy_threshold, 3)
+    interval            = tonumber(trim(coalesce(each.value.healthcheck.interval, "35s"), "s"))
+    timeout             = tonumber(trim(coalesce(each.value.healthcheck.timeout, "30s"), "s"))
   }
 }
+
+
 
