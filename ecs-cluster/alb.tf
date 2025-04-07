@@ -63,7 +63,7 @@ resource "aws_lb_listener_rule" "https" {
   condition {
     host_header {
       # TODO - The domain is different for prod environments
-      values = ["${lookup(each.value.alb, "alb_rule_alias", each.key)}.${var.environment}.${var.application}.uktrade.digital"]
+      values = lookup(each.value.alb, "alb_rule_alias", ["${each.key}.${var.environment}.${var.application}.uktrade.digital"])
     }
   }
 
@@ -99,17 +99,25 @@ resource "aws_lb_listener_rule" "http_to_https" {
   tags = local.tags
 }
 
+resource "random_string" "tg_suffix" {
+  for_each = local.web_services
+  length  = 6
+  lower   = true
+  min_lower = 6
+  special = false
+}
 
 resource "aws_lb_target_group" "target_group" {
   for_each = local.web_services
 
-  name        = "${each.key}-tg"
+  name = "${each.key}-tg-${random_string.tg_suffix[each.key].result}"
   port        = 443
   protocol    = "HTTPS"
   target_type = "ip"
   vpc_id      = data.aws_vpc.vpc.id
-
   deregistration_delay = 60
+  tags = local.tags
+
 
   health_check {
     port                = lookup(each.value.healthcheck, "port", 8080)
@@ -122,7 +130,6 @@ resource "aws_lb_target_group" "target_group" {
     timeout             = tonumber(trim(lookup(each.value.healthcheck, "timeout", "30s"), "s"))
   }
 
-  tags = local.tags
 }
 
 
