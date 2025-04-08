@@ -18,8 +18,19 @@ locals {
     ]
   ]))
 
-  web_services = {
+  services_with_default_and_environment_settings_merged = {
     for service_name, service_config in var.services :
+    service_name => merge(
+      service_config,
+      merge(
+        lookup(service_config.environments, "*", {}),
+        lookup(service_config.environments, var.environment, {})
+      )
+    )
+  }
+
+  web_services = {
+    for service_name, service_config in local.services_with_default_and_environment_settings_merged :
     service_name => service_config
     if service_config.type == "web"
   }
@@ -62,6 +73,18 @@ locals {
 #     path = ["/", "/test"]
 #     is_root = false
 #   }
+# } 
+
+# /secondary-service/sub-service/sub-sub
+# /secondary-service/sub-service
+# /secondary-service/
+
+# rules: {
+#  "root-rules": [list of rules],
+#  "secondary-service" : {
+#     "/*": { rule}, 
+#     "/sub-service": {rule}
+#  }
 # }
 
   root_rules_list = [
