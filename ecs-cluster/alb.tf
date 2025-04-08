@@ -50,10 +50,10 @@ resource "aws_security_group" "environment_security_group" {
 }
 
 resource "aws_lb_listener_rule" "https" {
-  for_each = local.web_services
+  for_each = local.rules_with_priority
 
   listener_arn = data.aws_lb_listener.environment_alb_listener_https.arn
-  priority     = 100 + each.value.alb.alb_rule_priority
+  priority     = each.value.priority
 
   action {
     type             = "forward"
@@ -63,13 +63,13 @@ resource "aws_lb_listener_rule" "https" {
   condition {
     host_header {
       # TODO - The domain is different for prod environments
-      values = lookup(each.value.alb, "alb_rule_alias", ["${each.key}.${var.environment}.${var.application}.uktrade.digital"])
+      values = each.value.host
     }
   }
 
   condition {
     path_pattern {
-      values = lookup(each.value.alb, "alb_rule_path", ["/*"])
+      values = each.value.path
     }
   }
 
@@ -105,6 +105,7 @@ resource "random_string" "tg_suffix" {
   lower   = true
   min_lower = 6
   special = false
+  upper = true
 }
 
 resource "aws_lb_target_group" "target_group" {
@@ -120,14 +121,14 @@ resource "aws_lb_target_group" "target_group" {
 
 
   health_check {
-    port                = lookup(each.value.healthcheck, "port", 8080)
-    path                = lookup(each.value.healthcheck, "path", "/")
+    port                = lookup(each.value, "port", 8080)
+    path                = lookup(each.value, "path", "/")
     protocol            = "HTTP"
-    matcher             = lookup(each.value.healthcheck, "success_codes", "200")
-    healthy_threshold   = lookup(each.value.healthcheck, "healthy_threshold", 3)
-    unhealthy_threshold = lookup(each.value.healthcheck, "unhealthy_threshold", 3)
-    interval            = tonumber(trim(lookup(each.value.healthcheck, "interval", "35s"), "s"))
-    timeout             = tonumber(trim(lookup(each.value.healthcheck, "timeout", "30s"), "s"))
+    matcher             = lookup(each.value, "success_codes", "200")
+    healthy_threshold   = lookup(each.value, "healthy_threshold", 3)
+    unhealthy_threshold = lookup(each.value, "unhealthy_threshold", 3)
+    interval            = tonumber(trim(lookup(each.value, "interval", "35s"), "s"))
+    timeout             = tonumber(trim(lookup(each.value, "timeout", "30s"), "s"))
   }
 
 }
