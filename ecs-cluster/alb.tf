@@ -121,14 +121,14 @@ resource "aws_lb_target_group" "target_group" {
 
 
   health_check {
-    port                = lookup(each.value, "port", 8080)
-    path                = lookup(each.value, "path", "/")
+    port                = lookup(each.value, "healthcheck_port", 8080)
+    path                = lookup(each.value, "healthcheck_path", "/")
     protocol            = "HTTP"
-    matcher             = lookup(each.value, "success_codes", "200")
+    matcher             = lookup(each.value, "healthcheck_success_codes", "200")
     healthy_threshold   = lookup(each.value, "healthy_threshold", 3)
     unhealthy_threshold = lookup(each.value, "unhealthy_threshold", 3)
-    interval            = tonumber(trim(lookup(each.value, "interval", "35s"), "s"))
-    timeout             = tonumber(trim(lookup(each.value, "timeout", "30s"), "s"))
+    interval            = tonumber(trim(lookup(each.value, "healthcheck_interval", "35s"), "s"))
+    timeout             = tonumber(trim(lookup(each.value, "healthcheck_timeout", "30s"), "s"))
   }
 
 }
