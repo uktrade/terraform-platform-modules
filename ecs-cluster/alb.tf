@@ -77,6 +77,7 @@ resource "aws_lb_listener_rule" "https" {
 }
 
 
+# Redirect all incoming HTTP traffic to the HTTPS listener
 resource "aws_lb_listener_rule" "http_to_https" {
   listener_arn = data.aws_lb_listener.environment_alb_listener_http.arn
   priority     = 1
@@ -102,10 +103,9 @@ resource "aws_lb_listener_rule" "http_to_https" {
 resource "random_string" "tg_suffix" {
   for_each = local.web_services
   length  = 6
-  lower   = true
   min_lower = 6
   special = false
-  upper = true
+  lower = true
 }
 
 resource "aws_lb_target_group" "target_group" {
